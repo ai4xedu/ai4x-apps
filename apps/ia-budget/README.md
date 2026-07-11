@@ -73,6 +73,22 @@ Cliquez sur « Découvrir avec des données démo » pour explorer sans export.
 5. **Tendance** — hausse >30 % signalée avec bienveillance, baisse >15 % félicitée.
 6. Toujours au moins un message d'encouragement.
 
+## Acquisition & rétention (implémenté)
+
+- **Import du zip complet** : l'utilisateur glisse le zip reçu par e-mail tel
+  quel (ChatGPT ou Claude) — extraction locale via `fflate`, le
+  `conversations.json` est trouvé automatiquement. Friction du rituel : ~30 s.
+- **Carte de partage** (`lib/sharecard.ts`) : image 1080×1350 façon « Wrapped »
+  générée en canvas côté client (montant, équivalent cafés, top thèmes,
+  outils). Partage natif mobile ou téléchargement PNG. Agrégats uniquement.
+- **Lead magnet SEO** (`/comparateur`) : comparateur de coût ChatGPT vs Claude
+  vs Gemini + 8 pages statiques par cas d'usage
+  (`/comparateur/rediger-des-emails`, `/comparateur/generer-du-code`, …),
+  chacune avec recommandation de modèle, coûts mensuels léger/régulier/intensif
+  calculés depuis `lib/pricing.ts` (source unique), conseil du coach et CTA
+  vers l'app. `sitemap.ts` + `robots.ts` inclus ; `/dashboard` désindexé.
+  Domaine configurable via `NEXT_PUBLIC_SITE_URL`.
+
 ## Limites assumées du MVP
 
 - **Estimation, pas comptage exact** : tokens ≈ caractères/4 (±15 %), grille

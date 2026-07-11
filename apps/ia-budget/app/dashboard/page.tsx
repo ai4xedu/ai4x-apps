@@ -15,6 +15,7 @@ import type { AppState, MonthlyReport, Provider } from "@/lib/types";
 import { loadState, saveState, clearState } from "@/lib/store";
 import { themeName } from "@/lib/classify";
 import { PROVIDER_LABELS } from "@/lib/pricing";
+import { renderShareCard, shareOrDownload } from "@/lib/sharecard";
 
 /* ---------- helpers ---------- */
 
@@ -65,6 +66,7 @@ export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [editingTheme, setEditingTheme] = useState<string | null>(null);
   const [editingBudget, setEditingBudget] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     const s = loadState();
@@ -130,6 +132,25 @@ export default function Dashboard() {
               </option>
             ))}
           </select>
+          <button
+            onClick={async () => {
+              setSharing(true);
+              try {
+                const blob = await renderShareCard(
+                  report,
+                  monthLabel(report.month),
+                  settings.themeNames,
+                );
+                await shareOrDownload(blob, `releve-ia-${report.month}.png`);
+              } finally {
+                setSharing(false);
+              }
+            }}
+            className="card px-3 py-2 text-sm font-medium"
+            title="Générer une image de votre bilan (agrégats uniquement, jamais vos conversations)"
+          >
+            {sharing ? "Génération…" : "📤 Partager"}
+          </button>
           <button
             onClick={() => router.push("/")}
             className="rounded-lg px-3 py-2 text-sm font-medium"

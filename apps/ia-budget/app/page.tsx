@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { unzipSync, strFromU8 } from "fflate";
 import { parseExport, ParseError } from "@/lib/parsers";
+import type { ParsedConversation } from "@/lib/types";
 import { analyzeConversation, buildMonthlyReports, mergeReports } from "@/lib/aggregate";
 import { buildDemoReports } from "@/lib/demo";
 import { loadState, newState, saveState } from "@/lib/store";
@@ -24,13 +27,28 @@ export default function Home() {
       setBusy(true);
       setError(null);
       try {
-        const allReports = [];
+        const allConvos: ParsedConversation[] = [];
         for (const file of Array.from(files)) {
-          const raw = await file.text();
-          const convos = parseExport(raw);
-          const analyzed = convos.map(analyzeConversation);
-          allReports.push(...buildMonthlyReports(analyzed));
+          if (file.name.toLowerCase().endsWith(".zip")) {
+            // Zip d'export complet : on extrait les conversations.json localement
+            const entries = unzipSync(new Uint8Array(await file.arrayBuffer()));
+            const jsonNames = Object.keys(entries).filter((n) =>
+              n.toLowerCase().endsWith("conversations.json"),
+            );
+            if (jsonNames.length === 0) {
+              throw new ParseError(
+                "Ce zip ne contient pas de conversations.json. Vérifiez qu'il s'agit bien du zip d'export ChatGPT ou Claude reçu par e-mail.",
+              );
+            }
+            for (const name of jsonNames) {
+              allConvos.push(...parseExport(strFromU8(entries[name])));
+            }
+          } else {
+            allConvos.push(...parseExport(await file.text()));
+          }
         }
+        const analyzed = allConvos.map(analyzeConversation);
+        const allReports = buildMonthlyReports(analyzed);
         const existing = loadState();
         const merged = mergeReports(
           existing && !existing.settings.demoMode ? existing.reports : [],
@@ -110,7 +128,7 @@ export default function Home() {
         >
           <input
             type="file"
-            accept=".json,application/json"
+            accept=".json,.zip,application/json,application/zip"
             multiple
             className="hidden"
             onChange={(e) => handleFiles(e.target.files)}
@@ -120,9 +138,9 @@ export default function Home() {
           </span>
           <span className="font-semibold">{busy ? "Analyse en cours…" : "Importer mon export"}</span>
           <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Glissez votre <code>conversations.json</code> ici
+            Glissez le <strong>zip reçu par e-mail</strong> tel quel
             <br />
-            (ChatGPT ou Claude — 2 minutes, une fois par mois)
+            (ChatGPT ou Claude — 30 secondes, une fois par mois)
           </span>
         </label>
 
@@ -159,17 +177,23 @@ export default function Home() {
         <ol className="space-y-2 text-sm" style={{ color: "var(--text-secondary)" }}>
           <li>
             <strong>ChatGPT</strong> — Paramètres → Gestion des données → Exporter les données. Vous
-            recevez un e-mail avec un zip : glissez le fichier <code>conversations.json</code> ici.
+            recevez un e-mail avec un zip : glissez-le ici tel quel, sans l&apos;ouvrir.
           </li>
           <li>
             <strong>Claude</strong> — Paramètres → Confidentialité → Exporter mes données. Même
-            principe : le zip contient un <code>conversations.json</code>.
+            principe : glissez directement le zip reçu.
           </li>
           <li>
             <strong>Gemini</strong> — bientôt disponible (Google Takeout).
           </li>
         </ol>
       </section>
+
+      <footer className="mt-14 border-t pt-6 text-sm" style={{ borderColor: "var(--grid)", color: "var(--text-muted)" }}>
+        <Link href="/comparateur" className="underline">
+          Comparateur : combien coûte ChatGPT vs Claude vs Gemini selon votre usage ?
+        </Link>
+      </footer>
     </main>
   );
 }
