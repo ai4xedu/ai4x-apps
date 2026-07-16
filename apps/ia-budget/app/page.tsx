@@ -187,12 +187,19 @@ export default function Home() {
         <ul className="space-y-3 text-sm" style={{ color: "var(--text-secondary)" }}>
           <li>
             <strong style={{ color: "var(--text-primary)" }}>
-              💰 Coût réel + détail par modèle (recommandé)
+              💰 Coût réel par modèle, API + Claude Code (recommandé)
             </strong>
             <br />
-            <strong>console.anthropic.com → Usage</strong> (ou Cost) → bouton <em>Export</em>. Le CSV
-            contient votre dépense exacte par modèle (Opus, Sonnet, Haiku, Fable…) et par jour, API
-            et Claude Code compris. C&apos;est la source de vérité financière.
+            Lancez le script <code>scripts/fetch-anthropic-usage.mjs</code> avec votre clé{" "}
+            <strong>Admin</strong> (gratuite, sur platform.claude.com/settings/admin-keys). Il
+            interroge l&apos;Admin API et génère un CSV avec votre dépense exacte par modèle (Opus,
+            Sonnet, Haiku, Fable) et par jour — usage API <em>et</em> Claude Code (même sur
+            abonnement). La clé reste sur votre machine. Glissez le CSV produit ici.
+            <br />
+            <span style={{ color: "var(--text-muted)" }}>
+              Alternative simple : <strong>console.anthropic.com → Usage/Cost → Export</strong> (API
+              seule, sans Claude Code sur abonnement).
+            </span>
           </li>
           <li>
             <strong style={{ color: "var(--text-primary)" }}>🏷️ Thématiques (optionnel)</strong>

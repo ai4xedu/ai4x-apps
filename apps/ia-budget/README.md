@@ -73,28 +73,48 @@ Cliquez sur « Découvrir avec des données démo » pour explorer sans export.
 5. **Tendance** — hausse >30 % signalée avec bienveillance, baisse >15 % félicitée.
 6. Toujours au moins un message d'encouragement.
 
-## Deux sources de données (important)
+## Sources de données : ce qui est récupérable par modèle
 
-L'app combine deux lentilles complémentaires par mois :
+Recherche menée sur les docs officielles Anthropic — la réalité de la facturation
+impose trois canaux distincts :
 
-| Source | Ce qu'elle apporte | Précision |
-|---|---|---|
-| **CSV Usage/Cost du console** (`console.anthropic.com` → Usage/Cost → Export) | Coût **réel facturé**, ventilé **par modèle** (Opus, Sonnet, Haiku, Fable…) et par jour. Couvre API + Claude Code + crédits. | **Exact** (source de vérité $) |
-| **Export de conversations** (claude.ai / ChatGPT) | **Thématiques** : sur quoi vous parlez. | Estimation (texte du chat, sans les tokens de thinking/outils/fichiers) |
+| Canal d'usage | Facturation | Détail par modèle ? | Comment le récupérer |
+|---|---|---|---|
+| **API / crédits** | au token | ✅ exact | Admin API `usage_report/messages` + `cost_report` (ou CSV console Usage/Cost) |
+| **Claude Code** | au token (clé API) ou forfait (Max) | ✅ tokens + coût estimé, même sur abonnement | Admin API **`usage_report/claude_code`** → `model_breakdown` |
+| **Chat claude.ai pur** (Pro/Max) | forfait fixe | ❌ **impossible** (limite Anthropic) | Saisi comme "forfait" dans l'app + rentabilité |
 
-> ⚠️ **Pourquoi le CSV console est indispensable pour le coût :** l'export de
-> conversations de claude.ai ne contient que le texte visible des chats web. Il
-> ignore les tokens de réflexion, les lectures de fichiers/outils, et surtout
-> **tout l'usage API et Claude Code** — donc il sous-estime massivement (×100
-> observé). Il n'indique pas non plus le modèle. Le CSV console règle les deux :
-> coût exact **et** détail par modèle.
+> ⚠️ **L'export de conversations claude.ai (le ZIP) ne contient NI le modèle, NI
+> les tokens, NI le coût** — confirmé par le code de plusieurs parseurs réels (le
+> champ `model` existe mais est toujours `null`). Il ne sert donc **qu'aux
+> thématiques**. Pour le coût par modèle, il faut l'Admin API (voir script
+> ci-dessous).
 
-Import : `lib/csv.ts` (parseur) + `lib/consoleImport.ts` (auto-détection des
-colonnes date/modèle/coût/tokens, tolérant aux variations de format ; coût pris
-tel quel s'il est présent, sinon reconstruit depuis les tokens via `pricing.ts`).
-La fusion (`mergeReports` dans `aggregate.ts`) combine, pour un même mois, le
-coût+modèles du console et les thématiques des conversations. Le forfait Max/Pro
-se saisit dans les réglages et affiche la rentabilité (« ×2,3 »).
+### Le connecteur : `scripts/fetch-anthropic-usage.mjs`
+
+Script Node local. Avec votre **clé Admin** (`sk-ant-admin01-…`, gratuite via
+platform.claude.com/settings/admin-keys, rôle admin requis), il interroge
+l'Admin API et écrit un CSV `anthropic-usage.csv` — dépense exacte par modèle et
+par jour, **usage API + Claude Code (abonnement compris)**, sans double-comptage.
+La clé n'appelle que `api.anthropic.com` depuis votre machine ; rien n'est envoyé
+ailleurs ; le CSV ne contient que des agrégats.
+
+```bash
+cd apps/ia-budget
+export ANTHROPIC_ADMIN_KEY=sk-ant-admin01-...
+node scripts/fetch-anthropic-usage.mjs            # 6 derniers mois → anthropic-usage.csv
+# puis glissez anthropic-usage.csv dans l'app
+```
+
+### Import et fusion
+
+`lib/csv.ts` (parseur) + `lib/consoleImport.ts` (auto-détection des colonnes
+date/modèle/coût/tokens ; coût pris tel quel s'il est présent, sinon reconstruit
+via `pricing.ts`) — lit le CSV du script **comme** celui du console. La fusion
+(`mergeReports` dans `aggregate.ts`) combine, pour un même mois, le coût+modèles
+(Admin API/console) et les thématiques (export conversations). Le forfait Max/Pro
+se saisit dans le dashboard et affiche la rentabilité (« ×2,3 ») + le coût total
+ressenti (au token + forfait).
 
 ## Acquisition & rétention (implémenté)
 

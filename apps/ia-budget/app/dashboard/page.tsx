@@ -228,38 +228,50 @@ export default function Dashboard() {
           )}
         </p>
 
-        {/* Rentabilité de l'abonnement */}
-        {sub > 0 && isExact && (
-          <p
-            className="mt-3 rounded-lg px-3 py-2 text-sm"
-            style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}
-          >
-            <span aria-hidden>💡 </span>
-            Votre forfait à{" "}
+        {/* Forfait (chat/Claude Code Max) + rentabilité — toujours accessible */}
+        <p
+          className="mt-3 rounded-lg px-3 py-2 text-sm"
+          style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}
+        >
+          <span aria-hidden>💡 </span>
+          Forfait Max/Pro (fixe, non ventilable par modèle) :{" "}
+          {editingSub ? (
+            <input
+              type="number"
+              min={0}
+              defaultValue={sub}
+              autoFocus
+              className="card w-20 px-2 py-0.5 tabular"
+              onBlur={(e) => {
+                update((s) => void (s.settings.subscriptionEur = Math.max(0, Number(e.target.value) || 0)));
+                setEditingSub(false);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+            />
+          ) : (
             <button
               className="font-semibold underline decoration-dotted"
               onClick={() => setEditingSub(true)}
             >
-              {editingSub ? "" : fmtEur(sub)}
+              {sub > 0 ? fmtEur(sub) : "à renseigner"}
             </button>
-            {editingSub && (
-              <input
-                type="number"
-                min={0}
-                defaultValue={sub}
-                autoFocus
-                className="card w-20 px-2 py-0.5 tabular"
-                onBlur={(e) => {
-                  update((s) => void (s.settings.subscriptionEur = Math.max(0, Number(e.target.value) || 0)));
-                  setEditingSub(false);
-                }}
-                onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-              />
-            )}{" "}
-            vous a rapporté <strong>{fmtEur(report.costEur)}</strong> de valeur API —{" "}
-            <strong style={{ color: "var(--delta-good)" }}>rentabilisé ×{roi!.toFixed(1)}</strong>.
-          </p>
-        )}
+          )}
+          {sub > 0 && isExact && roi !== null && (
+            <>
+              {" "}— vos <strong>{fmtEur(report.costEur)}</strong> de valeur API au token{" "}
+              <strong style={{ color: "var(--delta-good)" }}>
+                {roi >= 1 ? `rentabilisent le forfait ×${roi.toFixed(1)}` : `en couvrent ${Math.round(roi * 100)} %`}
+              </strong>
+              .
+            </>
+          )}
+          {sub > 0 && (
+            <span className="ml-1" style={{ color: "var(--text-muted)" }}>
+              (coût total ressenti ≈ {fmtEur(report.costEur + sub)} : {fmtEur(report.costEur)} au token
+              + {fmtEur(sub)} de forfait)
+            </span>
+          )}
+        </p>
 
         {/* Jauge de budget */}
         <div className="mt-6">
