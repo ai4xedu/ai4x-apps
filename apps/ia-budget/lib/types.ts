@@ -46,6 +46,16 @@ export interface ProviderBreakdown {
   tokens: number;
 }
 
+/** Ventilation par modèle — vient du CSV de coût console (source de vérité). */
+export interface ModelBreakdown {
+  model: string; // slug tel qu'affiché par le console, ex. "claude-opus-4-8"
+  label: string;
+  costEur: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheTokens: number;
+}
+
 export interface Recommendation {
   id: string;
   title: string;
@@ -54,22 +64,34 @@ export interface Recommendation {
   kind: "economie" | "bonne-pratique" | "encouragement";
 }
 
+/**
+ * Provenance des chiffres d'un mois :
+ * - "console"       : CSV Usage/Cost d'Anthropic → coût EXACT + détail par modèle.
+ * - "conversations" : export chat → coût ESTIMÉ + thématiques (pas de modèle).
+ */
+export type ReportSource = "console" | "conversations";
+
 /** Agrégat mensuel — la seule donnée persistée (aucun contenu de conversation). */
 export interface MonthlyReport {
   month: string; // "2026-07"
-  costEur: number;
+  source: ReportSource;
+  costEur: number; // exact si console, estimé si conversations
   inputTokens: number;
   outputTokens: number;
-  conversations: number;
+  cacheTokens: number;
+  conversations: number; // 0 si source console
   messages: number;
   avgTurnsPerConversation: number;
-  themes: ThemeBreakdown[];
+  themes: ThemeBreakdown[]; // vide si source console
   providers: ProviderBreakdown[];
+  models: ModelBreakdown[]; // vide si source conversations
   recommendations: Recommendation[];
 }
 
 export interface Settings {
   monthlyBudgetEur: number;
+  /** Coût réel du forfait chat (Claude Max/Pro), € par mois. 0 = pas de forfait. */
+  subscriptionEur: number;
   /** Renommages utilisateur : themeId -> libellé personnalisé */
   themeNames: Record<string, string>;
   demoMode: boolean;

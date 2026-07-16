@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { unzipSync, strFromU8 } from "fflate";
 import { parseExport, ParseError } from "@/lib/parsers";
-import type { ParsedConversation } from "@/lib/types";
+import { parseConsoleCsv } from "@/lib/consoleImport";
+import type { MonthlyReport, ParsedConversation } from "@/lib/types";
 import { analyzeConversation, buildMonthlyReports, mergeReports } from "@/lib/aggregate";
 import { buildDemoReports } from "@/lib/demo";
 import { loadState, newState, saveState } from "@/lib/store";
@@ -28,27 +29,32 @@ export default function Home() {
       setError(null);
       try {
         const allConvos: ParsedConversation[] = [];
+        const consoleReports: MonthlyReport[] = [];
         for (const file of Array.from(files)) {
-          if (file.name.toLowerCase().endsWith(".zip")) {
+          const name = file.name.toLowerCase();
+          if (name.endsWith(".csv")) {
+            // CSV Usage/Cost du console Anthropic → coût exact + par modèle
+            consoleReports.push(...parseConsoleCsv(await file.text()));
+          } else if (name.endsWith(".zip")) {
             // Zip d'export complet : on extrait les conversations.json localement
             const entries = unzipSync(new Uint8Array(await file.arrayBuffer()));
             const jsonNames = Object.keys(entries).filter((n) =>
               n.toLowerCase().endsWith("conversations.json"),
             );
-            if (jsonNames.length === 0) {
+            const csvNames = Object.keys(entries).filter((n) => n.toLowerCase().endsWith(".csv"));
+            for (const n of csvNames) consoleReports.push(...parseConsoleCsv(strFromU8(entries[n])));
+            if (jsonNames.length === 0 && csvNames.length === 0) {
               throw new ParseError(
-                "Ce zip ne contient pas de conversations.json. Vérifiez qu'il s'agit bien du zip d'export ChatGPT ou Claude reçu par e-mail.",
+                "Ce zip ne contient ni conversations.json ni CSV. Vérifiez qu'il s'agit bien d'un export ChatGPT/Claude ou d'un CSV Usage/Cost du console Anthropic.",
               );
             }
-            for (const name of jsonNames) {
-              allConvos.push(...parseExport(strFromU8(entries[name])));
-            }
+            for (const n of jsonNames) allConvos.push(...parseExport(strFromU8(entries[n])));
           } else {
             allConvos.push(...parseExport(await file.text()));
           }
         }
         const analyzed = allConvos.map(analyzeConversation);
-        const allReports = buildMonthlyReports(analyzed);
+        const allReports = mergeReports(buildMonthlyReports(analyzed), consoleReports);
         const existing = loadState();
         const merged = mergeReports(
           existing && !existing.settings.demoMode ? existing.reports : [],
@@ -73,7 +79,10 @@ export default function Home() {
   );
 
   const startDemo = useCallback(() => {
-    saveState(newState(buildDemoReports(), true));
+    const state = newState(buildDemoReports(), true);
+    state.settings.subscriptionEur = 90; // forfait Max, pour illustrer la rentabilité
+    state.settings.monthlyBudgetEur = 150;
+    saveState(state);
     router.push("/dashboard");
   }, [router]);
 
@@ -95,12 +104,13 @@ export default function Home() {
       </header>
 
       <h1 className="mb-4 text-4xl font-bold leading-tight">
-        Combien vous « coûte » vraiment votre usage de l&apos;IA&nbsp;?
+        Combien vous coûte vraiment votre usage de l&apos;IA&nbsp;?
       </h1>
       <p className="mb-2 text-lg" style={{ color: "var(--text-secondary)" }}>
-        Chaque mois, importez votre export ChatGPT ou Claude et recevez votre relevé&nbsp;: coût
-        équivalent en euros, répartition par thématique, et les conseils d&apos;un coach pour
-        consommer plus malin.
+        Chaque mois, importez votre <strong>CSV Usage/Cost</strong> du console Anthropic et recevez
+        votre relevé&nbsp;: coût réel <strong>par modèle</strong> (Opus, Sonnet, Haiku, Fable…),
+        rentabilité de votre forfait, et les conseils d&apos;un coach pour payer moins. Ajoutez
+        l&apos;export de vos conversations pour la répartition par thématique.
       </p>
       <p className="mb-10 flex items-center gap-2 text-sm font-medium" style={{ color: "var(--delta-good)" }}>
         <span aria-hidden>🔒</span> Analyse 100&nbsp;% locale — vos conversations ne quittent jamais
@@ -128,7 +138,7 @@ export default function Home() {
         >
           <input
             type="file"
-            accept=".json,.zip,application/json,application/zip"
+            accept=".json,.zip,.csv,application/json,application/zip,text/csv"
             multiple
             className="hidden"
             onChange={(e) => handleFiles(e.target.files)}
@@ -136,11 +146,11 @@ export default function Home() {
           <span className="text-3xl" aria-hidden>
             📄
           </span>
-          <span className="font-semibold">{busy ? "Analyse en cours…" : "Importer mon export"}</span>
+          <span className="font-semibold">{busy ? "Analyse en cours…" : "Importer mes données"}</span>
           <span className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Glissez le <strong>zip reçu par e-mail</strong> tel quel
+            <strong>CSV Usage/Cost</strong> du console (coût exact par modèle)
             <br />
-            (ChatGPT ou Claude — 30 secondes, une fois par mois)
+            et/ou <strong>zip d&apos;export</strong> chat (thématiques)
           </span>
         </label>
 
@@ -174,19 +184,29 @@ export default function Home() {
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
           Comment récupérer votre export ?
         </h2>
-        <ol className="space-y-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+        <ul className="space-y-3 text-sm" style={{ color: "var(--text-secondary)" }}>
           <li>
-            <strong>ChatGPT</strong> — Paramètres → Gestion des données → Exporter les données. Vous
-            recevez un e-mail avec un zip : glissez-le ici tel quel, sans l&apos;ouvrir.
+            <strong style={{ color: "var(--text-primary)" }}>
+              💰 Coût réel + détail par modèle (recommandé)
+            </strong>
+            <br />
+            <strong>console.anthropic.com → Usage</strong> (ou Cost) → bouton <em>Export</em>. Le CSV
+            contient votre dépense exacte par modèle (Opus, Sonnet, Haiku, Fable…) et par jour, API
+            et Claude Code compris. C&apos;est la source de vérité financière.
           </li>
           <li>
-            <strong>Claude</strong> — Paramètres → Confidentialité → Exporter mes données. Même
-            principe : glissez directement le zip reçu.
+            <strong style={{ color: "var(--text-primary)" }}>🏷️ Thématiques (optionnel)</strong>
+            <br />
+            <strong>claude.ai / ChatGPT</strong> → Paramètres → Exporter mes données. Glissez le zip
+            reçu par e-mail : il sert à détecter <em>sur quoi</em> vous parlez. Note : cet export ne
+            contient pas le coût réel ni le modèle — d&apos;où l&apos;import CSV ci-dessus pour les
+            chiffres.
           </li>
-          <li>
-            <strong>Gemini</strong> — bientôt disponible (Google Takeout).
-          </li>
-        </ol>
+        </ul>
+        <p className="mt-3 text-xs" style={{ color: "var(--text-muted)" }}>
+          Les deux se combinent : coût exact du CSV console + thématiques du chat. Importez l&apos;un,
+          l&apos;autre, ou les deux.
+        </p>
       </section>
 
       <footer className="mt-14 border-t pt-6 text-sm" style={{ borderColor: "var(--grid)", color: "var(--text-muted)" }}>

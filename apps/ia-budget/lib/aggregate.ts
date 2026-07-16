@@ -100,14 +100,17 @@ export function buildMonthlyReports(convos: AnalyzedConversation[]): MonthlyRepo
     const previous = reports[reports.length - 1] ?? null;
     const report: MonthlyReport = {
       month,
+      source: "conversations",
       costEur: cost,
       inputTokens: inTok,
       outputTokens: outTok,
+      cacheTokens: 0,
       conversations: list.length,
       messages,
       avgTurnsPerConversation: list.length ? messages / list.length / 2 : 0,
       themes: [...themes.values()].sort((a, b) => b.costEur - a.costEur),
       providers: [...providers.values()].sort((a, b) => b.costEur - a.costEur),
+      models: [],
       recommendations: [],
     };
     report.recommendations = buildRecommendations(list, report, previous);
@@ -117,9 +120,51 @@ export function buildMonthlyReports(convos: AnalyzedConversation[]): MonthlyRepo
   return reports;
 }
 
-/** Fusionne de nouveaux relevés avec l'existant (nouvel import = source de vérité du mois). */
+/**
+ * Fusionne de nouveaux relevés avec l'existant.
+ * Deux lentilles complémentaires par mois :
+ *  - console       → coût exact + détail par modèle (source de vérité $)
+ *  - conversations → thématiques (sur quoi je parle)
+ * Quand les deux existent pour un mois, on combine : le coût et les modèles
+ * viennent du console, les thématiques des conversations.
+ */
 export function mergeReports(existing: MonthlyReport[], incoming: MonthlyReport[]): MonthlyReport[] {
   const map = new Map(existing.map((r) => [r.month, r]));
-  for (const r of incoming) map.set(r.month, r);
+  for (const r of incoming) {
+    const prev = map.get(r.month);
+    map.set(r.month, prev ? combine(prev, r) : r);
+  }
   return [...map.values()].sort((a, b) => a.month.localeCompare(b.month));
+}
+
+function combine(a: MonthlyReport, b: MonthlyReport): MonthlyReport {
+  // Le plus récent des deux dans chaque rôle l'emporte pour son rôle.
+  const console = a.source === "console" ? a : b.source === "console" ? b : null;
+  const convo = a.source === "conversations" ? a : b.source === "conversations" ? b : null;
+  const money = console ?? b; // fallback : le nouvel import
+  const themesFrom = convo ?? (a.themes.length ? a : b);
+
+  return {
+    month: money.month,
+    source: console ? "console" : money.source,
+    costEur: money.costEur,
+    inputTokens: money.inputTokens,
+    outputTokens: money.outputTokens,
+    cacheTokens: money.cacheTokens,
+    conversations: themesFrom.conversations,
+    messages: themesFrom.messages,
+    avgTurnsPerConversation: themesFrom.avgTurnsPerConversation,
+    themes: themesFrom.themes,
+    providers: money.providers,
+    models: money.models,
+    // Recos : coût réel prioritaire, complété par les recos thématiques
+    recommendations: dedupeRecs([...money.recommendations, ...themesFrom.recommendations]),
+  };
+}
+
+function dedupeRecs<T extends { id: string; savingEur: number | null }>(recs: T[]): T[] {
+  const seen = new Set<string>();
+  return recs
+    .filter((r) => (seen.has(r.id) ? false : (seen.add(r.id), true)))
+    .sort((x, y) => (y.savingEur ?? 0) - (x.savingEur ?? 0));
 }

@@ -58,6 +58,16 @@ const PROVIDER_COLORS: Record<Provider, string> = {
   gemini: "var(--series-1)",
 };
 
+/** Couleur par famille de modèle (par entité, jamais par rang). */
+function modelColor(model: string): string {
+  const s = model.toLowerCase();
+  if (s.includes("opus")) return "var(--series-5)"; // violet — premium
+  if (s.includes("fable")) return "var(--series-6)"; // rouge — le plus cher
+  if (s.includes("sonnet")) return "var(--series-1)"; // bleu — équilibré
+  if (s.includes("haiku")) return "var(--series-2)"; // aqua — éco
+  return "var(--text-muted)";
+}
+
 /* ---------- page ---------- */
 
 export default function Dashboard() {
@@ -66,6 +76,7 @@ export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [editingTheme, setEditingTheme] = useState<string | null>(null);
   const [editingBudget, setEditingBudget] = useState(false);
+  const [editingSub, setEditingSub] = useState(false);
   const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
@@ -96,6 +107,11 @@ export default function Dashboard() {
   const delta = previous && previous.costEur > 0 ? (report.costEur - previous.costEur) / previous.costEur : null;
   const totalSavings = report.recommendations.reduce((s, r) => s + (r.savingEur ?? 0), 0);
   const maxThemeCost = Math.max(...report.themes.map((t) => t.costEur), 0.01);
+  const themeTotal = report.themes.reduce((s, t) => s + t.costEur, 0) || 1;
+  const maxModelCost = Math.max(...report.models.map((m) => m.costEur), 0.01);
+  const isExact = report.source === "console";
+  const sub = settings.subscriptionEur;
+  const roi = sub > 0 ? report.costEur / sub : null; // valeur API équivalente / prix du forfait
 
   const update = (mut: (s: AppState) => void) => {
     const next = structuredClone(state);
@@ -163,9 +179,28 @@ export default function Dashboard() {
 
       {/* Métrique héros + budget */}
       <section className="card mb-6 p-6">
-        <p className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
-          Votre mois d&apos;IA de {monthLabel(report.month)} vaut
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>
+            {isExact
+              ? `Votre dépense Claude de ${monthLabel(report.month)}`
+              : `Votre mois d'IA de ${monthLabel(report.month)} vaut`}
+          </p>
+          <span
+            className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+            style={{
+              background: "var(--surface-1)",
+              border: "1px solid var(--border)",
+              color: isExact ? "var(--delta-good)" : "var(--status-serious)",
+            }}
+            title={
+              isExact
+                ? "Coût facturé réel, issu du CSV Usage/Cost du console Anthropic."
+                : "Estimation depuis l'export de conversations (texte du chat uniquement) — importez le CSV du console pour le coût réel."
+            }
+          >
+            {isExact ? "✓ coût réel (console)" : "≈ estimation (chat)"}
+          </span>
+        </div>
         <div className="mt-1 flex flex-wrap items-baseline gap-4">
           <span className="text-5xl font-bold tracking-tight">{fmtEur(report.costEur)}</span>
           {delta !== null && (
@@ -178,9 +213,53 @@ export default function Dashboard() {
           )}
         </div>
         <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
-          C&apos;est ce que cet usage aurait coûté facturé au token via les API — {report.conversations}{" "}
-          conversations, {fmtTokens(report.inputTokens + report.outputTokens)} tokens.
+          {isExact ? (
+            <>
+              Dépense réelle facturée au token (API + Claude Code + crédits) —{" "}
+              {fmtTokens(report.inputTokens + report.outputTokens)} tokens sur {report.models.length}{" "}
+              modèle{report.models.length > 1 ? "s" : ""}.
+            </>
+          ) : (
+            <>
+              Estimation de ce que cet usage aurait coûté au token — {report.conversations}{" "}
+              conversations, {fmtTokens(report.inputTokens + report.outputTokens)} tokens. Pour le
+              coût réel par modèle, importez le CSV du console.
+            </>
+          )}
         </p>
+
+        {/* Rentabilité de l'abonnement */}
+        {sub > 0 && isExact && (
+          <p
+            className="mt-3 rounded-lg px-3 py-2 text-sm"
+            style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}
+          >
+            <span aria-hidden>💡 </span>
+            Votre forfait à{" "}
+            <button
+              className="font-semibold underline decoration-dotted"
+              onClick={() => setEditingSub(true)}
+            >
+              {editingSub ? "" : fmtEur(sub)}
+            </button>
+            {editingSub && (
+              <input
+                type="number"
+                min={0}
+                defaultValue={sub}
+                autoFocus
+                className="card w-20 px-2 py-0.5 tabular"
+                onBlur={(e) => {
+                  update((s) => void (s.settings.subscriptionEur = Math.max(0, Number(e.target.value) || 0)));
+                  setEditingSub(false);
+                }}
+                onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+              />
+            )}{" "}
+            vous a rapporté <strong>{fmtEur(report.costEur)}</strong> de valeur API —{" "}
+            <strong style={{ color: "var(--delta-good)" }}>rentabilisé ×{roi!.toFixed(1)}</strong>.
+          </p>
+        )}
 
         {/* Jauge de budget */}
         <div className="mt-6">
@@ -241,17 +320,76 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* Par modèle — le détail Opus / Fable / Sonnet / Haiku (source console) */}
+      {report.models.length > 0 && (
+        <section className="card mb-6 p-6">
+          <div className="mb-1 flex items-center justify-between">
+            <h2 className="font-semibold">Par modèle</h2>
+            <span className="text-xs" style={{ color: "var(--delta-good)" }}>
+              coût réel facturé
+            </span>
+          </div>
+          <p className="mb-4 text-xs" style={{ color: "var(--text-muted)" }}>
+            Ce que chaque modèle vous a réellement coûté ce mois-ci.
+          </p>
+          <ul className="space-y-3">
+            {report.models.map((m) => {
+              const pct = report.costEur > 0 ? (m.costEur / report.costEur) * 100 : 0;
+              return (
+                <li key={m.model}>
+                  <div className="mb-1 flex items-center justify-between gap-2 text-sm">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                        style={{ background: modelColor(m.model) }}
+                        aria-hidden
+                      />
+                      <span className="truncate font-medium">{m.label}</span>
+                    </span>
+                    <span className="tabular shrink-0 font-semibold">{fmtEur(m.costEur)}</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--grid)" }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${(m.costEur / maxModelCost) * 100}%`, background: modelColor(m.model) }}
+                    />
+                  </div>
+                  <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>
+                    {Math.round(pct)} % de la dépense · {fmtTokens(m.inputTokens)} in ·{" "}
+                    {fmtTokens(m.outputTokens)} out
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       <div className="mb-6 grid gap-6 md:grid-cols-2">
         {/* Par thématique */}
         <section className="card p-6">
-          <h2 className="mb-1 font-semibold">Par thématique</h2>
+          <h2 className="mb-1 font-semibold">
+            Par thématique
+            {report.themes.length === 0 && (
+              <span className="ml-2 text-xs font-normal" style={{ color: "var(--text-muted)" }}>
+                — importez un export chat
+              </span>
+            )}
+          </h2>
           <p className="mb-4 text-xs" style={{ color: "var(--text-muted)" }}>
             Détection automatique — cliquez sur un nom pour le renommer.
           </p>
+          {report.themes.length === 0 && (
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+              Les thématiques viennent de l&apos;export de conversations (claude.ai → Exporter mes
+              données). Le CSV du console ne contient pas le contenu des chats — glissez aussi votre
+              zip d&apos;export pour voir sur quels sujets part votre budget.
+            </p>
+          )}
           <ul className="space-y-3">
             {report.themes.map((t) => {
               const name = themeName(t.themeId, settings.themeNames);
-              const pct = report.costEur > 0 ? (t.costEur / report.costEur) * 100 : 0;
+              const pct = (t.costEur / themeTotal) * 100;
               return (
                 <li key={t.themeId}>
                   <div className="mb-1 flex items-center justify-between gap-2 text-sm">
@@ -295,7 +433,7 @@ export default function Dashboard() {
                     />
                   </div>
                   <p className="mt-0.5 text-xs" style={{ color: "var(--text-muted)" }}>
-                    {t.conversations} conv. · {Math.round(pct)} % du mois
+                    {t.conversations} conv. · {Math.round(pct)} % de vos échanges
                   </p>
                 </li>
               );
@@ -413,7 +551,10 @@ export default function Dashboard() {
       <footer className="flex flex-wrap items-center justify-between gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
         <span>
           🔒 Analyse 100 % locale — seuls les totaux mensuels sont conservés dans ce navigateur,
-          jamais vos conversations. Coûts estimés (±15 %) sur la base des tarifs API publics.
+          jamais vos conversations.{" "}
+          {isExact
+            ? "Coût réel issu du CSV Usage/Cost du console Anthropic, converti en euros."
+            : "Coûts estimés (±15 %) sur la base des tarifs API publics."}
         </span>
         <button
           className="underline"

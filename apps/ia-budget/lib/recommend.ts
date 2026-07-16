@@ -1,6 +1,108 @@
 import type { AnalyzedConversation, MonthlyReport, Recommendation } from "./types";
 import { isPremiumModel } from "./pricing";
 
+/* ---------- Recommandations basées sur le CSV console (coût exact par modèle) ---------- */
+
+const money = (n: number) =>
+  n.toLocaleString("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 2 });
+
+function tier(model: string): "opus" | "fable" | "sonnet" | "haiku" | "autre" {
+  const s = model.toLowerCase();
+  if (s.includes("opus")) return "opus";
+  if (s.includes("fable")) return "fable";
+  if (s.includes("sonnet")) return "sonnet";
+  if (s.includes("haiku")) return "haiku";
+  return "autre";
+}
+
+export function buildConsoleRecommendations(
+  report: MonthlyReport,
+  previous: MonthlyReport | null,
+): Recommendation[] {
+  const recs: Recommendation[] = [];
+  const total = report.costEur;
+  if (report.models.length === 0 || total <= 0) return recs;
+
+  const share = (pred: (t: string) => boolean) =>
+    report.models.filter((m) => pred(tier(m.model))).reduce((s, m) => s + m.costEur, 0);
+
+  // 1. Part des modèles haut de gamme (Opus / Fable)
+  const premiumCost = share((t) => t === "opus" || t === "fable");
+  const premiumPct = premiumCost / total;
+  if (premiumPct > 0.55 && premiumCost > 3) {
+    // Bascule d'une partie vers Sonnet : ~-70 % sur la portion déplaçable
+    const movable = premiumCost * 0.4;
+    const saving = movable * 0.7;
+    recs.push({
+      id: "console-premium-share",
+      title: `${Math.round(premiumPct * 100)} % de votre budget part sur Opus/Fable`,
+      message: `Opus et Fable sont vos plus gros postes (${money(premiumCost)}). Une bonne part des tâches courantes (rédaction, questions, code simple) tourne aussi bien sur Sonnet pour ~70 % moins cher. En déplaçant environ 40 % de cet usage, vous garderiez la qualité là où elle compte et récupéreriez ~${money(saving)}/mois.`,
+      savingEur: saving,
+      kind: "economie",
+    });
+  }
+
+  // 2. Cache sous-utilisé (gros volume d'input, peu de cache)
+  const cacheRatio = report.inputTokens > 0 ? report.cacheTokens / report.inputTokens : 0;
+  if (report.inputTokens > 2_000_000 && cacheRatio < 0.1) {
+    const saving = report.costEur * 0.15;
+    recs.push({
+      id: "console-cache",
+      title: "Le cache de prompt est peu utilisé",
+      message: `Vous envoyez beaucoup de tokens d'entrée (${(report.inputTokens / 1_000_000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} M) mais très peu passent par le cache. Si vous réutilisez le même contexte (system prompt, gros document, base de code), le prompt caching le facture à ~10 % du prix. Potentiel : ~${money(saving)}/mois sur les charges répétitives.`,
+      savingEur: saving,
+      kind: "economie",
+    });
+  }
+
+  // 3. Haiku quasi absent alors que le volume est élevé
+  const haikuPct = share((t) => t === "haiku") / total;
+  if (haikuPct < 0.05 && total > 20) {
+    recs.push({
+      id: "console-haiku",
+      title: "Presque aucun usage de Haiku",
+      message: `Pour la classification, l'extraction, les résumés courts et les tâches à fort volume, Haiku coûte une fraction du prix des grands modèles pour une qualité équivalente. Router ces tâches vers Haiku est souvent le levier d'économie le plus rentable sur un usage API intensif.`,
+      savingEur: null,
+      kind: "bonne-pratique",
+    });
+  }
+
+  // 4. Tendance
+  if (previous && previous.costEur > 0) {
+    const delta = (total - previous.costEur) / previous.costEur;
+    if (delta > 0.3) {
+      const top = report.models[0];
+      recs.push({
+        id: "console-trend-up",
+        title: `Dépense en hausse de ${Math.round(delta * 100)} %`,
+        message: `Votre poste principal ce mois-ci est ${top.label} (${money(top.costEur)}). Vérifiez que cette hausse correspond à un usage à forte valeur — sinon, c'est le premier endroit où optimiser.`,
+        savingEur: null,
+        kind: "bonne-pratique",
+      });
+    } else if (delta < -0.15) {
+      recs.push({
+        id: "console-trend-down",
+        title: `Bravo : ${Math.round(-delta * 100)} % de dépense en moins`,
+        message: `Votre coût réel est passé de ${money(previous.costEur)} à ${money(total)}. Vos choix de modèles s'optimisent — continuez.`,
+        savingEur: null,
+        kind: "encouragement",
+      });
+    }
+  }
+
+  if (recs.filter((r) => r.kind !== "encouragement").length === 0) {
+    recs.push({
+      id: "console-all-good",
+      title: "Mix de modèles déjà bien équilibré",
+      message: `Votre répartition entre modèles est cohérente : pas de sur-utilisation évidente d'un modèle premium sur des tâches simples. Rien à redire ce mois-ci.`,
+      savingEur: null,
+      kind: "encouragement",
+    });
+  }
+
+  return recs.sort((a, b) => (b.savingEur ?? 0) - (a.savingEur ?? 0));
+}
+
 /**
  * Moteur de recommandations — ton "coach bienveillant" :
  * concret, chiffré quand c'est possible, jamais culpabilisant.

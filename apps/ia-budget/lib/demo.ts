@@ -1,6 +1,7 @@
-import type { AnalyzedConversation, MonthlyReport, Provider } from "./types";
-import { buildMonthlyReports, monthKey } from "./aggregate";
+import type { AnalyzedConversation, ModelBreakdown, MonthlyReport, Provider } from "./types";
+import { buildMonthlyReports, mergeReports, monthKey } from "./aggregate";
 import { costEur } from "./pricing";
+import { buildConsoleRecommendations } from "./recommend";
 
 /**
  * Jeu de données de démonstration : 6 mois d'usage réaliste d'un
@@ -145,5 +146,72 @@ export function buildDemoReports(now = new Date()): MonthlyReport[] {
     }
   }
 
-  return buildMonthlyReports(convos);
+  // Lentille "thématiques" (issue des conversations)
+  const themeReports = buildMonthlyReports(convos);
+  // Lentille "coût réel par modèle" (façon CSV console) sur les mêmes mois
+  const costReports = buildDemoConsoleReports(themeReports);
+  // Fusion : coût exact + modèles (console) + thématiques (conversations)
+  return mergeReports(themeReports, costReports);
+}
+
+/**
+ * Synthétise une ventilation par modèle réaliste (Opus, Fable, Sonnet, Haiku)
+ * pour chaque mois, façon export Cost du console Anthropic — pour montrer la
+ * fonctionnalité "coût par modèle" dans la démo.
+ */
+function buildDemoConsoleReports(themeReports: MonthlyReport[]): MonthlyReport[] {
+  const rand = mulberry32(424242);
+  const MODELS: { model: string; label: string; inPrice: number; outPrice: number }[] = [
+    { model: "claude-opus-4-8", label: "Claude Opus 4.8", inPrice: 5, outPrice: 25 },
+    { model: "claude-fable-5", label: "Claude Fable 5", inPrice: 10, outPrice: 50 },
+    { model: "claude-sonnet-5", label: "Claude Sonnet 5", inPrice: 3, outPrice: 15 },
+    { model: "claude-haiku-4-5", label: "Claude Haiku 4.5", inPrice: 1, outPrice: 5 },
+  ];
+  // Répartition de la dépense entre modèles (profil "power user" : Opus dominant)
+  const MIX = [0.5, 0.18, 0.24, 0.08];
+
+  const out: MonthlyReport[] = [];
+  themeReports.forEach((tr, i) => {
+    // Coût réel bien supérieur à l'estimation conversations (usage API + Claude Code)
+    const monthTotal = 60 + i * 22 + rand() * 40; // ~60 € → ~200 €
+    const models: ModelBreakdown[] = MODELS.map((m, k) => {
+      const cost = monthTotal * MIX[k] * (0.8 + rand() * 0.4);
+      const usd = cost / 0.92;
+      // reconstitution approximative des tokens à partir du coût
+      const inputTokens = Math.round(((usd * 0.4) / m.inPrice) * 1_000_000);
+      const outputTokens = Math.round(((usd * 0.6) / m.outPrice) * 1_000_000);
+      return {
+        model: m.model,
+        label: m.label,
+        costEur: cost,
+        inputTokens,
+        outputTokens,
+        cacheTokens: Math.round(inputTokens * rand() * 0.05),
+      };
+    }).sort((a, b) => b.costEur - a.costEur);
+
+    const cost = models.reduce((s, m) => s + m.costEur, 0);
+    const inTok = models.reduce((s, m) => s + m.inputTokens, 0);
+    const outTok = models.reduce((s, m) => s + m.outputTokens, 0);
+    const cacheTok = models.reduce((s, m) => s + m.cacheTokens, 0);
+
+    const report: MonthlyReport = {
+      month: tr.month,
+      source: "console",
+      costEur: cost,
+      inputTokens: inTok,
+      outputTokens: outTok,
+      cacheTokens: cacheTok,
+      conversations: 0,
+      messages: 0,
+      avgTurnsPerConversation: 0,
+      themes: [],
+      providers: [{ provider: "claude", costEur: cost, conversations: 0, tokens: inTok + outTok }],
+      models,
+      recommendations: [],
+    };
+    report.recommendations = buildConsoleRecommendations(report, out[out.length - 1] ?? null);
+    out.push(report);
+  });
+  return out;
 }

@@ -10,6 +10,7 @@ const KEY = "ia-budget:v1";
 
 const DEFAULT_SETTINGS: Settings = {
   monthlyBudgetEur: 30,
+  subscriptionEur: 0,
   themeNames: {},
   demoMode: false,
 };

@@ -73,6 +73,29 @@ Cliquez sur « Découvrir avec des données démo » pour explorer sans export.
 5. **Tendance** — hausse >30 % signalée avec bienveillance, baisse >15 % félicitée.
 6. Toujours au moins un message d'encouragement.
 
+## Deux sources de données (important)
+
+L'app combine deux lentilles complémentaires par mois :
+
+| Source | Ce qu'elle apporte | Précision |
+|---|---|---|
+| **CSV Usage/Cost du console** (`console.anthropic.com` → Usage/Cost → Export) | Coût **réel facturé**, ventilé **par modèle** (Opus, Sonnet, Haiku, Fable…) et par jour. Couvre API + Claude Code + crédits. | **Exact** (source de vérité $) |
+| **Export de conversations** (claude.ai / ChatGPT) | **Thématiques** : sur quoi vous parlez. | Estimation (texte du chat, sans les tokens de thinking/outils/fichiers) |
+
+> ⚠️ **Pourquoi le CSV console est indispensable pour le coût :** l'export de
+> conversations de claude.ai ne contient que le texte visible des chats web. Il
+> ignore les tokens de réflexion, les lectures de fichiers/outils, et surtout
+> **tout l'usage API et Claude Code** — donc il sous-estime massivement (×100
+> observé). Il n'indique pas non plus le modèle. Le CSV console règle les deux :
+> coût exact **et** détail par modèle.
+
+Import : `lib/csv.ts` (parseur) + `lib/consoleImport.ts` (auto-détection des
+colonnes date/modèle/coût/tokens, tolérant aux variations de format ; coût pris
+tel quel s'il est présent, sinon reconstruit depuis les tokens via `pricing.ts`).
+La fusion (`mergeReports` dans `aggregate.ts`) combine, pour un même mois, le
+coût+modèles du console et les thématiques des conversations. Le forfait Max/Pro
+se saisit dans les réglages et affiche la rentabilité (« ×2,3 »).
+
 ## Acquisition & rétention (implémenté)
 
 - **Import du zip complet** : l'utilisateur glisse le zip reçu par e-mail tel
