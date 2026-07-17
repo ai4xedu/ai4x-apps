@@ -37,6 +37,7 @@ export function newState(reports: MonthlyReport[], demoMode: boolean): AppState 
   return {
     version: 1,
     reports,
+    audit: null,
     settings: { ...DEFAULT_SETTINGS, demoMode },
   };
 }

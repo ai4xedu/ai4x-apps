@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Relevé IA — le compte rendu mensuel de votre consommation d'IA",
+  title: "Audit IA — comment utilisez-vous vraiment l'IA ?",
   description:
-    "Importez vos exports ChatGPT et Claude, découvrez ce que vaut votre usage de l'IA en euros, par thématique, et recevez des conseils pour l'optimiser. Analyse 100 % locale : vos conversations ne quittent jamais votre navigateur.",
+    "Importez l'export de vos conversations Claude ou ChatGPT et recevez votre audit d'usage : niveau de maturité, à quoi vous servez de l'IA, tâches récurrentes à industrialiser et playbook d'optimisation. Analyse 100 % locale : vos conversations ne quittent jamais votre navigateur.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -97,8 +97,11 @@ export interface Settings {
   demoMode: boolean;
 }
 
+import type { AuditReport } from "./audit";
+
 export interface AppState {
   version: 1;
   reports: MonthlyReport[]; // triés par mois croissant
+  audit: AuditReport | null; // rapport d'audit d'usage (lead magnet), depuis l'export chat
   settings: Settings;
 }

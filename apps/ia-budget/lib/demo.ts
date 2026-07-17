@@ -1,7 +1,113 @@
-import type { AnalyzedConversation, ModelBreakdown, MonthlyReport, Provider } from "./types";
+import type {
+  AnalyzedConversation,
+  ModelBreakdown,
+  MonthlyReport,
+  ParsedConversation,
+  Provider,
+} from "./types";
 import { buildMonthlyReports, mergeReports, monthKey } from "./aggregate";
 import { costEur } from "./pricing";
 import { buildConsoleRecommendations } from "./recommend";
+
+/**
+ * Conversations de démo (contenu synthétique réaliste) pour alimenter
+ * l'audit d'usage en mode démo. Profil : fondateur d'un organisme de
+ * formation IA qui fait beaucoup de marketing/contenu.
+ */
+export function buildDemoConversations(now = new Date()): ParsedConversation[] {
+  const rand = mulberry32(917531);
+  const TEMPLATES: { theme: string; model: string; titles: [string, string][] }[] = [
+    {
+      theme: "redaction",
+      model: "claude-sonnet-5",
+      titles: [
+        ["Post LinkedIn pour le bootcamp", "Prépare un post LinkedIn qui dirige vers https://demo.academy/bootcamp"],
+        ["Post LinkedIn replay webinaire", "Donne moi un post LinkedIn pour renvoyer au replay"],
+        ["Caption Instagram pour la formation", "Fais moi une caption IG pour ce post https://demo.academy"],
+        ["Reformuler ce message client", "Reformule mieux ce message pour un client"],
+        ["Email de relance Brevo", "Prépare un email de relance douce pour ma base Brevo"],
+      ],
+    },
+    {
+      theme: "business",
+      model: "claude-opus-4-8",
+      titles: [
+        ["Stratégie social media formation", "Propose des rubriques éditoriales pour https://demo.academy"],
+        ["Pitch pour attirer des clients", "Prépare un pitch LinkedIn vers https://demo.academy/bootcamp"],
+        ["Onboarding commercial", "Prépare une fiche pour mon commercial sur l'offre bootcamp"],
+        ["Scripts commerciaux formation", "Travaille les scripts commerciaux du summer camp"],
+      ],
+    },
+    {
+      theme: "code",
+      model: "claude-opus-4-8",
+      titles: [
+        ["App extraction highlights vidéo", "Je veux coder une app qui extrait les highlights d'une vidéo via l'IA"],
+        ["Skill facturation marocaine", "Aide moi à éditer le skill facturation avec skill-creator"],
+        ["Automatisation make.com leads", "Crée une automatisation make.com pour mes leads LinkedIn en JSON"],
+        ["Claude Code setup github", "Comment connecter Claude Code à un nouveau compte github ?"],
+      ],
+    },
+    {
+      theme: "data",
+      model: "claude-sonnet-5",
+      titles: [
+        ["Analyse campagne LinkedIn Ads", "Interprète ma campagne LinkedIn Ads lancée aujourd'hui"],
+        ["Rapport leads du jour", "Fais un résumé du nombre de leads générés aujourd'hui"],
+      ],
+    },
+    {
+      theme: "etudes",
+      model: "claude-sonnet-5",
+      titles: [
+        ["Expliquer le context window", "Explique moi le context window de façon pédagogique"],
+        ["Plan de formation Claude", "Élabore un plan de formation Claude de A à Z pour pros"],
+      ],
+    },
+    {
+      theme: "pratique",
+      model: "claude-haiku-4-5",
+      titles: [
+        ["Codes promo make.com", "Where can I get make.com promo codes?"],
+        ["Config MX records", "Comment configurer les MX records pour mon domaine ?"],
+        ["Paiement Meta ads", "Comment payer mes FB ads avec mes fonds ?"],
+        ["Installer Claude Code", "Dis moi comment installer Claude Code"],
+      ],
+    },
+  ];
+
+  const convos: ParsedConversation[] = [];
+  let id = 0;
+  for (let monthsAgo = 5; monthsAgo >= 0; monthsAgo--) {
+    const base = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
+    const daysInMonth = new Date(base.getFullYear(), base.getMonth() + 1, 0).getDate();
+    // Adoption : quasi rien les 4 premiers mois, explosion sur les 2 derniers
+    const count = monthsAgo >= 2 ? 2 + Math.floor(rand() * 3) : 40 + Math.floor(rand() * 15);
+    for (let i = 0; i < count; i++) {
+      const tpl = TEMPLATES[Math.floor(rand() * TEMPLATES.length)];
+      const [title, firstUser] = tpl.titles[Math.floor(rand() * tpl.titles.length)];
+      const marathon = rand() < 0.06;
+      const oneShot = tpl.theme === "pratique" && rand() < 0.7;
+      const turns = marathon ? 16 + Math.floor(rand() * 8) : oneShot ? 1 : 2 + Math.floor(rand() * 5);
+      const day = 1 + Math.floor(rand() * daysInMonth);
+      const ts = new Date(base.getFullYear(), base.getMonth(), day, 8 + Math.floor(rand() * 13)).getTime();
+      const messages = [];
+      for (let t = 0; t < turns; t++) {
+        messages.push({ role: "user" as const, text: t === 0 ? firstUser : "suite " + t, timestamp: ts + t * 60000 });
+        messages.push({ role: "assistant" as const, text: "Réponse détaillée…", timestamp: ts + t * 60000 + 30000 });
+      }
+      convos.push({
+        id: `democonv-${id++}`,
+        provider: "claude",
+        title,
+        model: tpl.model,
+        messages,
+        createdAt: ts,
+      });
+    }
+  }
+  return convos;
+}
 
 /**
  * Jeu de données de démonstration : 6 mois d'usage réaliste d'un

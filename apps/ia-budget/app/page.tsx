@@ -8,7 +8,8 @@ import { parseExport, ParseError } from "@/lib/parsers";
 import { parseConsoleCsv } from "@/lib/consoleImport";
 import type { MonthlyReport, ParsedConversation } from "@/lib/types";
 import { analyzeConversation, buildMonthlyReports, mergeReports } from "@/lib/aggregate";
-import { buildDemoReports } from "@/lib/demo";
+import { buildAudit } from "@/lib/audit";
+import { buildDemoReports, buildDemoConversations } from "@/lib/demo";
 import { loadState, newState, saveState } from "@/lib/store";
 
 export default function Home() {
@@ -19,7 +20,8 @@ export default function Home() {
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
-    setHasData((loadState()?.reports.length ?? 0) > 0);
+    const s = loadState();
+    setHasData(!!s && ((s.reports.length ?? 0) > 0 || !!s.audit));
   }, []);
 
   const handleFiles = useCallback(
@@ -63,8 +65,15 @@ export default function Home() {
         const state = existing && !existing.settings.demoMode ? existing : newState([], false);
         state.reports = merged;
         state.settings.demoMode = false;
-        saveState(state);
-        router.push("/dashboard");
+        // Un export chat → on génère l'audit d'usage (valeur phare) et on y redirige.
+        if (allConvos.length > 0) {
+          state.audit = buildAudit(allConvos);
+          saveState(state);
+          router.push("/audit");
+        } else {
+          saveState(state);
+          router.push("/dashboard");
+        }
       } catch (e) {
         setError(
           e instanceof ParseError
@@ -82,35 +91,37 @@ export default function Home() {
     const state = newState(buildDemoReports(), true);
     state.settings.subscriptionEur = 90; // forfait Max, pour illustrer la rentabilité
     state.settings.monthlyBudgetEur = 150;
+    state.audit = buildAudit(buildDemoConversations());
     saveState(state);
-    router.push("/dashboard");
+    router.push("/audit");
   }, [router]);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
       <header className="mb-12 flex items-center justify-between">
         <div className="text-lg font-semibold">
-          Relevé <span style={{ color: "var(--series-1)" }}>IA</span>
+          Audit <span style={{ color: "var(--series-1)" }}>IA</span>
         </div>
         {hasData && (
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/audit")}
             className="rounded-lg px-4 py-2 text-sm font-medium"
             style={{ background: "var(--series-1)", color: "#fff" }}
           >
-            Voir mon dernier relevé →
+            Voir mon audit →
           </button>
         )}
       </header>
 
       <h1 className="mb-4 text-4xl font-bold leading-tight">
-        Combien vous coûte vraiment votre usage de l&apos;IA&nbsp;?
+        Comment utilisez-vous <em>vraiment</em> l&apos;IA&nbsp;?
       </h1>
       <p className="mb-2 text-lg" style={{ color: "var(--text-secondary)" }}>
-        Chaque mois, importez votre <strong>CSV Usage/Cost</strong> du console Anthropic et recevez
-        votre relevé&nbsp;: coût réel <strong>par modèle</strong> (Opus, Sonnet, Haiku, Fable…),
-        rentabilité de votre forfait, et les conseils d&apos;un coach pour payer moins. Ajoutez
-        l&apos;export de vos conversations pour la répartition par thématique.
+        Importez l&apos;export de vos conversations Claude ou ChatGPT et recevez votre{" "}
+        <strong>audit d&apos;usage</strong>&nbsp;: votre niveau de maturité, à quoi vous servez de
+        l&apos;IA, vos tâches récurrentes à industrialiser, et un playbook concret pour passer au
+        niveau supérieur. Ce qu&apos;un seul chat ne peut pas voir&nbsp;: la vue d&apos;ensemble sur
+        tout votre historique.
       </p>
       <p className="mb-10 flex items-center gap-2 text-sm font-medium" style={{ color: "var(--delta-good)" }}>
         <span aria-hidden>🔒</span> Analyse 100&nbsp;% locale — vos conversations ne quittent jamais
