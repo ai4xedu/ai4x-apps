@@ -1,0 +1,8 @@
+# Déploiement du lead magnet "Audit IA" (monorepo → sous-dossier apps/ia-budget)
+[build]
+  base = "apps/ia-budget"
+  command = "npm run build"
+  publish = ".next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

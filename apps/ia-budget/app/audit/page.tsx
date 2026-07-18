@@ -29,9 +29,15 @@ const monthFull = (m: string) => {
   return `${full[mm - 1]} ${y}`;
 };
 
+const UNLOCK_KEY = "ia-audit:unlocked";
+
 export default function AuditPage() {
   const router = useRouter();
   const [state, setState] = useState<AppState | null>(null);
+  const [unlocked, setUnlocked] = useState(false);
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [gateError, setGateError] = useState<string | null>(null);
 
   useEffect(() => {
     const s = loadState();
@@ -40,7 +46,33 @@ export default function AuditPage() {
       return;
     }
     setState(s);
+    try {
+      setUnlocked(window.localStorage.getItem(UNLOCK_KEY) === "1");
+    } catch {}
   }, [router]);
+
+  async function submitEmail(e: React.FormEvent) {
+    e.preventDefault();
+    setGateError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email, score: a?.maturity.score, level: a?.maturity.level }),
+      });
+      const data = await res.json().catch(() => ({ ok: false }));
+      if (!res.ok || !data.ok) throw new Error(data.error || "Échec de l'envoi.");
+      try {
+        window.localStorage.setItem(UNLOCK_KEY, "1");
+      } catch {}
+      setUnlocked(true);
+    } catch (err) {
+      setGateError(err instanceof Error ? err.message : "Une erreur est survenue.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   if (!state || !state.audit) return null;
   const a = state.audit;
@@ -172,6 +204,46 @@ export default function AuditPage() {
         </ul>
       </section>
 
+      {/* PORTE EMAIL : le playbook et les tâches récurrentes sont le "reveal" */}
+      {!unlocked && (
+        <section className="card mb-6 p-6 text-center" style={{ borderColor: "var(--series-1)", borderWidth: 2 }}>
+          <p className="text-3xl" aria-hidden>🔓</p>
+          <h2 className="mt-2 text-xl font-semibold">Débloquez votre playbook complet</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm" style={{ color: "var(--text-secondary)" }}>
+            Vous avez votre score. Recevez maintenant vos <strong>tâches récurrentes à
+            industrialiser</strong> et votre <strong>plan d&apos;action priorisé</strong> pour passer
+            au niveau <strong>{a.maturity.nextLevel}</strong>.
+          </p>
+          <form onSubmit={submitEmail} className="mx-auto mt-4 flex max-w-md flex-col gap-2 sm:flex-row">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="votre@email.com"
+              className="card flex-1 px-3 py-2.5 text-sm"
+              style={{ borderColor: "var(--baseline)" }}
+            />
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-lg px-5 py-2.5 text-sm font-medium"
+              style={{ background: "var(--series-1)", color: "#fff", opacity: submitting ? 0.6 : 1 }}
+            >
+              {submitting ? "…" : "Voir mon playbook →"}
+            </button>
+          </form>
+          {gateError && (
+            <p className="mt-2 text-sm" style={{ color: "var(--status-critical)" }}>{gateError}</p>
+          )}
+          <p className="mt-3 text-xs" style={{ color: "var(--text-muted)" }}>
+            🔒 Seul votre email est envoyé — vos conversations restent dans votre navigateur.
+          </p>
+        </section>
+      )}
+
+      {unlocked && (
+        <>
       {/* Tâches récurrentes */}
       {a.recurringTasks.length > 0 && (
         <section className="card mb-6 p-6">
@@ -232,6 +304,8 @@ export default function AuditPage() {
           Découvrir la formation →
         </a>
       </section>
+        </>
+      )}
 
       <footer className="flex flex-wrap items-center justify-between gap-3 text-xs" style={{ color: "var(--text-muted)" }}>
         <span>
