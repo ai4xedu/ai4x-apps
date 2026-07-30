@@ -1,0 +1,51 @@
+{
+  "manifest_version": "0.3",
+  "name": "anonymiseur-ai4x",
+  "display_name": "Anonymiseur de données Ai4x",
+  "version": "1.0.0",
+  "description": "Anonymisez vos fichiers Excel sur votre poste avant que Claude ne les lise — puis dé-anonymisez le résultat localement. Rien ne quitte votre ordinateur.",
+  "long_description": "La bonne pratique « l'IA n'a jamais besoin de savoir qui est qui », en connecteur.\n\nDemandez simplement à Claude : « anonymise clients.xlsx et analyse les impayés ». Le connecteur remplace localement les colonnes sensibles (noms, prénoms, CIN, emails, téléphones, RIB, adresses…) par des codes (NOM-001…), Claude travaille sur les codes, et l'outil `deanonymiser` écrit le résultat retraduit **sur votre disque** — les vraies valeurs n'apparaissent jamais dans la conversation.\n\n- Détection automatique des colonnes sensibles + contrôle de fuite sur le reste\n- Même valeur = même code, sur tous vos fichiers (clé de session cumulée)\n- Clé de correspondance stockée sur votre poste, compatible avec l'appli web ai4x.academy/anonymiseur-donnees\n\nDéveloppé par Ai4x — formation et automatisation Claude pour les équipes marocaines.",
+  "author": {
+    "name": "Ai4x",
+    "url": "https://ai4x.academy"
+  },
+  "homepage": "https://ai4x.academy/anonymiseur-donnees",
+  "support": "https://ai4x.academy/anonymiseur-donnees",
+  "license": "MIT",
+  "keywords": ["anonymisation", "pseudonymisation", "rgpd", "loi-09-08", "excel", "confidentialité", "ai4x"],
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "ANX_WORKDIR": "${user_config.dossier_travail}"
+      }
+    }
+  },
+  "user_config": {
+    "dossier_travail": {
+      "type": "directory",
+      "title": "Dossier de travail",
+      "description": "Le dossier où se trouvent vos fichiers Excel/CSV. Les fichiers anonymisés, les résultats décodés et la clé de correspondance seront écrits dans un sous-dossier « Anonymiseur-Ai4x ».",
+      "required": true,
+      "default": "${DOCUMENTS}"
+    }
+  },
+  "tools": [
+    { "name": "lister_fichiers", "description": "Liste les fichiers Excel/CSV du dossier de travail" },
+    { "name": "anonymiser_fichier", "description": "Anonymise un fichier localement et renvoie le tableau codé" },
+    { "name": "deanonymiser", "description": "Retraduit les codes en vraies valeurs, dans un fichier local (jamais dans le chat)" },
+    { "name": "etat_cle", "description": "État de la clé de session (comptes uniquement)" },
+    { "name": "reinitialiser_cle", "description": "Archive la clé actuelle et repart de zéro" }
+  ],
+  "tools_generated": false,
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}
