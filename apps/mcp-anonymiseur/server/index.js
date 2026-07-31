@@ -29,6 +29,7 @@ import * as z from "zod";
 import {
   XLSX, TYPES, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook, pad, normFor,
+  detectLayout, anonymizeDocument, classifyLoose, cellText,
 } from "./engine.js";
 
 const WORKDIR = path.resolve(process.env.ANX_WORKDIR || path.join(os.homedir(), "Documents"));
@@ -117,7 +118,11 @@ function rulesBlock(book) {
 
 /* ------------------------------------------------------------------ MCP */
 
-const server = new McpServer({ name: "anonymiseur-ai4x", version: "1.0.0" });
+const server = new McpServer({ name: "anonymiseur-ai4x", version: "1.1.0" });
+
+const RESTART_HINT =
+  "Si tu viens de changer le dossier dans les réglages de l'extension, REDÉMARRE Claude Desktop : " +
+  "un changement de dossier n'est pris en compte qu'au redémarrage.";
 
 server.registerTool(
   "lister_fichiers",
@@ -133,7 +138,7 @@ server.registerTool(
     try {
       names = fs.readdirSync(WORKDIR);
     } catch (e) {
-      return err(`Dossier de travail introuvable : ${WORKDIR}. Configurez-le dans les réglages de l'extension.`);
+      return err(`Dossier de travail introuvable : ${WORKDIR}. Configure-le dans les réglages de l'extension. ${RESTART_HINT}`);
     }
     const rows = [];
     for (const n of names) {
@@ -161,21 +166,33 @@ server.registerTool(
   {
     title: "Anonymiser un fichier Excel/CSV (sur le poste)",
     description:
-      "Pseudonymise les colonnes sensibles d'un fichier Excel/CSV du dossier de travail : noms, CIN, emails, " +
-      "téléphones, RIB… deviennent des codes (NOM-001…). Détection automatique des colonnes ; ajustable via " +
-      "colonnes_a_coder / colonnes_a_exclure (noms d'en-têtes). Renvoie le tableau CODÉ (utilisable directement " +
-      "dans la conversation) et écrit le fichier anonymisé + la clé sur le poste. Les valeurs réelles ne sont " +
-      "jamais renvoyées. Toujours appeler cet outil AVANT de travailler sur un fichier contenant des données personnelles.",
+      "Pseudonymise les données sensibles d'un fichier Excel/CSV du dossier de travail. Deux modes, choisis " +
+      "automatiquement : TABLEAU (ligne d'en-têtes → colonnes entières codées : noms, CIN, emails, téléphones, RIB…) " +
+      "et DOCUMENT (facture, document mis en page → codage À L'INTÉRIEUR des cellules avec le dictionnaire marocain " +
+      "ICE/IF/RC/CNSS/patente/RIB/téléphone ; les libellés, montants, quantités et dates restent en clair). " +
+      "FONCTIONNEMENT EN DEUX TEMPS : un premier appel SANS confirmer renvoie le PLAN (rien n'est écrit) — " +
+      "présente-le à l'utilisateur, demande-lui les noms propres à coder (valeurs_a_coder), puis rappelle avec " +
+      "confirmer: true. Les valeurs réelles ne sont jamais renvoyées. Toujours utiliser cet outil AVANT de " +
+      "travailler sur un fichier contenant des données personnelles.",
     inputSchema: z.object({
       nom_fichier: z.string().describe("Nom du fichier dans le dossier de travail, ex. « clients.xlsx »"),
       onglet: z.string().optional().describe("Nom de l'onglet à traiter (défaut : le premier)"),
+      mode: z.enum(["auto", "tableau", "document"]).optional()
+        .describe("Défaut auto : la mise en page décide (en-têtes homogènes = tableau, sinon document)"),
       colonnes_a_coder: z.array(z.string()).optional()
-        .describe("En-têtes de colonnes à coder EN PLUS de la détection automatique"),
+        .describe("Mode tableau : en-têtes de colonnes à coder EN PLUS de la détection automatique"),
       colonnes_a_exclure: z.array(z.string()).optional()
-        .describe("En-têtes de colonnes à laisser en clair malgré la détection"),
+        .describe("Mode tableau : en-têtes de colonnes à laisser en clair malgré la détection"),
+      valeurs_a_coder: z.array(z.string()).optional()
+        .describe("Mode document : noms propres à coder en plus (personnes, sociétés) — demande-les à l'utilisateur, ne les invente jamais"),
+      confirmer: z.boolean().optional()
+        .describe("false/absent = renvoyer le PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ nom_fichier, onglet, colonnes_a_coder = [], colonnes_a_exclure = [] }) => {
+  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], confirmer = false }) => {
+    if (!fs.existsSync(WORKDIR)) {
+      return err(`Dossier de travail introuvable : ${WORKDIR}. Configure-le dans les réglages de l'extension. ${RESTART_HINT}`);
+    }
     let file;
     try { file = safeResolve(nom_fichier); } catch (e) { return err(e.message); }
     if (!fs.existsSync(file)) {
@@ -190,6 +207,79 @@ server.registerTool(
       return err(`Onglet « ${onglet} » introuvable. Onglets disponibles : ${wb.SheetNames.join(", ")}.`);
     }
     const ws = wb.Sheets[sheetName];
+    const layout = detectLayout(ws);
+    const effectiveMode = mode === "tableau" || mode === "document" ? mode : layout.layout;
+
+    /* ------------------------------------------------- MODE DOCUMENT ------ */
+    if (effectiveMode === "document") {
+      const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
+      const fmt = (byType) => Object.entries(byType).map(([k, n]) => `${n} × ${k}`).join(", ");
+
+      if (!confirmer) {
+        // Répétition à blanc sur une COPIE de la clé : rien n'est écrit.
+        const probe = anonymizeDocument(ws, JSON.parse(JSON.stringify(loadBook())), extras);
+        return text([
+          `📋 PLAN D'ANONYMISATION — mode DOCUMENT (mise en page type facture/document, pas un tableau de données). RIEN n'a encore été écrit.`,
+          probe.stats.replaced
+            ? `Serait codé, à l'intérieur des cellules (libellés conservés) : ${fmt(probe.stats.byType)} — soit ${probe.stats.replaced} valeur(s) dans ${probe.stats.cellsTouched} cellule(s).`
+            : `Le dictionnaire (ICE, IF, RC, CNSS, patente, RIB, téléphone marocain, email, CIN) n'a rien détecté dans ce document.`,
+          `Les montants, quantités, dates et libellés ne sont JAMAIS codés — c'est la matière de travail de l'IA.`,
+          `⚠️ Les NOMS PROPRES (personnes, sociétés) ne sont pas détectés automatiquement : demande à l'utilisateur lesquels coder et fournis-les dans valeurs_a_coder.`,
+          `Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.`,
+        ].join("\n"));
+      }
+
+      const book = loadBook();
+      const res = anonymizeDocument(ws, book, extras);
+      if (!res.stats.replaced) {
+        return err("Rien à coder : ni le dictionnaire ni valeurs_a_coder n'ont trouvé de correspondance dans ce document.");
+      }
+      saveBook(book);
+      ensureOutdir();
+      const base = sanitizeBase(path.basename(file), "fichier");
+      const outPath = path.join(OUTDIR, `${base}-anonymise.xlsx`);
+      const outWb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(outWb, res.ws, sheetName);
+      XLSX.writeFile(outWb, outPath);
+
+      // RÈGLE N°1 : si des motifs sensibles restent dans une cellule codée
+      // (format étranger, cas non couvert), elle est masquée dans l'aperçu.
+      const previewWs = { ...res.ws };
+      let masked = 0;
+      for (const addr of Object.keys(res.ws)) {
+        if (addr[0] === "!") continue;
+        const cell = res.ws[addr];
+        if (!cell || (cell.t !== "s" && cell.t !== "str")) continue;
+        if (classifyLoose(cellText(cell)).length) {
+          previewWs[addr] = { t: "s", v: "[MASQUÉ — fuite possible]" };
+          masked++;
+        }
+      }
+      const { tsv, totalRows, shownRows } = sheetToTsv(previewWs, MAX_PREVIEW_ROWS);
+      const lines = [
+        `✅ Anonymisation terminée (mode DOCUMENT) — onglet « ${sheetName} » de ${path.basename(file)}.`,
+        `Codé à l'intérieur des cellules (libellés conservés) : ${fmt(res.stats.byType)} — ${res.stats.replaced} valeur(s), ${res.stats.newCodes} nouveau(x) code(s). Clé cumulée : ${book.entries.length} codes.`,
+        `Montants, quantités, dates et libellés laissés en clair.`,
+        `Fichier anonymisé écrit : ${outPath}`,
+        `Clé (JAMAIS à partager, restée sur le poste) : ${KEY_XLSX}`,
+      ];
+      if (wb.SheetNames.length > 1) {
+        lines.push(`⚠️ Le classeur contient ${wb.SheetNames.length} onglets — seul « ${sheetName} » a été traité.`);
+      }
+      if (masked) {
+        lines.push(`⚠️ CONTRÔLE DE FUITE — ${masked} cellule(s) masquée(s) dans l'aperçu (motifs sensibles résiduels ; le fichier local reste complet).`);
+      }
+      lines.push(
+        "⚠️ Les noms propres ne sont pas détectés automatiquement : si l'aperçu montre encore des noms de personnes " +
+        "ou de sociétés, préviens l'utilisateur et relance avec valeurs_a_coder."
+      );
+      lines.push("", rulesBlock(book), "");
+      lines.push(shownRows < totalRows ? `DOCUMENT CODÉ (aperçu ${shownRows}/${totalRows} lignes) :` : "DOCUMENT CODÉ :");
+      lines.push(tsv);
+      return text(lines.join("\n"));
+    }
+
+    /* ------------------------------------------------- MODE TABLEAU ------- */
     const cols = scanSheet(ws);
     if (!cols.length) return err(`L'onglet « ${sheetName} » est vide.`);
 
@@ -205,8 +295,45 @@ server.registerTool(
       return err(
         "Aucune colonne sensible détectée ni demandée. Colonnes trouvées : " +
         cols.map((c) => `« ${c.header} »`).join(", ") +
-        ". Précise colonnes_a_coder si une colonne doit être codée."
+        ". Si une colonne précise doit être codée, indique-la dans colonnes_a_coder ; " +
+        "si ce fichier est un document mis en page (facture…), relance avec mode: \"document\"."
       );
+    }
+
+    // Garde-fou : une mise en page DOCUMENT forcée en mode tableau finit en
+    // « tout codé » (libellés et montants compris) — vécu sur une facture
+    // réelle, 32 cellules sur 33 codées. On refuse, quel que soit l'appelant.
+    if (layout.layout === "document") {
+      const totalCells = cols.reduce((s, c) => s + c.nonEmpty, 0);
+      const toCode = cols.filter((c) => c.checked).reduce((s, c) => s + c.nonEmpty, 0);
+      if (totalCells && toCode > totalCells * 0.4) {
+        return err(
+          `Ce fichier ressemble à un DOCUMENT mis en page (facture, courrier…), pas à un tableau de données : ` +
+          `coder ces colonnes reviendrait à coder ${Math.round((toCode / totalCells) * 100)} % des cellules, ` +
+          `libellés et montants compris — le fichier deviendrait inutilisable. ` +
+          `Relance avec mode: "document" (codage chirurgical à l'intérieur des cellules, montants préservés).`
+        );
+      }
+    }
+
+    if (!confirmer) {
+      const codedCols = cols.filter((c) => c.checked)
+        .map((c) => `« ${c.header} » (${typeById(c.type).label}, ${c.nonEmpty} cellule(s))`).join(", ");
+      const planLeaks = leakScan(ws, cols);
+      const planLines = [
+        `📋 PLAN D'ANONYMISATION — mode TABLEAU. RIEN n'a encore été écrit.`,
+        `Colonnes qui seraient codées : ${codedCols}.`,
+        `Colonnes laissées en clair : ${cols.filter((c) => !c.checked).map((c) => `« ${c.header} »`).join(", ") || "aucune"}.`,
+      ];
+      if (planLeaks.length) {
+        planLines.push(
+          `⚠️ Des colonnes non codées semblent contenir des données personnelles : ` +
+          planLeaks.map((l) => `« ${l.header} » (${l.parts})`).join(" ; ") +
+          ` — propose à l'utilisateur de les ajouter à colonnes_a_coder.`
+        );
+      }
+      planLines.push(`Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.`);
+      return text(planLines.join("\n"));
     }
 
     const book = loadBook();
@@ -335,6 +462,12 @@ server.registerTool(
     inputSchema: z.object({}),
   },
   async () => {
+    // Distinguer « dossier introuvable » de « clé vide » : sinon on croit
+    // repartir sur une clé neuve alors qu'on est branché dans le vide
+    // (vécu après un renommage du dossier de travail).
+    if (!fs.existsSync(WORKDIR)) {
+      return err(`Dossier de travail introuvable : ${WORKDIR} — impossible de dire s'il existe une clé. ${RESTART_HINT}`);
+    }
     const book = loadBook();
     if (!book.entries.length) {
       return text(`Clé de session vide. Dossier de travail : ${WORKDIR}. Les sorties iront dans ${OUTDIR}.`);
