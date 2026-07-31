@@ -1,6 +1,6 @@
 {
   "name": "anonymiseur-ai4x",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Anonymiseur de données Ai4x — serveur MCP local (pseudonymisation Excel avant IA)",
   "main": "index.js",
   "directories": {

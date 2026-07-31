@@ -141,20 +141,24 @@ test("mode document : facture → identifiants codés, montants et libellés int
   const planOut = resultText(plan);
   assert.match(planOut, /PLAN D'ANONYMISATION/);
   assert.match(planOut, /mode DOCUMENT/);
-  assert.match(planOut, /NOMS PROPRES/);
+  assert.match(planOut, /CODÉS D'OFFICE/);
   assert.ok(!planOut.includes("003463957000076"), "un ICE réel a fui dans le plan");
-  // Exécution, avec un nom de société fourni par « l'utilisateur ».
+  assert.ok(!planOut.includes("TARDIGRADE"), "un nom détecté a fui dans le plan");
+  assert.ok(!planOut.includes("Sophatel"), "un nom détecté a fui dans le plan");
+  // Exécution SANS fournir de noms : ils sont codés d'office (fail-closed).
   const res = await client.callTool({
     name: "anonymiser_fichier",
-    arguments: { nom_fichier: "facture.xlsx", confirmer: true, valeurs_a_coder: ["Sophatel S.A"] },
+    arguments: { nom_fichier: "facture.xlsx", confirmer: true },
   });
   const out = resultText(res);
   assert.match(out, /mode DOCUMENT/);
   assert.match(out, /ICE-\d{3}/);
-  // Les valeurs réelles n'apparaissent nulle part.
+  assert.match(out, /SOCIETE-\d{3}/);
+  // Les valeurs réelles n'apparaissent nulle part — noms compris, sans qu'on les fournisse.
   assert.ok(!out.includes("003463957000076"), "l'ICE réel a fui");
   assert.ok(!out.includes("65908714"), "l'IF réel a fui");
-  assert.ok(!out.includes("Sophatel"), "le nom de société fourni a fui");
+  assert.ok(!out.includes("Sophatel"), "le nom de société a fui");
+  assert.ok(!out.includes("TARDIGRADE"), "le nom en majuscules a fui");
   // La matière de travail reste : libellés et montants en clair.
   assert.match(out, /Total HT/);
   assert.match(out, /2150/);
@@ -164,6 +168,22 @@ test("mode document : facture → identifiants codés, montants et libellés int
   assert.match(flat, /ICE : ICE-\d{3}/);          // libellé conservé, valeur codée
   assert.ok(!/003463957000076/.test(flat));
   assert.ok(/Total HT/.test(flat) && /2150/.test(flat));
+});
+
+test("valeurs_a_exclure : le nom reste en clair dans le FICHIER, masqué dans l'aperçu", async () => {
+  const res = await client.callTool({
+    name: "anonymiser_fichier",
+    arguments: { nom_fichier: "facture.xlsx", confirmer: true, valeurs_a_exclure: ["TARDIGRADE"] },
+  });
+  const out = resultText(res);
+  // Second filet : même exclu du codage, un nom suspect ne traverse pas l'aperçu.
+  assert.ok(!out.includes("TARDIGRADE"), "le nom exclu a fui dans la conversation");
+  assert.match(out, /MASQUÉ — fuite possible/);
+  // Mais le fichier local, lui, le garde en clair (choix de l'utilisateur).
+  const wbOut = XLSX.readFile(path.join(workdir, "Anonymiseur-Ai4x", "facture-anonymise.xlsx"));
+  const flat = XLSX.utils.sheet_to_json(wbOut.Sheets[wbOut.SheetNames[0]], { header: 1, raw: false, defval: "" })
+    .flat().join(" | ");
+  assert.ok(flat.includes("TARDIGRADE"), "l'exclusion n'a pas été respectée dans le fichier");
 });
 
 test("garde-fou : un document forcé en mode tableau est refusé", async () => {

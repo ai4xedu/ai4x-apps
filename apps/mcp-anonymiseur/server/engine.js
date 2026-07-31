@@ -275,6 +275,138 @@ const DOC_PATTERNS = [
   { type: "__digits__", rx: /(?<![\dA-Za-z-])\d(?:[ .\-]?\d){14,25}(?![\dA-Za-z])/g },
 ];
 
+/* ------------------------------------------------------------------ *
+ *  Noms propres — codés PAR DÉFAUT (fail-closed).                     *
+ *  Leçon du terrain : demander les noms à l'utilisateur expose ces    *
+ *  mêmes noms dans l'aperçu — l'IA devait les VOIR pour proposer de   *
+ *  les coder. On inverse la charge : sur-coder est réversible et      *
+ *  inoffensif, sous-coder est une fuite définitive.                   *
+ * ------------------------------------------------------------------ */
+
+/* Lexique facture : jamais des noms, quel que soit leur casse. */
+const NAME_STOPLIST = new Set([
+  "FACTURE", "FAC", "DEVIS", "AVOIR", "BON", "COMMANDE", "LIVRAISON",
+  "EMETTEUR", "CLIENT", "DESTINATAIRE", "FOURNISSEUR", "ACHETEUR", "VENDEUR",
+  "DATE", "ECHEANCE", "DESIGNATION", "QTE", "REMISE", "MONTANT", "TOTAL",
+  "SOUS-TOTAL", "TVA", "HT", "TTC", "NET", "PRIX", "UNITAIRE", "REF",
+  "REFERENCE", "ARTICLE", "CACHET", "SIGNATURE", "CONDITIONS", "REGLEMENT",
+  "PAIEMENT", "VIREMENT", "ESPECES", "CHEQUE", "RIB", "IBAN", "ICE", "IF",
+  "RC", "CNSS", "PATENTE", "CIN", "TEL", "TELEPHONE", "FAX", "EMAIL", "MAIL",
+  "WEB", "SITE", "ADRESSE", "VILLE", "PAYS", "SOCIETE", "NUM", "NO", "DOC",
+  "MAROC", "CASABLANCA", "RABAT", "MARRAKECH", "TANGER", "FES", "AGADIR",
+  "KENITRA", "OUJDA", "TETOUAN", "SALE", "MOHAMMEDIA", "MEKNES",
+]);
+
+function normToken(t) {
+  return String(t).normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
+}
+
+/* « Sophatel S.A », « ATLAS NEGOCE SARL AU »… — capture nom + forme juridique. */
+const LEGAL_SUFFIX_RX =
+  /\b((?:[A-ZÀ-Ý][\p{L}\d&'’.\-]*\s+){0,4}[A-ZÀ-Ý][\p{L}\d&'’.\-]*)[\s,]+(S\.?A\.?R\.?L\.?(?:\s*A\.?U\.?)?|SARLAU|S\.?A\.?S\b\.?|S\.?N\.?C\b\.?|GIE\b|SCI\b|S\.?A\b\.?)/gu;
+
+const ADDRESS_RX =
+  /\b(rue|avenue|av\.|bd\b|boulevard|r[eé]sidence|r[eé]s\.|lotissement|lot\.|quartier|angle|[eé]tage|imm\.|immeuble|appt|apt\b|km\s?\d)/i;
+
+const ZONE_LABELS = new Set([
+  "EMETTEUR", "CLIENT", "DESTINATAIRE", "FOURNISSEUR", "ACHETEUR", "VENDEUR", "EXPEDITEUR",
+]);
+
+/* Une cellule entièrement en MAJUSCULES hors lexique = nom probable. */
+function allCapsName(text) {
+  // ⚠️ le flag u est vital : sans lui \p{L} n'est pas une classe Unicode.
+  const tokens = String(text).split(/[^\p{L}\d]+/u).filter((t) => /\p{L}/u.test(t));
+  if (!tokens.length) return false;
+  let signal = false;
+  for (const t of tokens) {
+    // Tester la casse sur le token BRUT (normToken met tout en majuscules).
+    if (t !== t.toUpperCase()) return false;               // un token en minuscules disqualifie
+    if (t.replace(/[^\p{L}]/gu, "").length >= 3 && !NAME_STOPLIST.has(normToken(t))) signal = true;
+  }
+  return signal;
+}
+
+/* Vrai si la cellule n'est faite QUE de mots du lexique facture (ou trop
+   courts) — « Montant HT », « Total TTC »… : jamais des noms. */
+function lexiconOnly(text) {
+  const tokens = String(text).split(/[^\p{L}\d]+/u).filter((t) => /\p{L}/u.test(t));
+  if (!tokens.length) return true;
+  return tokens.every((t) => t.replace(/[^\p{L}]/gu, "").length < 3 || NAME_STOPLIST.has(normToken(t)));
+}
+
+function matchesDocPattern(text) {
+  for (const p of DOC_PATTERNS) {
+    p.rx.lastIndex = 0;
+    if (p.rx.test(text)) { p.rx.lastIndex = 0; return true; }
+    p.rx.lastIndex = 0;
+  }
+  return false;
+}
+
+/* Balaye le document et propose les noms/adresses à coder d'office.
+   Renvoie [{ value, type }] dédupliqué — valeurs internes au moteur,
+   JAMAIS à renvoyer dans un résultat d'outil (seul leur NOMBRE l'est). */
+export function nameCandidates(ws) {
+  if (!ws || !ws["!ref"]) return [];
+  const range = XLSX.utils.decode_range(ws["!ref"]);
+  const seen = new Map();
+  const add = (value, type) => {
+    const v = String(value).trim().replace(/[\s,;:]+$/, "");
+    if (v.length < 2) return;
+    const k = v.toLowerCase();
+    if (!seen.has(k)) seen.set(k, { value: v, type });
+  };
+
+  // Passe 1 — règles « fortes » (leur type prime en cas de doublon) :
+  // forme juridique, adresse, MAJUSCULES hors lexique.
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c })];
+      if (!cell || (cell.t !== "s" && cell.t !== "str")) continue;
+      const text = cellText(cell).trim();
+      if (!text) continue;
+      LEGAL_SUFFIX_RX.lastIndex = 0;
+      let m;
+      while ((m = LEGAL_SUFFIX_RX.exec(text))) add(m[0], "societe");
+      if (ADDRESS_RX.test(text) && !matchesDocPattern(text)) add(text, "adresse");
+      if (allCapsName(text) && !matchesDocPattern(text)) add(text, "societe");
+    }
+  }
+  // Passe 2 — filet « zone » : cellules sous un libellé ÉMETTEUR / CLIENT / …
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      const cell = ws[XLSX.utils.encode_cell({ r, c })];
+      if (!cell || (cell.t !== "s" && cell.t !== "str")) continue;
+      const text = cellText(cell).trim();
+      if (!ZONE_LABELS.has(normToken(text).replace(/[^A-Z]/g, ""))) continue;
+      let taken = 0;
+      for (let rr = r + 1; rr <= Math.min(r + 4, range.e.r) && taken < 2; rr++) {
+        const below = ws[XLSX.utils.encode_cell({ r: rr, c })];
+        if (!below || (below.t !== "s" && below.t !== "str")) continue;
+        const bt = cellText(below).trim();
+        if (!bt) continue;
+        taken++;
+        if (!matchesDocPattern(bt) && !/\d{6,}/.test(bt) && !lexiconOnly(bt)) {
+          add(bt, "societe");
+        }
+      }
+    }
+  }
+  return [...seen.values()];
+}
+
+/* Après codage : cette cellule ressemble-t-elle ENCORE à un nom/adresse ?
+   Second filet pour l'aperçu (masquage) — les codes SOCIETE-001 sont ignorés. */
+export function isSuspectName(text) {
+  const s = String(text);
+  const noCodes = s.replace(/\b[A-Z]{2,10}-\d{3,}\b/g, "");
+  LEGAL_SUFFIX_RX.lastIndex = 0;
+  if (LEGAL_SUFFIX_RX.test(noCodes)) { LEGAL_SUFFIX_RX.lastIndex = 0; return true; }
+  LEGAL_SUFFIX_RX.lastIndex = 0;
+  if (ADDRESS_RX.test(noCodes)) return true;
+  return allCapsName(noCodes.trim());
+}
+
 /* Code les données sensibles D'UN TEXTE (une cellule). `extra` : valeurs
    exactes supplémentaires à coder (noms propres fournis par l'utilisateur),
    chacune { value, type }. Renvoie { text, replaced, newCodes, byType }. */
@@ -326,9 +458,15 @@ export function codeDocumentText(input, book, extra) {
 
 /* Anonymise un DOCUMENT : chaque cellule TEXTE passe par le dictionnaire ;
    les cellules numériques (montants, quantités, dates sérielles) ne sont
-   JAMAIS touchées — c'est la matière de travail de l'IA. */
-export function anonymizeDocument(ws, book, extra) {
+   JAMAIS touchées — c'est la matière de travail de l'IA.
+   Les noms/adresses détectés par nameCandidates sont codés PAR DÉFAUT ;
+   `opts.excludes` (valeurs exactes, insensible à la casse) les laisse en
+   clair, `extra` en ajoute. */
+export function anonymizeDocument(ws, book, extra, opts) {
   book = book || newCodebook();
+  const excludes = new Set(((opts && opts.excludes) || []).map((v) => String(v).trim().toLowerCase()));
+  const auto = nameCandidates(ws).filter((c) => !excludes.has(c.value.toLowerCase()));
+  const allExtra = [...(extra || []), ...auto];
   const out = {};
   for (const k of Object.keys(ws)) out[k] = ws[k];
   let replaced = 0;
@@ -341,7 +479,7 @@ export function anonymizeDocument(ws, book, extra) {
     if (!cell || (cell.t !== "s" && cell.t !== "str")) continue; // numériques/bool : intacts
     const text = cellText(cell);
     if (!text.trim()) continue;
-    const res = codeDocumentText(text, book, extra);
+    const res = codeDocumentText(text, book, allExtra);
     if (res.replaced) {
       out[addr] = { t: "s", v: res.text };
       cellsTouched++;
@@ -350,7 +488,13 @@ export function anonymizeDocument(ws, book, extra) {
       for (const k of Object.keys(res.byType)) byType[k] = (byType[k] || 0) + res.byType[k];
     }
   }
-  return { ws: out, book, stats: { replaced, newCodes, reusedCells: replaced - newCodes, cellsTouched, byType } };
+  return {
+    ws: out, book,
+    stats: {
+      replaced, newCodes, reusedCells: replaced - newCodes, cellsTouched, byType,
+      autoNames: auto.length, // NOMBRE seulement — les valeurs ne sortent jamais du moteur
+    },
+  };
 }
 
 /* Remplace les codes d'une clé dans un texte (insensible à la casse).
