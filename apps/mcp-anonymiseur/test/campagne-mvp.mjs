@@ -19,7 +19,7 @@ import os from "node:os";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
-import { writeMinimalPdf } from "./util-pdf.mjs";
+import { writeMinimalPdf, writeScannedPdf } from "./util-pdf.mjs";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import * as XLSX from "xlsx";
 import * as _fs from "node:fs";
@@ -44,6 +44,9 @@ const SECRETS = {
   if_: "65908714", rc: "620437", patente: "35788345",
   societe1: "ATLAS NEGOCE", societe2: "Menara Distribution S.A",
   adresse: "12 Rue des Oudayas, Rés. Yasmine, Maârif",
+  // valeurs présentes dans le SCAN (fixture image) — auditées elles aussi
+  scanSociete: "SOCIETE GHARB PRIMEURS", scanClient: "Cabinet Sekkat Conseil",
+  scanIce: "002233445566778", scanRib: "011780000556677889900112",
 };
 
 const transcript = [];   // tout ce que les outils ont renvoyé
@@ -98,6 +101,10 @@ function makeFiles(dir) {
   XLSX.writeFile(wb2, path.join(dir, "facture.xlsx"));
 
   // La facture fournisseur en PDF natif (ASCII — le moteur normalise les accents).
+  // Un scan : le JPEG de test enfermé dans un PDF sans couche de texte.
+  const scanJpeg = fs.readFileSync(path.join(here, "fixtures", "scan.jpg"));
+  writeScannedPdf(path.join(dir, "scan-fournisseur.pdf"), scanJpeg, 1240, 1754);
+
   writeMinimalPdf(path.join(dir, "facture-fournisseur.pdf"), [
     "FACTURE  N. FF-2026-118",
     "EMETTEUR",
@@ -209,6 +216,24 @@ check("A4d", "l'état de la clé ne révèle aucune correspondance",
 /* Sécurité : évasion du dossier */
 const escapeT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "../../etc/passwd", confirmer: true } }));
 check("A4e", "évasion du dossier de travail refusée", /Chemin refusé/.test(escapeT));
+
+/* OCR d'un scan (v1.5+) — le texte reconnu ne doit JAMAIS remonter */
+if (toolNames.includes("lire_scan")) {
+  const ocrT = record(await client.callTool({ name: "lire_scan", arguments: { nom_fichier: "scan-fournisseur.pdf" } }));
+  check("A3n", "OCR : compte rendu sans aucun texte reconnu, fichier À RELIRE écrit",
+    /OCR terminé/.test(ocrT) && /RELIRE/.test(ocrT)
+    && !ocrT.includes("GHARB") && !ocrT.includes("002233445566778") && !ocrT.includes("Sekkat"));
+  const relire = path.join(outDir, "scan-fournisseur-ocr-A-RELIRE.md");
+  check("A3o", "le texte reconnu vit sur le poste, marqué à relire",
+    fs.existsSync(relire) && /À RELIRE AVANT USAGE/.test(fs.readFileSync(relire, "utf8")));
+  const anoT = record(await client.callTool({
+    name: "anonymiser_fichier",
+    arguments: { nom_fichier: "Anonymiseur-Ai4x/scan-fournisseur-ocr-A-RELIRE.md", confirmer: true },
+  }));
+  check("A3p", "le scan relu s'anonymise sans fuite (ICE codés, montants gardés)",
+    /ICE-\d{3}/.test(anoT) && anoT.includes("17500")
+    && !anoT.includes("002233445566778") && !anoT.includes("GHARB PRIMEURS"));
+}
 
 /* A5 — L'AUDIT : tout ce qui a été dit, passé au crible */
 console.log("\n── A5 — audit de la conversation entière (le test qui décide de tout)\n");

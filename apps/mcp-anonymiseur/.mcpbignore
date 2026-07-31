@@ -3,3 +3,10 @@ node_modules/.bin/
 node_modules/@modelcontextprotocol/client/
 .git/
 *.mcpb
+
+
+# Tesseract : NE PAS élaguer les variantes de tesseract.js-core.
+# Tenté puis annulé : ne garder que les « -lstm » économise ~15 Mo mais casse
+# l'OCR dans le bundle — le worker réclame aussi une variante « legacy » à un
+# moment de son cycle (Cannot find module tesseract-core-relaxedsimd).
+# Le poids est le prix de la fiabilité sur des machines inconnues.
