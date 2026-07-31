@@ -8,6 +8,7 @@ import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
+import { writeMinimalPdf, FACTURE_PDF_LINES } from "./util-pdf.mjs";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import * as XLSX from "xlsx";
 import * as _fs from "node:fs";
@@ -56,6 +57,9 @@ before(async () => {
     "Facture"
   );
   XLSX.writeFile(wb2, path.join(workdir, "facture.xlsx"));
+
+  // La même facture, en PDF natif (générateur minimal, ASCII).
+  writeMinimalPdf(path.join(workdir, "facture.pdf"), FACTURE_PDF_LINES);
 
   client = new Client({ name: "e2e", version: "1.0.0" });
   await client.connect(
@@ -186,11 +190,47 @@ test("valeurs_a_exclure : le nom reste en clair dans le FICHIER, masqué dans l'
   assert.ok(flat.includes("TARDIGRADE"), "l'exclusion n'a pas été respectée dans le fichier");
 });
 
+test("PDF natif : plan en comptes, contenu anonymisé en .md, PDF jamais réécrit", async () => {
+  const plan = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.pdf" } });
+  const planOut = resultText(plan);
+  assert.match(planOut, /PLAN D'ANONYMISATION — PDF natif/);
+  assert.match(planOut, /\.md/);
+  assert.ok(!planOut.includes("ATLAS"), "un nom réel a fui dans le plan PDF");
+  assert.ok(!planOut.includes("003463957000076"), "un ICE réel a fui dans le plan PDF");
+
+  const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.pdf", confirmer: true } });
+  const out = resultText(res);
+  assert.match(out, /PDF natif/);
+  assert.match(out, /n'est PAS modifié/);
+  assert.ok(!out.includes("ATLAS") && !out.includes("Menara") && !out.includes("003463957000076"),
+    "une valeur réelle a fui dans le compte rendu PDF");
+  assert.match(out, /ICE : ICE-\d{3}/);
+  assert.ok(out.includes("20500"), "les montants doivent rester dans l'aperçu");
+  // Le contenu anonymisé est sur le poste, complet.
+  const mdPath = path.join(workdir, "Anonymiseur-Ai4x", "facture-anonymise.md");
+  assert.ok(fs.existsSync(mdPath), "sortie .md absente");
+  const md = fs.readFileSync(mdPath, "utf8");
+  assert.match(md, /ICE : ICE-\d{3}/);
+  assert.ok(!md.includes("ATLAS NEGOCE") && !md.includes("007810000123456789012345"));
+  assert.ok(md.includes("Total HT : 20500"));
+  // Le PDF d'origine est intact.
+  assert.ok(fs.existsSync(path.join(workdir, "facture.pdf")));
+});
+
+test("PDF scanné (sans texte) : refus honnête, jamais un faux « rien détecté »", async () => {
+  const scanPath = path.join(workdir, "scan.pdf");
+  writeMinimalPdf(scanPath, ["", "", ""]);
+  const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "scan.pdf", confirmer: true } });
+  assert.ok(res.isError, "un PDF sans texte doit être refusé");
+  assert.match(resultText(res), /OCR/);
+  fs.unlinkSync(scanPath); // ne pas polluer le test de lot qui suit
+});
+
 test("anonymiser_dossier : plan en comptes seuls, exécution → fichiers + rapport + clé unique", async () => {
   // Le PLAN d'abord : liste des fichiers, comptes par type, zéro valeur réelle.
   const plan = await client.callTool({ name: "anonymiser_dossier", arguments: {} });
   const planOut = resultText(plan);
-  assert.match(planOut, /PLAN DE LOT — 2 fichier/);
+  assert.match(planOut, /PLAN DE LOT — 3 fichier/);
   assert.match(planOut, /clients\.xlsx/);
   assert.match(planOut, /facture\.xlsx/);
   assert.match(planOut, /confirmer: true/);
@@ -203,7 +243,7 @@ test("anonymiser_dossier : plan en comptes seuls, exécution → fichiers + rapp
   // Exécution : tous les fichiers, toutes les feuilles, une seule clé.
   const res = await client.callTool({ name: "anonymiser_dossier", arguments: { confirmer: true } });
   const out = resultText(res);
-  assert.match(out, /LOT TERMINÉ — 2\/2/);
+  assert.match(out, /LOT TERMINÉ — 3\/3/);
   assert.ok(!out.includes("El Amrani") && !out.includes("Sophatel"), "une valeur réelle a fui dans le compte rendu de lot");
   // Pas d'aperçu de contenu dans un compte rendu de lot : ni tableau TSV,
   // ni section « TABLEAU CODÉ » (les codes cités par le bloc de règles sont

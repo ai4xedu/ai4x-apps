@@ -5,8 +5,9 @@ import {
   XLSX, detectByHeader, detectByValues, classifyLoose, scanSheet,
   anonymizeSheet, leakScan, decodeText, newCodebook, sheetToTsv, looksLikeTable,
   detectLayout, codeDocumentText, anonymizeDocument, isMoroccanPhone,
-  nameCandidates, isSuspectName,
+  nameCandidates, isSuspectName, nameCandidatesFromText, anonymizeText,
 } from "../server/engine.js";
+import { FACTURE_PDF_LINES } from "./util-pdf.mjs";
 
 const FACTURE_AOA = [
   ["", "", "", "FACTURE"],
@@ -203,6 +204,35 @@ test("isSuspectName : second filet d'aperçu, codes et libellés ignorés", () =
   assert.ok(!isSuspectName("TVA (20%)"));
   assert.ok(!isSuspectName("SOCIETE-001 — ICE : ICE-001"));
   assert.ok(!isSuspectName("N°  FAC-2026-003"));
+});
+
+test("texte libre (PDF) : les noms se détectent ligne à ligne, lexique épargné", () => {
+  const cands = nameCandidatesFromText(FACTURE_PDF_LINES.join("\n")).map((c) => c.value);
+  assert.ok(cands.includes("ATLAS NEGOCE"), "MAJUSCULES hors lexique manqué");
+  assert.ok(cands.includes("Menara Distribution S.A"), "forme juridique manquée");
+  assert.ok(cands.some((v) => v.includes("Rue des Oudayas")), "adresse manquée");
+  for (const label of ["FACTURE", "EMETTEUR", "CLIENT"]) {
+    assert.ok(!cands.includes(label), `le libellé « ${label} » est devenu un candidat`);
+  }
+});
+
+test("anonymizeText : identifiants et noms codés, montants et libellés intacts", () => {
+  const res = anonymizeText(FACTURE_PDF_LINES.join("\n"), newCodebook());
+  const out = res.text;
+  for (const gone of ["ATLAS NEGOCE", "Menara", "Rue des Oudayas",
+    "003463957000076", "65908714", "620437", "35788345", "007810000123456789012345"]) {
+    assert.ok(!out.includes(gone), `« ${gone} » a survécu au codage`);
+  }
+  assert.match(out, /ICE : ICE-\d{3}/);           // libellé conservé, valeur codée
+  assert.match(out, /SOCIETE-\d{3}/);
+  assert.match(out, /RIB : RIB-\d{3}/);
+  assert.ok(out.includes("Total HT : 20500"), "un montant a été abîmé");
+  assert.ok(out.includes("TVA (20%) : 4100"));
+  assert.ok(out.includes("FAC-2026-042"), "la référence de facture a été codée à tort");
+  assert.ok(res.stats.autoNames >= 3);
+  // Même carnet que les autres modes : une 2e passe ne crée aucun code.
+  const again = anonymizeText(FACTURE_PDF_LINES.join("\n"), res.book);
+  assert.equal(again.stats.newCodes, 0);
 });
 
 test("sheetToTsv tronque et looksLikeTable reconnaît un TSV", () => {
