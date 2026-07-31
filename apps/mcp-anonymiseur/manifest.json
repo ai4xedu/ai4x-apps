@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "anonymiseur-ai4x",
   "display_name": "Anonymiseur de données Ai4x",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Anonymisez vos fichiers Excel sur votre poste avant que Claude ne les lise — puis dé-anonymisez le résultat localement. Rien ne quitte votre ordinateur.",
   "long_description": "La bonne pratique « l'IA n'a jamais besoin de savoir qui est qui », en connecteur.\n\nDemandez simplement à Claude : « anonymise clients.xlsx et analyse les impayés ». Le connecteur remplace localement les colonnes sensibles (noms, prénoms, CIN, emails, téléphones, RIB, adresses…) par des codes (NOM-001…), Claude travaille sur les codes, et l'outil `deanonymiser` écrit le résultat retraduit **sur votre disque** — les vraies valeurs n'apparaissent jamais dans la conversation.\n\n- Détection automatique des colonnes sensibles + contrôle de fuite sur le reste\n- Même valeur = même code, sur tous vos fichiers (clé de session cumulée)\n- Clé de correspondance stockée sur votre poste, compatible avec l'appli web ai4x.academy/anonymiseur-donnees\n\nDéveloppé par Ai4x — formation et automatisation Claude pour les équipes marocaines.",
   "author": {

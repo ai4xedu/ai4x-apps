@@ -406,6 +406,208 @@ server.registerTool(
   }
 );
 
+/* ------------------------------------------------------------------ *
+ *  TRAITEMENT PAR LOTS — un cabinet ne traite pas une facture, il en   *
+ *  traite quarante. Une seule clé pour tout le lot (même valeur =      *
+ *  même code d'un fichier à l'autre), TOUS les onglets de chaque       *
+ *  classeur, et AUCUN aperçu de contenu dans la conversation : le      *
+ *  compte rendu ne contient que des comptes et des chemins.            *
+ * ------------------------------------------------------------------ */
+
+const BATCH_MAX_FILES = 200;
+
+function listBatchFiles(motif) {
+  const names = fs.readdirSync(WORKDIR);
+  const needle = String(motif || "").trim().toLowerCase();
+  const out = [];
+  for (const n of names) {
+    if (!/\.(xlsx|xls|csv)$/i.test(n)) continue;
+    if (n.startsWith("~$") || n.startsWith(".")) continue;
+    if (/-anonymise\.xlsx$/i.test(n)) continue;               // déjà des sorties
+    if (/CLE-NE-JAMAIS-PARTAGER/i.test(n)) continue;          // jamais la clé
+    if (needle && n.toLowerCase().indexOf(needle) === -1) continue;
+    out.push(n);
+    if (out.length >= BATCH_MAX_FILES) break;
+  }
+  out.sort();
+  return out;
+}
+
+/* Traite toutes les feuilles d'un classeur avec le carnet fourni.
+   Mode choisi feuille par feuille (tableau ou document). Renvoie
+   { outWb, perSheet: [{ name, mode, replaced, byType, untouched }] }. */
+function anonymizeWorkbook(wb, book, extras, docOpts) {
+  const outWb = XLSX.utils.book_new();
+  const perSheet = [];
+  for (const sn of wb.SheetNames) {
+    const ws = wb.Sheets[sn];
+    if (!ws || !ws["!ref"]) {
+      XLSX.utils.book_append_sheet(outWb, XLSX.utils.aoa_to_sheet([[]]), sn);
+      perSheet.push({ name: sn, mode: "vide", replaced: 0, byType: {}, untouched: true });
+      continue;
+    }
+    const layout = detectLayout(ws).layout;
+    if (layout === "document") {
+      const res = anonymizeDocument(ws, book, extras, docOpts);
+      XLSX.utils.book_append_sheet(outWb, res.ws, sn);
+      perSheet.push({ name: sn, mode: "document", replaced: res.stats.replaced, byType: res.stats.byType, untouched: !res.stats.replaced });
+    } else {
+      const cols = scanSheet(ws);
+      const checked = cols.filter((c) => c.checked);
+      if (!checked.length) {
+        // Rien de sensible détecté : la feuille passe telle quelle, mais on le DIT.
+        XLSX.utils.book_append_sheet(outWb, ws, sn);
+        perSheet.push({ name: sn, mode: "tableau", replaced: 0, byType: {}, untouched: true });
+        continue;
+      }
+      const res = anonymizeSheet(ws, cols, book);
+      const byType = {};
+      for (const c of checked) {
+        const label = typeById(c.type).label;
+        byType[label] = (byType[label] || 0) + c.nonEmpty;
+      }
+      XLSX.utils.book_append_sheet(outWb, res.ws, sn);
+      perSheet.push({ name: sn, mode: "tableau", replaced: res.stats.replaced, byType, untouched: false });
+    }
+  }
+  return { outWb, perSheet };
+}
+
+function fmtByType(byType) {
+  const parts = Object.entries(byType).map(([k, n]) => `${n} × ${k}`);
+  return parts.length ? parts.join(", ") : "rien détecté";
+}
+
+server.registerTool(
+  "anonymiser_dossier",
+  {
+    title: "Anonymiser un LOT de fichiers (dossier entier, une seule clé)",
+    description:
+      "Traite d'un coup tous les fichiers Excel/CSV du dossier de travail (ou ceux dont le nom contient `motif`) : " +
+      "chaque feuille est anonymisée en mode tableau ou document selon sa mise en page, avec UNE SEULE clé — la même " +
+      "valeur garde le même code d'un fichier à l'autre, c'est ce qui permet de croiser les fichiers codés. " +
+      "FONCTIONNEMENT EN DEUX TEMPS : sans confirmer, renvoie le PLAN (liste des fichiers + comptes par type, rien " +
+      "n'est écrit) — présente-le à l'utilisateur puis rappelle avec confirmer: true. Le compte rendu ne contient " +
+      "JAMAIS de contenu, seulement des comptes et des chemins ; un rapport de synthèse est écrit sur le poste. " +
+      "Pour travailler ensuite sur UN fichier dans la conversation, utiliser anonymiser_fichier.",
+    inputSchema: z.object({
+      motif: z.string().optional()
+        .describe("Filtre sur le nom de fichier (contient, insensible à la casse), ex. « facture ». Vide = tous"),
+      valeurs_a_coder: z.array(z.string()).optional()
+        .describe("Noms propres à coder en plus dans tout le lot — demande-les à l'utilisateur, ne les invente jamais"),
+      valeurs_a_exclure: z.array(z.string()).optional()
+        .describe("Noms détectés automatiquement à laisser en clair dans tout le lot (sur demande explicite)"),
+      confirmer: z.boolean().optional()
+        .describe("false/absent = PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
+    }),
+  },
+  async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) => {
+    if (!fs.existsSync(WORKDIR)) {
+      return err(`Dossier de travail introuvable : ${WORKDIR}. Configure-le dans les réglages de l'extension. ${RESTART_HINT}`);
+    }
+    const files = listBatchFiles(motif);
+    if (!files.length) {
+      return err(motif
+        ? `Aucun fichier Excel/CSV dont le nom contient « ${motif} » dans ${WORKDIR}.`
+        : `Aucun fichier Excel/CSV dans ${WORKDIR}.`);
+    }
+    const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
+    const docOpts = { excludes: valeurs_a_exclure };
+
+    if (!confirmer) {
+      // Répétition à blanc sur une COPIE de la clé, partagée par tout le lot
+      // (les comptes « nouveaux codes » reflètent la déduplication réelle).
+      const probeBook = JSON.parse(JSON.stringify(loadBook()));
+      const lines = [
+        `📋 PLAN DE LOT — ${files.length} fichier(s) dans ${WORKDIR}. RIEN n'a encore été écrit.`,
+      ];
+      let total = 0;
+      let unreadable = 0;
+      for (const name of files) {
+        let wb;
+        try { wb = XLSX.read(fs.readFileSync(path.join(WORKDIR, name)), { type: "buffer", cellDates: false }); }
+        catch { lines.push(`— ${name} : ILLISIBLE (sera ignoré)`); unreadable++; continue; }
+        const { perSheet } = anonymizeWorkbook(wb, probeBook, extras, docOpts);
+        const agg = {};
+        let fileTotal = 0;
+        for (const s of perSheet) {
+          fileTotal += s.replaced;
+          for (const k of Object.keys(s.byType)) agg[k] = (agg[k] || 0) + s.byType[k];
+        }
+        total += fileTotal;
+        const modes = [...new Set(perSheet.filter((s) => s.mode !== "vide").map((s) => s.mode))].join("+") || "vide";
+        lines.push(`— ${name} : ${wb.SheetNames.length} onglet(s), mode ${modes}, ${fileTotal} valeur(s) (${fmtByType(agg)})`);
+      }
+      lines.push(
+        `TOTAL : ~${total} valeur(s) seraient codées avec UNE SEULE clé (même valeur = même code sur tout le lot).`,
+        `Les montants, quantités, dates et libellés ne sont jamais codés. Les noms propres probables sont codés d'office ` +
+        `(ajuste avec valeurs_a_exclure) ; fournis les noms supplémentaires connus de l'utilisateur via valeurs_a_coder.`,
+        `Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.`
+      );
+      if (unreadable) lines.push(`⚠️ ${unreadable} fichier(s) illisible(s) seront ignorés.`);
+      return text(lines.join("\n"));
+    }
+
+    /* ------------------------------------------------------- exécution */
+    const book = loadBook();
+    ensureOutdir();
+    const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
+    const report = [
+      `# Rapport d'anonymisation par lot — ${stamp}`,
+      "",
+      `Dossier : ${WORKDIR}`,
+      `Ce rapport ne contient que des comptes — aucune valeur d'origine. Il peut être partagé.`,
+      "",
+    ];
+    let done = 0;
+    let totalReplaced = 0;
+    let totalNew = 0;
+    const failed = [];
+    const outNames = [];
+    for (const name of files) {
+      let wb;
+      try { wb = XLSX.read(fs.readFileSync(path.join(WORKDIR, name)), { type: "buffer", cellDates: false }); }
+      catch { failed.push(name); report.push(`- ❌ ${name} : illisible, ignoré`); continue; }
+      const before = book.entries.length;
+      const { outWb, perSheet } = anonymizeWorkbook(wb, book, extras, docOpts);
+      const base = sanitizeBase(name, "fichier");
+      const outPath = path.join(OUTDIR, `${base}-anonymise.xlsx`);
+      XLSX.writeFile(outWb, outPath);
+      outNames.push(`${base}-anonymise.xlsx`);
+      done++;
+      const fileReplaced = perSheet.reduce((s, x) => s + x.replaced, 0);
+      totalReplaced += fileReplaced;
+      totalNew += book.entries.length - before;
+      report.push(`- ✅ ${name} → ${base}-anonymise.xlsx`);
+      for (const s of perSheet) {
+        report.push(`    - onglet « ${s.name} » (${s.mode}) : ${s.replaced ? s.replaced + " valeur(s) — " + fmtByType(s.byType) : "rien détecté, copié tel quel"}`);
+      }
+    }
+    saveBook(book);
+    report.push(
+      "",
+      `Total : ${totalReplaced} valeur(s) codée(s), ${totalNew} nouveau(x) code(s), clé cumulée ${book.entries.length} codes.`,
+      `Clé (à ne JAMAIS partager) : ${KEY_XLSX}`
+    );
+    const reportPath = path.join(OUTDIR, `rapport-lot-${stamp}.md`);
+    fs.writeFileSync(reportPath, report.join("\n"), "utf8");
+
+    const lines = [
+      `✅ LOT TERMINÉ — ${done}/${files.length} fichier(s) anonymisé(s) dans ${OUTDIR}.`,
+      `${totalReplaced} valeur(s) codée(s) (${totalNew} nouveaux codes) avec une seule clé : la même valeur porte le même code dans tous les fichiers — les fichiers codés restent croisables entre eux.`,
+      `Rapport de synthèse (comptes uniquement, partageable) : ${reportPath}`,
+      `Clé (JAMAIS à partager, restée sur le poste) : ${KEY_XLSX}`,
+    ];
+    if (failed.length) lines.push(`⚠️ Ignorés (illisibles) : ${failed.join(", ")}.`);
+    lines.push(
+      "Aucun contenu n'est affiché ici — c'est voulu. Pour travailler sur un fichier précis dans la conversation, " +
+      "appelle anonymiser_fichier sur ce fichier (il renverra le tableau codé)."
+    );
+    lines.push("", rulesBlock(book));
+    return text(lines.join("\n"));
+  }
+);
+
 server.registerTool(
   "deanonymiser",
   {
