@@ -65,3 +65,29 @@ export const FACTURE_PDF_LINES = [
   "",
   "Reglement par virement - RIB : 007810000123456789012345",
 ];
+
+/* Écrit un PDF « scanné » : une page = une image JPEG (DCTDecode), sans
+   aucune couche de texte. C'est exactement ce que produit un scanner. */
+export function writeScannedPdf(filePath, jpegBuffer, width, height) {
+  const head = Buffer.from(
+    "%PDF-1.4\n" +
+    "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n" +
+    "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n" +
+    `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /XObject << /Im0 5 0 R >> >> >>\nendobj\n`,
+    "binary"
+  );
+  const content = "q 595 0 0 842 0 0 cm /Im0 Do Q";
+  const obj4 = Buffer.from(`4 0 obj\n<< /Length ${content.length} >>\nstream\n${content}\nendstream\nendobj\n`, "binary");
+  const obj5head = Buffer.from(
+    `5 0 obj\n<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} ` +
+    `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegBuffer.length} >>\nstream\n`,
+    "binary"
+  );
+  const obj5tail = Buffer.from("\nendstream\nendobj\n", "binary");
+  const body = Buffer.concat([head, obj4, obj5head, jpegBuffer, obj5tail]);
+  const trailer = Buffer.from(
+    `trailer\n<< /Size 6 /Root 1 0 R >>\n%%EOF\n`, "binary"
+  );
+  fs.writeFileSync(filePath, Buffer.concat([body, trailer]));
+  return filePath;
+}

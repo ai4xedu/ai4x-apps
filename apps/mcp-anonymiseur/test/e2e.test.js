@@ -8,7 +8,7 @@ import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
-import { writeMinimalPdf, FACTURE_PDF_LINES } from "./util-pdf.mjs";
+import { writeMinimalPdf, writeScannedPdf, FACTURE_PDF_LINES } from "./util-pdf.mjs";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import * as XLSX from "xlsx";
 import * as _fs from "node:fs";
@@ -61,6 +61,12 @@ before(async () => {
   // La même facture, en PDF natif (générateur minimal, ASCII).
   writeMinimalPdf(path.join(workdir, "facture.pdf"), FACTURE_PDF_LINES);
 
+  // Un vrai scan : une image JPEG, et le même JPEG enfermé dans un PDF sans
+  // couche de texte (ce que produit un scanner).
+  const jpeg = fs.readFileSync(path.join(here, "fixtures", "scan.jpg"));
+  fs.writeFileSync(path.join(workdir, "scan.jpg"), jpeg);
+  writeScannedPdf(path.join(workdir, "scan.pdf"), jpeg, 1240, 1754);
+
   client = new Client({ name: "e2e", version: "1.0.0" });
   await client.connect(
     new StdioClientTransport({
@@ -76,11 +82,12 @@ after(async () => {
   fs.rmSync(workdir, { recursive: true, force: true });
 });
 
-test("tools/list expose les 6 outils", async () => {
+test("tools/list expose les 7 outils", async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name).sort();
   assert.deepEqual(names, [
-    "anonymiser_dossier", "anonymiser_fichier", "deanonymiser", "etat_cle", "lister_fichiers", "reinitialiser_cle",
+    "anonymiser_dossier", "anonymiser_fichier", "deanonymiser", "etat_cle", "lire_scan",
+    "lister_fichiers", "reinitialiser_cle",
   ]);
 });
 
@@ -217,20 +224,59 @@ test("PDF natif : plan en comptes, contenu anonymisé en .md, PDF jamais réécr
   assert.ok(fs.existsSync(path.join(workdir, "facture.pdf")));
 });
 
-test("PDF scanné (sans texte) : refus honnête, jamais un faux « rien détecté »", async () => {
-  const scanPath = path.join(workdir, "scan.pdf");
-  writeMinimalPdf(scanPath, ["", "", ""]);
-  const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "scan.pdf", confirmer: true } });
-  assert.ok(res.isError, "un PDF sans texte doit être refusé");
-  assert.match(resultText(res), /OCR/);
-  fs.unlinkSync(scanPath); // ne pas polluer le test de lot qui suit
+test("lire_scan : OCR local, texte JAMAIS dans le chat, fichier À RELIRE écrit", async () => {
+  const res = await client.callTool({ name: "lire_scan", arguments: { nom_fichier: "scan.pdf" } });
+  const out = resultText(res);
+  assert.match(out, /OCR terminé/);
+  assert.match(out, /hors ligne/);
+  assert.match(out, /RELIRE/);
+  // RÈGLE OCR : aucune valeur reconnue ne remonte dans la conversation.
+  for (const secret of ["GHARB", "002233445566778", "011780000556677889900112", "Sekkat"]) {
+    assert.ok(!out.includes(secret), `« ${secret} » a fui dans le compte rendu OCR`);
+  }
+  // Le texte est sur le poste, complet, marqué à relire.
+  const p = path.join(workdir, "Anonymiseur-Ai4x", "scan-ocr-A-RELIRE.md");
+  assert.ok(fs.existsSync(p), "fichier À RELIRE absent");
+  const md = fs.readFileSync(p, "utf8");
+  assert.match(md, /À RELIRE AVANT USAGE/);
+  assert.ok(md.includes("GHARB") || md.includes("PRIMEURS"), "l'OCR n'a rien reconnu");
+});
+
+test("lire_scan refuse un PDF qui a déjà du texte (ne pas dégrader l'exact)", async () => {
+  const res = await client.callTool({ name: "lire_scan", arguments: { nom_fichier: "facture.pdf" } });
+  assert.ok(res.isError);
+  assert.match(resultText(res), /déjà du texte/);
+});
+
+test("le scan relu s'anonymise comme un texte, avec la même clé", async () => {
+  const res = await client.callTool({
+    name: "anonymiser_fichier",
+    arguments: { nom_fichier: "Anonymiseur-Ai4x/scan-ocr-A-RELIRE.md", confirmer: true },
+  });
+  const out = resultText(res);
+  assert.match(out, /Anonymisation terminée \(texte\)/);
+  assert.match(out, /ICE-\d{3}/);
+  for (const secret of ["002233445566778", "011780000556677889900112", "GHARB PRIMEURS"]) {
+    assert.ok(!out.includes(secret), `« ${secret} » a fui après anonymisation du scan`);
+  }
+  const p = path.join(workdir, "Anonymiseur-Ai4x", "scan-anonymise.md");
+  assert.ok(fs.existsSync(p), "sortie anonymisée du scan absente");
+  const md = fs.readFileSync(p, "utf8");
+  assert.ok(!md.includes("002233445566778"));
+  assert.ok(md.includes("17500"), "les montants doivent survivre");
+});
+
+test("une image seule est refusée par anonymiser_fichier, qui oriente vers lire_scan", async () => {
+  const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "scan.jpg", confirmer: true } });
+  assert.ok(res.isError);
+  assert.match(resultText(res), /lire_scan/);
 });
 
 test("anonymiser_dossier : plan en comptes seuls, exécution → fichiers + rapport + clé unique", async () => {
   // Le PLAN d'abord : liste des fichiers, comptes par type, zéro valeur réelle.
   const plan = await client.callTool({ name: "anonymiser_dossier", arguments: {} });
   const planOut = resultText(plan);
-  assert.match(planOut, /PLAN DE LOT — 3 fichier/);
+  assert.match(planOut, /PLAN DE LOT — 4 fichier/);
   assert.match(planOut, /clients\.xlsx/);
   assert.match(planOut, /facture\.xlsx/);
   assert.match(planOut, /confirmer: true/);
@@ -243,7 +289,7 @@ test("anonymiser_dossier : plan en comptes seuls, exécution → fichiers + rapp
   // Exécution : tous les fichiers, toutes les feuilles, une seule clé.
   const res = await client.callTool({ name: "anonymiser_dossier", arguments: { confirmer: true } });
   const out = resultText(res);
-  assert.match(out, /LOT TERMINÉ — 3\/3/);
+  assert.match(out, /LOT TERMINÉ — 3\/4/);
   assert.ok(!out.includes("El Amrani") && !out.includes("Sophatel"), "une valeur réelle a fui dans le compte rendu de lot");
   // Pas d'aperçu de contenu dans un compte rendu de lot : ni tableau TSV,
   // ni section « TABLEAU CODÉ » (les codes cités par le bloc de règles sont

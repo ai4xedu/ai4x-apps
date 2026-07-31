@@ -27,6 +27,7 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 import { extractText } from "unpdf";
+import { extractPdfJpegs, ocrImages, reviewHints, isImageFile } from "./ocr.js";
 import {
   XLSX, TYPES, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook, pad, normFor,
@@ -136,9 +137,11 @@ const RESTART_HINT =
  * détectée » silencieux sur un scan serait un mensonge de sécurité.        */
 
 const OCR_HINT =
-  "Ce PDF ne contient pas de texte extractible — c'est probablement un scan (une image). " +
-  "L'OCR n'est pas encore pris en charge : la v1 lit les PDF NATIFS (générés par un logiciel). " +
-  "Alternatives : réexporter le document en PDF texte depuis le logiciel source, ou traiter la version Excel.";
+  "Ce PDF ne contient pas de texte extractible — c'est un SCAN (des images). " +
+  "Utilise l'outil `lire_scan` sur ce fichier : il fait l'OCR sur le poste (hors ligne) et écrit le " +
+  "texte reconnu dans un fichier « À RELIRE ». L'utilisateur le corrige, puis on anonymise ce " +
+  "fichier-là. Si `lire_scan` échoue aussi, l'alternative est de réexporter un PDF avec couche de " +
+  "texte (réglage « PDF recherchable / OCR » du scanner, ou Acrobat → Reconnaître le texte).";
 
 async function readPdfPages(file) {
   const buf = fs.readFileSync(file);
@@ -164,6 +167,62 @@ function maskSuspectLines(codedText) {
     return line;
   }).join("\n");
   return { text: out, masked };
+}
+
+/* Anonymise un fichier TEXTE (.md/.txt) — typiquement un scan relu.
+   Même moteur, même clé, même flux plan→confirmer que le PDF natif. */
+function handlePlainText(file, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) {
+  const raw = fs.readFileSync(file, "utf8");
+  if (!raw.trim()) return err(`${path.basename(file)} est vide.`);
+  const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
+  const docOpts = { excludes: valeurs_a_exclure };
+  const fmt = (byType) => Object.entries(byType).map(([k, n]) => `${n} × ${k}`).join(", ") || "rien";
+  const reviewed = /-ocr-A-RELIRE\.md$/i.test(path.basename(file));
+
+  if (!confirmer) {
+    const probe = anonymizeText(raw, JSON.parse(JSON.stringify(loadBook())), extras, docOpts);
+    return text([
+      `📋 PLAN D'ANONYMISATION — fichier texte (${path.basename(file)}). RIEN n'a encore été écrit.`,
+      reviewed
+        ? `Ce fichier vient d'un scan passé à l'OCR. Vérifie avec l'utilisateur qu'il l'a RELU et corrigé avant d'aller plus loin — un identifiant mal reconnu ne serait pas détecté.`
+        : ``,
+      probe.stats.replaced
+        ? `Serait codé : ${fmt(probe.stats.byType)} — soit ${probe.stats.replaced} valeur(s), dont ${probe.stats.autoNames} nom(s)/adresse(s) codés d'office (jamais cités ici).`
+        : `Rien détecté (ni dictionnaire ICE/IF/RC/CNSS/patente/RIB/téléphone/email/CIN, ni nom probable).`,
+      `Les montants, dates et libellés ne sont JAMAIS codés.`,
+      `Présente ce plan à l'utilisateur, attends son accord, puis rappelle avec confirmer: true.`,
+    ].filter(Boolean).join("\n"));
+  }
+
+  const book = loadBook();
+  const res = anonymizeText(raw, book, extras, docOpts);
+  if (!res.stats.replaced) return err("Rien à coder dans ce fichier texte.");
+  saveBook(book);
+  ensureOutdir();
+  // L'extension d'abord, le suffixe ensuite : « scan-ocr-A-RELIRE.md » doit
+  // ressortir en « scan-anonymise.md », pas « scan-ocr-A-RELIRE-anonymise.md ».
+  const base = sanitizeBase(
+    path.basename(file).replace(/\.[^.]+$/, "").replace(/-ocr-A-RELIRE$/i, ""), "texte"
+  );
+  const outPath = path.join(OUTDIR, `${base}-anonymise.md`);
+  fs.writeFileSync(outPath, res.text.endsWith("\n") ? res.text : res.text + "\n", "utf8");
+
+  const { text: previewText, masked } = maskSuspectLines(res.text);
+  const previewLines = previewText.split("\n");
+  const shown = previewLines.slice(0, 200);
+  const lines = [
+    `✅ Anonymisation terminée (texte) — ${path.basename(file)}.`,
+    `Codé : ${fmt(res.stats.byType)} — ${res.stats.replaced} valeur(s), ${res.stats.newCodes} nouveau(x) code(s). Clé cumulée : ${book.entries.length} codes.`,
+    `Fichier anonymisé écrit : ${outPath}`,
+    `Clé (JAMAIS à partager, restée sur le poste) : ${KEY_XLSX}`,
+  ];
+  if (masked) lines.push(`⚠️ CONTRÔLE DE FUITE — ${masked} ligne(s) masquée(s) dans l'aperçu (le fichier local reste complet).`);
+  lines.push("", rulesBlock(book), "");
+  lines.push(shown.length < previewLines.length
+    ? `CONTENU CODÉ (aperçu ${shown.length}/${previewLines.length} lignes) :`
+    : "CONTENU CODÉ :");
+  lines.push(shown.join("\n"));
+  return text(lines.join("\n"));
 }
 
 async function handlePdf(file, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) {
@@ -309,6 +368,20 @@ server.registerTool(
     /* ---------------------------------------------------- MODE PDF -------- */
     if (/\.pdf$/i.test(file)) {
       return handlePdf(file, { valeurs_a_coder, valeurs_a_exclure, confirmer });
+    }
+
+    /* ------------------------------------------- MODE TEXTE (.md/.txt) ---- *
+     * C'est ici qu'atterrit un scan relu : lire_scan écrit un « À RELIRE »,  *
+     * l'utilisateur le corrige, et l'anonymisation le traite comme un texte. */
+    if (/\.(md|txt)$/i.test(file)) {
+      return handlePlainText(file, { valeurs_a_coder, valeurs_a_exclure, confirmer });
+    }
+
+    if (isImageFile(file)) {
+      return err(
+        `${path.basename(file)} est une image (un scan). Utilise d'abord l'outil \`lire_scan\` : il fait ` +
+        "l'OCR sur le poste et écrit un fichier « À RELIRE » que l'utilisateur corrige avant anonymisation."
+      );
     }
 
     let wb;
@@ -759,6 +832,107 @@ server.registerTool(
       "appelle anonymiser_fichier sur ce fichier (il renverra le tableau codé)."
     );
     lines.push("", rulesBlock(book));
+    return text(lines.join("\n"));
+  }
+);
+
+server.registerTool(
+  "lire_scan",
+  {
+    title: "Lire un scan (OCR local) — texte écrit sur le poste, à relire",
+    description:
+      "Fait l'OCR d'un SCAN (image .png/.jpg/.tif ou PDF sans couche de texte) ENTIÈREMENT sur le poste, hors " +
+      "ligne. Le texte reconnu N'EST JAMAIS renvoyé ici : il est écrit dans un fichier « …-ocr-A-RELIRE.md » " +
+      "que l'UTILISATEUR doit relire et corriger — l'OCR se trompe, et un identifiant mal reconnu ne serait " +
+      "pas détecté à l'anonymisation (ce serait une fuite silencieuse). Une fois le fichier relu, appelle " +
+      "anonymiser_fichier sur CE fichier. Ne propose jamais d'envoyer l'image elle-même à une IA.",
+    inputSchema: z.object({
+      nom_fichier: z.string().describe("Nom du scan dans le dossier de travail (.pdf, .png, .jpg, .tif…)"),
+    }),
+  },
+  async ({ nom_fichier }) => {
+    if (!fs.existsSync(WORKDIR)) {
+      return err(`Dossier de travail introuvable : ${WORKDIR}. ${RESTART_HINT}`);
+    }
+    let file;
+    try { file = safeResolve(nom_fichier); } catch (e) { return err(e.message); }
+    if (!fs.existsSync(file)) {
+      return err(`Fichier introuvable : ${nom_fichier}. Utilise lister_fichiers pour voir les fichiers disponibles.`);
+    }
+
+    /* Rassemble les images à reconnaître : le fichier lui-même si c'est une
+       image, sinon les images embarquées dans le PDF. */
+    let images = [];
+    let source = "";
+    if (isImageFile(file)) {
+      images = [fs.readFileSync(file)];
+      source = "image";
+    } else if (/\.pdf$/i.test(file)) {
+      const buf = fs.readFileSync(file);
+      // Un PDF qui a DÉJÀ du texte n'a pas besoin d'OCR — on évite de
+      // dégrader une donnée exacte par une reconnaissance approximative.
+      try {
+        const { text: t } = await extractText(new Uint8Array(buf), { mergePages: true });
+        if (String(t || "").replace(/\s/g, "").length > 40) {
+          return err(
+            `${path.basename(file)} contient déjà du texte : ce n'est pas un scan. Utilise directement ` +
+            "anonymiser_fichier — l'OCR dégraderait une donnée exacte."
+          );
+        }
+      } catch {}
+      images = extractPdfJpegs(buf);
+      source = "PDF scanné";
+      if (!images.length) {
+        return err(
+          `Aucune image exploitable dans ${path.basename(file)}. Les scans en JPEG sont pris en charge ; ` +
+          "les compressions CCITT/JBIG2 (fax, noir et blanc) ne le sont pas encore. " +
+          "Contournement : réenregistrer le scan en JPEG/PNG, ou activer le réglage « PDF recherchable / OCR » du scanner."
+        );
+      }
+    } else {
+      return err(`${path.basename(file)} n'est ni une image ni un PDF. lire_scan attend un scan.`);
+    }
+
+    let res;
+    try { res = await ocrImages(images); }
+    catch (e) { return err(`OCR impossible : ${e.message}`); }
+
+    const clean = res.text.replace(/\s/g, "");
+    if (clean.length < 40) {
+      return err(
+        `L'OCR n'a presque rien reconnu dans ${path.basename(file)} (image trop floue, contrastée ou de travers ?). ` +
+        "Rescanner à 300 dpi en noir et blanc donne généralement un bien meilleur résultat."
+      );
+    }
+
+    ensureOutdir();
+    const base = sanitizeBase(path.basename(file).replace(/\.[^.]+$/, ""), "scan");
+    const outPath = path.join(OUTDIR, `${base}-ocr-A-RELIRE.md`);
+    fs.writeFileSync(outPath,
+      `# ${base} — texte reconnu par OCR, À RELIRE AVANT USAGE\n\n` +
+      `> Confiance moyenne : ${res.confidence.toFixed(0)} %. L'OCR se trompe : vérifiez surtout les suites de\n` +
+      `> chiffres (ICE, RIB, IF, téléphone) et les lignes de tableau. Corrigez directement ce fichier,\n` +
+      `> puis demandez l'anonymisation de CE fichier.\n\n` +
+      res.text + "\n", "utf8");
+
+    const hints = reviewHints(res.text);
+    const conf = res.confidence;
+    const lines = [
+      `📄 OCR terminé (${source}, ${images.length} page(s)) — ENTIÈREMENT sur le poste, hors ligne.`,
+      `Confiance moyenne : ${conf.toFixed(0)} %${conf < 75 ? " — FAIBLE, la relecture est indispensable" : ""}.`,
+      `Le texte reconnu n'apparaît PAS ici (il contient les vraies valeurs). Il est écrit là :`,
+      outPath,
+      "",
+      "⚠️ ÉTAPE OBLIGATOIRE — dis à l'utilisateur d'ouvrir ce fichier et de le RELIRE :",
+      "un identifiant mal reconnu (un 0 lu O, un chiffre avalé) ne serait pas détecté à l'anonymisation," +
+      " et passerait donc en clair pendant que le rapport annoncerait « rien détecté ».",
+    ];
+    if (hints.length) lines.push("À vérifier en priorité : " + hints.join(" ; ") + ".");
+    lines.push(
+      "",
+      `Quand c'est relu : appelle anonymiser_fichier avec nom_fichier « Anonymiseur-Ai4x/${base}-ocr-A-RELIRE.md ».`,
+      "N'envoie JAMAIS l'image d'origine à une IA — c'est précisément ce que cet outil évite."
+    );
     return text(lines.join("\n"));
   }
 );
