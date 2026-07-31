@@ -28,6 +28,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 import { extractText } from "unpdf";
 import { extractPdfJpegs, ocrImages, reviewHints, isImageFile } from "./ocr.js";
+import { readLicence, licenceStatus, blockedMessage, warningBanner } from "./licence.js";
 import {
   XLSX, TYPES, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook, pad, normFor,
@@ -40,6 +41,25 @@ const OUTDIR = path.join(WORKDIR, "Anonymiseur-Ai4x");
 const KEY_JSON = path.join(OUTDIR, "cle-de-session.json");
 const KEY_XLSX = path.join(OUTDIR, "cle-correspondance-NE-JAMAIS-PARTAGER.xlsx");
 const MAX_PREVIEW_ROWS = 300;
+
+/* ---------------------------------------------------------------- licence *
+ * Lue au démarrage (comme le dossier de travail : changer la clé demande un
+ * redémarrage de Claude Desktop — c'est dit dans les messages). La
+ * vérification est locale et cryptographique : aucun appel réseau. */
+const LICENCE = readLicence(WORKDIR);
+
+function licence() {
+  return licenceStatus(LICENCE.raw);
+}
+
+/* Garde-fou des outils qui PRODUISENT de l'anonymisation. Volontairement
+   PAS appliqué à deanonymiser ni etat_cle : à l'expiration, on cesse de
+   servir, on ne prend rien en otage. */
+function requireLicence() {
+  const st = licence();
+  if (st.valid) return null;
+  return err(blockedMessage(st));
+}
 
 /* ------------------------------------------------------------ clé (disque) */
 
@@ -101,6 +121,13 @@ function text(s) {
   return { content: [{ type: "text", text: s }] };
 }
 
+/* Réponse d'un outil producteur : y colle l'avertissement d'échéance quand
+   la licence expire bientôt (règle : prévenir largement, jamais surprendre). */
+function textWithLicence(s) {
+  const banner = warningBanner(licence());
+  return text(banner ? `${banner}\n\n${s}` : s);
+}
+
 function err(s) {
   return { content: [{ type: "text", text: `⚠️ ${s}` }], isError: true };
 }
@@ -121,7 +148,7 @@ function rulesBlock(book) {
 
 /* ------------------------------------------------------------------ MCP */
 
-const server = new McpServer({ name: "anonymiseur-ai4x", version: "1.2.0" });
+const server = new McpServer({ name: "anonymiseur-ai4x", version: "1.6.0" });
 
 const RESTART_HINT =
   "Si tu viens de changer le dossier dans les réglages de l'extension, REDÉMARRE Claude Desktop : " +
@@ -181,7 +208,7 @@ function handlePlainText(file, { valeurs_a_coder = [], valeurs_a_exclure = [], c
 
   if (!confirmer) {
     const probe = anonymizeText(raw, JSON.parse(JSON.stringify(loadBook())), extras, docOpts);
-    return text([
+    return textWithLicence([
       `📋 PLAN D'ANONYMISATION — fichier texte (${path.basename(file)}). RIEN n'a encore été écrit.`,
       reviewed
         ? `Ce fichier vient d'un scan passé à l'OCR. Vérifie avec l'utilisateur qu'il l'a RELU et corrigé avant d'aller plus loin — un identifiant mal reconnu ne serait pas détecté.`
@@ -222,7 +249,7 @@ function handlePlainText(file, { valeurs_a_coder = [], valeurs_a_exclure = [], c
     ? `CONTENU CODÉ (aperçu ${shown.length}/${previewLines.length} lignes) :`
     : "CONTENU CODÉ :");
   lines.push(shown.join("\n"));
-  return text(lines.join("\n"));
+  return textWithLicence(lines.join("\n"));
 }
 
 async function handlePdf(file, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) {
@@ -239,7 +266,7 @@ async function handlePdf(file, { valeurs_a_coder = [], valeurs_a_exclure = [], c
 
   if (!confirmer) {
     const probe = anonymizeText(fullText, JSON.parse(JSON.stringify(loadBook())), extras, docOpts);
-    return text([
+    return textWithLicence([
       `📋 PLAN D'ANONYMISATION — PDF natif (${pdf.totalPages} page(s)). RIEN n'a encore été écrit.`,
       `Le PDF n'est jamais réécrit : son CONTENU sera anonymisé et livré en texte structuré (.md) — c'est ce fichier-là qu'on donne à l'IA.`,
       probe.stats.replaced
@@ -283,7 +310,7 @@ async function handlePdf(file, { valeurs_a_coder = [], valeurs_a_exclure = [], c
     ? `CONTENU CODÉ (aperçu ${shown.length}/${previewLines.length} lignes — le fichier complet est sur le poste) :`
     : "CONTENU CODÉ :");
   lines.push(shown.join("\n"));
-  return text(lines.join("\n"));
+  return textWithLicence(lines.join("\n"));
 }
 
 server.registerTool(
@@ -356,6 +383,8 @@ server.registerTool(
     }),
   },
   async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) => {
+    const bloque = requireLicence();
+    if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) {
       return err(`Dossier de travail introuvable : ${WORKDIR}. Configure-le dans les réglages de l'extension. ${RESTART_HINT}`);
     }
@@ -405,7 +434,7 @@ server.registerTool(
       if (!confirmer) {
         // Répétition à blanc sur une COPIE de la clé : rien n'est écrit.
         const probe = anonymizeDocument(ws, JSON.parse(JSON.stringify(loadBook())), extras, docOpts);
-        return text([
+        return textWithLicence([
           `📋 PLAN D'ANONYMISATION — mode DOCUMENT (mise en page type facture/document, pas un tableau de données). RIEN n'a encore été écrit.`,
           probe.stats.replaced
             ? `Serait codé, à l'intérieur des cellules (libellés conservés) : ${fmt(probe.stats.byType)} — soit ${probe.stats.replaced} valeur(s) dans ${probe.stats.cellsTouched} cellule(s).`
@@ -465,7 +494,7 @@ server.registerTool(
       lines.push("", rulesBlock(book), "");
       lines.push(shownRows < totalRows ? `DOCUMENT CODÉ (aperçu ${shownRows}/${totalRows} lignes) :` : "DOCUMENT CODÉ :");
       lines.push(tsv);
-      return text(lines.join("\n"));
+      return textWithLicence(lines.join("\n"));
     }
 
     /* ------------------------------------------------- MODE TABLEAU ------- */
@@ -522,7 +551,7 @@ server.registerTool(
         );
       }
       planLines.push(`Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.`);
-      return text(planLines.join("\n"));
+      return textWithLicence(planLines.join("\n"));
     }
 
     const book = loadBook();
@@ -586,7 +615,7 @@ server.registerTool(
         : "TABLEAU CODÉ :"
     );
     lines.push(tsv);
-    return text(lines.join("\n"));
+    return textWithLicence(lines.join("\n"));
   }
 );
 
@@ -687,6 +716,8 @@ server.registerTool(
     }),
   },
   async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) => {
+    const bloque = requireLicence();
+    if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) {
       return err(`Dossier de travail introuvable : ${WORKDIR}. Configure-le dans les réglages de l'extension. ${RESTART_HINT}`);
     }
@@ -748,7 +779,7 @@ server.registerTool(
         `Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.`
       );
       if (unreadable) lines.push(`⚠️ ${unreadable} fichier(s) illisible(s) seront ignorés.`);
-      return text(lines.join("\n"));
+      return textWithLicence(lines.join("\n"));
     }
 
     /* ------------------------------------------------------- exécution */
@@ -832,7 +863,7 @@ server.registerTool(
       "appelle anonymiser_fichier sur ce fichier (il renverra le tableau codé)."
     );
     lines.push("", rulesBlock(book));
-    return text(lines.join("\n"));
+    return textWithLicence(lines.join("\n"));
   }
 );
 
@@ -851,6 +882,8 @@ server.registerTool(
     }),
   },
   async ({ nom_fichier }) => {
+    const bloque = requireLicence();
+    if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) {
       return err(`Dossier de travail introuvable : ${WORKDIR}. ${RESTART_HINT}`);
     }
@@ -933,7 +966,7 @@ server.registerTool(
       `Quand c'est relu : appelle anonymiser_fichier avec nom_fichier « Anonymiseur-Ai4x/${base}-ocr-A-RELIRE.md ».`,
       "N'envoie JAMAIS l'image d'origine à une IA — c'est précisément ce que cet outil évite."
     );
-    return text(lines.join("\n"));
+    return textWithLicence(lines.join("\n"));
   }
 );
 
@@ -1015,9 +1048,14 @@ server.registerTool(
     }
     const detail = Object.entries(byPrefix)
       .map(([p, n]) => `${n} × ${PREFIX_LABEL[p] || p}`).join(", ");
+    const st = licence();
+    const licLine = st.valid
+      ? `Licence : ${st.holder} · ${st.seats} poste(s) · valide jusqu'au ${st.expiresAt} (${st.daysLeft} j).`
+      : `Licence : aucune valide (${st.reason}). La dé-anonymisation reste disponible — elle le restera toujours.`;
     return text(
       [
         `Clé de session : ${book.entries.length} codes (${detail}).`,
+        licLine,
         `Clé (à ne jamais partager) : ${KEY_XLSX}`,
         `Sorties : ${OUTDIR}`,
         "La même valeur garde le même code sur tous les fichiers traités avec cette clé.",

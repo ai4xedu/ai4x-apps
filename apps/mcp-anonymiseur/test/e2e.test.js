@@ -14,7 +14,36 @@ import * as XLSX from "xlsx";
 import * as _fs from "node:fs";
 XLSX.set_fs(_fs); // build ESM de SheetJS : fs à brancher explicitement
 
+import crypto from "node:crypto";
+import { b64urlEncode } from "../server/licence.js";
+
 const here = path.dirname(fileURLToPath(import.meta.url));
+
+/* Licence de test signée avec la clé privée locale (hors dépôt). Sans elle,
+   les outils producteurs sont bloqués — c'est justement ce que teste
+   « sans licence » plus bas. */
+function testPrivateKey() {
+  try {
+    const f = process.env.NANOMIZER_PRIVATE_KEY_FILE ||
+      path.join(os.homedir(), "Desktop", "nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt");
+    const raw = fs.readFileSync(f, "utf8").split("\n").map((l) => l.trim())
+      .filter((l) => l.length > 40 && /^[A-Za-z0-9+/=]+$/.test(l)).pop();
+    return crypto.createPrivateKey({ key: Buffer.from(raw, "base64"), format: "der", type: "pkcs8" });
+  } catch { return null; }
+}
+
+function mintLicence(payload) {
+  const key = testPrivateKey();
+  if (!key) return "";
+  const body = b64urlEncode(Buffer.from(JSON.stringify(payload), "utf8"));
+  const sig = b64urlEncode(crypto.sign(null, Buffer.from(body), key));
+  return `NANO1.${body}.${sig}`;
+}
+
+function testLicence() {
+  const exp = new Date(Date.now() + 400 * 86400000).toISOString().slice(0, 10);
+  return mintLicence({ v: 1, org: "Suite de tests", seats: 99, iat: "2026-01-01", exp });
+}
 const serverPath = path.join(here, "..", "server", "index.js");
 
 let client;
@@ -72,7 +101,7 @@ before(async () => {
     new StdioClientTransport({
       command: process.execPath,
       args: [serverPath],
-      env: { ...process.env, ANX_WORKDIR: workdir },
+      env: { ...process.env, ANX_WORKDIR: workdir, ANX_LICENCE: testLicence() },
     })
   );
 });
