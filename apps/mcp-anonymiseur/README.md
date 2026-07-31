@@ -73,3 +73,38 @@ plus téléchargeable sur le site (retiré de `ai4x-website/assets/outils/` le
 31/07). Il se livre après un échange commercial ; la LP `/anonymiseur-donnees`
 le présente et renvoie vers `#plans`. Installation côté client : double-clic sur
 le `.mcpb` → Claude Desktop propose « Installer ».
+
+## Licences (offre Équipes)
+
+Vérification **100 % hors ligne** : la clé est un jeton signé Ed25519 que le
+connecteur vérifie avec une clé publique embarquée. Aucun appel réseau — un
+outil qui promet « rien ne sort » ne peut pas téléphoner pour se valider.
+
+Trois règles qui priment sur la protection :
+
+1. **Le décodage ne s'arrête jamais.** À l'expiration, `anonymiser_fichier`,
+   `anonymiser_dossier` et `lire_scan` se bloquent ; `deanonymiser` et
+   `etat_cle` continuent **pour toujours**. Les données d'un client ne sont
+   jamais prises en otage par une facture impayée.
+2. **On prévient dès J-30**, dans chaque réponse d'outil.
+3. **La licence ne parle de personne** : titulaire, postes, dates. Aucune
+   donnée d'usage, aucune empreinte machine, rien qui ressemble à de la
+   télémétrie.
+
+C'est une **serrure de courtoisie, pas un DRM** : le code est du JavaScript
+lisible. Le but est de structurer une relation commerciale, pas de gagner une
+course aux armements — un vrai DRM se paierait en promesse de confidentialité.
+
+Émettre une clé (interne, jamais dans le bundle) :
+
+```bash
+node scripts/emettre-licence.mjs --org "Cabinet X" --postes 5 --mois 12
+```
+
+⚠️ La clé privée vit **hors dépôt** (par défaut sur le Bureau,
+`nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt`). Sans elle, personne ne peut
+émettre de licence ; avec elle, n'importe qui le peut. Ne jamais la committer,
+ne jamais l'envoyer, ne jamais la coller dans un chat.
+
+Côté client : réglages de l'extension → « Clé de licence » → coller →
+**redémarrer Claude Desktop** (l'env d'un process ne change pas en vol).

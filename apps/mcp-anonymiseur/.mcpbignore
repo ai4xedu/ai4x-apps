@@ -1,3 +1,7 @@
+scripts/
+
+# Outillage interne : le script d'émission de licences n'a rien à faire chez
+# le client (il exige de toute façon la clé privée, qui vit hors dépôt).
 test/
 node_modules/.bin/
 node_modules/@modelcontextprotocol/client/
