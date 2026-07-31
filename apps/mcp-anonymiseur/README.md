@@ -1,7 +1,7 @@
 # Anonymiseur de données Ai4x — connecteur MCP local
 
-Extension Claude Desktop (`.mcpb`) : Claude anonymise les fichiers Excel/CSV
-**sur le poste de l'utilisateur**, travaille sur les codes (`NOM-001`…), puis
+Extension Claude Desktop (`.mcpb`) : Claude anonymise les fichiers Excel/CSV,
+les factures PDF et les scans **sur le poste de l'utilisateur**, travaille sur les codes (`NOM-001`…), puis
 dé-anonymise le résultat **sur le disque** — les données personnelles
 n'entrent jamais dans la conversation.
 
@@ -24,20 +24,21 @@ compteurs, `etat_cle` ne renvoie que des comptes. Les tests E2E
 | `lister_fichiers` | Liste les .xlsx/.xls/.csv/.pdf du dossier de travail |
 | `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) et deux modes auto-choisis : TABLEAU (colonnes entières) ou DOCUMENT (facture mise en page → codage intra-cellule, dictionnaire marocain ICE/IF/RC/CNSS/patente/RIB/tél ; libellés et montants JAMAIS codés). `valeurs_a_coder` pour les noms propres. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
 | `anonymiser_dossier` | LOT : tous les fichiers du dossier (ou filtrés par `motif`), toutes les feuilles, UNE clé partagée, plan→confirmer, compte rendu en comptes seuls + rapport local `rapport-lot-*.md` |
-| `lire_scan` | OCR LOCAL d'un scan (image ou PDF image). Le texte reconnu n'entre JAMAIS dans le chat : il est écrit dans `…-ocr-A-RELIRE.md`, l'utilisateur le corrige, puis on anonymise CE fichier |
+| `lire_scan` | OCR LOCAL d'un scan (image ou PDF sans texte) — le texte reconnu n'entre JAMAIS dans la conversation : il est écrit en `…-ocr-A-RELIRE.md`, l'utilisateur le relit et le corrige, PUIS on anonymise ce fichier |
 | `deanonymiser` | Retraduit texte/TSV → fichier local (.md ou .xlsx), jamais dans le chat |
 | `etat_cle` | Comptes par type, chemins (distingue « dossier introuvable » de « clé vide ») |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
-v1.5.0 (OCR) : les scans sont lus SUR LE POSTE (tesseract.js, modèle
-`tessdata/fra.traineddata` embarqué — aucun téléchargement). Triptyque imposé :
-**OCR → relecture humaine → anonymisation**. Raison : l'OCR se trompe (sur une
-facture de test propre, une ligne de tableau perdue, « Hassan II » lu
-« Hassan Il ») et un identifiant mal reconnu échappe au dictionnaire — il
-passerait en clair pendant que le rapport annoncerait « rien détecté ». Un OCR
-silencieux transformerait un refus honnête en fausse sécurité.
-`anonymiser_fichier` accepte donc aussi les .md/.txt (le scan relu).
-Bundle 4,4 → 23 Mo : ne PAS élaguer tesseract.js-core (cf. .mcpbignore).
+v1.5.0 (OCR des scans) : Tesseract embarqué (`tessdata/fra.traineddata`,
+aucun téléchargement au premier usage). RÈGLE OCR, aussi dure que la RÈGLE
+N°1 : **le texte reconnu ne remonte jamais dans le chat** et la relecture
+humaine est une étape obligatoire du flux — l'OCR se trompe (une ligne de
+tableau perdue, « Hassan II » lu « Hassan Il ») et un identifiant mal reconnu
+échapperait au dictionnaire, donc passerait en clair pendant que le rapport
+annoncerait « rien détecté ». Un OCR silencieux, c'est une fausse sécurité.
+`anonymiser_fichier` accepte aussi les `.md`/`.txt` : c'est là qu'atterrit le
+scan relu. Bundle 4,4 → 23 Mo (le prix de l'OCR hors ligne) — ne PAS élaguer
+tesseract.js-core, cf. `.mcpbignore`.
 
 v1.4.0 (PDF natifs) : `anonymiser_fichier` et `anonymiser_dossier` lisent
 les PDF NATIFS (unpdf) — le contenu est extrait, anonymisé comme un document
@@ -67,7 +68,8 @@ npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb
 Piège : le build ESM de SheetJS exige `XLSX.set_fs(fs)` avant tout
 readFile/writeFile.
 
-Distribution : le `.mcpb` est copié dans
-`ai4x-website/assets/outils/anonymiseur-ai4x.mcpb` et téléchargeable depuis la
-LP `/anonymiseur-donnees` (gate email). Installation côté utilisateur :
-double-clic sur le fichier → Claude Desktop propose « Installer ».
+Distribution : le connecteur est la version PAYANTE (offre Équipes) — il n'est
+plus téléchargeable sur le site (retiré de `ai4x-website/assets/outils/` le
+31/07). Il se livre après un échange commercial ; la LP `/anonymiseur-donnees`
+le présente et renvoie vers `#plans`. Installation côté client : double-clic sur
+le `.mcpb` → Claude Desktop propose « Installer ».
