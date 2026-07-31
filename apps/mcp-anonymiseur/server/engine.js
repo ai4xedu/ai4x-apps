@@ -395,6 +395,62 @@ export function nameCandidates(ws) {
   return [...seen.values()];
 }
 
+/* Même chasse aux noms, mais sur du TEXTE LIBRE (contenu extrait d'un PDF).
+   Chaque ligne joue le rôle d'une cellule : mêmes règles fortes (forme
+   juridique, adresse, MAJUSCULES hors lexique), et le filet « zone » devient
+   « les 1-2 lignes non vides qui suivent un libellé ÉMETTEUR / CLIENT / … ». */
+export function nameCandidatesFromText(fullText) {
+  const lines = String(fullText || "").split(/\r?\n/).map((l) => l.trim());
+  const seen = new Map();
+  const add = (value, type) => {
+    const v = String(value).trim().replace(/[\s,;:]+$/, "");
+    if (v.length < 2) return;
+    const k = v.toLowerCase();
+    if (!seen.has(k)) seen.set(k, { value: v, type });
+  };
+  // Passe 1 — règles fortes, ligne par ligne.
+  for (const line of lines) {
+    if (!line) continue;
+    LEGAL_SUFFIX_RX.lastIndex = 0;
+    let m;
+    while ((m = LEGAL_SUFFIX_RX.exec(line))) add(m[0], "societe");
+    if (ADDRESS_RX.test(line) && !matchesDocPattern(line)) add(line, "adresse");
+    if (allCapsName(line) && !matchesDocPattern(line)) add(line, "societe");
+  }
+  // Passe 2 — zone : les lignes qui suivent un libellé ÉMETTEUR / CLIENT / …
+  for (let i = 0; i < lines.length; i++) {
+    const label = normToken(lines[i]).replace(/[^A-Z]/g, "");
+    if (!ZONE_LABELS.has(label)) continue;
+    let taken = 0;
+    for (let j = i + 1; j < Math.min(i + 5, lines.length) && taken < 2; j++) {
+      const lt = lines[j];
+      if (!lt) continue;
+      taken++;
+      if (!matchesDocPattern(lt) && !/\d{6,}/.test(lt) && !lexiconOnly(lt)) add(lt, "societe");
+    }
+  }
+  return [...seen.values()];
+}
+
+/* Anonymise un TEXTE LIBRE entier (contenu extrait d'un PDF) : dictionnaire
+   marocain + noms/adresses codés d'office, montants et libellés intacts.
+   Même carnet, mêmes codes que les modes tableau et document. */
+export function anonymizeText(fullText, book, extra, opts) {
+  book = book || newCodebook();
+  const excludes = new Set(((opts && opts.excludes) || []).map((v) => String(v).trim().toLowerCase()));
+  const auto = nameCandidatesFromText(fullText).filter((c) => !excludes.has(c.value.toLowerCase()));
+  const allExtra = [...(extra || []), ...auto];
+  const res = codeDocumentText(fullText, book, allExtra);
+  return {
+    text: res.text, book,
+    stats: {
+      replaced: res.replaced, newCodes: res.newCodes,
+      reusedCells: res.replaced - res.newCodes,
+      byType: res.byType, autoNames: auto.length,
+    },
+  };
+}
+
 /* Après codage : cette cellule ressemble-t-elle ENCORE à un nom/adresse ?
    Second filet pour l'aperçu (masquage) — les codes SOCIETE-001 sont ignorés. */
 export function isSuspectName(text) {

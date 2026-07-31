@@ -26,10 +26,12 @@ import os from "node:os";
 import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
+import { extractText } from "unpdf";
 import {
   XLSX, TYPES, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook, pad, normFor,
   detectLayout, anonymizeDocument, classifyLoose, cellText, isSuspectName,
+  anonymizeText,
 } from "./engine.js";
 
 const WORKDIR = path.resolve(process.env.ANX_WORKDIR || path.join(os.homedir(), "Documents"));
@@ -124,6 +126,107 @@ const RESTART_HINT =
   "Si tu viens de changer le dossier dans les réglages de l'extension, REDÉMARRE Claude Desktop : " +
   "un changement de dossier n'est pris en compte qu'au redémarrage.";
 
+/* ------------------------------------------------------------------ PDF *
+ * Décision de conception : on ne produit JAMAIS de « PDF caviardé » — la    *
+ * rédaction visuelle est un champ de mines (calques de texte résiduels,     *
+ * masquage incomplet = fausse sécurité). On lit le CONTENU du PDF natif,    *
+ * on l'anonymise comme un document, et on livre un texte structuré (.md)    *
+ * + la même clé. Un PDF scanné (sans texte extractible) est REFUSÉ          *
+ * honnêtement : l'OCR n'est pas encore pris en charge, et un « 0 donnée    *
+ * détectée » silencieux sur un scan serait un mensonge de sécurité.        */
+
+const OCR_HINT =
+  "Ce PDF ne contient pas de texte extractible — c'est probablement un scan (une image). " +
+  "L'OCR n'est pas encore pris en charge : la v1 lit les PDF NATIFS (générés par un logiciel). " +
+  "Alternatives : réexporter le document en PDF texte depuis le logiciel source, ou traiter la version Excel.";
+
+async function readPdfPages(file) {
+  const buf = fs.readFileSync(file);
+  const { totalPages, text } = await extractText(new Uint8Array(buf), { mergePages: false });
+  const pages = (Array.isArray(text) ? text : [text]).map((p) => String(p || "").trim());
+  return { totalPages, pages };
+}
+
+function pdfFullText(pages) {
+  return pages
+    .map((p, i) => (pages.length > 1 ? `----- Page ${i + 1} -----\n${p}` : p))
+    .join("\n\n");
+}
+
+/* Second filet d'aperçu : toute ligne encore suspecte après codage est
+   masquée dans la conversation (le fichier local, lui, reste complet). */
+function maskSuspectLines(codedText) {
+  let masked = 0;
+  const out = String(codedText).split("\n").map((line) => {
+    const t = line.trim();
+    if (!t) return line;
+    if (classifyLoose(t).length || isSuspectName(t)) { masked++; return "[MASQUÉ — fuite possible]"; }
+    return line;
+  }).join("\n");
+  return { text: out, masked };
+}
+
+async function handlePdf(file, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) {
+  let pdf;
+  try { pdf = await readPdfPages(file); }
+  catch { return err(`PDF illisible (${path.basename(file)}) — le fichier est peut-être corrompu ou protégé par mot de passe.`); }
+  const fullText = pdfFullText(pdf.pages);
+  if (fullText.replace(/[-\s]|Page \d+/g, "").length < 40) {
+    return err(OCR_HINT);
+  }
+  const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
+  const docOpts = { excludes: valeurs_a_exclure };
+  const fmt = (byType) => Object.entries(byType).map(([k, n]) => `${n} × ${k}`).join(", ") || "rien";
+
+  if (!confirmer) {
+    const probe = anonymizeText(fullText, JSON.parse(JSON.stringify(loadBook())), extras, docOpts);
+    return text([
+      `📋 PLAN D'ANONYMISATION — PDF natif (${pdf.totalPages} page(s)). RIEN n'a encore été écrit.`,
+      `Le PDF n'est jamais réécrit : son CONTENU sera anonymisé et livré en texte structuré (.md) — c'est ce fichier-là qu'on donne à l'IA.`,
+      probe.stats.replaced
+        ? `Serait codé : ${fmt(probe.stats.byType)} — soit ${probe.stats.replaced} valeur(s).`
+        : `Rien détecté (ni dictionnaire ICE/IF/RC/CNSS/patente/RIB/téléphone/email/CIN, ni nom probable).`,
+      `Dont ${probe.stats.autoNames} nom(s)/adresse(s) probables CODÉS D'OFFICE — leurs valeurs ne sont jamais citées ici. Ajuste avec valeurs_a_exclure ; ajoute les noms connus de l'utilisateur via valeurs_a_coder.`,
+      `Les montants, quantités, dates et libellés ne sont JAMAIS codés.`,
+      `Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.`,
+    ].join("\n"));
+  }
+
+  const book = loadBook();
+  const res = anonymizeText(fullText, book, extras, docOpts);
+  if (!res.stats.replaced) {
+    return err("Rien à coder : ni le dictionnaire ni les noms probables n'ont trouvé de correspondance dans ce PDF.");
+  }
+  saveBook(book);
+  ensureOutdir();
+  const base = sanitizeBase(path.basename(file).replace(/\.pdf$/i, ""), "document");
+  const outPath = path.join(OUTDIR, `${base}-anonymise.md`);
+  fs.writeFileSync(outPath, `# ${base} — contenu anonymisé (extrait du PDF)\n\n${res.text}\n`, "utf8");
+
+  const { text: previewText, masked } = maskSuspectLines(res.text);
+  const previewLines = previewText.split("\n");
+  const shown = previewLines.slice(0, 200);
+  const lines = [
+    `✅ Anonymisation terminée (PDF natif, ${pdf.totalPages} page(s)) — ${path.basename(file)}.`,
+    `Codé : ${fmt(res.stats.byType)} — ${res.stats.replaced} valeur(s), ${res.stats.newCodes} nouveau(x) code(s). Clé cumulée : ${book.entries.length} codes.`,
+    `Le PDF d'origine n'est PAS modifié. Le contenu anonymisé est écrit ici : ${outPath}`,
+    `Clé (JAMAIS à partager, restée sur le poste) : ${KEY_XLSX}`,
+  ];
+  if (masked) {
+    lines.push(`⚠️ CONTRÔLE DE FUITE — ${masked} ligne(s) masquée(s) dans l'aperçu (motifs sensibles résiduels ; le fichier local reste complet).`);
+  }
+  lines.push(
+    `${res.stats.autoNames} nom(s)/adresse(s) probables codés d'office. Si un nom reste visible dans l'aperçu, ` +
+    "préviens l'utilisateur et relance avec valeurs_a_coder ; pour garder un nom en clair, valeurs_a_exclure."
+  );
+  lines.push("", rulesBlock(book), "");
+  lines.push(shown.length < previewLines.length
+    ? `CONTENU CODÉ (aperçu ${shown.length}/${previewLines.length} lignes — le fichier complet est sur le poste) :`
+    : "CONTENU CODÉ :");
+  lines.push(shown.join("\n"));
+  return text(lines.join("\n"));
+}
+
 server.registerTool(
   "lister_fichiers",
   {
@@ -142,7 +245,7 @@ server.registerTool(
     }
     const rows = [];
     for (const n of names) {
-      if (!/\.(xlsx|xls|csv)$/i.test(n)) continue;
+      if (!/\.(xlsx|xls|csv|pdf)$/i.test(n)) continue;
       if (n.startsWith("~$") || n.startsWith(".")) continue;
       try {
         const st = fs.statSync(path.join(WORKDIR, n));
@@ -152,7 +255,7 @@ server.registerTool(
     }
     rows.sort((a, b) => b.m - a.m);
     if (!rows.length) {
-      return text(`Aucun fichier Excel/CSV dans ${WORKDIR}. L'utilisateur peut y déposer son fichier, ou changer le dossier dans les réglages de l'extension.`);
+      return text(`Aucun fichier Excel/CSV/PDF dans ${WORKDIR}. L'utilisateur peut y déposer son fichier, ou changer le dossier dans les réglages de l'extension.`);
     }
     const list = rows
       .map((r) => `- ${r.n} (${Math.max(1, Math.round(r.size / 1024))} Ko, modifié le ${r.m.toISOString().slice(0, 10)})`)
@@ -166,10 +269,12 @@ server.registerTool(
   {
     title: "Anonymiser un fichier Excel/CSV (sur le poste)",
     description:
-      "Pseudonymise les données sensibles d'un fichier Excel/CSV du dossier de travail. Deux modes, choisis " +
-      "automatiquement : TABLEAU (ligne d'en-têtes → colonnes entières codées : noms, CIN, emails, téléphones, RIB…) " +
-      "et DOCUMENT (facture, document mis en page → codage À L'INTÉRIEUR des cellules avec le dictionnaire marocain " +
-      "ICE/IF/RC/CNSS/patente/RIB/téléphone ; les libellés, montants, quantités et dates restent en clair). " +
+      "Pseudonymise les données sensibles d'un fichier Excel/CSV/PDF du dossier de travail. Modes choisis " +
+      "automatiquement : TABLEAU (ligne d'en-têtes → colonnes entières codées : noms, CIN, emails, téléphones, RIB…), " +
+      "DOCUMENT (facture, document mis en page → codage À L'INTÉRIEUR des cellules avec le dictionnaire marocain " +
+      "ICE/IF/RC/CNSS/patente/RIB/téléphone ; les libellés, montants, quantités et dates restent en clair) et " +
+      "PDF NATIF (le contenu texte est extrait, anonymisé comme un document, et livré en .md — le PDF n'est jamais " +
+      "réécrit ; un PDF scanné sans texte est refusé, l'OCR n'est pas pris en charge). " +
       "FONCTIONNEMENT EN DEUX TEMPS : un premier appel SANS confirmer renvoie le PLAN (rien n'est écrit) — " +
       "présente-le à l'utilisateur, demande-lui les noms propres à coder (valeurs_a_coder), puis rappelle avec " +
       "confirmer: true. Les valeurs réelles ne sont jamais renvoyées. Toujours utiliser cet outil AVANT de " +
@@ -200,9 +305,15 @@ server.registerTool(
     if (!fs.existsSync(file)) {
       return err(`Fichier introuvable : ${nom_fichier}. Utilise lister_fichiers pour voir les fichiers disponibles.`);
     }
+
+    /* ---------------------------------------------------- MODE PDF -------- */
+    if (/\.pdf$/i.test(file)) {
+      return handlePdf(file, { valeurs_a_coder, valeurs_a_exclure, confirmer });
+    }
+
     let wb;
     try { wb = XLSX.read(fs.readFileSync(file), { type: "buffer", cellDates: false }); }
-    catch { return err(`Fichier illisible (${nom_fichier}) — .xlsx, .xls ou .csv attendu.`); }
+    catch { return err(`Fichier illisible (${nom_fichier}) — .xlsx, .xls, .csv ou .pdf attendu.`); }
 
     const sheetName = onglet || wb.SheetNames[0];
     if (!wb.SheetNames.includes(sheetName)) {
@@ -421,9 +532,9 @@ function listBatchFiles(motif) {
   const needle = String(motif || "").trim().toLowerCase();
   const out = [];
   for (const n of names) {
-    if (!/\.(xlsx|xls|csv)$/i.test(n)) continue;
+    if (!/\.(xlsx|xls|csv|pdf)$/i.test(n)) continue;
     if (n.startsWith("~$") || n.startsWith(".")) continue;
-    if (/-anonymise\.xlsx$/i.test(n)) continue;               // déjà des sorties
+    if (/-anonymise\.(xlsx|md)$/i.test(n)) continue;          // déjà des sorties
     if (/CLE-NE-JAMAIS-PARTAGER/i.test(n)) continue;          // jamais la clé
     if (needle && n.toLowerCase().indexOf(needle) === -1) continue;
     out.push(n);
@@ -483,8 +594,9 @@ server.registerTool(
   {
     title: "Anonymiser un LOT de fichiers (dossier entier, une seule clé)",
     description:
-      "Traite d'un coup tous les fichiers Excel/CSV du dossier de travail (ou ceux dont le nom contient `motif`) : " +
-      "chaque feuille est anonymisée en mode tableau ou document selon sa mise en page, avec UNE SEULE clé — la même " +
+      "Traite d'un coup tous les fichiers Excel/CSV/PDF du dossier de travail (ou ceux dont le nom contient `motif`) : " +
+      "chaque feuille est anonymisée en mode tableau ou document selon sa mise en page (les PDF natifs sortent en .md, " +
+      "les PDF scannés sont ignorés et signalés), avec UNE SEULE clé — la même " +
       "valeur garde le même code d'un fichier à l'autre, c'est ce qui permet de croiser les fichiers codés. " +
       "FONCTIONNEMENT EN DEUX TEMPS : sans confirmer, renvoie le PLAN (liste des fichiers + comptes par type, rien " +
       "n'est écrit) — présente-le à l'utilisateur puis rappelle avec confirmer: true. Le compte rendu ne contient " +
@@ -524,6 +636,24 @@ server.registerTool(
       let total = 0;
       let unreadable = 0;
       for (const name of files) {
+        if (/\.pdf$/i.test(name)) {
+          try {
+            const pdf = await readPdfPages(path.join(WORKDIR, name));
+            const fullText = pdfFullText(pdf.pages);
+            if (fullText.replace(/[-\s]|Page \d+/g, "").length < 40) {
+              lines.push(`— ${name} : PDF SANS TEXTE (scanné ? OCR non supporté) — sera ignoré`);
+              unreadable++;
+              continue;
+            }
+            const probe = anonymizeText(fullText, probeBook, extras, docOpts);
+            total += probe.stats.replaced;
+            lines.push(`— ${name} : PDF natif ${pdf.totalPages} page(s), ${probe.stats.replaced} valeur(s) (${fmtByType(probe.stats.byType)}) → sortie .md`);
+          } catch {
+            lines.push(`— ${name} : PDF ILLISIBLE (sera ignoré)`);
+            unreadable++;
+          }
+          continue;
+        }
         let wb;
         try { wb = XLSX.read(fs.readFileSync(path.join(WORKDIR, name)), { type: "buffer", cellDates: false }); }
         catch { lines.push(`— ${name} : ILLISIBLE (sera ignoré)`); unreadable++; continue; }
@@ -565,6 +695,31 @@ server.registerTool(
     const failed = [];
     const outNames = [];
     for (const name of files) {
+      if (/\.pdf$/i.test(name)) {
+        const before = book.entries.length;
+        try {
+          const pdf = await readPdfPages(path.join(WORKDIR, name));
+          const fullText = pdfFullText(pdf.pages);
+          if (fullText.replace(/[-\s]|Page \d+/g, "").length < 40) {
+            failed.push(name);
+            report.push(`- ❌ ${name} : PDF sans texte (scanné ? OCR non supporté), ignoré`);
+            continue;
+          }
+          const res = anonymizeText(fullText, book, extras, docOpts);
+          const base = sanitizeBase(name.replace(/\.pdf$/i, ""), "document");
+          const outPath = path.join(OUTDIR, `${base}-anonymise.md`);
+          fs.writeFileSync(outPath, `# ${base} — contenu anonymisé (extrait du PDF)\n\n${res.text}\n`, "utf8");
+          outNames.push(`${base}-anonymise.md`);
+          done++;
+          totalReplaced += res.stats.replaced;
+          totalNew += book.entries.length - before;
+          report.push(`- ✅ ${name} → ${base}-anonymise.md (PDF natif, ${pdf.totalPages} page(s)) : ${res.stats.replaced} valeur(s) — ${fmtByType(res.stats.byType)}`);
+        } catch {
+          failed.push(name);
+          report.push(`- ❌ ${name} : PDF illisible, ignoré`);
+        }
+        continue;
+      }
       let wb;
       try { wb = XLSX.read(fs.readFileSync(path.join(WORKDIR, name)), { type: "buffer", cellDates: false }); }
       catch { failed.push(name); report.push(`- ❌ ${name} : illisible, ignoré`); continue; }

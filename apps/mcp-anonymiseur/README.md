@@ -21,12 +21,20 @@ compteurs, `etat_cle` ne renvoie que des comptes. Les tests E2E
 
 | Outil | Rôle |
 |---|---|
-| `lister_fichiers` | Liste les .xlsx/.xls/.csv du dossier de travail |
+| `lister_fichiers` | Liste les .xlsx/.xls/.csv/.pdf du dossier de travail |
 | `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) et deux modes auto-choisis : TABLEAU (colonnes entières) ou DOCUMENT (facture mise en page → codage intra-cellule, dictionnaire marocain ICE/IF/RC/CNSS/patente/RIB/tél ; libellés et montants JAMAIS codés). `valeurs_a_coder` pour les noms propres. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
 | `anonymiser_dossier` | LOT : tous les fichiers du dossier (ou filtrés par `motif`), toutes les feuilles, UNE clé partagée, plan→confirmer, compte rendu en comptes seuls + rapport local `rapport-lot-*.md` |
 | `deanonymiser` | Retraduit texte/TSV → fichier local (.md ou .xlsx), jamais dans le chat |
 | `etat_cle` | Comptes par type, chemins (distingue « dossier introuvable » de « clé vide ») |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v1.4.0 (PDF natifs) : `anonymiser_fichier` et `anonymiser_dossier` lisent
+les PDF NATIFS (unpdf) — le contenu est extrait, anonymisé comme un document
+(dictionnaire marocain + noms d'office) et livré en `.md` ; le PDF n'est
+JAMAIS réécrit (la rédaction visuelle = calques résiduels = fausse sécurité),
+et un PDF scanné est REFUSÉ honnêtement (OCR non supporté) plutôt que de
+rendre un « rien détecté » mensonger. Fixtures de test : PDF minimal écrit à
+la main (`test/util-pdf.mjs`), zéro dépendance de génération.
 
 v1.1.0 (mode document) : né d'un test réel — une facture traitée en mode
 tableau finissait codée à 100 % (32/33 cellules), et la règle téléphone

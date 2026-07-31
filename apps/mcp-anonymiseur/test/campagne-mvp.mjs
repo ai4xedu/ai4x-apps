@@ -19,6 +19,7 @@ import os from "node:os";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
+import { writeMinimalPdf } from "./util-pdf.mjs";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import * as XLSX from "xlsx";
 import * as _fs from "node:fs";
@@ -95,6 +96,20 @@ function makeFiles(dir) {
     [`Règlement par virement — RIB : ${SECRETS.rib}`],
   ]), "Facture");
   XLSX.writeFile(wb2, path.join(dir, "facture.xlsx"));
+
+  // La facture fournisseur en PDF natif (ASCII — le moteur normalise les accents).
+  writeMinimalPdf(path.join(dir, "facture-fournisseur.pdf"), [
+    "FACTURE  N. FF-2026-118",
+    "EMETTEUR",
+    SECRETS.societe1,
+    "12 Rue des Oudayas, Res. Yasmine, Maarif",
+    `ICE : ${SECRETS.ice1}`,
+    `IF : ${SECRETS.if_}   |   RC : ${SECRETS.rc}`,
+    "CLIENT",
+    SECRETS.societe2,
+    "Total HT : 20500",
+    `Reglement - RIB : ${SECRETS.rib}`,
+  ]);
 }
 
 /* ---------------------------------------------------------------- main */
@@ -147,6 +162,20 @@ check("A3g", "identifiants marocains codés (ICE/IF/RC/patente)",
   /ICE-\d{3}/.test(docT) && /IF-\d{3}/.test(docT) && /RC-\d{3}/.test(docT) && /PATENTE-\d{3}/.test(docT));
 check("A3h", "montants et libellés préservés dans l'aperçu",
   docT.includes("20500") && docT.includes("Total HT") && docT.includes("TVA"));
+
+/* PDF natif (v1.4+) */
+if (toolNames.includes("anonymiser_fichier")) {
+  const pdfPlanT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture-fournisseur.pdf" } }));
+  check("A3k", "le plan PDF reste en comptes seuls",
+    /PDF natif/.test(pdfPlanT) && !pdfPlanT.includes(SECRETS.societe1) && !pdfPlanT.includes(SECRETS.ice1));
+  const pdfT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture-fournisseur.pdf", confirmer: true } }));
+  check("A3l", "PDF : identifiants codés, montants en clair, PDF jamais réécrit",
+    /ICE : ICE-\d{3}/.test(pdfT) && pdfT.includes("20500") && /n'est PAS modifié/.test(pdfT)
+    && !pdfT.includes(SECRETS.societe1) && !pdfT.includes(SECRETS.rib));
+  const mdOnDisk = fs.readFileSync(path.join(outDir, "facture-fournisseur-anonymise.md"), "utf8");
+  check("A3m", "le .md local est codé, complet, sans valeur réelle",
+    /ICE : ICE-\d{3}/.test(mdOnDisk) && mdOnDisk.includes("Total HT : 20500") && !mdOnDisk.includes(SECRETS.societe1));
+}
 
 /* Traitement par lots (v1.3+) */
 if (toolNames.includes("anonymiser_dossier")) {
