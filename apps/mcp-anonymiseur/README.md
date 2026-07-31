@@ -23,6 +23,7 @@ compteurs, `etat_cle` ne renvoie que des comptes. Les tests E2E
 |---|---|
 | `lister_fichiers` | Liste les .xlsx/.xls/.csv du dossier de travail |
 | `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) et deux modes auto-choisis : TABLEAU (colonnes entières) ou DOCUMENT (facture mise en page → codage intra-cellule, dictionnaire marocain ICE/IF/RC/CNSS/patente/RIB/tél ; libellés et montants JAMAIS codés). `valeurs_a_coder` pour les noms propres. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
+| `anonymiser_dossier` | LOT : tous les fichiers du dossier (ou filtrés par `motif`), toutes les feuilles, UNE clé partagée, plan→confirmer, compte rendu en comptes seuls + rapport local `rapport-lot-*.md` |
 | `deanonymiser` | Retraduit texte/TSV → fichier local (.md ou .xlsx), jamais dans le chat |
 | `etat_cle` | Comptes par type, chemins (distingue « dossier introuvable » de « clé vide ») |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |

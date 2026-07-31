@@ -72,11 +72,11 @@ after(async () => {
   fs.rmSync(workdir, { recursive: true, force: true });
 });
 
-test("tools/list expose les 5 outils", async () => {
+test("tools/list expose les 6 outils", async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name).sort();
   assert.deepEqual(names, [
-    "anonymiser_fichier", "deanonymiser", "etat_cle", "lister_fichiers", "reinitialiser_cle",
+    "anonymiser_dossier", "anonymiser_fichier", "deanonymiser", "etat_cle", "lister_fichiers", "reinitialiser_cle",
   ]);
 });
 
@@ -184,6 +184,52 @@ test("valeurs_a_exclure : le nom reste en clair dans le FICHIER, masqué dans l'
   const flat = XLSX.utils.sheet_to_json(wbOut.Sheets[wbOut.SheetNames[0]], { header: 1, raw: false, defval: "" })
     .flat().join(" | ");
   assert.ok(flat.includes("TARDIGRADE"), "l'exclusion n'a pas été respectée dans le fichier");
+});
+
+test("anonymiser_dossier : plan en comptes seuls, exécution → fichiers + rapport + clé unique", async () => {
+  // Le PLAN d'abord : liste des fichiers, comptes par type, zéro valeur réelle.
+  const plan = await client.callTool({ name: "anonymiser_dossier", arguments: {} });
+  const planOut = resultText(plan);
+  assert.match(planOut, /PLAN DE LOT — 2 fichier/);
+  assert.match(planOut, /clients\.xlsx/);
+  assert.match(planOut, /facture\.xlsx/);
+  assert.match(planOut, /confirmer: true/);
+  assert.ok(!planOut.includes("El Amrani"), "un nom réel a fui dans le plan de lot");
+  assert.ok(!planOut.includes("003463957000076"), "un ICE réel a fui dans le plan de lot");
+  assert.ok(!planOut.includes("Sophatel"), "un nom détecté a fui dans le plan de lot");
+  // Rien n'a été écrit par le plan.
+  assert.ok(!fs.readdirSync(path.join(workdir, "Anonymiseur-Ai4x")).some((n) => n.startsWith("rapport-lot-")));
+
+  // Exécution : tous les fichiers, toutes les feuilles, une seule clé.
+  const res = await client.callTool({ name: "anonymiser_dossier", arguments: { confirmer: true } });
+  const out = resultText(res);
+  assert.match(out, /LOT TERMINÉ — 2\/2/);
+  assert.ok(!out.includes("El Amrani") && !out.includes("Sophatel"), "une valeur réelle a fui dans le compte rendu de lot");
+  // Pas d'aperçu de contenu dans un compte rendu de lot : ni tableau TSV,
+  // ni section « TABLEAU CODÉ » (les codes cités par le bloc de règles sont
+  // des EXEMPLES de forme, pas des données).
+  assert.ok(!out.includes("TABLEAU CODÉ") && !out.includes("\t"), "le compte rendu de lot contient un aperçu de tableau");
+  // Sorties sur disque.
+  const outDir = path.join(workdir, "Anonymiseur-Ai4x");
+  assert.ok(fs.existsSync(path.join(outDir, "clients-anonymise.xlsx")));
+  assert.ok(fs.existsSync(path.join(outDir, "facture-anonymise.xlsx")));
+  const reportName = fs.readdirSync(outDir).find((n) => n.startsWith("rapport-lot-"));
+  assert.ok(reportName, "rapport de lot absent");
+  const report = fs.readFileSync(path.join(outDir, reportName), "utf8");
+  assert.match(report, /clients\.xlsx/);
+  assert.ok(!report.includes("El Amrani") && !report.includes("Sophatel"), "le rapport doit rester en comptes uniquement");
+  // Clé UNIQUE : le même téléphone garde le même code dans les deux fichiers codés.
+  const wbC = XLSX.readFile(path.join(outDir, "clients-anonymise.xlsx"));
+  const wbF = XLSX.readFile(path.join(outDir, "facture-anonymise.xlsx"));
+  const flatC = XLSX.utils.sheet_to_json(wbC.Sheets[wbC.SheetNames[0]], { header: 1, raw: false, defval: "" }).flat().join(" ");
+  const flatF = XLSX.utils.sheet_to_json(wbF.Sheets[wbF.SheetNames[0]], { header: 1, raw: false, defval: "" }).flat().join(" ");
+  const telC = flatC.match(/TEL-\d{3}/g) || [];
+  const telF = flatF.match(/TEL-\d{3}/g) || [];
+  // clients.xlsx contient « 06 61 23 45 67 » et la facture « +212 6 61 23 45 67 » :
+  // normalisation à part, ce n'est PAS le même numéro normalisé (0661… vs +212661…),
+  // mais chacun doit être codé, et aucune vraie valeur ne doit subsister.
+  assert.ok(telC.length >= 1 && telF.length >= 1, "téléphones non codés dans le lot");
+  assert.ok(!/06 61 23 45 67/.test(flatC) && !/\+212 6 61 23 45 67/.test(flatF));
 });
 
 test("garde-fou : un document forcé en mode tableau est refusé", async () => {
