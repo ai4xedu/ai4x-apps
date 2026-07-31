@@ -29,7 +29,7 @@ import * as z from "zod";
 import {
   XLSX, TYPES, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook, pad, normFor,
-  detectLayout, anonymizeDocument, classifyLoose, cellText,
+  detectLayout, anonymizeDocument, classifyLoose, cellText, isSuspectName,
 } from "./engine.js";
 
 const WORKDIR = path.resolve(process.env.ANX_WORKDIR || path.join(os.homedir(), "Documents"));
@@ -118,7 +118,7 @@ function rulesBlock(book) {
 
 /* ------------------------------------------------------------------ MCP */
 
-const server = new McpServer({ name: "anonymiseur-ai4x", version: "1.1.0" });
+const server = new McpServer({ name: "anonymiseur-ai4x", version: "1.2.0" });
 
 const RESTART_HINT =
   "Si tu viens de changer le dossier dans les réglages de l'extension, REDÉMARRE Claude Desktop : " +
@@ -184,12 +184,14 @@ server.registerTool(
       colonnes_a_exclure: z.array(z.string()).optional()
         .describe("Mode tableau : en-têtes de colonnes à laisser en clair malgré la détection"),
       valeurs_a_coder: z.array(z.string()).optional()
-        .describe("Mode document : noms propres à coder en plus (personnes, sociétés) — demande-les à l'utilisateur, ne les invente jamais"),
+        .describe("Mode document : noms propres à coder EN PLUS de la détection automatique (personnes, sociétés) — demande-les à l'utilisateur, ne les invente jamais"),
+      valeurs_a_exclure: z.array(z.string()).optional()
+        .describe("Mode document : noms détectés automatiquement que l'utilisateur veut laisser EN CLAIR (sur-codage inoffensif par défaut ; n'exclure que sur demande explicite)"),
       confirmer: z.boolean().optional()
         .describe("false/absent = renvoyer le PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], confirmer = false }) => {
+  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) => {
     if (!fs.existsSync(WORKDIR)) {
       return err(`Dossier de travail introuvable : ${WORKDIR}. Configure-le dans les réglages de l'extension. ${RESTART_HINT}`);
     }
@@ -213,24 +215,25 @@ server.registerTool(
     /* ------------------------------------------------- MODE DOCUMENT ------ */
     if (effectiveMode === "document") {
       const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
+      const docOpts = { excludes: valeurs_a_exclure };
       const fmt = (byType) => Object.entries(byType).map(([k, n]) => `${n} × ${k}`).join(", ");
 
       if (!confirmer) {
         // Répétition à blanc sur une COPIE de la clé : rien n'est écrit.
-        const probe = anonymizeDocument(ws, JSON.parse(JSON.stringify(loadBook())), extras);
+        const probe = anonymizeDocument(ws, JSON.parse(JSON.stringify(loadBook())), extras, docOpts);
         return text([
           `📋 PLAN D'ANONYMISATION — mode DOCUMENT (mise en page type facture/document, pas un tableau de données). RIEN n'a encore été écrit.`,
           probe.stats.replaced
             ? `Serait codé, à l'intérieur des cellules (libellés conservés) : ${fmt(probe.stats.byType)} — soit ${probe.stats.replaced} valeur(s) dans ${probe.stats.cellsTouched} cellule(s).`
-            : `Le dictionnaire (ICE, IF, RC, CNSS, patente, RIB, téléphone marocain, email, CIN) n'a rien détecté dans ce document.`,
+            : `Rien détecté (ni dictionnaire ICE/IF/RC/CNSS/patente/RIB/téléphone/email/CIN, ni nom probable).`,
+          `Dont ${probe.stats.autoNames} nom(s)/adresse(s) probables CODÉS D'OFFICE (sociétés, zones émetteur/client, adresses) — leurs valeurs ne sont jamais citées ici, c'est voulu. Sur-coder est inoffensif ; si l'utilisateur veut en garder en clair, il les indique dans valeurs_a_exclure.`,
           `Les montants, quantités, dates et libellés ne sont JAMAIS codés — c'est la matière de travail de l'IA.`,
-          `⚠️ Les NOMS PROPRES (personnes, sociétés) ne sont pas détectés automatiquement : demande à l'utilisateur lesquels coder et fournis-les dans valeurs_a_coder.`,
           `Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.`,
         ].join("\n"));
       }
 
       const book = loadBook();
-      const res = anonymizeDocument(ws, book, extras);
+      const res = anonymizeDocument(ws, book, extras, docOpts);
       if (!res.stats.replaced) {
         return err("Rien à coder : ni le dictionnaire ni valeurs_a_coder n'ont trouvé de correspondance dans ce document.");
       }
@@ -250,7 +253,8 @@ server.registerTool(
         if (addr[0] === "!") continue;
         const cell = res.ws[addr];
         if (!cell || (cell.t !== "s" && cell.t !== "str")) continue;
-        if (classifyLoose(cellText(cell)).length) {
+        const t = cellText(cell);
+        if (classifyLoose(t).length || isSuspectName(t)) {
           previewWs[addr] = { t: "s", v: "[MASQUÉ — fuite possible]" };
           masked++;
         }
@@ -270,8 +274,9 @@ server.registerTool(
         lines.push(`⚠️ CONTRÔLE DE FUITE — ${masked} cellule(s) masquée(s) dans l'aperçu (motifs sensibles résiduels ; le fichier local reste complet).`);
       }
       lines.push(
-        "⚠️ Les noms propres ne sont pas détectés automatiquement : si l'aperçu montre encore des noms de personnes " +
-        "ou de sociétés, préviens l'utilisateur et relance avec valeurs_a_coder."
+        `${res.stats.autoNames} nom(s)/adresse(s) probables codés d'office. Si un nom de personne reste visible dans ` +
+        "l'aperçu (la détection n'est pas infaillible), préviens l'utilisateur et relance avec valeurs_a_coder ; " +
+        "s'il veut au contraire garder un nom en clair, relance avec valeurs_a_exclure."
       );
       lines.push("", rulesBlock(book), "");
       lines.push(shownRows < totalRows ? `DOCUMENT CODÉ (aperçu ${shownRows}/${totalRows} lignes) :` : "DOCUMENT CODÉ :");

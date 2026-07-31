@@ -5,6 +5,7 @@ import {
   XLSX, detectByHeader, detectByValues, classifyLoose, scanSheet,
   anonymizeSheet, leakScan, decodeText, newCodebook, sheetToTsv, looksLikeTable,
   detectLayout, codeDocumentText, anonymizeDocument, isMoroccanPhone,
+  nameCandidates, isSuspectName,
 } from "../server/engine.js";
 
 const FACTURE_AOA = [
@@ -156,6 +157,52 @@ test("anonymizeDocument : cellules numériques et libellés intacts, identifiant
   assert.equal(aoa[6][2], "Total HT");      // libellé intact
   assert.equal(aoa[5][1], "Formation Claude Bootcamp"); // désignation intacte
   assert.equal(aoa[0][3], "FACTURE");
+});
+
+const NAMES_AOA = [
+  ["", "", "FACTURE"],
+  ["ÉMETTEUR", "", "CLIENT"],
+  ["TARDIGRADE", "", "Sophatel S.A"],
+  ["13 Rue Ahmed El Mejjati, Rés. Les Alizés, Maârif", "", "Cabinet Benali"],
+  ["Total HT", 2150, "TVA (20%)"],
+];
+
+test("nameCandidates : noms codés d'office, lexique facture épargné", () => {
+  const cands = nameCandidates(XLSX.utils.aoa_to_sheet(NAMES_AOA));
+  const values = cands.map((c) => c.value);
+  assert.ok(values.includes("TARDIGRADE"), "MAJUSCULES hors lexique manqué");
+  assert.ok(values.includes("Sophatel S.A"), "forme juridique manquée");
+  assert.ok(values.some((v) => v.includes("Rue Ahmed")), "adresse manquée");
+  assert.ok(values.includes("Cabinet Benali"), "zone CLIENT manquée");
+  for (const label of ["FACTURE", "ÉMETTEUR", "CLIENT", "Total HT", "TVA (20%)"]) {
+    assert.ok(!values.includes(label), `le libellé « ${label} » est devenu un candidat`);
+  }
+});
+
+test("anonymizeDocument code les noms par défaut, valeurs_a_exclure les épargne", () => {
+  const ws = XLSX.utils.aoa_to_sheet(NAMES_AOA);
+  const res = anonymizeDocument(ws, newCodebook());
+  const flat = XLSX.utils.sheet_to_json(res.ws, { header: 1, defval: "" }).flat().join(" | ");
+  assert.ok(!/TARDIGRADE|Sophatel|Benali|Rue Ahmed/.test(flat), "un nom a survécu : " + flat);
+  assert.match(flat, /SOCIETE-\d{3}/);
+  assert.match(flat, /ADRESSE-\d{3}/);
+  assert.ok(flat.includes("FACTURE") && flat.includes("Total HT"), "un libellé a été codé");
+  assert.equal(res.stats.autoNames, 4);
+  // Opt-out : l'utilisateur garde TARDIGRADE en clair.
+  const res2 = anonymizeDocument(XLSX.utils.aoa_to_sheet(NAMES_AOA), newCodebook(), [], { excludes: ["tardigrade"] });
+  const flat2 = XLSX.utils.sheet_to_json(res2.ws, { header: 1, defval: "" }).flat().join(" | ");
+  assert.ok(flat2.includes("TARDIGRADE"));
+  assert.ok(!flat2.includes("Sophatel"));
+});
+
+test("isSuspectName : second filet d'aperçu, codes et libellés ignorés", () => {
+  assert.ok(isSuspectName("CABINET BENALI"));
+  assert.ok(isSuspectName("Atlas Négoce SARL AU"));
+  assert.ok(isSuspectName("12 Avenue Hassan II, 3e étage"));
+  assert.ok(!isSuspectName("Total HT"));
+  assert.ok(!isSuspectName("TVA (20%)"));
+  assert.ok(!isSuspectName("SOCIETE-001 — ICE : ICE-001"));
+  assert.ok(!isSuspectName("N°  FAC-2026-003"));
 });
 
 test("sheetToTsv tronque et looksLikeTable reconnaît un TSV", () => {
