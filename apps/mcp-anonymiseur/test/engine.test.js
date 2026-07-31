@@ -4,7 +4,18 @@ import assert from "node:assert/strict";
 import {
   XLSX, detectByHeader, detectByValues, classifyLoose, scanSheet,
   anonymizeSheet, leakScan, decodeText, newCodebook, sheetToTsv, looksLikeTable,
+  detectLayout, codeDocumentText, anonymizeDocument, isMoroccanPhone,
 } from "../server/engine.js";
+
+const FACTURE_AOA = [
+  ["", "", "", "FACTURE"],
+  ["ÉMETTEUR", "", "", "CLIENT"],
+  ["ICE : 003463957000076", "", "", "ICE : 001510119000058"],
+  ["IF : 65908714   |   RC : 620437 (Casablanca)"],
+  ["N°", "Désignation", "Qté", "Montant HT"],
+  [1, "Formation Claude Bootcamp", 1, 2150],
+  ["", "", "Total HT", 2150],
+];
 
 const AOA = [
   ["Nom", "Prénom", "CIN", "Email", "Téléphone", "RIB", "Ville", "Montant"],
@@ -84,6 +95,67 @@ test("contrôle de fuite : email et téléphone enfouis détectés, factures ép
   const leaks = leakScan(ws, cols);
   assert.equal(leaks.length, 1);
   assert.equal(leaks[0].header, "Commentaires");
+});
+
+test("téléphone = forme marocaine uniquement — les montants ne sont plus des numéros", () => {
+  assert.ok(isMoroccanPhone("0661234567"));
+  assert.ok(isMoroccanPhone("+212661234567"));
+  assert.ok(!isMoroccanPhone("202600789"));      // référence 9 chiffres — ex-faux positif
+  assert.ok(!isMoroccanPhone("123456789012"));   // montant en centimes
+  assert.equal(detectByValues(["202600789", "202600790", "202600791"]), null);
+  assert.equal(detectByValues(["0661234567", "0708091011", "+212 6 70 11 22 33"]), "tel");
+});
+
+test("detectLayout : tableau avec en-têtes vs facture mise en page", () => {
+  assert.equal(detectLayout(makeWs()).layout, "tableau");
+  assert.equal(detectLayout(XLSX.utils.aoa_to_sheet(FACTURE_AOA)).layout, "document");
+});
+
+test("codeDocumentText : libellé conservé, valeur codée, même valeur = même code", () => {
+  const book = newCodebook();
+  const r1 = codeDocumentText("ICE : 003463957000076", book);
+  assert.equal(r1.text, "ICE : ICE-001");
+  const r2 = codeDocumentText("Rappel : leur ICE 003463957000076 est inchangé", book);
+  assert.ok(r2.text.includes("ICE-001"));
+  assert.equal(r2.newCodes, 0);
+  const r3 = codeDocumentText("RIB : 007810000123456789012345", book);
+  assert.ok(r3.text.includes("RIB-001"));
+  const r4 = codeDocumentText("Tél : +212 6 61 23 45 67", book);
+  assert.match(r4.text, /Tél : TEL-\d{3}/);
+});
+
+test("codeDocumentText épargne montants, dates et références", () => {
+  const book = newCodebook();
+  const r = codeDocumentText(
+    "Total TTC : 2 580,00 DH — échéance 2026-08-15 — Facture FAC-2026-003 — réf 123456789",
+    book
+  );
+  assert.equal(r.replaced, 0, "une donnée métier a été codée : " + r.text);
+});
+
+test("codeDocumentText : valeurs fournies (noms propres) codées partout, insensible à la casse", () => {
+  const book = newCodebook();
+  const r = codeDocumentText(
+    "Le client Sophatel S.A (contrat SOPHATEL S.A) a signé",
+    book,
+    [{ value: "Sophatel S.A", type: "autre" }]
+  );
+  assert.ok(!/sophatel/i.test(r.text), "le nom fourni est resté : " + r.text);
+  assert.equal(r.newCodes, 1); // une seule entrée de clé pour les deux occurrences
+});
+
+test("anonymizeDocument : cellules numériques et libellés intacts, identifiants codés", () => {
+  const ws = XLSX.utils.aoa_to_sheet(FACTURE_AOA);
+  const res = anonymizeDocument(ws, newCodebook());
+  const aoa = XLSX.utils.sheet_to_json(res.ws, { header: 1, defval: "" });
+  assert.equal(aoa[2][0], "ICE : ICE-001");
+  assert.equal(aoa[2][3], "ICE : ICE-002");
+  assert.match(aoa[3][0], /IF : IF-001/);
+  assert.match(aoa[3][0], /RC : RC-001/);
+  assert.equal(aoa[5][3], 2150);            // montant numérique intact
+  assert.equal(aoa[6][2], "Total HT");      // libellé intact
+  assert.equal(aoa[5][1], "Formation Claude Bootcamp"); // désignation intacte
+  assert.equal(aoa[0][3], "FACTURE");
 });
 
 test("sheetToTsv tronque et looksLikeTable reconnaît un TSV", () => {

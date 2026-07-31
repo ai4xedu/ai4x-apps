@@ -22,10 +22,16 @@ compteurs, `etat_cle` ne renvoie que des comptes. Les tests E2E
 | Outil | Rôle |
 |---|---|
 | `lister_fichiers` | Liste les .xlsx/.xls/.csv du dossier de travail |
-| `anonymiser_fichier` | Code les colonnes sensibles (auto + overrides), écrit fichier + clé, renvoie le tableau codé + contrôle de fuite |
+| `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) et deux modes auto-choisis : TABLEAU (colonnes entières) ou DOCUMENT (facture mise en page → codage intra-cellule, dictionnaire marocain ICE/IF/RC/CNSS/patente/RIB/tél ; libellés et montants JAMAIS codés). `valeurs_a_coder` pour les noms propres. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
 | `deanonymiser` | Retraduit texte/TSV → fichier local (.md ou .xlsx), jamais dans le chat |
-| `etat_cle` | Comptes par type, chemins |
+| `etat_cle` | Comptes par type, chemins (distingue « dossier introuvable » de « clé vide ») |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v1.1.0 (mode document) : né d'un test réel — une facture traitée en mode
+tableau finissait codée à 100 % (32/33 cellules), et la règle téléphone
+« 9-15 chiffres » transformait les montants en TEL-xxx. Désormais : téléphone =
+forme marocaine uniquement, et un changement de dossier de travail exige un
+redémarrage de Claude Desktop (l'env d'un process ne change pas en vol).
 
 La clé vit dans `<dossier de travail>/Anonymiseur-Ai4x/` : `cle-de-session.json`
 (état) + `cle-correspondance-NE-JAMAIS-PARTAGER.xlsx` (export humain/compatible web).

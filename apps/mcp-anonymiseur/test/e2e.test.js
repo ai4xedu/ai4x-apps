@@ -37,6 +37,26 @@ before(async () => {
   );
   XLSX.writeFile(wb, path.join(workdir, "clients.xlsx"));
 
+  // Une facture MISE EN PAGE (pas un tableau) — le cas réel qui a tout déclenché.
+  const wb2 = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(
+    wb2,
+    XLSX.utils.aoa_to_sheet([
+      ["", "", "", "FACTURE"],
+      ["", "", "", "N°  FAC-2026-003"],
+      ["ÉMETTEUR", "", "", "CLIENT"],
+      ["TARDIGRADE", "", "", "Sophatel S.A"],
+      ["ICE : 003463957000076", "", "", "ICE : 001510119000058"],
+      ["IF : 65908714   |   RC : 620437 (Casablanca)"],
+      ["Patente : 35788345   |   Tél : +212 6 61 23 45 67"],
+      ["N°", "Désignation", "Qté", "Montant HT"],
+      [1, "Formation Claude Bootcamp", 1, 2150],
+      ["", "", "Total HT", 2150],
+    ]),
+    "Facture"
+  );
+  XLSX.writeFile(wb2, path.join(workdir, "facture.xlsx"));
+
   client = new Client({ name: "e2e", version: "1.0.0" });
   await client.connect(
     new StdioClientTransport({
@@ -65,10 +85,27 @@ test("lister_fichiers voit clients.xlsx", async () => {
   assert.match(resultText(res), /clients\.xlsx/);
 });
 
-test("anonymiser_fichier : codes présents, valeurs réelles absentes, fuite signalée", async () => {
+test("anonymiser_fichier sans confirmer : un PLAN, rien d'écrit, zéro valeur réelle", async () => {
   const res = await client.callTool({
     name: "anonymiser_fichier",
     arguments: { nom_fichier: "clients.xlsx" },
+  });
+  const out = resultText(res);
+  assert.match(out, /PLAN D'ANONYMISATION/);
+  assert.match(out, /mode TABLEAU/);
+  assert.match(out, /confirmer: true/);
+  // La fuite de la colonne Commentaires est déjà annoncée au stade du plan.
+  assert.match(out, /Commentaires/);
+  assert.ok(!out.includes("El Amrani"), "un nom réel a fui dans le plan");
+  assert.ok(!out.includes("yassine.elamrani@gmail.com"), "un email réel a fui dans le plan");
+  // Rien n'a été écrit.
+  assert.ok(!fs.existsSync(path.join(workdir, "Anonymiseur-Ai4x", "clients-anonymise.xlsx")));
+});
+
+test("anonymiser_fichier confirmé : codes présents, valeurs réelles absentes, fuite signalée", async () => {
+  const res = await client.callTool({
+    name: "anonymiser_fichier",
+    arguments: { nom_fichier: "clients.xlsx", confirmer: true },
   });
   const out = resultText(res);
   assert.match(out, /NOM-001/);
@@ -90,9 +127,56 @@ test("anonymiser_fichier : codes présents, valeurs réelles absentes, fuite sig
 test("clé stable : deuxième passe sans nouveau code", async () => {
   const res = await client.callTool({
     name: "anonymiser_fichier",
-    arguments: { nom_fichier: "clients.xlsx" },
+    arguments: { nom_fichier: "clients.xlsx", confirmer: true },
   });
   assert.match(resultText(res), /0 nouveaux codes/);
+});
+
+test("mode document : facture → identifiants codés, montants et libellés intacts", async () => {
+  // Le plan d'abord : détection automatique de la mise en page.
+  const plan = await client.callTool({
+    name: "anonymiser_fichier",
+    arguments: { nom_fichier: "facture.xlsx" },
+  });
+  const planOut = resultText(plan);
+  assert.match(planOut, /PLAN D'ANONYMISATION/);
+  assert.match(planOut, /mode DOCUMENT/);
+  assert.match(planOut, /NOMS PROPRES/);
+  assert.ok(!planOut.includes("003463957000076"), "un ICE réel a fui dans le plan");
+  // Exécution, avec un nom de société fourni par « l'utilisateur ».
+  const res = await client.callTool({
+    name: "anonymiser_fichier",
+    arguments: { nom_fichier: "facture.xlsx", confirmer: true, valeurs_a_coder: ["Sophatel S.A"] },
+  });
+  const out = resultText(res);
+  assert.match(out, /mode DOCUMENT/);
+  assert.match(out, /ICE-\d{3}/);
+  // Les valeurs réelles n'apparaissent nulle part.
+  assert.ok(!out.includes("003463957000076"), "l'ICE réel a fui");
+  assert.ok(!out.includes("65908714"), "l'IF réel a fui");
+  assert.ok(!out.includes("Sophatel"), "le nom de société fourni a fui");
+  // La matière de travail reste : libellés et montants en clair.
+  assert.match(out, /Total HT/);
+  assert.match(out, /2150/);
+  const decoded = XLSX.readFile(path.join(workdir, "Anonymiseur-Ai4x", "facture-anonymise.xlsx"));
+  const aoa = XLSX.utils.sheet_to_json(decoded.Sheets[decoded.SheetNames[0]], { header: 1, raw: false, defval: "" });
+  const flat = aoa.flat().join(" | ");
+  assert.match(flat, /ICE : ICE-\d{3}/);          // libellé conservé, valeur codée
+  assert.ok(!/003463957000076/.test(flat));
+  assert.ok(/Total HT/.test(flat) && /2150/.test(flat));
+});
+
+test("garde-fou : un document forcé en mode tableau est refusé", async () => {
+  const res = await client.callTool({
+    name: "anonymiser_fichier",
+    arguments: {
+      nom_fichier: "facture.xlsx", mode: "tableau", confirmer: true,
+      colonnes_a_coder: ["Colonne A", "Colonne B", "Colonne C", "FACTURE"],
+    },
+  });
+  assert.ok(res.isError, "le garde-fou n'a pas refusé");
+  assert.match(resultText(res), /DOCUMENT mis en page/);
+  assert.match(resultText(res), /mode: "document"/);
 });
 
 test("deanonymiser : compte rendu sans valeurs réelles, fichier décodé correct", async () => {
