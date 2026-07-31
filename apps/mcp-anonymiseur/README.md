@@ -25,6 +25,7 @@ compteurs, `etat_cle` ne renvoie que des comptes. Les tests E2E
 | `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) et deux modes auto-choisis : TABLEAU (colonnes entières) ou DOCUMENT (facture mise en page → codage intra-cellule, dictionnaire marocain ICE/IF/RC/CNSS/patente/RIB/tél ; libellés et montants JAMAIS codés). `valeurs_a_coder` pour les noms propres. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
 | `anonymiser_dossier` | LOT : tous les fichiers du dossier (ou filtrés par `motif`), toutes les feuilles, UNE clé partagée, plan→confirmer, compte rendu en comptes seuls + rapport local `rapport-lot-*.md` |
 | `lire_scan` | OCR LOCAL d'un scan (image ou PDF image). Le texte reconnu n'entre JAMAIS dans le chat : il est écrit dans `…-ocr-A-RELIRE.md`, l'utilisateur le corrige, puis on anonymise CE fichier |
+| `lire_scan` | OCR LOCAL d'un scan (image ou PDF sans texte) — le texte reconnu n'entre JAMAIS dans la conversation : il est écrit en `…-ocr-A-RELIRE.md`, l'utilisateur le relit et le corrige, PUIS on anonymise ce fichier |
 | `deanonymiser` | Retraduit texte/TSV → fichier local (.md ou .xlsx), jamais dans le chat |
 | `etat_cle` | Comptes par type, chemins (distingue « dossier introuvable » de « clé vide ») |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
@@ -38,6 +39,16 @@ passerait en clair pendant que le rapport annoncerait « rien détecté ». Un O
 silencieux transformerait un refus honnête en fausse sécurité.
 `anonymiser_fichier` accepte donc aussi les .md/.txt (le scan relu).
 Bundle 4,4 → 23 Mo : ne PAS élaguer tesseract.js-core (cf. .mcpbignore).
+
+v1.5.0 (OCR des scans) : Tesseract embarqué (`tessdata/fra.traineddata`,
+aucun téléchargement au premier usage). RÈGLE OCR, aussi dure que la RÈGLE
+N°1 : **le texte reconnu ne remonte jamais dans le chat** et la relecture
+humaine est une étape obligatoire du flux — l'OCR se trompe (une ligne de
+tableau perdue, « Hassan II » lu « Hassan Il ») et un identifiant mal reconnu
+échapperait au dictionnaire, donc passerait en clair pendant que le rapport
+annoncerait « rien détecté ». Un OCR silencieux, c'est une fausse sécurité.
+`anonymiser_fichier` accepte aussi les `.md`/`.txt` : c'est là qu'atterrit le
+scan relu. Bundle 4,4 → 23 Mo (le prix de l'OCR hors ligne).
 
 v1.4.0 (PDF natifs) : `anonymiser_fichier` et `anonymiser_dossier` lisent
 les PDF NATIFS (unpdf) — le contenu est extrait, anonymisé comme un document
