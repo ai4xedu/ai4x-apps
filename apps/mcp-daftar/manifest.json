@@ -1,0 +1,79 @@
+{
+  "manifest_version": "0.3",
+  "name": "daftar-ai4x",
+  "display_name": "Daftar — saisie des factures d'achat",
+  "version": "0.1.0",
+  "description": "Videz votre carton de factures d'achat dans un dossier : Daftar propose les écritures, signale ce qui cloche et écrit le journal importable. Tout se passe sur votre poste.",
+  "long_description": "Le comptable arrête de taper et se met à réviser.\n\nDemandez simplement à Claude : « analyse le lot de factures du dossier Menara ». Le connecteur lit les PDF SUR VOTRE POSTE, en extrait fournisseur, ICE, date, numéro, HT, TVA et TTC, propose une écriture d'achat par pièce (charge / TVA récupérable / fournisseur) et trie entre ce qui est sûr et ce qui demande un arbitrage.\n\n- Le journal importable ne contient QUE les écritures sûres — rien de douteux n'entre dans votre comptabilité\n- Ce qui reste part dans une liste de travail, avec la raison et le chemin du justificatif\n- La mémoire « fournisseur → compte » est propre à chaque dossier client et s'enrichit à chaque arbitrage : au deuxième lot, l'essentiel sort tout seul\n- Les tiers remontent codés dans la conversation (FOURN-001) ; le tableau nominatif reste sur votre disque\n\nAucune facture ne quitte votre ordinateur.\n\nDéveloppé par Ai4x — formation et automatisation Claude pour les équipes marocaines.",
+  "author": {
+    "name": "Ai4x",
+    "url": "https://ai4x.academy"
+  },
+  "homepage": "https://ai4x.academy",
+  "support": "https://ai4x.academy",
+  "license": "MIT",
+  "keywords": [
+    "comptabilité",
+    "saisie",
+    "factures",
+    "achats",
+    "cgnc",
+    "maroc",
+    "ai4x"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {
+        "DAFTAR_WORKDIR": "${user_config.dossier_travail}"
+      }
+    }
+  },
+  "user_config": {
+    "dossier_travail": {
+      "type": "directory",
+      "title": "Dossier de travail",
+      "description": "Le dossier où vous déposez les factures d'achat. La mémoire des dossiers clients, les journaux et les listes de travail sont écrits dans un sous-dossier « Daftar ». Après un changement de dossier, redémarrez Claude Desktop.",
+      "required": true,
+      "default": "${DOCUMENTS}"
+    }
+  },
+  "tools": [
+    {
+      "name": "lister_factures",
+      "description": "Liste les pièces lisibles du dossier de travail"
+    },
+    {
+      "name": "analyser_lot",
+      "description": "Analyse un lot et propose les écritures (plan — rien n'est exporté)"
+    },
+    {
+      "name": "apprendre_compte",
+      "description": "Affecte un fournisseur à un compte de charge pour ce dossier client"
+    },
+    {
+      "name": "exporter_ecritures",
+      "description": "Écrit le journal importable (écritures sûres) et la liste de travail"
+    },
+    {
+      "name": "etat_dossier",
+      "description": "État de la mémoire d'un dossier (comptes uniquement)"
+    }
+  ],
+  "tools_generated": false,
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}
