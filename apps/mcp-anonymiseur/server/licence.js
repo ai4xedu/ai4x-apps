@@ -55,6 +55,17 @@ export function b64urlEncode(buf) {
   return Buffer.from(buf).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/* ⚠️ Piège vécu (01/08/2026, sur le poste du fondateur) : quand un champ
+   `user_config` OPTIONNEL est laissé vide, Claude Desktop ne remplace pas le
+   gabarit du manifest — la variable d'environnement reçoit LITTÉRALEMENT la
+   chaîne « ${user_config.licence} ». Elle n'est pas vide, donc sans ce filtre
+   on la prend pour une clé mal formée et on affiche « format inconnu » à
+   quelqu'un qui n'a simplement jamais rien collé. Un client paierait ce
+   message d'un appel au support. Une valeur non substituée = valeur absente. */
+export function isUnsubstituted(value) {
+  return /^\$\{[^}]*\}$/.test(String(value || "").trim());
+}
+
 /* Une clé a la forme NANO1.<payload b64url>.<signature b64url>. */
 export function parseKey(raw) {
   const key = String(raw || "").trim().replace(/\s+/g, "");
@@ -106,7 +117,7 @@ export function licenceStatus(raw, now = new Date()) {
       cabinet qui déploie sur plusieurs postes par copie. */
 export function readLicence(workdir, env = process.env) {
   const fromEnv = String(env.ANX_LICENCE || "").trim();
-  if (fromEnv) return { raw: fromEnv, source: "réglages de l'extension" };
+  if (fromEnv && !isUnsubstituted(fromEnv)) return { raw: fromEnv, source: "réglages de l'extension" };
   for (const candidate of ["licence.txt", path.join("Anonymiseur-Ai4x", "licence.txt")]) {
     try {
       const p = path.join(workdir, candidate);
@@ -122,17 +133,32 @@ export function readLicence(workdir, env = process.env) {
 /* Message affiché quand la licence manque ou a expiré. Il doit VENDRE, pas
    punir : l'utilisateur garde l'appli web gratuite et son décodage. */
 export function blockedMessage(status) {
-  const why = status.reason === "licence expirée"
-    ? `Votre licence a expiré le ${status.expiresAt}.`
-    : `Aucune licence valide n'est configurée (${status.reason || "absente"}).`;
-  return [
-    `🔒 ${why}`,
+  /* Trois situations très différentes, qui appelaient le même message avant le
+     01/08/2026 : « expirée » (relation commerciale à renouveler), « absente »
+     (l'utilisateur a peut-être une clé et ne l'a pas encore collée — on lui
+     donne le mode d'emploi, PAS un argumentaire), et « clé refusée » (elle est
+     là mais fausse ou tronquée). Confondre les deux dernières fait perdre une
+     demi-heure à quelqu'un qui a déjà payé. */
+  const head = [];
+  if (status.reason === "licence expirée") {
+    head.push(`🔒 Votre licence a expiré le ${status.expiresAt}.`);
+  } else if (!status.reason || status.reason === "absente") {
+    head.push("🔒 Aucune clé de licence n'est configurée.");
+    head.push("Si vous en avez une : réglages de Claude Desktop → Extensions → Anonymiseur de données Ai4x →");
+    head.push("champ « Clé de licence » → collez la clé (elle commence par NANO1.) → REDÉMARREZ Claude Desktop");
+    head.push("(la clé est lue au démarrage du connecteur, un changement à chaud n'est pas vu).");
+  } else {
+    head.push(`🔒 La clé configurée a été refusée : ${status.reason}.`);
+    head.push("Vérifiez qu'elle a été collée EN ENTIER (elle commence par NANO1. et fait plusieurs lignes),");
+    head.push("puis redémarrez Claude Desktop.");
+  }
+  return head.concat([
     "Le connecteur (traitement par lots, PDF, OCR, clé d'équipe) fait partie de l'offre Équipes.",
     "Ce qui continue de fonctionner, et continuera toujours : la DÉ-ANONYMISATION de vos fichiers déjà",
     "codés (outil deanonymiser) et l'état de votre clé. Vos données ne sont jamais prises en otage.",
     "L'appli gratuite reste disponible : https://ai4x.academy/anonymiseur-donnees",
-    "Pour renouveler ou obtenir une clé : https://ai4x.academy/anonymiseur-donnees#plans",
-  ].join("\n");
+    "Pour obtenir ou renouveler une clé : https://ai4x.academy/anonymiseur-donnees#plans",
+  ]).join("\n");
 }
 
 /* Bandeau d'avertissement à coller aux réponses quand l'échéance approche. */

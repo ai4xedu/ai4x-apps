@@ -16,6 +16,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
@@ -28,6 +29,44 @@ XLSX.set_fs(_fs);
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 const bundle = path.join(root, "dist", "anonymiseur-ai4x.mcpb");
+
+/* ------------------------------------------------------------- licence */
+// Depuis la v1.6, les outils qui PRODUISENT de l'anonymisation exigent une
+// licence : sans elle, la campagne testerait le message de blocage et rien
+// d'autre (piège vécu — 8 contrôles au rouge pour cette seule raison). On
+// émet donc une licence de campagne, courte, avec la vraie clé privée du
+// poste. Sans clé privée, on s'arrête franchement plutôt que de rendre un
+// bilan vert sur une campagne qui n'a rien validé.
+const PRIVATE_KEY_FILE = process.env.NANOMIZER_PRIVATE_KEY_FILE ||
+  path.join(os.homedir(), "Desktop", "nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt");
+
+function b64url(buf) {
+  return Buffer.from(buf).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function mintCampaignLicence() {
+  let key;
+  try {
+    const raw = fs.readFileSync(PRIVATE_KEY_FILE, "utf8")
+      .split("\n").map((l) => l.trim())
+      .filter((l) => l.length > 40 && /^[A-Za-z0-9+/=]+$/.test(l)).pop();
+    key = crypto.createPrivateKey({ key: Buffer.from(raw, "base64"), format: "der", type: "pkcs8" });
+  } catch {
+    console.error(
+      `Clé privée introuvable (${PRIVATE_KEY_FILE}).\n` +
+      "La campagne a besoin d'émettre une licence de test pour exercer les outils de production.\n" +
+      "Posez la clé privée à cet endroit, ou pointez NANOMIZER_PRIVATE_KEY_FILE dessus."
+    );
+    process.exit(2);
+  }
+  const exp = new Date(Date.now() + 86400000).toISOString().slice(0, 10);   // demain
+  const payload = b64url(Buffer.from(JSON.stringify({
+    v: 1, org: "Campagne MVP", seats: 1, iat: new Date().toISOString().slice(0, 10), exp, id: "campagne",
+  }), "utf8"));
+  return `NANO1.${payload}.${b64url(crypto.sign(null, Buffer.from(payload), key))}`;
+}
+
+const CAMPAIGN_LICENCE = mintCampaignLicence();
 
 /* ------------------------------------------------------------- données */
 // Fictives, mais aux formats marocains réels. Ce sont ces chaînes exactes
@@ -141,7 +180,7 @@ client = new Client({ name: "campagne-mvp", version: "1.0.0" });
 await client.connect(new StdioClientTransport({
   command: process.execPath,
   args: [path.join(unpacked, "server", "index.js")],
-  env: { ...process.env, ANX_WORKDIR: workdir },
+  env: { ...process.env, ANX_WORKDIR: workdir, ANX_LICENCE: CAMPAIGN_LICENCE },
 }));
 
 const { tools } = await client.listTools();
@@ -291,6 +330,37 @@ check("B4a", "la clé exporte les colonnes attendues par l'appli web",
   keyAoa[0][0] === "Code" && /Valeur/.test(keyAoa[0][1]) && keyAoa[0][2] === "Type",
   `${keyAoa.length - 1} correspondances`);
 check("B4b", "l'onglet Lisez-moi accompagne la clé", keyWb.SheetNames.includes("Lisez-moi"));
+
+/* ------------------------------------------------ Série C — la licence */
+// Née d'un incident réel (01/08/2026) : le champ « Clé de licence » laissé
+// vide, Claude Desktop passe le GABARIT NON SUBSTITUÉ « ${user_config.licence} »
+// dans l'environnement. Le connecteur y voyait une clé mal formée et répondait
+// « format inconnu » à quelqu'un qui n'avait rien collé. On rejoue ici la
+// situation exacte, sur l'artefact distribué.
+console.log("\n── Série C — licence (le message doit dire quoi FAIRE)\n");
+const wd2 = fs.mkdtempSync(path.join(os.tmpdir(), "anx-nolic-"));
+makeFiles(wd2);
+const sansLicence = new Client({ name: "campagne-nolic", version: "1.0.0" });
+await sansLicence.connect(new StdioClientTransport({
+  command: process.execPath,
+  args: [path.join(unpacked, "server", "index.js")],
+  env: { ...process.env, ANX_WORKDIR: wd2, ANX_LICENCE: "${user_config.licence}" },
+}));
+const bloque = record(await sansLicence.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx" } }));
+check("C1a", "champ vide : on dit « aucune clé configurée », pas « format inconnu »",
+  /Aucune clé de licence n'est configurée/.test(bloque) && !/format inconnu/.test(bloque));
+check("C1b", "le message donne le geste exact (champ + redémarrage)",
+  /Clé de licence/.test(bloque) && /REDÉMARREZ/.test(bloque));
+check("C1c", "et il n'anonymise rien", !/TABLEAU CODÉ/.test(bloque));
+
+// La promesse fondatrice : sans licence, le décodage marche quand même.
+const decodeSansLicence = record(await sansLicence.callTool({
+  name: "deanonymiser", arguments: { contenu: "relancer NOM-001", nom_sortie: "sans-licence" },
+}));
+check("C2", "sans licence, la DÉ-ANONYMISATION fonctionne toujours (rien n'est pris en otage)",
+  !/🔒/.test(decodeSansLicence));
+await sansLicence.close();
+fs.rmSync(wd2, { recursive: true, force: true });
 
 /* --------------------------------------------------------------- bilan */
 const failed = results.filter((r) => !r.ok);
