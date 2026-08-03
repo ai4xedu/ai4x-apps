@@ -108,3 +108,17 @@ ne jamais l'envoyer, ne jamais la coller dans un chat.
 
 Côté client : réglages de l'extension → « Clé de licence » → coller →
 **redémarrer Claude Desktop** (l'env d'un process ne change pas en vol).
+
+⚠️ v1.6.1 — piège des gabarits `user_config`. Un champ **optionnel laissé vide**
+n'est pas substitué par Claude Desktop : la variable d'environnement reçoit
+littéralement `${user_config.licence}`. Non filtrée, cette chaîne se lisait
+comme une clé mal formée (« format inconnu ») et laissait croire à un problème
+de clé alors qu'aucune n'avait été collée. `isUnsubstituted()` (licence.js) la
+traite désormais comme une valeur absente, pour la licence **et** pour le
+dossier de travail ; les trois situations (absente / refusée / expirée) ont
+maintenant trois messages distincts, chacun disant quel geste faire. Verrouillé
+par la série C de `test/campagne-mvp.mjs`, qui rejoue le cas sur l'artefact.
+
+La campagne de validation (`node test/campagne-mvp.mjs`, 35 contrôles) émet
+elle-même une licence d'un jour avec la clé privée du poste — sans quoi elle ne
+testerait que l'écran de blocage.

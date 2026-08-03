@@ -7,7 +7,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { parseKey, licenceStatus, readLicence, blockedMessage, warningBanner, b64urlEncode } from "../server/licence.js";
+import { parseKey, licenceStatus, readLicence, blockedMessage, warningBanner, b64urlEncode, isUnsubstituted } from "../server/licence.js";
 
 /* Émet une clé signée par la VRAIE clé privée si elle est disponible sur ce
    poste ; sinon, les tests de signature valide sont ignorés (un contributeur
@@ -83,6 +83,44 @@ test("le message de blocage vend, ne punit pas, et promet le décodage", { skip 
   assert.match(msg, /jamais prises en otage/);
   assert.match(msg, /anonymiseur-donnees/);       // l'appli gratuite reste
   assert.match(msg, /#plans/);                     // et la voie du renouvellement
+});
+
+test("clé absente ≠ clé refusée : deux messages, deux gestes à faire", () => {
+  // Absente : on donne le MODE D'EMPLOI (le client a peut-être déjà payé).
+  const absente = blockedMessage(licenceStatus(""));
+  assert.match(absente, /Aucune clé de licence n'est configurée/);
+  assert.match(absente, /Clé de licence/);
+  assert.match(absente, /REDÉMARREZ/);
+  assert.doesNotMatch(absente, /format inconnu/);
+
+  // Présente mais fausse : on parle de la clé, pas des réglages vides.
+  const refusee = blockedMessage(licenceStatus("NANO1.nawak.nawak"));
+  assert.match(refusee, /refusée/);
+  assert.match(refusee, /EN ENTIER/);
+
+  // Les deux gardent la promesse fondatrice.
+  for (const m of [absente, refusee]) assert.match(m, /jamais prises en otage/);
+});
+
+test("un gabarit ${user_config.*} non substitué vaut « pas de valeur »", () => {
+  // Le bug du 01/08/2026 : champ laissé vide → Claude Desktop passe le
+  // littéral, et l'utilisateur lisait « format inconnu » sans rien avoir collé.
+  assert.equal(isUnsubstituted("${user_config.licence}"), true);
+  assert.equal(isUnsubstituted("  ${user_config.dossier_travail}  "), true);
+  assert.equal(isUnsubstituted(""), false);
+  assert.equal(isUnsubstituted("NANO1.a.b"), false);
+  // Une vraie clé n'est jamais prise pour un gabarit.
+  assert.equal(isUnsubstituted("${NANO1.a.b"), false);
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "anx-lic-"));
+  const lu = readLicence(dir, { ANX_LICENCE: "${user_config.licence}" });
+  assert.equal(lu.raw, "");                       // traité comme absent…
+  assert.match(blockedMessage(licenceStatus(lu.raw)), /Aucune clé de licence/);
+
+  // …et on retombe bien sur le fichier licence.txt s'il existe.
+  fs.writeFileSync(path.join(dir, "licence.txt"), "NANO1.depuis.fichier\n");
+  assert.equal(readLicence(dir, { ANX_LICENCE: "${user_config.licence}" }).raw, "NANO1.depuis.fichier");
+  fs.rmSync(dir, { recursive: true, force: true });
 });
 
 test("la clé se lit dans l'env, ou dans licence.txt du dossier de travail", () => {

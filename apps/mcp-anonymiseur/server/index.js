@@ -28,7 +28,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 import { extractText } from "unpdf";
 import { extractPdfJpegs, ocrImages, reviewHints, isImageFile } from "./ocr.js";
-import { readLicence, licenceStatus, blockedMessage, warningBanner } from "./licence.js";
+import { readLicence, licenceStatus, blockedMessage, warningBanner, isUnsubstituted } from "./licence.js";
 import {
   XLSX, TYPES, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook, pad, normFor,
@@ -36,7 +36,12 @@ import {
   anonymizeText,
 } from "./engine.js";
 
-const WORKDIR = path.resolve(process.env.ANX_WORKDIR || path.join(os.homedir(), "Documents"));
+/* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
+   résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
+   créé pour de bon à côté du binaire, et l'utilisateur chercherait longtemps
+   ses fichiers. Cf. isUnsubstituted() dans licence.js. */
+const ENV_WORKDIR = isUnsubstituted(process.env.ANX_WORKDIR) ? "" : process.env.ANX_WORKDIR;
+const WORKDIR = path.resolve(ENV_WORKDIR || path.join(os.homedir(), "Documents"));
 const OUTDIR = path.join(WORKDIR, "Anonymiseur-Ai4x");
 const KEY_JSON = path.join(OUTDIR, "cle-de-session.json");
 const KEY_XLSX = path.join(OUTDIR, "cle-correspondance-NE-JAMAIS-PARTAGER.xlsx");
