@@ -1,0 +1,32 @@
+{
+  "name": "daftar-ai4x",
+  "version": "0.1.0",
+  "description": "Daftar — serveur MCP local : un carton de factures d'achat devient un journal d'écritures importable, sans rien envoyer en ligne",
+  "main": "server/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "comptabilite",
+    "saisie",
+    "factures",
+    "maroc",
+    "cgnc",
+    "mcp",
+    "ai4x"
+  ],
+  "author": "Ai4x",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "unpdf": "^1.8.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0"
+  }
+}
