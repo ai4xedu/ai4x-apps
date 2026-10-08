@@ -7,6 +7,7 @@
 // Ne jamais l'envoyer, ne jamais la committer, ne jamais la coller dans un chat.
 //
 // Usage :
+//   node scripts/emettre-licence.mjs --org "Maître Sekkat" --a-vie                 ← l'offre 500 Dhs
 //   node scripts/emettre-licence.mjs --org "Cabinet Sekkat" --postes 5 --mois 12
 //   node scripts/emettre-licence.mjs --org "Pilote X" --postes 3 --mois 3 --note "pilote gratuit"
 //
@@ -30,6 +31,7 @@ const org = arg("org", "");
 const seats = parseInt(arg("postes", "1"), 10);
 const months = parseInt(arg("mois", "12"), 10);
 const note = arg("note", "");
+const lifetime = process.argv.includes("--a-vie");
 
 if (!org) {
   console.error("Il faut au moins --org \"Nom du cabinet\". Voir l'en-tête du script.");
@@ -55,14 +57,18 @@ const exp = new Date(now.getTime());
 exp.setMonth(exp.getMonth() + months);
 const iso = (d) => d.toISOString().slice(0, 10);
 
+/* Licence à vie : `exp` lointain ET drapeau `life`. Le drapeau fait afficher
+   « à vie » par la v2 ; la date lointaine fait accepter la clé par une v1.6
+   déjà installée (elle ne connaît pas le drapeau). */
 const payload = {
   v: 1,
   org,
   seats,
   iat: iso(now),
-  exp: iso(exp),
+  exp: lifetime ? "9999-12-31" : iso(exp),
   id: crypto.randomUUID().slice(0, 8),
 };
+if (lifetime) payload.life = true;
 if (note) payload.note = note;
 
 const b64url = (buf) => Buffer.from(buf).toString("base64")
@@ -75,10 +81,21 @@ const key = `NANO1.${body}.${sig}`;
 console.log("\n════ LICENCE ÉMISE ════");
 console.log(`Titulaire : ${payload.org}`);
 console.log(`Postes    : ${payload.seats}`);
-console.log(`Validité  : ${payload.iat} → ${payload.exp} (${months} mois)`);
+console.log(lifetime ? `Validité  : À VIE (émise le ${payload.iat})` : `Validité  : ${payload.iat} → ${payload.exp} (${months} mois)`);
 console.log(`Référence : ${payload.id}${note ? "  · " + note : ""}`);
 console.log("\nClé à transmettre au client :\n");
 console.log(key);
 console.log("\nInstallation côté client : Claude Desktop → réglages de l'extension");
 console.log("« Anonymiseur de données Ai4x » → champ « Clé de licence » → coller → REDÉMARRER Claude Desktop.");
 console.log("(Ou déposer la clé dans un fichier licence.txt à la racine du dossier de travail.)\n");
+console.log("──── Message WhatsApp prêt à envoyer (avec le fichier .mcpb en pièce jointe) ────\n");
+console.log(`Merci ${payload.org} ! Votre paiement est bien reçu. Voici votre connecteur et votre clé ${lifetime ? "à vie" : ""}.
+
+1. Ouvrez le fichier joint anonymiseur-ai4x.mcpb : Claude Desktop propose « Installer ».
+2. Choisissez votre dossier de travail (hors iCloud / Google Drive / Dropbox).
+3. Dans le champ « Clé de licence », collez la clé ci-dessous, puis REDÉMARREZ Claude Desktop.
+4. Demandez à Claude : « vérifie le confinement » — il vous dira si une autre extension voit votre dossier.
+
+Votre clé (à garder, elle ne doit pas être partagée) :
+${key}`);
+console.log("");

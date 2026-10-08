@@ -53,6 +53,13 @@ function resultText(res) {
   return res.content.map((c) => (c.type === "text" ? c.text : "")).join("\n");
 }
 
+/* Les chemins affichés sont relatifs au dossier de travail (masqué) : on
+   rejoint la partie « Anonymiseur-Ai4x/… » au vrai dossier du test. */
+function decodedPath(out) {
+  const m = out.match(/Fichier décodé écrit sur le poste : .*?(Anonymiseur-Ai4x\/\S+)/);
+  return m ? path.join(workdir, m[1]) : null;
+}
+
 before(async () => {
   workdir = fs.mkdtempSync(path.join(os.tmpdir(), "anx-e2e-"));
   const wb = XLSX.utils.book_new();
@@ -111,13 +118,20 @@ after(async () => {
   fs.rmSync(workdir, { recursive: true, force: true });
 });
 
-test("tools/list expose les 7 outils", async () => {
+test("tools/list expose les 8 outils", async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name).sort();
   assert.deepEqual(names, [
     "anonymiser_dossier", "anonymiser_fichier", "deanonymiser", "etat_cle", "lire_scan",
-    "lister_fichiers", "reinitialiser_cle",
+    "lister_fichiers", "reinitialiser_cle", "verifier_confinement",
   ]);
+});
+
+test("le protocole de confidentialité est envoyé à Claude dès la connexion", () => {
+  const instr = client.getInstructions() || "";
+  assert.match(instr, /PROTOCOLE DE CONFIDENTIALITÉ/);
+  assert.match(instr, /JAMAIS par un autre moyen que les outils Nanomizer/);
+  assert.match(instr, /Filesystem/);
 });
 
 test("lister_fichiers voit clients.xlsx", async () => {
@@ -368,9 +382,9 @@ test("deanonymiser : compte rendu sans valeurs réelles, fichier décodé correc
   const out = resultText(res);
   assert.match(out, /3 code\(s\) remplacé\(s\)/);
   assert.ok(!out.includes("El Amrani"), "valeur réelle dans le compte rendu de décodage");
-  const m = out.match(/Fichier décodé écrit sur le poste : (.+)/);
-  assert.ok(m, "chemin du fichier décodé absent");
-  const decoded = fs.readFileSync(m[1].trim(), "utf8");
+  const p = decodedPath(out);
+  assert.ok(p, "chemin du fichier décodé absent");
+  const decoded = fs.readFileSync(p, "utf8");
   assert.ok(decoded.includes("El Amrani"));
   assert.ok(decoded.includes("06 61 23 45 67"));
 });
@@ -380,9 +394,9 @@ test("deanonymiser un tableau TSV produit un xlsx", async () => {
     name: "deanonymiser",
     arguments: { contenu: "Nom\tTéléphone\nNOM-001\tTEL-001\nNOM-002\tTEL-002", nom_sortie: "tableau" },
   });
-  const m = resultText(res).match(/Fichier décodé écrit sur le poste : (.+)/);
-  assert.ok(m && m[1].trim().endsWith(".xlsx"));
-  const wb = XLSX.readFile(m[1].trim());
+  const p = decodedPath(resultText(res));
+  assert.ok(p && p.endsWith(".xlsx"));
+  const wb = XLSX.readFile(p);
   const aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
   assert.equal(aoa[1][0], "El Amrani");
 });

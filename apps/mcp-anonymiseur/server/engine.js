@@ -30,6 +30,9 @@ export const TYPES = [
   { id: "rc",       prefix: "RC",       label: "Registre de commerce (RC)" },
   { id: "cnss",     prefix: "CNSS",     label: "N° CNSS" },
   { id: "patente",  prefix: "PATENTE",  label: "N° de patente" },
+  // v2.0 (verrou) : références alphanumériques / n° de dossier, et liens web.
+  { id: "reference", prefix: "REF",     label: "Référence / n° de dossier" },
+  { id: "lien",     prefix: "LIEN",     label: "Lien / site web" },
   { id: "autre",    prefix: "CODE",     label: "Autre donnée sensible" },
 ];
 
@@ -47,12 +50,27 @@ export function detectByHeader(h) {
   if (/pr[eé]nom|first\s*name/.test(s)) return "prenom";
   if (/nom\s*complet|full\s*name/.test(s)) return "personne";
   if (/\bnom\b|last\s*name|surname/.test(s)) return "nom";
-  if (/\bcin\b|c\.i\.n|identit/.test(s)) return "cin";
+  if (/\bcin\b|c\.i\.n|identit|passeport|passport|\bnir\b|s[eé]curit[eé]\s*sociale|\bcni\b/.test(s)) return "cin";
   if (/mail|courriel/.test(s)) return "email";
   if (/t[eé]l|phone|gsm|portable|mobile|whatsapp/.test(s)) return "tel";
   if (/\brib\b|iban|compte|bancaire|bank/.test(s)) return "rib";
-  if (/adresse|address/.test(s)) return "adresse";
-  if (/soci[eé]t|entreprise|raison\s*sociale|company|employeur/.test(s)) return "societe";
+  if (/adresse|address|domicile/.test(s)) return "adresse";
+  if (/soci[eé]t|entreprise|raison\s*sociale|company|employeur|fournisseur|prestataire|[eé]metteur|enseigne/.test(s)) return "societe";
+  if (/naissance|birth|\bdob\b/.test(s)) return "autre";
+  if (/\bice\b/.test(s)) return "ice";
+  if (/identifiant\s*fiscal|^\s*i\.?f\.?\s*$/.test(s)) return "if";
+  if (/registre\s*de\s*commerce|^\s*r\.?c\.?\s*$/.test(s)) return "rc";
+  if (/cnss/.test(s)) return "cnss";
+  if (/patente/.test(s)) return "patente";
+  if (/n[°o]\s*(client|dossier|contrat|affaire)|code\s*client|r[eé]f[eé]rence|matricule|\bdossier\b|\bsiret\b|\bsiren\b/.test(s)) return "reference";
+  /* v2.0 — une colonne qui désigne une PERSONNE par son rôle (« Client »,
+     « Partie adverse », « Bénéficiaire »…) contient des noms, même quand
+     l'en-tête ne dit pas « nom ». Constaté : une colonne « Client » de noms
+     passait en clair. Sauf si l'en-tête qualifie une mesure (« Statut
+     client », « Montant client ») : alors ce sont des valeurs, pas des gens. */
+  const measure = /statut|type|cat[eé]gorie|segment|nombre|\bnb\b|montant|total|solde|date|d[eé]lai|chiffre|\bca\b|secteur|ville|pays|r[eé]gion|nature|objet/;
+  const role = /\b(clients?|contacts?|b[eé]n[eé]ficiaires?|titulaires?|destinataires?|exp[eé]diteurs?|responsables?|interlocuteurs?|repr[eé]sentants?|g[eé]rants?|dirigeants?|signataires?|salari[eé]e?s?|employ[eé]e?s?|collaborat(eur|rice)s?|patients?|locataires?|bailleurs?|propri[eé]taires?|acqu[eé]reurs?|d[eé]biteurs?|cr[eé]anci(er|[eè]re)s?|cautions?|garants?|associ[eé]e?s?|h[eé]riti(er|[eè]re)s?|t[eé]moins?|avocats?|notaires?|parties?|adversaires?|demandeu(r|se)s?|d[eé]fendeu(r|resse)s?|requ[eé]rante?s?|intim[eé]e?s?|appelante?s?|mandataires?|conjoints?|[eé]poux|[eé]pouses?|[eé]l[eè]ves?|candidate?s?|adh[eé]rente?s?|abonn[eé]e?s?|assur[eé]e?s?|souscripteurs?|prospects?|vendeu(r|se)s?|acheteu(r|se)s?)\b/;
+  if (role.test(s) && !measure.test(s)) return "personne";
   return null;
 }
 
@@ -297,13 +315,41 @@ const NAME_STOPLIST = new Set([
   "KENITRA", "OUJDA", "TETOUAN", "SALE", "MOHAMMEDIA", "MEKNES",
 ]);
 
+/* Vocabulaire des intitulés d'actes et de documents (forme désaccentuée,
+   minuscules) : un intitulé en MAJUSCULES fait de ces mots (« PAR CES
+   MOTIFS », « RAPPEL DES FAITS », « CONCLUSIONS EN RÉPONSE ») n'est pas un nom.
+   Partagé avec le verrou (verrou.js). Tout autre mot en majuscules reste
+   suspect : « HORIZON IMMOBILIER » en tête de lettre est une société. */
+export const HEADING_WORDS = new Set(`
+par ces motifs en fait droit sur ce attendu attendus que considerant considerants plaise au tribunal cour dit
+juge juger condamne condamner deboute debouter ordonne ordonner statuant constate constater rejette rejeter
+renvoie declare declarer recoit recevoir infirme infirmer confirme confirmer annule annuler prononce fixe alloue
+rappel des faits discussion motifs moyens moyen objet article articles annexe annexes preambule entre les
+soussignes ci-apres denomme denommee convenu qui suit important urgent confidentiel attention conclusions
+conclusion reponse replique requete assignation memoire note observations procedure expose bordereau pieces
+piece communiquees communication dispositif decision jugement arret ordonnance sommaire introduction synthese
+resume contrat convention avenant protocole accord facture devis avoir bon commande livraison total sous-total
+montant date echeance designation quantite prix unitaire reference client clients fournisseur emetteur
+destinataire vendeur acheteur signature cachet lu approuve fait a le la de du et ou pour contre au aux un une
+par avec sans dans il elle ils sont est ont ne pas plus demandeur demanderesse defendeur defenderesse appelant
+appelante intime intimee requerant requerante partie parties sous toutes reserves audience jugement premiere
+instance appel cassation chambre section titre chapitre paragraphe alinea sommaire table matieres
+competence incompetence recevabilite irrecevabilite fond forme prescription fin fins non-recevoir demandes
+demande reconventionnelle reconventionnelles prejudice prejudices dommages interets responsabilite faute
+contractuelle delictuelle indemnite indemnites indemnisation licenciement rupture travail cause reelle serieuse
+frais irrepetibles depens execution provisoire sursis jonction expertise mesures mesure instruction incident
+exception exceptions nullite nullites litispendance connexite qualite interet agir liminaires preliminaires
+liste principal subsidiaire subsidiairement titre infiniment tres plus reponse faits droit application
+mise cause garantie appel incident moyens nouveaux conclusions recapitulatives recapitulatif chronologie
+`.split(/\s+/).filter(Boolean));
+
 function normToken(t) {
   return String(t).normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
 }
 
 /* « Sophatel S.A », « ATLAS NEGOCE SARL AU »… — capture nom + forme juridique. */
 const LEGAL_SUFFIX_RX =
-  /\b((?:[A-ZÀ-Ý][\p{L}\d&'’.\-]*\s+){0,4}[A-ZÀ-Ý][\p{L}\d&'’.\-]*)[\s,]+(S\.?A\.?R\.?L\.?(?:\s*A\.?U\.?)?|SARLAU|S\.?A\.?S\b\.?|S\.?N\.?C\b\.?|GIE\b|SCI\b|S\.?A\b\.?)/gu;
+  /\b((?:[A-ZÀ-Ý][\p{L}\d'’.\-]*(?:\s+(?:&|et|and)\s+|\s+)){0,5}[A-ZÀ-Ý][\p{L}\d&'’.\-]*)[\s,]+(S\.?A\.?R\.?L\.?(?:\s*A\.?U\.?)?|SARLAU|S\.?A\.?S\b\.?|S\.?N\.?C\b\.?|GIE\b|SCI\b|S\.?A\b\.?)/gu;
 
 const ADDRESS_RX =
   /\b(rue|avenue|av\.|bd\b|boulevard|r[eé]sidence|r[eé]s\.|lotissement|lot\.|quartier|angle|[eé]tage|imm\.|immeuble|appt|apt\b|km\s?\d)/i;
@@ -321,7 +367,8 @@ function allCapsName(text) {
   for (const t of tokens) {
     // Tester la casse sur le token BRUT (normToken met tout en majuscules).
     if (t !== t.toUpperCase()) return false;               // un token en minuscules disqualifie
-    if (t.replace(/[^\p{L}]/gu, "").length >= 3 && !NAME_STOPLIST.has(normToken(t))) signal = true;
+    if (t.replace(/[^\p{L}]/gu, "").length >= 3 && !NAME_STOPLIST.has(normToken(t)) &&
+        !HEADING_WORDS.has(normToken(t).toLowerCase())) signal = true;
   }
   return signal;
 }
@@ -414,7 +461,11 @@ export function nameCandidatesFromText(fullText) {
     LEGAL_SUFFIX_RX.lastIndex = 0;
     let m;
     while ((m = LEGAL_SUFFIX_RX.exec(line))) add(m[0], "societe");
-    if (ADDRESS_RX.test(line) && !matchesDocPattern(line)) add(line, "adresse");
+    // Ligne d'adresse d'une facture : codée en entier. Une PHRASE qui contient
+    // une adresse (« Le témoin habite 12 rue des Lilas. ») ne l'est pas : le
+    // verrou y code l'adresse seule, le reste de la phrase reste lisible.
+    const prose = line.length > 80 || /[.!?]\s+\p{L}/u.test(line);
+    if (!prose && ADDRESS_RX.test(line) && !matchesDocPattern(line)) add(line, "adresse");
     if (allCapsName(line) && !matchesDocPattern(line)) add(line, "societe");
   }
   // Passe 2 — zone : les lignes qui suivent un libellé ÉMETTEUR / CLIENT / …

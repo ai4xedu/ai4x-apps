@@ -39,6 +39,23 @@ const PUBLIC_KEY_B64 = "MCowBQYDK2VwAyEA2ecQy6JVQUtn9e+yrbuzQf7I9dcplI8T6dr2fiWT
 
 export const WARN_DAYS = 30;
 
+/* Offre en vigueur (décision du 18/09/2026) : licence À VIE, 500 Dhs, une
+   seule fois, commandée sur WhatsApp — comme le reste du catalogue Ai4x :
+   pas de paiement en ligne, le RIB est envoyé sur WhatsApp, la clé part à
+   réception du virement. */
+export const OFFER = {
+  price: "500 Dhs",
+  whatsappDisplay: "+212 680 092 567",
+  whatsappUrl: "https://wa.me/212680092567?text=" + encodeURIComponent(
+    "Bonjour, je veux la licence à vie du connecteur Nanomizer (anonymiseur Ai4x pour Claude Desktop) à 500 Dhs. Comment on procède ?"
+  ),
+};
+
+/* Date butoir des licences à vie. On garde un champ `exp` (et une vraie
+   date) pour que les connecteurs déjà installés en v1.6 lisent aussi une clé
+   à vie : ils afficheront une échéance lointaine au lieu de la refuser. */
+export const LIFETIME_EXP = "9999-12-31";
+
 function publicKey() {
   return crypto.createPublicKey({
     key: Buffer.from(PUBLIC_KEY_B64, "base64"),
@@ -95,12 +112,20 @@ export function licenceStatus(raw, now = new Date()) {
   const parsed = parseKey(raw);
   if (!parsed.ok) return { valid: false, reason: parsed.reason };
   const p = parsed.payload;
+  if (p.life === true || p.exp === LIFETIME_EXP) {
+    return {
+      valid: true, reason: "", lifetime: true,
+      holder: p.org || "—", seats: p.seats || 1, issuedAt: p.iat || "",
+      expiresAt: "à vie", daysLeft: Infinity, expiringSoon: false, id: p.id || "",
+    };
+  }
   const expires = new Date(p.exp + "T23:59:59");
   if (Number.isNaN(expires.getTime())) return { valid: false, reason: "date d'expiration illisible" };
   const days = Math.ceil((expires - now) / 86400000);
   return {
     valid: days >= 0,
     reason: days >= 0 ? "" : "licence expirée",
+    lifetime: false,
     holder: p.org || "—",
     seats: p.seats || 1,
     issuedAt: p.iat || "",
@@ -153,17 +178,18 @@ export function blockedMessage(status) {
     head.push("puis redémarrez Claude Desktop.");
   }
   return head.concat([
-    "Le connecteur (traitement par lots, PDF, OCR, clé d'équipe) fait partie de l'offre Équipes.",
+    `Le connecteur (verrou, traitement par lots, PDF, OCR) s'active avec une licence À VIE : ${OFFER.price}, une seule fois,`,
+    `mises à jour comprises. Commande sur WhatsApp au ${OFFER.whatsappDisplay} : ${OFFER.whatsappUrl}`,
     "Ce qui continue de fonctionner, et continuera toujours : la DÉ-ANONYMISATION de vos fichiers déjà",
     "codés (outil deanonymiser) et l'état de votre clé. Vos données ne sont jamais prises en otage.",
     "L'appli gratuite reste disponible : https://ai4x.academy/anonymiseur-donnees",
-    "Pour obtenir ou renouveler une clé : https://ai4x.academy/anonymiseur-donnees#plans",
   ]).join("\n");
 }
 
 /* Bandeau d'avertissement à coller aux réponses quand l'échéance approche. */
 export function warningBanner(status) {
-  if (!status.valid || !status.expiringSoon) return "";
+  if (!status.valid || status.lifetime || !status.expiringSoon) return "";
   return `⏳ Licence ${status.holder} : ${status.daysLeft} jour(s) restant(s) (expire le ${status.expiresAt}). ` +
-    "Pensez au renouvellement — à l'échéance, l'anonymisation s'arrêtera, mais la dé-anonymisation continuera de fonctionner.";
+    `Pensez au renouvellement, ou passez à la licence à vie (${OFFER.price}, WhatsApp ${OFFER.whatsappDisplay}) — à ` +
+    "l'échéance, l'anonymisation s'arrêtera, mais la dé-anonymisation continuera de fonctionner.";
 }

@@ -3,6 +3,11 @@ scripts/
 # Outillage interne : le script d'émission de licences n'a rien à faire chez
 # le client (il exige de toute façon la clé privée, qui vit hors dépôt).
 test/
+
+# Docs internes : elles citent l'emplacement de la clé privée et le circuit de
+# vente — rien à faire chez le client.
+README.md
+LIVRAISON.md
 node_modules/.bin/
 node_modules/@modelcontextprotocol/client/
 .git/

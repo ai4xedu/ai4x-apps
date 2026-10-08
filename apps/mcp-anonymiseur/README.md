@@ -1,33 +1,101 @@
-# Anonymiseur de données Ai4x — connecteur MCP local
+# Nanomizer — Anonymiseur de données Ai4x (connecteur MCP local)
 
 Extension Claude Desktop (`.mcpb`) : Claude anonymise les fichiers Excel/CSV,
-les factures PDF et les scans **sur le poste de l'utilisateur**, travaille sur les codes (`NOM-001`…), puis
-dé-anonymise le résultat **sur le disque** — les données personnelles
-n'entrent jamais dans la conversation.
+les PDF, les notes et les scans **sur le poste de l'utilisateur**, travaille sur
+les codes (`NOM-001`…), puis dé-anonymise le résultat **sur le disque** — les
+données personnelles n'entrent jamais dans la conversation.
 
 Jumeau du moteur de l'appli web `ai4x.academy/anonymiseur-donnees`
-(ai4x-website/anonymiseur-local.html) : mêmes détections, mêmes codes, clé
-compatible (export xlsx réimportable dans l'appli web).
+(ai4x-website/anonymiseur-local.html) : mêmes codes, clé compatible (export
+xlsx réimportable dans l'appli web). Depuis la v2.0, le connecteur code plus
+que l'appli (le verrou) ; les codes restent décodables par l'appli.
 
 ## Règle de conception n°1
 
-**Aucune valeur réelle ne remonte dans un résultat d'outil.**
-`anonymiser_fichier` renvoie le tableau codé (colonnes suspectes masquées dans
-l'aperçu), `deanonymiser` écrit sur disque et ne renvoie qu'un chemin + des
-compteurs, `etat_cle` ne renvoie que des comptes. Les tests E2E
-(`test/e2e.test.js`) verrouillent ces invariants — ne jamais les affaiblir.
+**Aucune valeur réelle ne remonte dans un résultat d'outil.** Depuis la v2.0,
+elle tient en trois verrous empilés, chacun suffisant pour ce qu'il couvre :
+
+1. **Le verrou** (`server/verrou.js`) — codage *fail-closed* : n'entre dans un
+   aperçu que ce qui est PROUVÉ inoffensif — codes, nombres, mots du
+   dictionnaire français courant (`lexique/fr.txt.gz`, 336 000 formes, MIT),
+   liste blanche (institutions, pays, villes de juridiction, intitulés
+   d'actes). Tout le reste est codé : noms propres (même au fil d'une phrase,
+   même derrière « Maître »), mots inconnus, références, identifiants. Les
+   termes définis des contrats (« le Prestataire ») restent lisibles grâce au
+   déterminant. Les noms qui sont AUSSI des mots (Moulin, Robin, Jacques,
+   Marine…) sont repérés grâce aux listes de l'INSEE (`lexique/noms.json.gz`,
+   Licence Ouverte — cf. `lexique/SOURCES.md`, régénération
+   `scripts/generer-noms.mjs`). Un nom codé une fois recode ses autres
+   occurrences capitalisées (second passage).
+2. **Le contrôle d'aperçu** (`previewUnsafe`, index.js) — chaque cellule et
+   chaque ligne montrée au modèle repasse au verrou : s'il y trouverait encore
+   quelque chose à coder, elle est masquée.
+3. **Le verrou de sortie** (`server/sortie.js`) — branché au SEUL point
+   d'enregistrement des outils (`tool()`) : sur le texte final de chaque
+   réponse, toute valeur connue de la clé redevient son code, toute forme de
+   donnée sensible (email, téléphone, IBAN, identifiant long, CIN) est masquée,
+   le dossier personnel devient `~`. Chemins, noms d'onglets et messages
+   d'erreur compris.
+
+Plus : les **noms de fichiers** ne sortent jamais en clair (`lister_fichiers`
+les masque et donne un repère `[F-XXXXX]` — HMAC local — accepté par tous les
+outils) ; les fichiers produits portent un nom **codé** ; la clé, ses archives
+et les résultats décodés sont **refusés** en entrée ; le **protocole de
+confidentialité** est envoyé à Claude à la connexion (`instructions` MCP).
+
+Relecture adverse du 18/09/2026 (agent indépendant, 8 familles de fuites
+trouvées, toutes corrigées et verrouillées par un test : `R1`…`R6` dans
+`test/verrou.test.js`, pièges ajoutés à `test/fuite.test.js`) : patronymes qui
+sont des mots, villes/mois après un prénom, téléphones `+33 (0)6…` et chiffres
+non latins, désignation d'une personne par le contexte (« en blanc » → code),
+sous-dossiers en clair dans l'audit, formules/liens/commentaires conservés
+dans le `.xlsx`, chemins dans les messages d'erreur, `motif` comme oracle sur
+les vrais noms de fichiers ; plus la lenteur (3,7 s par appel à 20 000 codes →
+index incrémental, 60 000 codes en 0,2 s).
+
+**Limite résiduelle assumée** : un mot qui est d'abord une ville, un jour, un
+pays ou un rôle (« Paris », « Lundi », « France », « Juge ») employé SEUL comme
+patronyme — sans prénom, sans titre, sans rôle, sans libellé, jamais en
+capitales, jamais ailleurs dans le texte — reste lisible. Ambiguïté de la
+langue, pas du code ; c'est une raison de plus de relire le plan.
+
+Ce que le connecteur ne peut PAS empêcher, et qu'il DIT (`verifier_confinement`) :
+une autre extension ou un serveur MCP qui a accès au même dossier, le dossier
+Cowork, le pilotage du navigateur/de l'écran, et un dossier synchronisé dans
+le cloud (qui emporterait la clé). Ni, bien sûr, un texte collé directement
+dans la conversation.
+
+Les tests verrouillent ces invariants — ne jamais les affaiblir :
+`test/fuite.test.js` (chasse aux fuites : valeurs cachées dans les noms de
+fichiers, d'onglets, les en-têtes, une colonne « Client », du texte libre en
+minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js`
+(les règles une à une), `test/e2e.test.js`, et la campagne sur l'artefact
+(`test/campagne-mvp.mjs`, audit A5).
 
 ## Outils
 
 | Outil | Rôle |
 |---|---|
-| `lister_fichiers` | Liste les .xlsx/.xls/.csv/.pdf du dossier de travail |
-| `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) et deux modes auto-choisis : TABLEAU (colonnes entières) ou DOCUMENT (facture mise en page → codage intra-cellule, dictionnaire marocain ICE/IF/RC/CNSS/patente/RIB/tél ; libellés et montants JAMAIS codés). `valeurs_a_coder` pour les noms propres. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
-| `anonymiser_dossier` | LOT : tous les fichiers du dossier (ou filtrés par `motif`), toutes les feuilles, UNE clé partagée, plan→confirmer, compte rendu en comptes seuls + rapport local `rapport-lot-*.md` |
-| `lire_scan` | OCR LOCAL d'un scan (image ou PDF sans texte) — le texte reconnu n'entre JAMAIS dans la conversation : il est écrit en `…-ocr-A-RELIRE.md`, l'utilisateur le relit et le corrige, PUIS on anonymise ce fichier |
-| `deanonymiser` | Retraduit texte/TSV → fichier local (.md ou .xlsx), jamais dans le chat |
-| `etat_cle` | Comptes par type, chemins (distingue « dossier introuvable » de « clé vide ») |
+| `lister_fichiers` | Liste les fichiers traitables (Excel, CSV, PDF, .md/.txt, scans) — noms propres masqués (•••), repère stable `[F-XXXXX]` |
+| `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) ; modes TABLEAU (colonnes entières), DOCUMENT (facture → codage intra-cellule, dictionnaire marocain) et TEXTE/PDF ; le verrou passe ENSUITE partout (colonnes lisibles et en-têtes compris). `onglet` par numéro. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
+| `anonymiser_dossier` | LOT : tous les fichiers (ou filtrés par `motif`), toutes les feuilles, UNE clé, plan→confirmer, compte rendu en comptes seuls + rapport `rapport-lot-*.md` (noms de fichiers codés) |
+| `lire_scan` | OCR LOCAL d'un scan — le texte reconnu n'entre JAMAIS dans la conversation : il est écrit en `…-ocr-A-RELIRE.md` (nom codé), l'utilisateur le relit, PUIS on anonymise ce fichier |
+| `deanonymiser` | Retraduit texte/TSV → fichier local (.md ou .xlsx, droits 600), jamais dans le chat |
+| `etat_cle` | Comptes par type, licence, résumé de l'audit de confinement |
+| `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v2.0.0 (le verrou, 18/09/2026) : né d'un constat — la v1.6 codait ce qu'elle
+RECONNAISSAIT ; « Maître Dupont représente M. Karim Benali », une colonne
+« Client », un fichier « Dossier Benali.pdf » ou un nom d'onglet passaient en
+clair. Pour un avocat, c'est le cas général. Aussi dans la v2.0 : une clé
+illisible n'est plus jamais écrasée par une clé vierge (avant : JSON corrompu =
+clé repartie de zéro, correspondances perdues) ; écriture atomique +
+sauvegarde `cle-de-session.sauvegarde.json` ; droits 600 sur la clé ; licence
+**à vie** (voir plus bas). Le dictionnaire pèse 0,8 Mo (bundle 24 Mo).
+Limite assumée : un texte qui n'est pas en français courant (anglais, arabe)
+est codé presque entièrement — la protection tient, l'utilité baisse, et le
+plan le DIT (« X % des mots sont codés »).
 
 v1.5.0 (OCR des scans) : Tesseract embarqué (`tessdata/fra.traineddata`,
 aucun téléchargement au premier usage). RÈGLE OCR, aussi dure que la RÈGLE
@@ -68,13 +136,14 @@ npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb
 Piège : le build ESM de SheetJS exige `XLSX.set_fs(fs)` avant tout
 readFile/writeFile.
 
-Distribution : le connecteur est la version PAYANTE (offre Équipes) — il n'est
-plus téléchargeable sur le site (retiré de `ai4x-website/assets/outils/` le
-31/07). Il se livre après un échange commercial ; la LP `/anonymiseur-donnees`
-le présente et renvoie vers `#plans`. Installation côté client : double-clic sur
-le `.mcpb` → Claude Desktop propose « Installer ».
+Distribution (décision du 18/09/2026) : **licence à vie, 500 Dhs, commande
+sur WhatsApp** (+212 680 092 567), comme le reste du catalogue Ai4x — pas de
+paiement en ligne : RIB envoyé sur WhatsApp, virement, puis le `.mcpb` et la
+clé partent sur WhatsApp. Voir `LIVRAISON.md`. La LP `/anonymiseur-donnees`
+présente l'offre (#connecteur, #plans). Installation côté client : double-clic
+sur le `.mcpb` → Claude Desktop propose « Installer ».
 
-## Licences (offre Équipes)
+## Licences
 
 Vérification **100 % hors ligne** : la clé est un jeton signé Ed25519 que le
 connecteur vérifie avec une clé publique embarquée. Aucun appel réseau — un
@@ -98,11 +167,19 @@ course aux armements — un vrai DRM se paierait en promesse de confidentialité
 Émettre une clé (interne, jamais dans le bundle) :
 
 ```bash
+node scripts/emettre-licence.mjs --org "Maître X" --a-vie          # l'offre 500 Dhs
 node scripts/emettre-licence.mjs --org "Cabinet X" --postes 5 --mois 12
 ```
 
+Une licence à vie porte `exp: "9999-12-31"` ET `life: true` : la v2 affiche
+« à vie » et n'avertit jamais d'échéance ; une v1.6 déjà installée l'accepte
+aussi (elle lit une date lointaine). Le script imprime le message WhatsApp de
+livraison, prêt à copier.
+
 ⚠️ La clé privée vit **hors dépôt** (par défaut sur le Bureau,
-`nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt`). Sans elle, personne ne peut
+`nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt` ; sinon pointer
+`NANOMIZER_PRIVATE_KEY_FILE` dessus — au 18/09/2026 elle est rangée dans
+`Bureau/Archive/…/Testing Nanomizer/`). Sans elle, personne ne peut
 émettre de licence ; avec elle, n'importe qui le peut. Ne jamais la committer,
 ne jamais l'envoyer, ne jamais la coller dans un chat.
 
@@ -119,6 +196,6 @@ dossier de travail ; les trois situations (absente / refusée / expirée) ont
 maintenant trois messages distincts, chacun disant quel geste faire. Verrouillé
 par la série C de `test/campagne-mvp.mjs`, qui rejoue le cas sur l'artefact.
 
-La campagne de validation (`node test/campagne-mvp.mjs`, 35 contrôles) émet
+La campagne de validation (`node test/campagne-mvp.mjs`, 42 contrôles) émet
 elle-même une licence d'un jour avec la clé privée du poste — sans quoi elle ne
 testerait que l'écran de blocage.

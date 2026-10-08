@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "anonymiseur-ai4x",
   "display_name": "Anonymiseur de données Ai4x",
-  "version": "1.6.1",
-  "description": "Anonymisez vos fichiers Excel sur votre poste avant que Claude ne les lise — puis dé-anonymisez le résultat localement. Rien ne quitte votre ordinateur.",
-  "long_description": "La bonne pratique « l'IA n'a jamais besoin de savoir qui est qui », en connecteur.\n\nDemandez simplement à Claude : « anonymise clients.xlsx et analyse les impayés ». Le connecteur remplace localement les colonnes sensibles (noms, prénoms, CIN, emails, téléphones, RIB, adresses…) par des codes (NOM-001…), Claude travaille sur les codes, et l'outil `deanonymiser` écrit le résultat retraduit **sur votre disque** — les vraies valeurs n'apparaissent jamais dans la conversation.\n\n- Détection automatique des colonnes sensibles + contrôle de fuite sur le reste\n- Même valeur = même code, sur tous vos fichiers (clé de session cumulée)\n- Clé de correspondance stockée sur votre poste, compatible avec l'appli web ai4x.academy/anonymiseur-donnees\n\nDéveloppé par Ai4x — formation et automatisation Claude pour les équipes marocaines.",
+  "version": "2.0.0",
+  "description": "Nanomizer : vos dossiers sont anonymisés sur votre poste AVANT que Claude ne les lise, et le résultat est dé-anonymisé localement. Aucune valeur réelle n'entre dans la conversation.",
+  "long_description": "La règle « l'IA n'a jamais besoin de savoir qui est qui », en connecteur — pour les professionnels tenus au secret.\n\nDemandez simplement à Claude : « anonymise mes conclusions et prépare une synthèse ». Nanomizer code vos fichiers sur votre poste (Excel, CSV, PDF, scans, notes), Claude travaille sur les codes (NOM-001…), et l'outil `deanonymiser` écrit le résultat retraduit **sur votre disque** — les vraies valeurs n'apparaissent jamais dans la conversation.\n\n**Le verrou (v2.0)** : n'entre dans la conversation que ce qui est prouvé inoffensif — codes, nombres, mots du dictionnaire courant. Noms propres (même écrits au fil d'une phrase, même derrière « Maître » ou « M. »), mots inconnus, références, identifiants : codés. Un dernier filet repasse sur chaque réponse, noms de fichiers et chemins compris.\n\n- Même entité = même code, sur tout un dossier (clé cumulée multi-fichiers)\n- Audit de confinement : signale toute autre extension qui verrait vos fichiers, et un dossier synchronisé dans le cloud\n- 100 % hors ligne : aucune connexion, licence vérifiée sur votre poste\n- Clé compatible avec l'appli web gratuite ai4x.academy/anonymiseur-donnees\n\nLicence à vie : 500 Dhs, sur WhatsApp. Développé par Ai4x.",
   "author": {
     "name": "Ai4x",
     "url": "https://ai4x.academy"
@@ -15,10 +15,12 @@
   "keywords": [
     "anonymisation",
     "pseudonymisation",
+    "secret professionnel",
+    "avocats",
     "rgpd",
     "loi-09-08",
-    "excel",
     "confidentialité",
+    "nanomizer",
     "ai4x"
   ],
   "icon": "icon.png",
@@ -40,14 +42,14 @@
     "dossier_travail": {
       "type": "directory",
       "title": "Dossier de travail",
-      "description": "Le dossier où se trouvent vos fichiers Excel/CSV. Les fichiers anonymisés, les résultats décodés et la clé de correspondance seront écrits dans un sous-dossier « Anonymiseur-Ai4x ».",
+      "description": "Le dossier où se trouvent vos fichiers. Les fichiers anonymisés, les résultats décodés et la clé de correspondance seront écrits dans un sous-dossier « Anonymiseur-Ai4x ». Choisissez un dossier NON synchronisé (hors iCloud, Google Drive, Dropbox, OneDrive) : la clé contient toutes les vraies valeurs.",
       "required": true,
       "default": "${DOCUMENTS}"
     },
     "licence": {
       "type": "string",
-      "title": "Clé de licence (offre Équipes)",
-      "description": "Collez ici la clé fournie avec votre licence (commence par NANO1.). Elle est vérifiée sur votre poste, hors ligne — aucune connexion n'est établie. Sans clé, la dé-anonymisation de vos fichiers déjà codés reste possible. Après un changement de clé, redémarrez Claude Desktop.",
+      "title": "Clé de licence (à vie)",
+      "description": "Collez ici la clé reçue sur WhatsApp (elle commence par NANO1.). Elle est vérifiée sur votre poste, hors ligne — aucune connexion n'est établie. Sans clé, la dé-anonymisation de vos fichiers déjà codés reste possible. Après un changement de clé, redémarrez Claude Desktop.",
       "required": false,
       "sensitive": true
     }
@@ -55,11 +57,19 @@
   "tools": [
     {
       "name": "lister_fichiers",
-      "description": "Liste les fichiers Excel/CSV du dossier de travail"
+      "description": "Liste les fichiers du dossier de travail (noms propres masqués, repères stables)"
     },
     {
       "name": "anonymiser_fichier",
-      "description": "Anonymise un fichier localement et renvoie le tableau codé"
+      "description": "Anonymise un fichier sur le poste (plan puis exécution) et renvoie le contenu codé"
+    },
+    {
+      "name": "anonymiser_dossier",
+      "description": "Anonymise un lot de fichiers avec une seule clé (comptes seulement dans la conversation)"
+    },
+    {
+      "name": "lire_scan",
+      "description": "OCR local d'un scan — le texte reconnu reste sur le poste, à relire"
     },
     {
       "name": "deanonymiser",
@@ -67,7 +77,11 @@
     },
     {
       "name": "etat_cle",
-      "description": "État de la clé de session (comptes uniquement)"
+      "description": "État de la clé et de la licence (comptes uniquement)"
+    },
+    {
+      "name": "verifier_confinement",
+      "description": "Audit : une autre extension ou une synchronisation cloud voit-elle vos fichiers ?"
     },
     {
       "name": "reinitialiser_cle",
