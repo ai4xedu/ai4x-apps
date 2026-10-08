@@ -82,7 +82,8 @@ test("le message de blocage vend, ne punit pas, et promet le décodage", { skip 
   assert.match(msg, /DÉ-ANONYMISATION/);
   assert.match(msg, /jamais prises en otage/);
   assert.match(msg, /anonymiseur-donnees/);       // l'appli gratuite reste
-  assert.match(msg, /#plans/);                     // et la voie du renouvellement
+  assert.match(msg, /500 Dhs/);                   // et l'offre à vie…
+  assert.match(msg, /wa\.me\/212680092567/);     // …commandée sur WhatsApp
 });
 
 test("clé absente ≠ clé refusée : deux messages, deux gestes à faire", () => {
@@ -134,4 +135,36 @@ test("la clé se lit dans l'env, ou dans licence.txt du dossier de travail", () 
   // L'env prime sur le fichier.
   assert.equal(readLicence(dir, { ANX_LICENCE: "NANO1.env.gagne" }).raw, "NANO1.env.gagne");
   fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test("licence À VIE : valide dans 100 ans, jamais d'avertissement, affichée « à vie »", { skip }, () => {
+  const key = mint({ v: 1, org: "Maître Sekkat", seats: 1, iat: "2026-09-18", exp: "9999-12-31", life: true }, KEY);
+  for (const when of ["2026-09-18", "2031-01-01", "2126-06-30"]) {
+    const st = licenceStatus(key, new Date(when + "T10:00:00"));
+    assert.equal(st.valid, true, `à vie doit être valide le ${when}`);
+    assert.equal(st.lifetime, true);
+    assert.equal(st.expiringSoon, false);
+    assert.equal(st.expiresAt, "à vie");
+    assert.equal(warningBanner(st), "");
+  }
+});
+
+test("licence À VIE : une v1.6 déjà installée l'accepte aussi (exp lointain, pas seulement le drapeau)", { skip }, () => {
+  // Ce que fait emettre-licence.mjs --a-vie : exp « 9999-12-31 » ET life: true.
+  const key = mint({ v: 1, org: "Cabinet Ancien", seats: 1, iat: "2026-09-18", exp: "9999-12-31", life: true }, KEY);
+  const payload = parseKey(key).payload;
+  // Logique de la v1.6 : date d'expiration lue telle quelle.
+  const expires = new Date(payload.exp + "T23:59:59");
+  assert.ok(!Number.isNaN(expires.getTime()) && expires > new Date("2126-01-01"));
+});
+
+test("une licence à vie falsifiée (drapeau ajouté à une clé datée) est refusée", { skip }, () => {
+  const key = mint({ v: 1, org: "Malin", seats: 1, iat: "2026-01-01", exp: "2026-02-01" }, KEY);
+  const [head, body, sig] = key.split(".");
+  const p = JSON.parse(Buffer.from(body.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));
+  p.life = true;
+  const forged = `${head}.${b64urlEncode(Buffer.from(JSON.stringify(p), "utf8"))}.${sig}`;
+  const st = licenceStatus(forged);
+  assert.equal(st.valid, false);
+  assert.match(st.reason, /signature invalide/);
 });

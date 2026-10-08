@@ -86,6 +86,8 @@ const SECRETS = {
   // valeurs présentes dans le SCAN (fixture image) — auditées elles aussi
   scanSociete: "SOCIETE GHARB PRIMEURS", scanClient: "Cabinet Sekkat Conseil",
   scanIce: "002233445566778", scanRib: "011780000556677889900112",
+  // v2.0 — des noms écrits NORMALEMENT, au fil du texte, et dans un nom de fichier.
+  verrouNom: "Benali", verrouPrenom: "Karim", verrouAvocat: "Dupont", verrouAdverse: "Rousseau",
 };
 
 const transcript = [];   // tout ce que les outils ont renvoyé
@@ -118,6 +120,12 @@ function makeFiles(dir) {
       "Casablanca", "Doublon volontaire", 4100],
   ]), "Impayés");
   XLSX.writeFile(wb1, path.join(dir, "clients.xlsx"));
+
+  // v2.0 — le cas d'un avocat : des conclusions en texte libre, et un nom de
+  // client DANS le nom du fichier.
+  fs.writeFileSync(path.join(dir, `Dossier ${SECRETS.verrouNom}.md`),
+    `Maître ${SECRETS.verrouAvocat} représente M. ${SECRETS.verrouPrenom} ${SECRETS.verrouNom} contre ` +
+    `Mme ${SECRETS.verrouAdverse}. Le Tribunal de commerce de Casablanca a fixé l'audience au 15 octobre 2026.\n`, "utf8");
 
   const wb2 = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet([
@@ -195,7 +203,8 @@ check("A3b", "le PLAN annonce déjà la fuite de la colonne Commentaires", /Comm
 
 const codedT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx", confirmer: true } }));
 check("A3c", "CONTRÔLE DE FUITE déclenché sur la colonne non codée", /CONTR[ÔO]LE DE FUITE/.test(codedT));
-check("A3d", "la colonne suspecte est MASQUÉE dans l'aperçu", /MASQU[ÉE]/.test(codedT));
+check("A3d", "v2 : l'email enfoui est CODÉ dans la cellule, le reste du commentaire reste lisible",
+  /EMAIL-\d{3}/.test(codedT) && /Relancé le 12\/07/.test(codedT));
 check("A3e", "l'email enfoui n'apparaît nulle part", !codedT.includes(SECRETS.emailEnfoui));
 
 /* Mode document sur la facture — noms codés d'office */
@@ -243,8 +252,10 @@ const deanonT = record(await client.callTool({
 check("A4a", "le compte rendu de décodage ne contient aucune valeur réelle",
   !deanonT.includes(SECRETS.nom1) && !deanonT.includes(SECRETS.tel1) && !deanonT.includes(SECRETS.societe1));
 check("A4b", "il ne renvoie qu'un chemin + des compteurs", /Fichier décodé écrit sur le poste/.test(deanonT));
-const decodedPath = (deanonT.match(/Fichier décodé écrit sur le poste : (.+)/) || [])[1];
-const decodedOnDisk = decodedPath ? fs.readFileSync(decodedPath.trim(), "utf8") : "";
+// v2 : les chemins affichés sont relatifs au dossier de travail (masqué).
+const shownFile = (t) => { const m = t.match(/Fichier décodé écrit sur le poste : .*?(Anonymiseur-Ai4x\/\S+)/); return m ? path.join(workdir, m[1]) : ""; };
+const decodedPath = shownFile(deanonT);
+const decodedOnDisk = decodedPath ? fs.readFileSync(decodedPath, "utf8") : "";
 check("A4c", "les vraies valeurs SONT dans le fichier local", decodedOnDisk.includes(SECRETS.nom1) && decodedOnDisk.includes(SECRETS.tel1));
 
 /* etat_cle */
@@ -274,6 +285,29 @@ if (toolNames.includes("lire_scan")) {
     && !anoT.includes("002233445566778") && !anoT.includes("GHARB PRIMEURS"));
 }
 
+/* Série D — v2.0 : le verrou */
+console.log("\n── Série D — v2.0 : le verrou (noms au fil du texte, noms de fichiers, confinement)\n");
+const instr = client.getInstructions() || "";
+check("D1", "le protocole de confidentialité est transmis à Claude à la connexion",
+  /PROTOCOLE DE CONFIDENTIALITÉ/.test(instr) && /Filesystem/.test(instr));
+const listeT = record(await client.callTool({ name: "lister_fichiers", arguments: {} }));
+const dossierRef = (listeT.match(/\[(F-[A-Z2-7]{5})\] Dossier/) || [])[1];
+check("D2", "lister_fichiers masque le nom du client dans le nom du fichier et donne un repère",
+  !!dossierRef && !listeT.includes(SECRETS.verrouNom));
+if (dossierRef) {
+  const vT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: dossierRef, confirmer: true } }));
+  check("D3", "un nom écrit normalement, derrière « Maître », « M. », « Mme », est codé ; la juridiction reste lisible",
+    /Maître NOM-\d{3}/.test(vT) && /Tribunal de commerce de Casablanca/.test(vT)
+    && ![SECRETS.verrouNom, SECRETS.verrouPrenom, SECRETS.verrouAvocat, SECRETS.verrouAdverse].some((v) => vT.includes(v)));
+  check("D4", "le fichier anonymisé ne porte pas le nom du client dans SON nom",
+    fs.readdirSync(outDir).some((n) => /^Dossier NOM-\d{3}-anonymise\.md$/.test(n))
+    && !fs.readdirSync(outDir).some((n) => n.includes(SECRETS.verrouNom) && /anonymise/.test(n)));
+}
+const confT = record(await client.callTool({ name: "verifier_confinement", arguments: {} }));
+check("D5", "l'audit de confinement tourne et confirme le verrou actif", /Verrou actif/.test(confT));
+const cleT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "Anonymiseur-Ai4x/cle-correspondance-NE-JAMAIS-PARTAGER.xlsx" } }));
+check("D6", "la clé ne peut pas être passée à l'IA, même demandée", /Fichier refusé/.test(cleT));
+
 /* A5 — L'AUDIT : tout ce qui a été dit, passé au crible */
 console.log("\n── A5 — audit de la conversation entière (le test qui décide de tout)\n");
 const everything = transcript.join("\n\n");
@@ -296,10 +330,10 @@ const roundTrip = record(await client.callTool({
   name: "deanonymiser",
   arguments: { contenu: aoaCoded.map((r) => r.join("\t")).join("\n"), nom_sortie: "aller-retour" },
 }));
-const rtPath = (roundTrip.match(/Fichier décodé écrit sur le poste : (.+)/) || [])[1];
+const rtPath = shownFile(roundTrip);
 let rtFlat = "";
-if (rtPath && rtPath.trim().endsWith(".xlsx")) {
-  const wbRt = XLSX.readFile(rtPath.trim());
+if (rtPath && rtPath.endsWith(".xlsx")) {
+  const wbRt = XLSX.readFile(rtPath);
   rtFlat = XLSX.utils.sheet_to_json(wbRt.Sheets[wbRt.SheetNames[0]], { header: 1, raw: false, defval: "" }).flat().join(" | ");
 }
 check("B1c", "aller-retour : toutes les valeurs restituées",
@@ -352,6 +386,8 @@ check("C1a", "champ vide : on dit « aucune clé configurée », pas « format i
 check("C1b", "le message donne le geste exact (champ + redémarrage)",
   /Clé de licence/.test(bloque) && /REDÉMARREZ/.test(bloque));
 check("C1c", "et il n'anonymise rien", !/TABLEAU CODÉ/.test(bloque));
+check("C1d", "et il dit comment acheter : licence à vie 500 Dhs, sur WhatsApp",
+  /500 Dhs/.test(bloque) && /https:\/\/wa\.me\/212680092567/.test(bloque));
 
 // La promesse fondatrice : sans licence, le décodage marche quand même.
 const decodeSansLicence = record(await sansLicence.callTool({

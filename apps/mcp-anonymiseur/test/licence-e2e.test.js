@@ -73,7 +73,8 @@ test("sans licence : anonymiser, lot et OCR sont bloqués, avec un message qui o
       const res = await client.callTool({ name, arguments: args });
       assert.ok(res.isError, `${name} devrait être bloqué sans licence`);
       const out = resultText(res);
-      assert.match(out, /offre Équipes/, `${name} : le message doit orienter vers l'offre`);
+      assert.match(out, /À VIE : 500 Dhs/, `${name} : le message doit orienter vers l'offre`);
+      assert.match(out, /https:\/\/wa\.me\/212680092567/, `${name} : la commande se fait sur WhatsApp`);
       assert.match(out, /jamais prises en otage/, `${name} : le message doit rassurer sur les données`);
     }
   } finally { await client.close(); }
@@ -97,9 +98,9 @@ test("sans licence : la DÉ-ANONYMISATION et l'état de la clé restent disponib
       arguments: { contenu: "Relancer NOM-001 au TEL-001.", nom_sortie: "relance" },
     });
     assert.ok(!dec.isError, "deanonymiser DOIT fonctionner sans licence — jamais d'otage");
-    const m = resultText(dec).match(/Fichier décodé écrit sur le poste : (.+)/);
+    const m = resultText(dec).match(/Fichier décodé écrit sur le poste : .*?(Anonymiseur-Ai4x\/\S+)/);
     assert.ok(m, "chemin du fichier décodé absent");
-    const decoded = fs.readFileSync(m[1].trim(), "utf8");
+    const decoded = fs.readFileSync(path.join(workdir, m[1]), "utf8");
     assert.ok(decoded.includes("El Amrani"), "la vraie valeur doit être restituée");
   } finally { await client.close(); }
 });
@@ -123,6 +124,18 @@ test("licence valide : etat_cle affiche titulaire, postes et échéance", { skip
     assert.match(out, /Cabinet Sekkat/);
     assert.match(out, /5 poste\(s\)/);
     assert.match(out, /valide jusqu'au 2099-01-01/);
+  } finally { await client.close(); }
+});
+
+test("licence À VIE : acceptée, affichée « à vie », jamais d'avertissement d'échéance", { skip }, async () => {
+  const client = await connect(mint({ v: 1, org: "Maître Sekkat", seats: 1, iat: "2026-09-18", exp: "9999-12-31", life: true }));
+  try {
+    const out = resultText(await client.callTool({ name: "etat_cle", arguments: {} }));
+    assert.match(out, /Maître Sekkat/);
+    assert.match(out, /À VIE/);
+    const plan = resultText(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx" } }));
+    assert.match(plan, /PLAN D'ANONYMISATION/);
+    assert.ok(!/jour\(s\) restant/.test(plan), "une licence à vie n'expire pas");
   } finally { await client.close(); }
 });
 

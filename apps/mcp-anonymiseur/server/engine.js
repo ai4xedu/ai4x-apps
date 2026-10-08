@@ -22,6 +22,11 @@ export const TYPES = [
   { id: "email",    prefix: "EMAIL",    label: "Email" },
   { id: "tel",      prefix: "TEL",      label: "Téléphone" },
   { id: "rib",      prefix: "RIB",      label: "Compte bancaire (RIB / IBAN)" },
+  // v2.1 (08/10/2026) — demandé par un client de la monétique : une carte
+  // étiquetée « RIB » et un permis laissé en clair ne sont pas crédibles
+  // chez des gens qui manipulent des cartes toute la journée.
+  { id: "carte",    prefix: "CARTE",    label: "Carte bancaire" },
+  { id: "permis",   prefix: "PERMIS",   label: "Permis de conduire" },
   { id: "adresse",  prefix: "ADRESSE",  label: "Adresse" },
   { id: "societe",  prefix: "SOCIETE",  label: "Société / employeur" },
   // Identifiants d'entreprise marocains (mode document — dictionnaire local).
@@ -30,6 +35,9 @@ export const TYPES = [
   { id: "rc",       prefix: "RC",       label: "Registre de commerce (RC)" },
   { id: "cnss",     prefix: "CNSS",     label: "N° CNSS" },
   { id: "patente",  prefix: "PATENTE",  label: "N° de patente" },
+  // v2.0 (verrou) : références alphanumériques / n° de dossier, et liens web.
+  { id: "reference", prefix: "REF",     label: "Référence / n° de dossier" },
+  { id: "lien",     prefix: "LIEN",     label: "Lien / site web" },
   { id: "autre",    prefix: "CODE",     label: "Autre donnée sensible" },
 ];
 
@@ -47,12 +55,33 @@ export function detectByHeader(h) {
   if (/pr[eé]nom|first\s*name/.test(s)) return "prenom";
   if (/nom\s*complet|full\s*name/.test(s)) return "personne";
   if (/\bnom\b|last\s*name|surname/.test(s)) return "nom";
-  if (/\bcin\b|c\.i\.n|identit/.test(s)) return "cin";
+  if (/\bcin\b|c\.i\.n|identit|passeport|passport|\bnir\b|s[eé]curit[eé]\s*sociale|\bcni\b/.test(s)) return "cin";
+  // Une « carte » est d'abord une carte bancaire — sauf la grise (un véhicule)
+  // et celle d'identité (déjà prise par la ligne du CIN). Avant « bancaire »,
+  // sinon « Carte bancaire » partait en RIB. Pas de \b : « numero_carte ».
+  if (/carte\s*grise|immatriculation|\bplaque/.test(s)) return "reference";
+  if (/permis|driv(?:ing|er)|licen[cs]e\s*(?:de\s*)?condui/.test(s)) return "permis";
+  if (/carte|card|(?:^|[^a-z])(?:pan|cb|cmi)(?:[^a-z]|$)|visa|mastercard/.test(s)) return "carte";
   if (/mail|courriel/.test(s)) return "email";
   if (/t[eé]l|phone|gsm|portable|mobile|whatsapp/.test(s)) return "tel";
   if (/\brib\b|iban|compte|bancaire|bank/.test(s)) return "rib";
-  if (/adresse|address/.test(s)) return "adresse";
-  if (/soci[eé]t|entreprise|raison\s*sociale|company|employeur/.test(s)) return "societe";
+  if (/adresse|address|domicile/.test(s)) return "adresse";
+  if (/soci[eé]t|entreprise|raison\s*sociale|company|employeur|fournisseur|prestataire|[eé]metteur|enseigne/.test(s)) return "societe";
+  if (/naissance|birth|\bdob\b/.test(s)) return "autre";
+  if (/\bice\b/.test(s)) return "ice";
+  if (/identifiant\s*fiscal|^\s*i\.?f\.?\s*$/.test(s)) return "if";
+  if (/registre\s*de\s*commerce|^\s*r\.?c\.?\s*$/.test(s)) return "rc";
+  if (/cnss/.test(s)) return "cnss";
+  if (/patente/.test(s)) return "patente";
+  if (/n[°o]\s*(client|dossier|contrat|affaire)|code\s*client|r[eé]f[eé]rence|matricule|\bdossier\b|\bsiret\b|\bsiren\b/.test(s)) return "reference";
+  /* v2.0 — une colonne qui désigne une PERSONNE par son rôle (« Client »,
+     « Partie adverse », « Bénéficiaire »…) contient des noms, même quand
+     l'en-tête ne dit pas « nom ». Constaté : une colonne « Client » de noms
+     passait en clair. Sauf si l'en-tête qualifie une mesure (« Statut
+     client », « Montant client ») : alors ce sont des valeurs, pas des gens. */
+  const measure = /statut|type|cat[eé]gorie|segment|nombre|\bnb\b|montant|total|solde|date|d[eé]lai|chiffre|\bca\b|secteur|ville|pays|r[eé]gion|nature|objet/;
+  const role = /\b(clients?|contacts?|b[eé]n[eé]ficiaires?|titulaires?|destinataires?|exp[eé]diteurs?|responsables?|interlocuteurs?|repr[eé]sentants?|g[eé]rants?|dirigeants?|signataires?|salari[eé]e?s?|employ[eé]e?s?|collaborat(eur|rice)s?|patients?|locataires?|bailleurs?|propri[eé]taires?|acqu[eé]reurs?|d[eé]biteurs?|cr[eé]anci(er|[eè]re)s?|cautions?|garants?|associ[eé]e?s?|h[eé]riti(er|[eè]re)s?|t[eé]moins?|avocats?|notaires?|parties?|adversaires?|demandeu(r|se)s?|d[eé]fendeu(r|resse)s?|requ[eé]rante?s?|intim[eé]e?s?|appelante?s?|mandataires?|conjoints?|[eé]poux|[eé]pouses?|[eé]l[eè]ves?|candidate?s?|adh[eé]rente?s?|abonn[eé]e?s?|assur[eé]e?s?|souscripteurs?|prospects?|vendeu(r|se)s?|acheteu(r|se)s?)\b/;
+  if (role.test(s) && !measure.test(s)) return "personne";
   return null;
 }
 
@@ -64,7 +93,42 @@ export function isMoroccanPhone(digits) {
   return /^(?:\+212|00212)[5-7]\d{8}$/.test(digits) || /^0[5-7]\d{8}$/.test(digits);
 }
 
-/* Détection par contenu : échantillon de 80 valeurs, seuil 60 %. */
+/* Numéro de CARTE BANCAIRE : 13 à 19 chiffres qui passent la clé de Luhn —
+   la règle commune à tous les réseaux (Visa, Mastercard, CMI…). La longueur
+   seule ne suffit pas : un RIB marocain fait 24 chiffres, un ICE 15, un
+   montant en centimes peut en faire 13. Quinze chiffres n'est une carte que
+   chez American Express (34/37) ; ailleurs, c'est un ICE. Un numéro masqué
+   (« 4111 **** **** 1111 ») reste une carte : BIN + quatre derniers chiffres
+   suffisent à la retrouver. */
+export function luhnOk(digits) {
+  let sum = 0;
+  let dbl = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let d = digits.charCodeAt(i) - 48;
+    if (dbl) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+    dbl = !dbl;
+  }
+  return sum % 10 === 0;
+}
+export function isCardNumber(s) {
+  const t = String(s).trim();
+  if (/^\d{4,6}(?:[\s.\-]*[*xX•·]){4,12}[\s.\-]*\d{4}$/.test(t)) return true;
+  const d = t.replace(/[\s.\- ‐-―]/g, "");
+  if (!/^\d{13,19}$/.test(d)) return false;
+  if (d.length === 15 && !/^3[47]/.test(d)) return false;
+  return luhnOk(d);
+}
+
+/* PERMIS DE CONDUIRE marocain : « 15/284731 » — le code de la province, une
+   barre, six chiffres. Une date (06/10/2026) n'a jamais six chiffres d'un
+   bloc après la barre. */
+export function isPermis(s) {
+  return /^\d{1,2}\s?\/\s?\d{6}$/.test(String(s).trim());
+}
+
+/* Détection par contenu : échantillon de 80 valeurs, seuil 60 %. La carte
+   passe AVANT le compte : seize chiffres sont un RIB sauf si Luhn dit carte. */
 export function detectByValues(values) {
   const take = [];
   for (const v of values) {
@@ -73,15 +137,17 @@ export function detectByValues(values) {
     if (take.length >= 80) break;
   }
   if (!take.length) return null;
-  const n = { email: 0, tel: 0, cin: 0, rib: 0 };
+  const n = { email: 0, tel: 0, cin: 0, rib: 0, carte: 0, permis: 0 };
   for (const s of take) {
     if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)) { n.email++; continue; }
+    if (isCardNumber(s)) { n.carte++; continue; }
     const d = s.replace(/[\s.\-()]/g, "");
     if (/^\d{16,26}$/.test(d)) { n.rib++; continue; }
     if (isMoroccanPhone(d)) { n.tel++; continue; }
+    if (isPermis(s)) { n.permis++; continue; }
     if (/^[A-Za-z]{1,2}\d{3,8}$/.test(s.replace(/\s/g, ""))) n.cin++;
   }
-  for (const k of ["rib", "email", "cin", "tel"]) {
+  for (const k of ["carte", "rib", "email", "cin", "permis", "tel"]) {
     if (n[k] >= take.length * 0.6) return k;
   }
   return null;
@@ -90,9 +156,11 @@ export function detectByValues(values) {
 /* Cellule entière. */
 export function classifyValue(s) {
   if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)) return "email";
+  if (isCardNumber(s)) return "carte bancaire";
   const d = s.replace(/[\s.\-()]/g, "");
   if (/^\d{16,26}$/.test(d)) return "compte bancaire";
   if (isMoroccanPhone(d)) return "téléphone";
+  if (isPermis(s)) return "permis de conduire";
   if (/^[A-Za-z]{1,2}\d{3,8}$/.test(s.replace(/\s/g, ""))) return "CIN";
   return null;
 }
@@ -104,12 +172,17 @@ export function classifyLoose(s) {
   const whole = classifyValue(s);
   if (whole) kinds[whole] = 1;
   if (/[^\s@]+@[^\s@]+\.[^\s@]{2,}/.test(s)) kinds["email"] = 1;
-  if (/(\+|00)?\d([\s.\-]?\d){15,25}/.test(s)) kinds["compte bancaire"] = 1;
+  // Une carte enfouie (« payé avec la 4111 1111 1111 1111 ») : Luhn tranche
+  // entre carte et compte.
+  const runs = s.match(/(?<!\d)\d(?:[ .\-]?\d){12,25}(?!\d)/g) || [];
+  if (runs.some(isCardNumber)) kinds["carte bancaire"] = 1;
+  else if (/(\+|00)?\d([\s.\-]?\d){15,25}/.test(s)) kinds["compte bancaire"] = 1;
   else if (/(?:\+212|00212|0)[\s.\-]?[5-7](?:[\s.\-]?\d){8}(?!\d)/.test(s)) kinds["téléphone"] = 1;
+  if (/(?<![\d/])\d{1,2}\/\d{6}(?![\d/])/.test(s)) kinds["permis de conduire"] = 1;
   return Object.keys(kinds);
 }
 
-const DIGIT_PREFIXES = new Set(["TEL", "RIB", "ICE", "IF", "RC", "CNSS", "PATENTE"]);
+const DIGIT_PREFIXES = new Set(["TEL", "RIB", "ICE", "IF", "RC", "CNSS", "PATENTE", "CARTE", "PERMIS"]);
 
 export function normFor(prefix, text) {
   if (prefix === "EMAIL") return String(text).toLowerCase();
@@ -269,6 +342,14 @@ const DOC_PATTERNS = [
   { type: "cnss",    rx: /\bCNSS[^0-9A-Za-z\n]{0,6}(\d{6,9})\b/gi },
   { type: "patente", rx: /\bpatente[^0-9A-Za-z\n]{0,6}(\d{5,9})\b/gi },
   { type: "cin",     rx: /\b(?:CIN|C\.I\.N\.?)[^0-9A-Za-z\n]{0,4}([A-Za-z]{1,2}\d{3,8})\b/gi },
+  // v2.1 — permis de conduire (libellé ou nu) et carte bancaire (Luhn), AVANT
+  // les suites de chiffres nues : seize chiffres sont une carte si Luhn le
+  // dit, un RIB sinon. Les 24 chiffres d'un RIB ne sont jamais pris pour une
+  // carte : rien ne peut suivre les 19 premiers.
+  { type: "permis",  rx: /\bpermis(?:\s+de\s+conduire)?[^0-9A-Za-z\n]{0,8}(\d{1,2}\s?\/\s?\d{6})(?![\d/])/gi },
+  { type: "permis",  rx: /(?<![\d/])\d{1,2}\/\d{6}(?![\d/])/g },
+  { type: "carte",   rx: /(?<![\dA-Za-z-])\d(?:[ .\-]?\d){12,18}(?![\dA-Za-z])/g, check: isCardNumber },
+  { type: "carte",   rx: /(?<![\dA-Za-z*])\d{4,6}(?:[ .\-]*[*xX•·]){4,12}[ .\-]*\d{4}(?![\dA-Za-z])/g },
   // Longues suites de chiffres sans libellé : 15 = ICE, 16-26 = RIB/IBAN.
   // Les montants n'atteignent jamais ces tailles ; les cellules NUMÉRIQUES
   // (montants, quantités) ne passent de toute façon jamais par ici.
@@ -297,13 +378,41 @@ const NAME_STOPLIST = new Set([
   "KENITRA", "OUJDA", "TETOUAN", "SALE", "MOHAMMEDIA", "MEKNES",
 ]);
 
+/* Vocabulaire des intitulés d'actes et de documents (forme désaccentuée,
+   minuscules) : un intitulé en MAJUSCULES fait de ces mots (« PAR CES
+   MOTIFS », « RAPPEL DES FAITS », « CONCLUSIONS EN RÉPONSE ») n'est pas un nom.
+   Partagé avec le verrou (verrou.js). Tout autre mot en majuscules reste
+   suspect : « HORIZON IMMOBILIER » en tête de lettre est une société. */
+export const HEADING_WORDS = new Set(`
+par ces motifs en fait droit sur ce attendu attendus que considerant considerants plaise au tribunal cour dit
+juge juger condamne condamner deboute debouter ordonne ordonner statuant constate constater rejette rejeter
+renvoie declare declarer recoit recevoir infirme infirmer confirme confirmer annule annuler prononce fixe alloue
+rappel des faits discussion motifs moyens moyen objet article articles annexe annexes preambule entre les
+soussignes ci-apres denomme denommee convenu qui suit important urgent confidentiel attention conclusions
+conclusion reponse replique requete assignation memoire note observations procedure expose bordereau pieces
+piece communiquees communication dispositif decision jugement arret ordonnance sommaire introduction synthese
+resume contrat convention avenant protocole accord facture devis avoir bon commande livraison total sous-total
+montant date echeance designation quantite prix unitaire reference client clients fournisseur emetteur
+destinataire vendeur acheteur signature cachet lu approuve fait a le la de du et ou pour contre au aux un une
+par avec sans dans il elle ils sont est ont ne pas plus demandeur demanderesse defendeur defenderesse appelant
+appelante intime intimee requerant requerante partie parties sous toutes reserves audience jugement premiere
+instance appel cassation chambre section titre chapitre paragraphe alinea sommaire table matieres
+competence incompetence recevabilite irrecevabilite fond forme prescription fin fins non-recevoir demandes
+demande reconventionnelle reconventionnelles prejudice prejudices dommages interets responsabilite faute
+contractuelle delictuelle indemnite indemnites indemnisation licenciement rupture travail cause reelle serieuse
+frais irrepetibles depens execution provisoire sursis jonction expertise mesures mesure instruction incident
+exception exceptions nullite nullites litispendance connexite qualite interet agir liminaires preliminaires
+liste principal subsidiaire subsidiairement titre infiniment tres plus reponse faits droit application
+mise cause garantie appel incident moyens nouveaux conclusions recapitulatives recapitulatif chronologie
+`.split(/\s+/).filter(Boolean));
+
 function normToken(t) {
   return String(t).normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
 }
 
 /* « Sophatel S.A », « ATLAS NEGOCE SARL AU »… — capture nom + forme juridique. */
 const LEGAL_SUFFIX_RX =
-  /\b((?:[A-ZÀ-Ý][\p{L}\d&'’.\-]*\s+){0,4}[A-ZÀ-Ý][\p{L}\d&'’.\-]*)[\s,]+(S\.?A\.?R\.?L\.?(?:\s*A\.?U\.?)?|SARLAU|S\.?A\.?S\b\.?|S\.?N\.?C\b\.?|GIE\b|SCI\b|S\.?A\b\.?)/gu;
+  /\b((?:[A-ZÀ-Ý][\p{L}\d'’.\-]*(?:\s+(?:&|et|and)\s+|\s+)){0,5}[A-ZÀ-Ý][\p{L}\d&'’.\-]*)[\s,]+(S\.?A\.?R\.?L\.?(?:\s*A\.?U\.?)?|SARLAU|S\.?A\.?S\b\.?|S\.?N\.?C\b\.?|GIE\b|SCI\b|S\.?A\b\.?)/gu;
 
 const ADDRESS_RX =
   /\b(rue|avenue|av\.|bd\b|boulevard|r[eé]sidence|r[eé]s\.|lotissement|lot\.|quartier|angle|[eé]tage|imm\.|immeuble|appt|apt\b|km\s?\d)/i;
@@ -321,7 +430,8 @@ function allCapsName(text) {
   for (const t of tokens) {
     // Tester la casse sur le token BRUT (normToken met tout en majuscules).
     if (t !== t.toUpperCase()) return false;               // un token en minuscules disqualifie
-    if (t.replace(/[^\p{L}]/gu, "").length >= 3 && !NAME_STOPLIST.has(normToken(t))) signal = true;
+    if (t.replace(/[^\p{L}]/gu, "").length >= 3 && !NAME_STOPLIST.has(normToken(t)) &&
+        !HEADING_WORDS.has(normToken(t).toLowerCase())) signal = true;
   }
   return signal;
 }
@@ -414,7 +524,11 @@ export function nameCandidatesFromText(fullText) {
     LEGAL_SUFFIX_RX.lastIndex = 0;
     let m;
     while ((m = LEGAL_SUFFIX_RX.exec(line))) add(m[0], "societe");
-    if (ADDRESS_RX.test(line) && !matchesDocPattern(line)) add(line, "adresse");
+    // Ligne d'adresse d'une facture : codée en entier. Une PHRASE qui contient
+    // une adresse (« Le témoin habite 12 rue des Lilas. ») ne l'est pas : le
+    // verrou y code l'adresse seule, le reste de la phrase reste lisible.
+    const prose = line.length > 80 || /[.!?]\s+\p{L}/u.test(line);
+    if (!prose && ADDRESS_RX.test(line) && !matchesDocPattern(line)) add(line, "adresse");
     if (allCapsName(line) && !matchesDocPattern(line)) add(line, "societe");
   }
   // Passe 2 — zone : les lignes qui suivent un libellé ÉMETTEUR / CLIENT / …
