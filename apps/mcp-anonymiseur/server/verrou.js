@@ -41,7 +41,7 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
-import { TYPES, codeFor, codeDocumentText, newCodebook, normFor, HEADING_WORDS } from "./engine.js";
+import { TYPES, codeFor, codeDocumentText, newCodebook, normFor, HEADING_WORDS, isCardNumber } from "./engine.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const LEXICON_FILE = path.join(here, "..", "lexique", "fr.txt.gz");
@@ -79,6 +79,7 @@ d l s n j m t c qu jusqu lorsqu puisqu quoiqu presqu quelqu aujourd prud n°
 rg rcs siret siren nic naf ape cass civ crim soc bull jcp gaz pal rtd jorf bo ass plén plen ch mixte réun
 req adm const ord déc arr jur rép obs comm concl rapp trib gde inst sect ci-après ci-après dénommé
 export import data file files report draft final backup copy invoice new old test temp docs img image photo
+id ids tx txn ref refs num no nb qty qte
 `);
 const EXTRA_SET = new Set(EXTRA_WORDS.map(fold));
 
@@ -362,6 +363,14 @@ export const PATTERNS = [
   { type: "email", rx: /[\p{L}\p{N}._%+-]+\s?[[(](?:at|arobase|@)[\])]\s?[\p{L}\p{N}.-]+\s?(?:[[(](?:dot|point)[\])]|\.)\s?[\p{L}]{2,}/giu },
   { type: "lien", rx: /(?<![\p{L}\p{N}@.-])[a-z0-9][a-z0-9-]{1,62}(?:\.[a-z0-9-]{2,62})*\.(?:ma|fr|com|net|org|be|ch|ca|io|co|eu|info|biz|law|me|ly|app)(?![\p{L}\p{N}-])(?:\/[^\s<>"'()]*)?/giu },
   { type: "rib", rx: /\b[A-Z]{2}\p{Nd}{2}(?:[ ]?[A-Z0-9]{4}){2,7}(?:[ ]?[A-Z0-9]{1,4})?\b/gu },
+  // v2.1 — carte bancaire : 13 à 19 chiffres qui passent Luhn, AVANT les
+  // téléphones groupés et les suites nues (sinon « 4111 1111 1111 1111 »
+  // partait en TEL-001 et un numéro nu en REF-001 — codé, mais mal nommé,
+  // ce qui ne passe pas chez un client de la monétique). Chiffres de toutes
+  // écritures : Luhn se calcule sur la forme ASCII.
+  { type: "carte", rx: new RegExp(`(?<![\\p{Nd}\\p{L}-])${D}(?:${SEPNS}?${D}){12,18}(?![\\p{Nd}\\p{L}])`, "gu"),
+    check: (m) => isCardNumber(asciiDigits(m)) },
+  { type: "carte", rx: new RegExp(`(?<![\\p{Nd}\\p{L}*])${D}{4,6}(?:${SEPNS}*[*xX•·]){4,12}${SEPNS}*${D}{4}(?![\\p{Nd}\\p{L}])`, "gu") },
   // International, y compris « +33 (0)6 12 34 56 78 ».
   { type: "tel", rx: new RegExp(`(?<![\\p{Nd}+])(?:\\+|00)${D}{1,3}${SEPNS}?(?:\\(0\\)${SEPNS}?)?\\(?${D}{1,4}\\)?(?:${SEPNS}?${D}{2,4}){2,5}(?!${D})`, "gu"),
     // « 00… » sans séparateur de 15 chiffres = un ICE marocain, pas un téléphone.
@@ -369,6 +378,8 @@ export const PATTERNS = [
   // National (France, Maroc) : 06 12 34 56 78, 06.12.34.56.78, 06/12/34/56/78.
   { type: "tel", rx: new RegExp(`(?<!${D})0[1-9](?:${SEP}?${D}{2}){4}(?!${D})`, "gu") },
   { type: "cin", rx: new RegExp(`(?<!${D})[12]${SEP}?${D}{2}${SEP}?(?:0[1-9]|1[0-2])${SEP}?(?:${D}{2}|2[AB])${SEP}?${D}{3}${SEP}?${D}{3}(?:${SEP}?${D}{2})?(?!${D})`, "gu") },
+  // Permis de conduire marocain « 15/284731 » — avant les références à barre.
+  { type: "permis", rx: new RegExp(`(?<![\\p{Nd}/])${D}{1,2}[ \\u00A0]?/[ \\u00A0]?${D}{6}(?![\\p{Nd}/])`, "gu") },
   { type: "reference", rx: new RegExp(`(?<!${D})${D}{3}[ .\\u00A0]${D}{3}[ .\\u00A0]${D}{3}(?:[ .\\u00A0]${D}{5})?(?!${D})`, "gu") },
   { type: "reference", rx: new RegExp(`(?<!${D})${D}{9,}(?!${D})`, "gu") },
   // Chiffres groupés (« 01 423 456 78 », « 06-12-34-56-78 ») : ≥ 4 groupes et

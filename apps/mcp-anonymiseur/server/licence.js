@@ -39,15 +39,19 @@ const PUBLIC_KEY_B64 = "MCowBQYDK2VwAyEA2ecQy6JVQUtn9e+yrbuzQf7I9dcplI8T6dr2fiWT
 
 export const WARN_DAYS = 30;
 
-/* Offre en vigueur (décision du 18/09/2026) : licence À VIE, 500 Dhs, une
-   seule fois, commandée sur WhatsApp — comme le reste du catalogue Ai4x :
-   pas de paiement en ligne, le RIB est envoyé sur WhatsApp, la clé part à
-   réception du virement. */
+/* Offre en vigueur (décision du 08/10/2026, qui précise celle du 18/09) :
+   licence À VIE, 500 Dhs HT par poste — ou 5 000 Dhs HT pour une entité,
+   jusqu'à 20 postes sur une seule clé — une seule fois, commandée sur
+   WhatsApp, comme le reste du catalogue Ai4x : pas de paiement en ligne, le
+   RIB est envoyé sur WhatsApp, la clé part à réception du virement. Pas
+   d'abonnement : un outil hors ligne n'a rien à renouveler, et c'est la
+   facture de l'entité qui porte la prise en main. */
 export const OFFER = {
-  price: "500 Dhs",
+  price: "500 Dhs HT par poste",
+  priceTeam: "5 000 Dhs HT pour une équipe (jusqu'à 20 postes, une seule clé)",
   whatsappDisplay: "+212 680 092 567",
   whatsappUrl: "https://wa.me/212680092567?text=" + encodeURIComponent(
-    "Bonjour, je veux la licence à vie du connecteur Nanomizer (anonymiseur Ai4x pour Claude Desktop) à 500 Dhs. Comment on procède ?"
+    "Bonjour, je veux la licence à vie du connecteur Nanomizer (anonymiseur Ai4x pour Claude Desktop) à 500 Dhs HT. Comment on procède ?"
   ),
 };
 
@@ -169,7 +173,7 @@ export function blockedMessage(status) {
     head.push(`🔒 Votre licence a expiré le ${status.expiresAt}.`);
   } else if (!status.reason || status.reason === "absente") {
     head.push("🔒 Aucune clé de licence n'est configurée.");
-    head.push("Si vous en avez une : réglages de Claude Desktop → Extensions → Anonymiseur de données Ai4x →");
+    head.push("Si vous en avez une : réglages de Claude Desktop → Extensions → Nanomizer →");
     head.push("champ « Clé de licence » → collez la clé (elle commence par NANO1.) → REDÉMARREZ Claude Desktop");
     head.push("(la clé est lue au démarrage du connecteur, un changement à chaud n'est pas vu).");
   } else {
@@ -179,7 +183,7 @@ export function blockedMessage(status) {
   }
   return head.concat([
     `Le connecteur (verrou, traitement par lots, PDF, OCR) s'active avec une licence À VIE : ${OFFER.price}, une seule fois,`,
-    `mises à jour comprises. Commande sur WhatsApp au ${OFFER.whatsappDisplay} : ${OFFER.whatsappUrl}`,
+    `mises à jour comprises — ou ${OFFER.priceTeam}. Commande sur WhatsApp au ${OFFER.whatsappDisplay} : ${OFFER.whatsappUrl}`,
     "Ce qui continue de fonctionner, et continuera toujours : la DÉ-ANONYMISATION de vos fichiers déjà",
     "codés (outil deanonymiser) et l'état de votre clé. Vos données ne sont jamais prises en otage.",
     "L'appli gratuite reste disponible : https://ai4x.academy/anonymiseur-donnees",

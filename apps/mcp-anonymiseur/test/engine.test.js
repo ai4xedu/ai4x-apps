@@ -6,6 +6,7 @@ import {
   anonymizeSheet, leakScan, decodeText, newCodebook, sheetToTsv, looksLikeTable,
   detectLayout, codeDocumentText, anonymizeDocument, isMoroccanPhone,
   nameCandidates, isSuspectName, nameCandidatesFromText, anonymizeText,
+  isCardNumber, classifyValue,
 } from "../server/engine.js";
 import { FACTURE_PDF_LINES } from "./util-pdf.mjs";
 
@@ -241,4 +242,48 @@ test("sheetToTsv tronque et looksLikeTable reconnaît un TSV", () => {
   assert.equal(shownRows, 2);
   assert.ok(looksLikeTable(tsv));
   assert.ok(!looksLikeTable("Relancer NOM-001 demain."));
+});
+
+/* v2.1 — cartes bancaires et permis de conduire (08/10/2026). Les numéros de
+   carte sont ceux que Visa et Mastercard publient pour les tests. */
+test("v2.1 — carte bancaire : Luhn tranche, l'en-tête aussi", () => {
+  assert.equal(detectByHeader("numero_carte"), "carte");
+  assert.equal(detectByHeader("Carte bancaire"), "carte");
+  assert.equal(detectByHeader("Card number"), "carte");
+  assert.equal(detectByHeader("PAN"), "carte");
+  assert.equal(detectByHeader("Carte d'identité"), "cin");
+  assert.equal(detectByHeader("Carte grise"), "reference");
+  assert.ok(isCardNumber("4111 1111 1111 1111"));
+  assert.ok(isCardNumber("5555555555554444"));
+  assert.ok(isCardNumber("3782 822463 10005"));          // American Express, 15 chiffres
+  assert.ok(isCardNumber("4111 **** **** 1111"));        // masquée : BIN + 4 derniers
+  assert.ok(!isCardNumber("4111 1111 1111 1112"));       // Luhn faux
+  assert.ok(!isCardNumber("003463957000076"));           // un ICE de 15 chiffres
+  assert.ok(!isCardNumber("007810000123456789012345"));  // un RIB de 24 chiffres
+  assert.equal(detectByValues(["4111 1111 1111 1111", "5555 5555 5555 4444", "4012 8888 8888 1881"]), "carte");
+  assert.equal(detectByValues(["007810000123456789012345", "007810000987654321098765"]), "rib");
+  assert.equal(classifyValue("4111 1111 1111 1111"), "carte bancaire");
+  assert.deepEqual(classifyLoose("payé avec la 4111 1111 1111 1111 hier"), ["carte bancaire"]);
+  assert.deepEqual(classifyLoose("RIB 007810000123456789012345"), ["compte bancaire"]);
+});
+
+test("v2.1 — permis de conduire marocain « 15/284731 »", () => {
+  assert.equal(detectByHeader("numero_permis"), "permis");
+  assert.equal(detectByHeader("Permis de conduire"), "permis");
+  assert.equal(detectByValues(["15/284731", "08/551902", "21/090417"]), "permis");
+  assert.equal(classifyValue("15/284731"), "permis de conduire");
+  assert.ok(classifyLoose("permis n° 15/284731 vérifié").includes("permis de conduire"));
+  assert.ok(!classifyLoose("échéance 06/10/2026").includes("permis de conduire"));
+});
+
+test("v2.1 — en mode document, carte et permis sont codés sous leur nom, l'ICE reste un ICE", () => {
+  const book = newCodebook();
+  const r = codeDocumentText("Carte 4111 1111 1111 1111, permis 15/284731, ICE : 003463957000076, RIB 007810000123456789012345", book);
+  assert.equal(r.text, "Carte CARTE-001, permis PERMIS-001, ICE : ICE-001, RIB RIB-001");
+  // La même carte écrite sans espaces garde son code.
+  const again = codeDocumentText("4111111111111111", book);
+  assert.equal(again.text, "CARTE-001");
+  assert.equal(again.newCodes, 0);
+  // Seize chiffres qui ne passent pas Luhn : un compte, comme avant.
+  assert.match(codeDocumentText("4111111111111112", newCodebook()).text, /^RIB-001$/);
 });

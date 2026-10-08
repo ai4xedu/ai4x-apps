@@ -1,6 +1,6 @@
 {
   "name": "anonymiseur-ai4x",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Nanomizer — Anonymiseur de données Ai4x : serveur MCP local (pseudonymisation fail-closed avant IA)",
   "main": "index.js",
   "directories": {

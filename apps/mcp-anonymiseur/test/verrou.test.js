@@ -288,6 +288,17 @@ test("R6 — le fichier produit ne garde ni formule, ni lien, ni commentaire ; u
   assert.equal(ws.A2.v, "Honoraires");
 });
 
+test("v2.1 — carte bancaire et permis codés sous leur nom ; date et montant restent lisibles", () => {
+  const out = code("Payé 1 250,40 DH le 06/10/2026 avec la carte 5555 5555 5555 4444 (permis 15/284731).");
+  assert.match(out, /CARTE-001/);
+  assert.match(out, /PERMIS-001/);
+  for (const v of ["5555", "284731"]) assert.ok(!out.includes(v), `${v} en clair : ${out}`);
+  assert.ok(out.includes("06/10/2026") && out.includes("1 250,40"), out);
+  // Le verrou de sortie masque aussi un permis qui aurait échappé au codage.
+  const g = guardText("Réglé avec la 4111 1111 1111 1111, permis 08/551902.", {});
+  assert.ok(!g.text.includes("4111") && !g.text.includes("08/551902"), g.text);
+});
+
 test("performance : une clé de 20 000 codes ne ralentit pas le verrou", () => {
   const b = newCodebook();
   for (let i = 0; i < 20000; i++) codeFor(b, "nom", "Nomxyz" + i.toString(36) + "abc");

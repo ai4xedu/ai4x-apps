@@ -49,6 +49,8 @@ const CANARIES = [
   "2024/01234", "2023/99812", "BE123456", "12 rue des Lilas",
   // Relecture adverse du 18/09/2026.
   "Lahlou", "Mehdi", "Kettani", "youssef.tazi@gmail.com", "0661234567", "612345678", "(0)6 12",
+  // v2.1 : cartes de test Visa/Mastercard et permis marocains.
+  "4111 1111 1111 1111", "4111111111111111", "5555 5555 5555 4444", "4012 8888 8888 1881", "284731", "551902", "090417",
 ];
 // Mots des canaris qui sont AUSSI des mots courants : cherchés avec leur
 // majuscule seulement (« blanc » peut légitimement apparaître, « Blanc » non).
@@ -83,10 +85,10 @@ before(async () => {
   //    « Client » (sans le mot « nom ») portent des noms.
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-    ["Client", "N° dossier", "Commentaires", "Honoraires"],
-    ["Karim Benali", "RG 2024/01234", "Rappeler Mme Tazi au 06 12 34 56 78", 4500],
-    ["Sophie Lefèvre", "RG 2023/99812", "Voir avec Maître Blanc, CIN BE123456", 3200],
-    ["Transports Moreau & Fils SAS", "RG 2022/55555", "rdv avec pierre rousseau lundi", 1800],
+    ["Client", "N° dossier", "Commentaires", "Honoraires", "Carte", "Permis"],
+    ["Karim Benali", "RG 2024/01234", "Rappeler Mme Tazi au 06 12 34 56 78", 4500, "4111 1111 1111 1111", "15/284731"],
+    ["Sophie Lefèvre", "RG 2023/99812", "Voir avec Maître Blanc, CIN BE123456", 3200, "5555 5555 5555 4444", "08/551902"],
+    ["Transports Moreau & Fils SAS", "RG 2022/55555", "rdv avec pierre rousseau lundi", 1800, "4012 8888 8888 1881", "21/090417"],
   ]), "Benali");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
     // Tableau croisé : les CLIENTS sont les en-têtes.

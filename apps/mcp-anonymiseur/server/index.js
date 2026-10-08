@@ -28,6 +28,10 @@
 // Benali.pdf » est une fuite) : lister_fichiers montre des noms masqués et
 // un repère stable [F-XXXXX], accepté par tous les outils.
 //
+// v2.1 (08/10/2026) : cartes bancaires (clé de Luhn) et permis de conduire
+// reconnus et codés sous leur nom (CARTE-001, PERMIS-001) — demandé par un
+// client de la monétique, pour qui une carte étiquetée « RIB » ne passe pas.
+//
 // Environnement (posé par le manifest .mcpb via user_config) :
 //   ANX_WORKDIR — dossier de travail (défaut : ~/Documents). Les sorties et
 //   la clé vivent dans <ANX_WORKDIR>/Anonymiseur-Ai4x/.
@@ -53,7 +57,7 @@ import { strictCode, strictSheet, codedRatio, lexiconSize } from "./verrou.js";
 import { guardResult, MASK } from "./sortie.js";
 import { auditConfinement } from "./confinement.js";
 
-export const VERSION = "2.0.0";
+export const VERSION = "2.1.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -667,7 +671,8 @@ tool(
       "Modes choisis automatiquement : TABLEAU (colonnes sensibles codées en entier), DOCUMENT (facture, document " +
       "mis en page → codage à l'intérieur des cellules) et PDF/TEXTE (contenu extrait, anonymisé, livré en .md). " +
       "Dans tous les modes, le VERROU code en plus tout ce qui n'est pas prouvé inoffensif : noms propres, mots " +
-      "inconnus du dictionnaire, références, identifiants — les montants, dates et mots courants restent lisibles. " +
+      "inconnus du dictionnaire, références, identifiants (cartes bancaires et permis de conduire compris) — les " +
+      "montants, dates et mots courants restent lisibles. " +
       "FONCTIONNEMENT EN DEUX TEMPS : sans confirmer, renvoie le PLAN (rien n'est écrit) — présente-le à " +
       "l'utilisateur, puis rappelle avec confirmer: true. Les valeurs réelles ne sont jamais renvoyées. " +
       "Toujours utiliser cet outil AVANT de travailler sur un fichier contenant des données personnelles.",
@@ -755,7 +760,7 @@ tool(
           `📋 PLAN D'ANONYMISATION — mode DOCUMENT (mise en page type facture/document, pas un tableau de données) — ${sheetLabel} de ${label}. RIEN n'a encore été écrit.`,
           s.replaced
             ? `Serait codé, à l'intérieur des cellules (libellés conservés) : ${fmt(s.byType)} — soit ${s.replaced} valeur(s).`
-            : "Rien détecté (ni dictionnaire ICE/IF/RC/CNSS/patente/RIB/téléphone/email/CIN, ni nom propre).",
+            : "Rien détecté (ni dictionnaire ICE/IF/RC/CNSS/patente/RIB/carte bancaire/permis/téléphone/email/CIN, ni nom propre).",
           `Dont ${s.autoNames} nom(s)/adresse(s) probables CODÉS D'OFFICE et ${s.names} nom(s) propre(s) + ${s.unknown} mot(s) inconnu(s) codés par le VERROU — leurs valeurs ne sont jamais citées ici, c'est voulu. Sur-coder est inoffensif ; pour garder une valeur en clair, l'utilisateur l'indique dans valeurs_a_exclure.`,
           "Les montants, quantités, dates et libellés ne sont JAMAIS codés — c'est la matière de travail de l'IA.",
           wb.SheetNames.length > 1 ? `ℹ️ Le classeur a ${wb.SheetNames.length} onglets (${sheetList()}) — seul celui-ci sera traité ; anonymiser_dossier les traite tous.` : "",

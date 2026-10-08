@@ -46,6 +46,9 @@ const OUT_PATTERNS = [
   new RegExp(`(?<![\\p{Nd}\\p{L}_\\-])${D}{1,4}(?:${SEP}${D}{1,4}){3,}(?!${D})`, "gu"),
   new RegExp(`(?<!${D})${D}{10,}(?!${D})`, "gu"),                                                 // identifiant long
   new RegExp(`(?<![\\p{L}\\p{N}-])(?!CA\\b|HT\\b)[A-Z]{1,2}[ \\u00A0]?${D}{5,8}(?![\\p{L}\\p{N}])`, "gu"), // CIN, passeport
+  // v2.1 — permis de conduire « 15/284731 ». Une carte bancaire, elle, tombe
+  // déjà dans « chiffres groupés » ou « identifiant long ».
+  new RegExp(`(?<![\\p{Nd}/])${D}{1,2}/${D}{6}(?![\\p{Nd}/])`, "gu"),
 ];
 
 /* Filtre un texte sortant. ctx : { book, home }.

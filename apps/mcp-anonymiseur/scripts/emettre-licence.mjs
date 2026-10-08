@@ -7,7 +7,8 @@
 // Ne jamais l'envoyer, ne jamais la committer, ne jamais la coller dans un chat.
 //
 // Usage :
-//   node scripts/emettre-licence.mjs --org "Maître Sekkat" --a-vie                 ← l'offre 500 Dhs
+//   node scripts/emettre-licence.mjs --org "Maître Sekkat" --a-vie                 ← Solo, 500 Dhs HT
+//   node scripts/emettre-licence.mjs --org "Payzone" --postes 20 --a-vie          ← Équipe, 5 000 Dhs HT
 //   node scripts/emettre-licence.mjs --org "Cabinet Sekkat" --postes 5 --mois 12
 //   node scripts/emettre-licence.mjs --org "Pilote X" --postes 3 --mois 3 --note "pilote gratuit"
 //
@@ -86,7 +87,7 @@ console.log(`Référence : ${payload.id}${note ? "  · " + note : ""}`);
 console.log("\nClé à transmettre au client :\n");
 console.log(key);
 console.log("\nInstallation côté client : Claude Desktop → réglages de l'extension");
-console.log("« Anonymiseur de données Ai4x » → champ « Clé de licence » → coller → REDÉMARRER Claude Desktop.");
+console.log("« Nanomizer » → champ « Clé de licence » → coller → REDÉMARRER Claude Desktop.");
 console.log("(Ou déposer la clé dans un fichier licence.txt à la racine du dossier de travail.)\n");
 console.log("──── Message WhatsApp prêt à envoyer (avec le fichier .mcpb en pièce jointe) ────\n");
 console.log(`Merci ${payload.org} ! Votre paiement est bien reçu. Voici votre connecteur et votre clé ${lifetime ? "à vie" : ""}.

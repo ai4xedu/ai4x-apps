@@ -22,6 +22,11 @@ export const TYPES = [
   { id: "email",    prefix: "EMAIL",    label: "Email" },
   { id: "tel",      prefix: "TEL",      label: "Téléphone" },
   { id: "rib",      prefix: "RIB",      label: "Compte bancaire (RIB / IBAN)" },
+  // v2.1 (08/10/2026) — demandé par un client de la monétique : une carte
+  // étiquetée « RIB » et un permis laissé en clair ne sont pas crédibles
+  // chez des gens qui manipulent des cartes toute la journée.
+  { id: "carte",    prefix: "CARTE",    label: "Carte bancaire" },
+  { id: "permis",   prefix: "PERMIS",   label: "Permis de conduire" },
   { id: "adresse",  prefix: "ADRESSE",  label: "Adresse" },
   { id: "societe",  prefix: "SOCIETE",  label: "Société / employeur" },
   // Identifiants d'entreprise marocains (mode document — dictionnaire local).
@@ -51,6 +56,12 @@ export function detectByHeader(h) {
   if (/nom\s*complet|full\s*name/.test(s)) return "personne";
   if (/\bnom\b|last\s*name|surname/.test(s)) return "nom";
   if (/\bcin\b|c\.i\.n|identit|passeport|passport|\bnir\b|s[eé]curit[eé]\s*sociale|\bcni\b/.test(s)) return "cin";
+  // Une « carte » est d'abord une carte bancaire — sauf la grise (un véhicule)
+  // et celle d'identité (déjà prise par la ligne du CIN). Avant « bancaire »,
+  // sinon « Carte bancaire » partait en RIB. Pas de \b : « numero_carte ».
+  if (/carte\s*grise|immatriculation|\bplaque/.test(s)) return "reference";
+  if (/permis|driv(?:ing|er)|licen[cs]e\s*(?:de\s*)?condui/.test(s)) return "permis";
+  if (/carte|card|(?:^|[^a-z])(?:pan|cb|cmi)(?:[^a-z]|$)|visa|mastercard/.test(s)) return "carte";
   if (/mail|courriel/.test(s)) return "email";
   if (/t[eé]l|phone|gsm|portable|mobile|whatsapp/.test(s)) return "tel";
   if (/\brib\b|iban|compte|bancaire|bank/.test(s)) return "rib";
@@ -82,7 +93,42 @@ export function isMoroccanPhone(digits) {
   return /^(?:\+212|00212)[5-7]\d{8}$/.test(digits) || /^0[5-7]\d{8}$/.test(digits);
 }
 
-/* Détection par contenu : échantillon de 80 valeurs, seuil 60 %. */
+/* Numéro de CARTE BANCAIRE : 13 à 19 chiffres qui passent la clé de Luhn —
+   la règle commune à tous les réseaux (Visa, Mastercard, CMI…). La longueur
+   seule ne suffit pas : un RIB marocain fait 24 chiffres, un ICE 15, un
+   montant en centimes peut en faire 13. Quinze chiffres n'est une carte que
+   chez American Express (34/37) ; ailleurs, c'est un ICE. Un numéro masqué
+   (« 4111 **** **** 1111 ») reste une carte : BIN + quatre derniers chiffres
+   suffisent à la retrouver. */
+export function luhnOk(digits) {
+  let sum = 0;
+  let dbl = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let d = digits.charCodeAt(i) - 48;
+    if (dbl) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+    dbl = !dbl;
+  }
+  return sum % 10 === 0;
+}
+export function isCardNumber(s) {
+  const t = String(s).trim();
+  if (/^\d{4,6}(?:[\s.\-]*[*xX•·]){4,12}[\s.\-]*\d{4}$/.test(t)) return true;
+  const d = t.replace(/[\s.\- ‐-―]/g, "");
+  if (!/^\d{13,19}$/.test(d)) return false;
+  if (d.length === 15 && !/^3[47]/.test(d)) return false;
+  return luhnOk(d);
+}
+
+/* PERMIS DE CONDUIRE marocain : « 15/284731 » — le code de la province, une
+   barre, six chiffres. Une date (06/10/2026) n'a jamais six chiffres d'un
+   bloc après la barre. */
+export function isPermis(s) {
+  return /^\d{1,2}\s?\/\s?\d{6}$/.test(String(s).trim());
+}
+
+/* Détection par contenu : échantillon de 80 valeurs, seuil 60 %. La carte
+   passe AVANT le compte : seize chiffres sont un RIB sauf si Luhn dit carte. */
 export function detectByValues(values) {
   const take = [];
   for (const v of values) {
@@ -91,15 +137,17 @@ export function detectByValues(values) {
     if (take.length >= 80) break;
   }
   if (!take.length) return null;
-  const n = { email: 0, tel: 0, cin: 0, rib: 0 };
+  const n = { email: 0, tel: 0, cin: 0, rib: 0, carte: 0, permis: 0 };
   for (const s of take) {
     if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)) { n.email++; continue; }
+    if (isCardNumber(s)) { n.carte++; continue; }
     const d = s.replace(/[\s.\-()]/g, "");
     if (/^\d{16,26}$/.test(d)) { n.rib++; continue; }
     if (isMoroccanPhone(d)) { n.tel++; continue; }
+    if (isPermis(s)) { n.permis++; continue; }
     if (/^[A-Za-z]{1,2}\d{3,8}$/.test(s.replace(/\s/g, ""))) n.cin++;
   }
-  for (const k of ["rib", "email", "cin", "tel"]) {
+  for (const k of ["carte", "rib", "email", "cin", "permis", "tel"]) {
     if (n[k] >= take.length * 0.6) return k;
   }
   return null;
@@ -108,9 +156,11 @@ export function detectByValues(values) {
 /* Cellule entière. */
 export function classifyValue(s) {
   if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)) return "email";
+  if (isCardNumber(s)) return "carte bancaire";
   const d = s.replace(/[\s.\-()]/g, "");
   if (/^\d{16,26}$/.test(d)) return "compte bancaire";
   if (isMoroccanPhone(d)) return "téléphone";
+  if (isPermis(s)) return "permis de conduire";
   if (/^[A-Za-z]{1,2}\d{3,8}$/.test(s.replace(/\s/g, ""))) return "CIN";
   return null;
 }
@@ -122,12 +172,17 @@ export function classifyLoose(s) {
   const whole = classifyValue(s);
   if (whole) kinds[whole] = 1;
   if (/[^\s@]+@[^\s@]+\.[^\s@]{2,}/.test(s)) kinds["email"] = 1;
-  if (/(\+|00)?\d([\s.\-]?\d){15,25}/.test(s)) kinds["compte bancaire"] = 1;
+  // Une carte enfouie (« payé avec la 4111 1111 1111 1111 ») : Luhn tranche
+  // entre carte et compte.
+  const runs = s.match(/(?<!\d)\d(?:[ .\-]?\d){12,25}(?!\d)/g) || [];
+  if (runs.some(isCardNumber)) kinds["carte bancaire"] = 1;
+  else if (/(\+|00)?\d([\s.\-]?\d){15,25}/.test(s)) kinds["compte bancaire"] = 1;
   else if (/(?:\+212|00212|0)[\s.\-]?[5-7](?:[\s.\-]?\d){8}(?!\d)/.test(s)) kinds["téléphone"] = 1;
+  if (/(?<![\d/])\d{1,2}\/\d{6}(?![\d/])/.test(s)) kinds["permis de conduire"] = 1;
   return Object.keys(kinds);
 }
 
-const DIGIT_PREFIXES = new Set(["TEL", "RIB", "ICE", "IF", "RC", "CNSS", "PATENTE"]);
+const DIGIT_PREFIXES = new Set(["TEL", "RIB", "ICE", "IF", "RC", "CNSS", "PATENTE", "CARTE", "PERMIS"]);
 
 export function normFor(prefix, text) {
   if (prefix === "EMAIL") return String(text).toLowerCase();
@@ -287,6 +342,14 @@ const DOC_PATTERNS = [
   { type: "cnss",    rx: /\bCNSS[^0-9A-Za-z\n]{0,6}(\d{6,9})\b/gi },
   { type: "patente", rx: /\bpatente[^0-9A-Za-z\n]{0,6}(\d{5,9})\b/gi },
   { type: "cin",     rx: /\b(?:CIN|C\.I\.N\.?)[^0-9A-Za-z\n]{0,4}([A-Za-z]{1,2}\d{3,8})\b/gi },
+  // v2.1 — permis de conduire (libellé ou nu) et carte bancaire (Luhn), AVANT
+  // les suites de chiffres nues : seize chiffres sont une carte si Luhn le
+  // dit, un RIB sinon. Les 24 chiffres d'un RIB ne sont jamais pris pour une
+  // carte : rien ne peut suivre les 19 premiers.
+  { type: "permis",  rx: /\bpermis(?:\s+de\s+conduire)?[^0-9A-Za-z\n]{0,8}(\d{1,2}\s?\/\s?\d{6})(?![\d/])/gi },
+  { type: "permis",  rx: /(?<![\d/])\d{1,2}\/\d{6}(?![\d/])/g },
+  { type: "carte",   rx: /(?<![\dA-Za-z-])\d(?:[ .\-]?\d){12,18}(?![\dA-Za-z])/g, check: isCardNumber },
+  { type: "carte",   rx: /(?<![\dA-Za-z*])\d{4,6}(?:[ .\-]*[*xX•·]){4,12}[ .\-]*\d{4}(?![\dA-Za-z])/g },
   // Longues suites de chiffres sans libellé : 15 = ICE, 16-26 = RIB/IBAN.
   // Les montants n'atteignent jamais ces tailles ; les cellules NUMÉRIQUES
   // (montants, quantités) ne passent de toute façon jamais par ici.

@@ -85,6 +85,18 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.1.0 (cartes et permis, 08/10/2026) : demandé la veille d'une formation par
+le DG d'un acteur de la monétique — « nous utilisons des numéros de cartes
+bancaires et de permis ». Le moteur codait déjà ces valeurs, mais une carte
+sortait étiquetée « RIB » et un permis « référence » : codé, mais pas
+crédible chez des gens qui manipulent des cartes toute la journée. Désormais
+`CARTE-001` (13 à 19 chiffres validés par la **clé de Luhn** — un RIB de 24
+chiffres ou un ICE de 15 n'en sont jamais ; les numéros masqués
+`4111 **** **** 1111` aussi) et `PERMIS-001` (format marocain `15/284731`),
+dans les trois modes et dans le verrou ; en-têtes « carte », « card », « PAN »,
+« permis » reconnus. Deux tarifs : 500 Dhs HT par poste, 5 000 Dhs HT pour une
+équipe (20 postes, une clé).
+
 v2.0.0 (le verrou, 18/09/2026) : né d'un constat — la v1.6 codait ce qu'elle
 RECONNAISSAIT ; « Maître Dupont représente M. Karim Benali », une colonne
 « Client », un fichier « Dossier Benali.pdf » ou un nom d'onglet passaient en
@@ -136,12 +148,14 @@ npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb
 Piège : le build ESM de SheetJS exige `XLSX.set_fs(fs)` avant tout
 readFile/writeFile.
 
-Distribution (décision du 18/09/2026) : **licence à vie, 500 Dhs, commande
-sur WhatsApp** (+212 680 092 567), comme le reste du catalogue Ai4x — pas de
-paiement en ligne : RIB envoyé sur WhatsApp, virement, puis le `.mcpb` et la
-clé partent sur WhatsApp. Voir `LIVRAISON.md`. La LP `/anonymiseur-donnees`
-présente l'offre (#connecteur, #plans). Installation côté client : double-clic
-sur le `.mcpb` → Claude Desktop propose « Installer ».
+Distribution (décisions du 18/09 et du 08/10/2026) : **licence à vie, 500 Dhs
+HT par poste — ou 5 000 Dhs HT pour une équipe, jusqu'à 20 postes sur une
+seule clé —, commande sur WhatsApp** (+212 680 092 567), comme le reste du
+catalogue Ai4x — pas de paiement en ligne : RIB envoyé sur WhatsApp, virement,
+puis le `.mcpb` et la clé partent sur WhatsApp. Facturé par YGH (le logiciel
+vendu est chez YGH, décision du 24/08/2026). Voir `LIVRAISON.md`. La LP
+`/anonymiseur-donnees` présente l'offre (#connecteur, #plans). Installation
+côté client : double-clic sur le `.mcpb` → Claude Desktop propose « Installer ».
 
 ## Licences
 
