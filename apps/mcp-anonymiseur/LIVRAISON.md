@@ -6,11 +6,13 @@ YGH, décision du 24/08/2026) :
 
 | | Prix | Clé | Inclus |
 |---|---|---|---|
-| **Solo** | 500 Dhs HT | 1 poste (`--postes 1`) | le connecteur, la clé, le mode d'emploi |
+| **Solo** | 500 Dhs HT | 1 poste (`--postes 1`) | le connecteur, **l'appli web débloquée par la même clé**, le mode d'emploi |
 | **Équipe** | 5 000 Dhs HT | jusqu'à 20 postes, **une seule clé** (`--postes 20`) | + 1 h de prise en main en visio, facture au nom de l'entité |
 
 Au-delà de 20 postes : 200 Dhs HT par poste supplémentaire, sur la même clé.
-Pas d'abonnement : un outil hors ligne n'a rien à renouveler.
+Pas d'abonnement : un outil hors ligne n'a rien à renouveler. Sans clé, l'appli web est la
+version Découverte (50 lignes par fichier, une clé par fichier, tableaux seulement) ; la
+clé l'ouvre en entier — c'est l'argument pour qui n'a pas Claude Desktop.
 
 Circuit habituel Ai4x : aucun paiement en ligne. Le client écrit sur WhatsApp
 (bouton de la LP `/anonymiseur-donnees`, message pré-rempli), on envoie le RIB

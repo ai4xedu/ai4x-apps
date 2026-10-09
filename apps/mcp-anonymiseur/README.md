@@ -148,6 +148,11 @@ npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb
 Piège : le build ESM de SheetJS exige `XLSX.set_fs(fs)` avant tout
 readFile/writeFile.
 
+Depuis le 09/10/2026, **la même clé débloque l'appli web** (`ai4x-website/anonymiseur-local.html`,
+bouton « J'ai une clé » ; vérification Ed25519 dans le navigateur, même clé publique) : sans
+clé, l'appli est la version *Découverte* — 50 lignes par fichier, une clé par fichier,
+tableaux seulement, dé-anonymisation toujours possible.
+
 Distribution (décisions du 18/09 et du 08/10/2026) : **licence à vie, 500 Dhs
 HT par poste — ou 5 000 Dhs HT pour une équipe, jusqu'à 20 postes sur une
 seule clé —, commande sur WhatsApp** (+212 680 092 567), comme le reste du
