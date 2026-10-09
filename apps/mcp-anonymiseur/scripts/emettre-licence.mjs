@@ -96,6 +96,7 @@ console.log(`Merci ${payload.org} ! Votre paiement est bien reçu. Voici votre c
 2. Choisissez votre dossier de travail (hors iCloud / Google Drive / Dropbox).
 3. Dans le champ « Clé de licence », collez la clé ci-dessous, puis REDÉMARREZ Claude Desktop.
 4. Demandez à Claude : « vérifie le confinement » — il vous dira si une autre extension voit votre dossier.
+5. La même clé débloque l'appli web : https://ai4x.academy/anonymiseur-local.html → « J'ai une clé » (tableaux illimités, mode document, diagnostic).
 
 Votre clé (à garder, elle ne doit pas être partagée) :
 ${key}`);
