@@ -55,6 +55,7 @@ import {
 } from "./engine.js";
 import { strictCode, strictSheet, codedRatio, lexiconSize } from "./verrou.js";
 import { guardResult, guardText, MASK } from "./sortie.js";
+import { protectNumbers, describeNumbers, NUMBER_MODES, DEFAULT_NUMBER_MODE } from "./chiffres.js";
 import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
 import { auditConfinement } from "./confinement.js";
 
@@ -86,6 +87,23 @@ const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer
 const JOURNAL_DIR = path.join(OUTDIR, JOURNAL_DIRNAME);
 const REPORT_PATH = path.join(OUTDIR, REPORT_NAME);
 const JOURNAL = createJournal(JOURNAL_DIR);
+
+/* Correspondance cellule → vraie valeur des nombres protégés (cf. chiffres.js),
+   à côté du classeur produit. Nom en .nanomizer- : jamais servi à l'IA. */
+function numberMapPath(outXlsx) {
+  return path.join(OUTDIR, `.nanomizer-chiffres-${path.basename(outXlsx).replace(/\.xlsx$/i, "")}.json`);
+}
+function saveNumberMap(outXlsx, sheets) {
+  const p = numberMapPath(outXlsx);
+  if (!Object.values(sheets).some((x) => x.cells)) { try { fs.rmSync(p, { force: true }); } catch {} return; }
+  fs.writeFileSync(p, JSON.stringify({ fichier: path.basename(outXlsx), cree: new Date().toISOString(), feuilles: sheets }), { encoding: "utf8", mode: 0o600 });
+  lockDown(p);
+}
+const chiffresSchema = z.enum(NUMBER_MODES).optional()
+  .describe("Protection des nombres (montants, quantités, taux) : « gabarit » (défaut — valeurs factices, l'IA construit " +
+    "formules et graphiques, remettre_chiffres remet les vraies valeurs sur le poste), « indice » (un facteur secret : " +
+    "proportions et totaux justes, niveaux cachés — pour commenter une tendance) ou « clair » (sur demande explicite " +
+    "de l'utilisateur). Les dates restent toujours lisibles.");
 
 /* ---------------------------------------------------------------- licence *
  * Lue au démarrage (comme le dossier de travail : changer la clé demande un
@@ -691,8 +709,8 @@ tool(
       "Modes choisis automatiquement : TABLEAU (colonnes sensibles codées en entier), DOCUMENT (facture, document " +
       "mis en page → codage à l'intérieur des cellules) et PDF/TEXTE (contenu extrait, anonymisé, livré en .md). " +
       "Dans tous les modes, le VERROU code en plus tout ce qui n'est pas prouvé inoffensif : noms propres, mots " +
-      "inconnus du dictionnaire, références, identifiants (cartes bancaires et permis de conduire compris) — les " +
-      "montants, dates et mots courants restent lisibles. " +
+      "inconnus du dictionnaire, références, identifiants (cartes bancaires et permis de conduire compris). Les NOMBRES d'un tableur sont " +
+      "protégés par défaut (paramètre chiffres) ; dates et mots courants restent lisibles. " +
       "FONCTIONNEMENT EN DEUX TEMPS : sans confirmer, renvoie le PLAN (rien n'est écrit) — présente-le à " +
       "l'utilisateur, puis rappelle avec confirmer: true. Les valeurs réelles ne sont jamais renvoyées. " +
       "Toujours utiliser cet outil AVANT de travailler sur un fichier contenant des données personnelles.",
@@ -709,11 +727,12 @@ tool(
         .describe("Noms propres à coder EN PLUS de la détection automatique — demande-les à l'utilisateur, ne les invente jamais"),
       valeurs_a_exclure: z.array(z.string()).optional()
         .describe("Valeurs que l'utilisateur veut EXPLICITEMENT laisser en clair dans le fichier (elles restent masquées dans l'aperçu)"),
+      chiffres: chiffresSchema,
       confirmer: z.boolean().optional()
         .describe("false/absent = renvoyer le PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) => {
+  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, confirmer = false }) => {
     const bloque = requireLicence();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
@@ -755,12 +774,14 @@ tool(
     const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
     const docOpts = { excludes: valeurs_a_exclure };
 
-    const writeOut = (outWs, book) => {
+    const writeOut = (outWs, book, nums) => {
       ensureOutdir();
       const outPath = path.join(OUTDIR, `${codedBase(path.basename(file), book, "fichier")}-anonymise.xlsx`);
       const outWb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(outWb, outWs, codedSheetName(sheetName, book, new Set()));
+      const outSheet = codedSheetName(sheetName, book, new Set());
+      XLSX.utils.book_append_sheet(outWb, outWs, outSheet);
       saveBook(book);
+      saveNumberMap(outPath, { [outSheet]: nums });
       XLSX.writeFile(outWb, outPath);
       return outPath;
     };
@@ -770,7 +791,8 @@ tool(
       const run = (book) => {
         const res = anonymizeDocument(ws, book, extras, docOpts);
         const strict = strictSheet(res.ws, XLSX, { book, extra: extras, excludes: valeurs_a_exclure });
-        return { ws: res.ws, stats: { ...mergeStats(res.stats, strict), autoNames: res.stats.autoNames } };
+        const nums = protectNumbers(res.ws, XLSX, { mode: chiffres });
+        return { ws: res.ws, nums, stats: { ...mergeStats(res.stats, strict), autoNames: res.stats.autoNames } };
       };
 
       if (!confirmer) {
@@ -782,7 +804,7 @@ tool(
             ? `Serait codé, à l'intérieur des cellules (libellés conservés) : ${fmt(s.byType)} — soit ${s.replaced} valeur(s).`
             : "Rien détecté (ni dictionnaire ICE/IF/RC/CNSS/patente/RIB/carte bancaire/permis/téléphone/email/CIN, ni nom propre).",
           `Dont ${s.autoNames} nom(s)/adresse(s) probables CODÉS D'OFFICE et ${s.names} nom(s) propre(s) + ${s.unknown} mot(s) inconnu(s) codés par le VERROU — leurs valeurs ne sont jamais citées ici, c'est voulu. Sur-coder est inoffensif ; pour garder une valeur en clair, l'utilisateur l'indique dans valeurs_a_exclure.`,
-          "Les montants, quantités, dates et libellés ne sont JAMAIS codés — c'est la matière de travail de l'IA.",
+          describeNumbers([probe.nums], chiffres),
           wb.SheetNames.length > 1 ? `ℹ️ Le classeur a ${wb.SheetNames.length} onglets (${sheetList()}) — seul celui-ci sera traité ; anonymiser_dossier les traite tous.` : "",
           confinementAlert(),
           "Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.",
@@ -791,14 +813,14 @@ tool(
 
       const book = loadBook();
       const res = run(book);
-      if (!res.stats.replaced) return err("Rien à coder : aucun identifiant ni nom propre dans ce document.");
-      const outPath = writeOut(res.ws, book);
+      if (!res.stats.replaced && !res.nums.cells) return err("Rien à coder : aucun identifiant, nom propre ni nombre dans ce document.");
+      const outPath = writeOut(res.ws, book, res.nums);
       const { preview, masked } = maskPreviewSheet(res.ws, { document: true, excludes: valeurs_a_exclure });
       const { tsv, totalRows, shownRows } = sheetToTsv(preview, MAX_PREVIEW_ROWS);
       const lines = [
         `✅ Anonymisation terminée (mode DOCUMENT) — ${sheetLabel} de ${label}.`,
         `Codé à l'intérieur des cellules (libellés conservés) : ${fmt(res.stats.byType)} — ${res.stats.replaced} valeur(s), ${res.stats.newCodes} nouveau(x) code(s). Clé cumulée : ${book.entries.length} codes.`,
-        "Montants, quantités, dates et libellés laissés en clair.",
+        describeNumbers([res.nums], chiffres),
         `Fichier anonymisé écrit : ${shown(outPath)}`,
         `Clé (JAMAIS à partager, restée sur le poste) : ${shown(KEY_XLSX)}`,
       ];
@@ -854,7 +876,8 @@ tool(
       }
       const strictHead = strictSheet(headerOnly, XLSX, { book, extra: extras, excludes: valeurs_a_exclure });
       for (const k of Object.keys(headerOnly)) if (k[0] !== "!") res.ws[k] = headerOnly[k];
-      return { ws: res.ws, base: res.stats, strict: mergeStats(strictData, strictHead) };
+      const nums = protectNumbers(res.ws, XLSX, { mode: chiffres, headerRow: range.s.r });
+      return { ws: res.ws, nums, base: res.stats, strict: mergeStats(strictData, strictHead) };
     };
 
     const planLeaks = leakScan(ws, cols);
@@ -875,6 +898,7 @@ tool(
           " — le verrou les coderait à l'intérieur des cellules ; pour coder ces colonnes EN ENTIER, ajoute-les à colonnes_a_coder."
         );
       }
+      planLines.push(describeNumbers([probe.nums], chiffres));
       if (wb.SheetNames.length > 1) planLines.push(`ℹ️ Le classeur a ${wb.SheetNames.length} onglets (${sheetList()}) — seul celui-ci sera traité ; anonymiser_dossier les traite tous.`);
       const alert = confinementAlert();
       if (alert) planLines.push(alert);
@@ -885,9 +909,9 @@ tool(
     const book = loadBook();
     const res = run(book);
     const total = res.base.replaced + res.strict.replaced;
-    if (!total) return err("Aucune valeur à coder dans cet onglet.");
+    if (!total && !res.nums.cells) return err("Aucune valeur à coder dans cet onglet.");
     const newCodes = res.base.newCodes + res.strict.newCodes;
-    const outPath = writeOut(res.ws, book);
+    const outPath = writeOut(res.ws, book, res.nums);
 
     // Aperçu : chaque cellule repasse au contrôle d'aperçu. (Avant la v2.0,
     // une colonne où traînait un email était masquée EN ENTIER ; le verrou
@@ -902,6 +926,7 @@ tool(
       `Colonnes codées en entier : ${codedCols || "aucune"}.`,
       `${total} cellules/valeurs remplacées (${newCodes} nouveaux codes, ${total - newCodes} réutilisés — même valeur = même code, y compris entre fichiers). ` +
         `Dont ${res.strict.replaced} par le VERROU dans les colonnes lisibles et les en-têtes. Clé cumulée : ${book.entries.length} codes.`,
+      describeNumbers([res.nums], chiffres),
       `Fichier anonymisé écrit : ${shown(outPath)}`,
       `Clé (JAMAIS à partager, restée sur le poste) : ${shown(KEY_XLSX)}`,
     ];
@@ -960,16 +985,17 @@ function listBatchFiles(motif) {
 
 /* Traite toutes les feuilles d'un classeur avec le carnet fourni : mode
    choisi feuille par feuille (tableau ou document), PUIS le verrou partout. */
-function anonymizeWorkbook(wb, book, extras, docOpts) {
+function anonymizeWorkbook(wb, book, extras, docOpts, numberMode = DEFAULT_NUMBER_MODE) {
   const outWb = XLSX.utils.book_new();
   const perSheet = [];
+  const numbers = {};
   const used = new Set();
   for (const sn of wb.SheetNames) {
     const ws = wb.Sheets[sn];
     const outName = codedSheetName(sn, book, used);
     if (!ws || !ws["!ref"]) {
       XLSX.utils.book_append_sheet(outWb, XLSX.utils.aoa_to_sheet([[]]), outName);
-      perSheet.push({ name: sn, mode: "vide", replaced: 0, byType: {} });
+      perSheet.push({ name: sn, mode: "vide", replaced: 0, byType: {}, nums: { cells: 0 } });
       continue;
     }
     const layout = detectLayout(ws).layout;
@@ -1008,10 +1034,13 @@ function anonymizeWorkbook(wb, book, extras, docOpts) {
       }
     }
     const merged = mergeStats(base, strict);
+    const nums = protectNumbers(outWs, XLSX, { mode: numberMode,
+      headerRow: skipCols ? XLSX.utils.decode_range(outWs["!ref"]).s.r : null });
+    numbers[outName] = nums;
     XLSX.utils.book_append_sheet(outWb, outWs, outName);
-    perSheet.push({ name: sn, mode: layout, replaced: merged.replaced, byType: merged.byType });
+    perSheet.push({ name: sn, mode: layout, replaced: merged.replaced, byType: merged.byType, nums });
   }
-  return { outWb, perSheet };
+  return { outWb, perSheet, numbers };
 }
 
 tool(
@@ -1034,11 +1063,12 @@ tool(
         .describe("Noms propres à coder en plus dans tout le lot — demande-les à l'utilisateur, ne les invente jamais"),
       valeurs_a_exclure: z.array(z.string()).optional()
         .describe("Valeurs à laisser en clair dans tout le lot (sur demande explicite de l'utilisateur)"),
+      chiffres: chiffresSchema,
       confirmer: z.boolean().optional()
         .describe("false/absent = PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) => {
+  async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, confirmer = false }) => {
     const bloque = requireLicence();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
@@ -1058,6 +1088,7 @@ tool(
       const lines = [`📋 PLAN DE LOT — ${files.length} fichier(s) dans ${shown(WORKDIR)}. RIEN n'a encore été écrit.`];
       let total = 0;
       let unreadable = 0;
+      const planNums = [];
       for (const name of files) {
         const lbl = fileLabel(name);
         if (/\.pdf$/i.test(name)) {
@@ -1081,7 +1112,8 @@ tool(
         let wb;
         try { wb = readWorkbook(path.join(WORKDIR, name)); }
         catch { lines.push(`— ${lbl} : ILLISIBLE (sera ignoré)`); unreadable++; continue; }
-        const { perSheet } = anonymizeWorkbook(wb, pb, extras, docOpts);
+        const { perSheet } = anonymizeWorkbook(wb, pb, extras, docOpts, chiffres);
+        planNums.push(...perSheet.map((x) => x.nums));
         const agg = {};
         let fileTotal = 0;
         for (const s of perSheet) {
@@ -1094,8 +1126,8 @@ tool(
       }
       lines.push(
         `TOTAL : ~${total} valeur(s) seraient codées avec UNE SEULE clé (même valeur = même code sur tout le lot).`,
-        "Les montants, quantités, dates et mots courants ne sont jamais codés. Les noms propres, mots inconnus et " +
-        "identifiants sont codés d'office par le verrou (ajuste avec valeurs_a_exclure).",
+        "Les noms propres, mots inconnus et identifiants sont codés d'office par le verrou (ajuste avec valeurs_a_exclure).",
+        describeNumbers(planNums, chiffres) + " (Les nombres écrits dans un PDF ou un texte restent lisibles.)",
         confinementAlert(),
         "Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true."
       );
@@ -1147,23 +1179,24 @@ tool(
       try { wb = readWorkbook(path.join(WORKDIR, name)); }
       catch { failed.push(lbl); report.push(`- ❌ [${handleOf(name)}] : illisible, ignoré`); continue; }
       const before = book.entries.length;
-      const { outWb, perSheet } = anonymizeWorkbook(wb, book, extras, docOpts);
+      const { outWb, perSheet, numbers } = anonymizeWorkbook(wb, book, extras, docOpts, chiffres);
       const base = codedBase(name, book, "fichier");
-      writes.push({ path: path.join(OUTDIR, `${base}-anonymise.xlsx`), wb: outWb });
+      writes.push({ path: path.join(OUTDIR, `${base}-anonymise.xlsx`), wb: outWb, numbers });
       done++;
       const fileReplaced = perSheet.reduce((s, x) => s + x.replaced, 0);
       totalReplaced += fileReplaced;
       totalNew += book.entries.length - before;
       report.push(`- ✅ ${base}${path.extname(name)} → ${base}-anonymise.xlsx`);
       perSheet.forEach((s, i) => {
-        report.push(`    - onglet ${i + 1} (${s.mode}) : ${s.replaced ? s.replaced + " valeur(s) — " + fmt(s.byType) : "rien détecté, copié tel quel"}`);
+        report.push(`    - onglet ${i + 1} (${s.mode}) : ${s.replaced ? s.replaced + " valeur(s) — " + fmt(s.byType) : "aucun texte codé"}` +
+          (s.nums.cells ? `, ${s.nums.cells} nombre(s) protégé(s) (${chiffres})` : ""));
       });
     }
     // La clé d'abord : si l'écriture d'une sortie échoue ensuite, les codes
     // déjà présents dans un fichier restent décodables.
     saveBook(book);
     for (const w of writes) {
-      if (w.wb) XLSX.writeFile(w.wb, w.path);
+      if (w.wb) { saveNumberMap(w.path, w.numbers); XLSX.writeFile(w.wb, w.path); }
       else fs.writeFileSync(w.path, w.md, "utf8");
     }
     report.push(

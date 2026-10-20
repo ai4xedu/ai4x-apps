@@ -72,7 +72,8 @@ test("journal_ia : verdict propre, page locale sans aucune valeur réelle", asyn
   const html = fs.readFileSync(path.join(workdir, "Anonymiseur-Ai4x", "CE-QUE-CLAUDE-A-VU.html"), "utf8");
   for (const s of SECRETS) assert.ok(!html.includes(s), `« ${s} » dans la page`);
   assert.match(html, /NOM-001/);
-  assert.match(html, /12400|12 400/, "les montants en clair sont comptés et visibles : la page dit la vérité");
+  // v2.2 : les montants sont protégés par défaut — ni dans le journal, ni dans la page.
+  assert.ok(!/12400|12 400/.test(html), "le montant réel ne doit pas apparaître");
 });
 
 test("audit RÉTROACTIF : une valeur sortie avant d'être connue de la clé est retrouvée, montrée par son code", async () => {

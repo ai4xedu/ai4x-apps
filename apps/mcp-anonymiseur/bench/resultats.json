@@ -3,7 +3,7 @@
   "date": "2026-10-20",
   "documents": 15,
   "sorties_lues": 49,
-  "valeurs_sensibles": 183,
+  "valeurs_sensibles": 201,
   "fuites": 0,
   "taux_detection": "100.0",
   "par_categorie": {
@@ -66,6 +66,12 @@
       "total": 4,
       "leaked": 0,
       "taux": "100.0"
+    },
+    "montant": {
+      "libelle": "Montants des tableurs",
+      "total": 18,
+      "leaked": 0,
+      "taux": "100.0"
     }
   },
   "par_domaine": {
@@ -75,20 +81,20 @@
       "taux": "100.0"
     },
     "finance": {
-      "total": 69,
+      "total": 84,
       "leaked": 0,
       "taux": "100.0"
     },
     "cartes": {
-      "total": 36,
+      "total": 39,
       "leaked": 0,
       "taux": "100.0"
     }
   },
   "lisibilite": {
-    "total": 60,
-    "gardees": 56,
-    "taux": "93.3",
+    "total": 56,
+    "gardees": 52,
+    "taux": "92.9",
     "perdues": [
       {
         "document": "Conclusions prud'hommes - Garnier c. Vectura.md",

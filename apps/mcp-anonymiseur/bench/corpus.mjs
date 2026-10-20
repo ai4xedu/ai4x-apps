@@ -46,6 +46,11 @@ export const CATEGORIES = {
   entreprise: "Identifiants d'entreprise (ICE, IF, RC, CNSS, patente, SIRET)",
   dossier: "Références de dossier (RG, contrat, sinistre)",
   vehicule: "Plaques d'immatriculation",
+  // v2.2 : les nombres d'un tableur sont protégés par défaut. Seuls les
+  // montants ≥ 1 000 sont étiquetés : une valeur de gabarit (1 à 999,99) ne
+  // peut pas tomber dessus par hasard. Les montants écrits dans un texte ou
+  // un PDF restent lisibles par conception et ne sont pas comptés.
+  montant: "Montants des tableurs",
 };
 
 export const DOCUMENTS = [
@@ -265,8 +270,9 @@ Jonathan
       contact: ["05 22 47 18 90"],
       bancaire: ["230 780 4512378211002345 61"],
       dossier: ["FA-2026-0912"],
+      montant: ["18400", "2600", "21000", "4200", "25200"],
     },
-    garder: ["21000", "25200", "TVA", "Palettes de semoule"],
+    garder: ["TVA", "Palettes de semoule", "Total HT"],
   },
   {
     file: "Paie octobre - salaries.xlsx", kind: "xlsx", domaine: "finance",
@@ -284,8 +290,9 @@ Jonathan
       identite: ["BK284519", "AB731204", "JE119087", "X402981"],
       entreprise: ["123456789", "987654321", "456123789", "321654987"],
       bancaire: ["011780000012345678901234", "007640000098765432109876", "145780000045612378945612", "190810000032165498732165"],
+      montant: ["14500", "11236", "9800", "7954", "6200", "5310", "15742"],
     },
-    garder: ["14500", "11236", "Salaire brut", "Net à payer"],
+    garder: ["Salaire brut", "Net à payer", "Matricule"],
   },
   {
     file: "Relance impayes clients.xlsx", kind: "xlsx", domaine: "finance",
@@ -301,8 +308,9 @@ Jonathan
       societe: ["Al Amal", "Les Arcades", "Garage Moderne Souissi"],
       personne: ["Hicham", "Tazi", "Laila", "Berrada", "Omar", "Chraibi", "Kettani", "hicham"],
       contact: ["0661 23 45 78", "pharmacie.alamal@gmail.com", "+212 6 62 98 12 07", "l.berrada@arcades.ma", "0537 77 41 26"],
+      montant: ["12750", "4300", "9100"],
     },
-    garder: ["12750", "chèque impayé", "Montant dû"],
+    garder: ["chèque impayé", "Montant dû"],
   },
   {
     file: "Contrat de pret - Fiduciaire.pdf", kind: "pdf", domaine: "finance",
@@ -368,8 +376,9 @@ Recommandation : constituer une provision complémentaire et régulariser avant 
     secrets: {
       carte: [PAN1, PAN2, PAN3, PAN4, spaced(PAN1), spaced(PAN2)],
       personne: ["Anas", "Bouzidi", "Ghita", "Benslimane", "Reda", "Lamrani", "Kevin", "O'Brien"],
+      montant: ["1245.5", "4890", "1520"],
     },
-    garder: ["1245.5", "Code réponse", "Expiration"],
+    garder: ["Code réponse", "Expiration"],
   },
   {
     file: "Litige chargeback - dossier CB-77812.md", kind: "md", domaine: "cartes",
