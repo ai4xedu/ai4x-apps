@@ -92,7 +92,7 @@ footer code { font-family: var(--font-display); font-size: 0.85em; }
   <header style="display:flex;flex-direction:column;gap:1rem">
     <span class="mark"><span class="bar" aria-hidden="true"></span>Nanomizer · banc d'essai</span>
     <h1>183 valeurs sensibles sur 183 arrivent codées chez l'IA</h1>
-    <p class="lede">Nous avons fait passer 15 documents fictifs, rédigés comme ceux d'un cabinet d'avocats, d'une fiduciaire et d'un acteur de la monétique, dans le connecteur Nanomizer. Puis nous avons cherché chaque nom, numéro et adresse dans <strong>tout ce que Claude peut lire</strong>. La première mesure, sur la version 2.1.0, a trouvé une fuite. Elle est corrigée, et la nouvelle mesure n'en trouve plus aucune.</p>
+    <p class="lede">Nous avons fait passer 15 documents fictifs, rédigés comme ceux d'un cabinet d'avocats, d'une fiduciaire et d'un acteur de la monétique, dans le connecteur Nanomizer. Puis nous avons cherché chaque nom, numéro et adresse dans <strong>tout ce que Claude peut lire</strong>. La première mesure, sur la version 2.1.0, a trouvé une fuite. Elle est corrigée dans la version 2.1.1, et la nouvelle mesure n'en trouve plus aucune.</p>
   </header>
 
   <div class="figures" role="list">
@@ -126,7 +126,7 @@ footer code { font-family: var(--font-display); font-size: 0.85em; }
     <h2>Détection mesurée</h2>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Type de donnée</th><th class="num">Valeurs</th><th class="num">v2.1.0</th><th class="num">Corrigée</th></tr></thead>
+        <thead><tr><th>Type de donnée</th><th class="num">Valeurs</th><th class="num">v2.1.0</th><th class="num">v2.1.1</th></tr></thead>
         <tbody>
           <tr><td>Noms et prénoms</td><td class="num">95</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
           <tr><td>Sociétés et raisons sociales</td><td class="num">15</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
@@ -144,7 +144,7 @@ footer code { font-family: var(--font-display); font-size: 0.85em; }
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Domaine</th><th>Documents</th><th class="num">Valeurs</th><th class="num">Corrigée</th></tr></thead>
+        <thead><tr><th>Domaine</th><th>Documents</th><th class="num">Valeurs</th><th class="num">v2.1.1</th></tr></thead>
         <tbody>
           <tr><td>Droit (France)</td><td>conclusions, assignation, notes de rendez-vous, mise en demeure, attestation, bordereau, e-mail en anglais</td><td class="num">78</td><td class="num"><span class="pill ok">100 %</span></td></tr>
           <tr><td>Finance (Maroc)</td><td>facture, paie, relances d'impayés, contrat de prêt, note d'audit avec passages en darija</td><td class="num">69</td><td class="num"><span class="pill ok">100 %</span></td></tr>
@@ -159,7 +159,7 @@ footer code { font-family: var(--font-display); font-size: 0.85em; }
     <h2>Un numéro de registre de commerce précédé d'une ville</h2>
     <div class="callout">
       <p>Sur la version 2.1.0, dans un contrat de prêt en PDF, la ligne « ICE <span class="code">ICE-001</span>, RC Rabat <span class="leaked">145782</span> » a gardé le numéro RC en clair. Le libellé « RC » était reconnu quand le numéro le suivait directement ; ici, le nom de la ville s'intercalait. Le même type de numéro écrit « RC : 389412 (Casablanca) » dans la facture était bien codé.</p>
-      <p>Corrigé : le numéro est désormais codé quand une ville, même de plusieurs mots, sépare le libellé du numéro (« RC de Casablanca sous le n° … », « R.C. Agadir : … »). La ville reste lisible : « RC Rabat <span class="code">RC-001</span> ». Deux tests empêchent le retour de cette fuite, dont un dans la chasse aux fuites qui appelle tous les outils.</p>
+      <p>Corrigé en v2.1.1 : le numéro est désormais codé quand une ville, même de plusieurs mots, sépare le libellé du numéro (« RC de Casablanca sous le n° … », « R.C. Agadir : … »). La ville reste lisible : « RC Rabat <span class="code">RC-001</span> ». Deux tests empêchent le retour de cette fuite, dont un dans la chasse aux fuites qui appelle tous les outils.</p>
     </div>
   </section>
 
@@ -198,7 +198,7 @@ footer code { font-family: var(--font-display); font-size: 0.85em; }
   </section>
 
   <footer>
-    <span>Mesuré le 20 octobre 2026 sur le connecteur Nanomizer v2.1.0, puis sur la même version avec le correctif RC (prochaine mise à jour). Toutes les personnes, sociétés et numéros du corpus sont fictifs.</span>
+    <span>Mesuré le 20 octobre 2026 sur le connecteur Nanomizer v2.1.0, puis sur la v2.1.1, qui corrige la fuite RC. Toutes les personnes, sociétés et numéros du corpus sont fictifs.</span>
     <span>Reproductible : le corpus et le banc sont dans le code du connecteur (<code>npm run bench</code>).</span>
   </footer>
 </main>
