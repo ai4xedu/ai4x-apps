@@ -9,7 +9,7 @@ sont des exemples ; tout ce qui concerne Nanomizer est factuel et vérifiable.*
   contentieux) avec l'aide d'un assistant d'IA générative.*
 - **Responsable du traitement** : *raison sociale, adresse, contact DPO.*
 - **Outils** : assistant d'IA *(Claude Desktop, éditeur Anthropic)* ;
-  Nanomizer v2.2, extension locale, éditeur YGH (aucun accès aux données).
+  Nanomizer v2.3, extension locale, éditeur YGH (aucun accès aux données).
 - **Personnes concernées** : *clients, parties adverses, salariés, témoins.*
 - **Catégories de données** : *identité, coordonnées, identifiants officiels,
   données financières, données de procédure.* Données sensibles : *à préciser

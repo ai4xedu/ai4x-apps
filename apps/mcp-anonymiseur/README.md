@@ -85,6 +85,22 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.3.0 (la clé d'équipe, 20/10/2026) : tout le cabinet code « Benali » de la
+même façon, sans serveur ni synchronisation (`server/equipe.js`, réglage
+« Dossier de clé d'équipe » → `ANX_TEAM_DIR`). En mode équipe, le code est tiré
+d'une empreinte HMAC-SHA256 de la valeur avec un secret d'équipe
+(`NOM-48291374`, 8 chiffres) : chaque poste calcule le même code sans parler aux
+autres, et personne sans le secret ne peut calculer le code d'un nom deviné.
+Le dossier partagé (NAS, serveur de fichiers) contient le secret, créé par le
+premier poste (création exclusive), et un fichier `cle-poste-*.json` par poste :
+chacun n'écrit que le sien et lit tous les autres, donc pas de verrou et pas de
+conflit. Le code d'un collègue se décode sur tous les postes. Réservée à la
+licence Équipe (≥ 2 postes) et à l'essai. Dossier injoignable : RIEN n'est codé
+(des codes locaux ne seraient pas ceux des collègues), le décodage continue.
+Dossier d'équipe synchronisé dans le cloud : signalé comme risque par l'audit
+de confinement. Sans dossier d'équipe, rien ne change (`NOM-001`). Banc :
+201/201 aussi en mode équipe (`node bench/run.mjs --equipe`).
+
 v2.2.0 (la confiance, 20/10/2026) : cinq chantiers pour qu'une entreprise
 puisse vérifier avant d'acheter.
 1. **Journal « Ce que Claude a vu »** (`server/journal.js`, outil `journal_ia`) :

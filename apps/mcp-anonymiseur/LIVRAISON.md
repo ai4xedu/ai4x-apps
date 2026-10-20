@@ -45,6 +45,23 @@ l'ouvrir dans le navigateur, puis Imprimer → Enregistrer en PDF. Numérotation
 des factures : continue, à tenir dans le suivi (CRM), comme la référence de
 licence.
 
+## 0 bis. Licence Équipe : la clé d'équipe (v2.3)
+
+Pour que tout le cabinet ait les mêmes codes :
+
+1. Créer un dossier sur un partage INTERNE (NAS, serveur de fichiers), accessible
+   à tous les postes — **jamais** un dossier iCloud / Google Drive / Dropbox /
+   OneDrive (l'audit de confinement le signalerait : toutes les correspondances
+   du cabinet y partiraient).
+2. Sur chaque poste : réglages de l'extension → « Dossier de clé d'équipe » → ce
+   même dossier ; la même clé de licence Équipe ; redémarrer Claude Desktop.
+3. Le premier poste qui anonymise crée le secret d'équipe dans le dossier.
+   Demander ensuite à Claude « état de la clé » : la ligne « Clé d'équipe
+   ACTIVE : N poste(s) » le confirme.
+
+Le dossier d'équipe contient TOUTES les vraies valeurs du cabinet : il se
+sauvegarde et se protège comme le serveur de fichiers lui-même.
+
 ## 1. Le client écrit (message pré-rempli)
 
 > Bonjour, je veux la licence à vie du connecteur Nanomizer (anonymiseur Ai4x

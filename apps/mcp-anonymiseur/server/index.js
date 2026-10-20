@@ -51,7 +51,7 @@ import { readLicence, licenceStatus, trialStatus, blockedMessage, warningBanner,
 import {
   XLSX, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook,
-  detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName,
+  detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName, attachTeam, normFor,
 } from "./engine.js";
 import { strictCode, strictSheet, codedRatio, lexiconSize } from "./verrou.js";
 import { guardResult, guardText, MASK } from "./sortie.js";
@@ -59,9 +59,10 @@ import { protectNumbers, describeNumbers, NUMBER_MODES, DEFAULT_NUMBER_MODE } fr
 import { mergeNumberMaps, restoreWorkbook } from "./remise.js";
 import { renderDashboard, CHART_TYPES, AGGREGATES } from "./tableau.js";
 import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
-import { auditConfinement } from "./confinement.js";
+import { auditConfinement, cloudSync } from "./confinement.js";
+import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 
-export const VERSION = "2.2.0";
+export const VERSION = "2.3.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -81,7 +82,7 @@ const MASKED_CELL = "[MASQUÉ — fuite possible]";
 
 /* Fichiers que le connecteur ne lit JAMAIS pour les montrer : la clé, ses
    archives, sa sauvegarde, et les résultats décodés (vraies valeurs). */
-const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia/i;
+const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia|cle-poste-/i;
 
 /* Journal « ce que Claude a vu » (cf. journal.js) : le texte FINAL de chaque
    réponse, après le verrou de sortie. Le .jsonl brut est interdit au modèle
@@ -141,6 +142,66 @@ function requireLicence() {
   return err(blockedMessage(st));
 }
 
+/* --------------------------------------------------- clé d'équipe (v2.3) *
+ * Cf. equipe.js. Réservée à la licence Équipe (≥ 2 postes) et à l'essai. Si
+ * le dossier d'équipe est configuré mais injoignable (NAS éteint), on REFUSE
+ * de coder : coder avec la clé locale seule fabriquerait des codes que les
+ * collègues ne connaissent pas. Le décodage, lui, continue avec ce qu'on a. */
+const ENV_TEAM = isUnsubstituted(process.env.ANX_TEAM_DIR) ? "" : String(process.env.ANX_TEAM_DIR || "").trim();
+const TEAM_DIR = ENV_TEAM ? path.resolve(ENV_TEAM) : "";
+const POSTE_FILE = path.join(OUTDIR, ".nanomizer-poste");
+
+function posteId() {
+  try { const id = fs.readFileSync(POSTE_FILE, "utf8").trim(); if (/^[a-f0-9]{12}$/.test(id)) return id; } catch {}
+  const id = crypto.randomBytes(6).toString("hex");
+  fs.mkdirSync(OUTDIR, { recursive: true, mode: 0o700 });
+  fs.writeFileSync(POSTE_FILE, id, { encoding: "utf8", mode: 0o600 });
+  return id;
+}
+
+function teamAllowed() {
+  const st = licence();
+  return st.valid && (st.trial || (st.seats || 1) >= 2);
+}
+
+function currentTeam() {
+  if (!TEAM_DIR || !teamAllowed()) return null;
+  return openTeam(TEAM_DIR, posteId());
+}
+
+/* À l'entrée des outils qui codent. */
+function requireTeam() {
+  if (!TEAM_DIR) return null;
+  if (!teamAllowed()) {
+    return err("Un dossier de clé d'équipe est configuré, mais la clé d'équipe fait partie de la licence Équipe " +
+      `(${OFFER.priceTeam}). Videz le réglage « Dossier de clé d'équipe » pour travailler seul, ou demandez un devis : ${OFFER.quoteUrl}`);
+  }
+  try { currentTeam(); return null; } catch (e) {
+    return err(`Clé d'équipe injoignable (${e.message}) : ${shown(TEAM_DIR)}. Par sécurité RIEN n'est codé — des codes ` +
+      "créés sans elle ne seraient pas ceux de vos collègues. Vérifiez que le dossier partagé est monté, puis réessayez. " +
+      "Le décodage reste disponible.");
+  }
+}
+
+/* Ajoute au carnet local les correspondances des collègues, et branche le
+   secret d'équipe (codes déterministes). Silencieux si l'équipe est
+   injoignable : requireTeam l'a déjà dit aux outils qui codent. */
+function withTeam(book) {
+  let team;
+  try { team = currentTeam(); } catch { return book; }
+  if (!team) return book;
+  const known = new Set(book.entries.map((e) => e.code));
+  for (const e of readTeamEntries(team).entries) {
+    if (!e || !e.code || known.has(e.code)) continue;
+    const prefix = String(e.code).split("-")[0];
+    const k = `${prefix}||${normFor(prefix, e.value)}`;
+    if (!book.byKey[k]) book.byKey[k] = e.code;
+    book.entries.push({ code: e.code, value: e.value, type: e.type });
+    known.add(e.code);
+  }
+  return attachTeam(book, team.secret);
+}
+
 /* ------------------------------------------------------------ clé (disque) *
  * La clé est le seul fichier qu'on ne peut pas se permettre de perdre : sans
  * elle, les fichiers déjà codés ne se décodent plus, et une clé repartie de
@@ -165,10 +226,10 @@ function validBook(raw) {
 }
 
 function loadBook() {
-  if (!fs.existsSync(KEY_JSON)) return newCodebook();
+  if (!fs.existsSync(KEY_JSON)) return withTeam(newCodebook());
   let raw;
   try { raw = JSON.parse(fs.readFileSync(KEY_JSON, "utf8")); } catch { raw = null; }
-  if (validBook(raw)) return raw;
+  if (validBook(raw)) return withTeam(raw);
   throw new KeyUnreadable(
     `La clé de correspondance (${shown(KEY_JSON)}) est illisible. Par sécurité, RIEN n'a été écrit : repartir d'une clé ` +
     "vierge ferait perdre les correspondances de tous vos fichiers déjà codés. " +
@@ -205,6 +266,10 @@ function saveBook(book) {
   fs.writeFileSync(tmp, JSON.stringify(book), { encoding: "utf8", mode: 0o600 });
   fs.renameSync(tmp, KEY_JSON);
   lockDown(KEY_JSON);
+  if (book.team) {
+    try { writePosteEntries(currentTeam(), book.entries); }
+    catch (e) { throw new TeamUnavailable(`la clé locale est enregistrée, mais pas dans le dossier d'équipe (${e.code || e.message}) : vos collègues ne pourront pas décoder ces codes tant que l'écriture n'aura pas réussi. Réessayez quand le dossier partagé est accessible.`); }
+  }
   // Export xlsx : même format que l'appli web (réimportable dans /anonymiseur-donnees).
   const aoa = [["Code", "Valeur d'origine", "Type"]];
   for (const e of book.entries) aoa.push([e.code, e.value, e.type]);
@@ -227,7 +292,9 @@ function saveBook(book) {
 }
 
 function probeBook() {
-  return JSON.parse(JSON.stringify(loadBook()));
+  const book = loadBook();
+  const copy = JSON.parse(JSON.stringify(book));
+  return book.team ? attachTeam(copy, book.team) : copy;
 }
 
 /* --------------------------------------------------------------- sécurité */
@@ -393,8 +460,11 @@ function mergeStats(a, b) {
 /* Les consignes qui voyagent AVEC les données codées : c'est ce qui empêche
    le modèle de reformuler les codes (cause n°1 d'un décodage raté). */
 function rulesBlock(book) {
-  const prefixes = [...new Set(book.entries.map((e) => e.code.split("-")[0]))];
-  const ex = prefixes.length ? prefixes.slice(0, 6).map((p) => p + "-001").join(", ") : "NOM-001, TEL-002";
+  // Des codes RÉELS de la clé en exemple : en mode équipe ils ont 8 chiffres
+  // (NOM-48291374), et un exemple « NOM-001 » pousserait l'IA à les abréger.
+  const firstByPrefix = new Map();
+  for (const e of book.entries) { const p = e.code.split("-")[0]; if (!firstByPrefix.has(p)) firstByPrefix.set(p, e.code); }
+  const ex = firstByPrefix.size ? [...firstByPrefix.values()].slice(0, 6).join(", ") : "NOM-001, TEL-002";
   return [
     "RÈGLES SUR LES CODES (à respecter dans toutes tes réponses) :",
     `1. Les données personnelles sont remplacées par des codes de la forme ${ex}, etc. Recopie chaque code EXACTEMENT tel quel — jamais « le client 1 » ni un nom inventé.`,
@@ -458,12 +528,20 @@ function confinementAlert() {
 }
 
 function runAudit() {
-  return auditConfinement({
+  const a = auditConfinement({
     workdir: WORKDIR,
     keyFiles: [KEY_JSON, KEY_XLSX, KEY_BAK].filter((p) => fs.existsSync(p)),
     shown,
     home: HOME,
   });
+  // Le dossier d'équipe contient TOUTES les correspondances du cabinet : dans
+  // un nuage synchronisé, elles partent avec lui.
+  const cloud = TEAM_DIR && fs.existsSync(TEAM_DIR) ? cloudSync(TEAM_DIR, { home: HOME }) : "";
+  if (cloud) {
+    a.findings.push({ level: "risque", text: `Le dossier de clé d'équipe est synchronisé par ${cloud} : les correspondances de tout le cabinet y partent. Placez-le sur un partage interne (NAS, serveur de fichiers).` });
+    a.risks++;
+  }
+  return a;
 }
 
 /* ------------------------------------------------------------------ MCP */
@@ -498,7 +576,8 @@ function tool(name, def, handler) {
     } catch (e) {
       // Jamais le message brut : il cite souvent un chemin, donc un nom de
       // fichier (« EACCES … open '…/Notes Lahlou Mehdi.md' »).
-      res = err(e instanceof KeyUnreadable ? e.message : unexpected(e));
+      res = err(e instanceof KeyUnreadable ? e.message
+        : e instanceof TeamUnavailable ? `Clé d'équipe : ${e.message}` : unexpected(e));
     }
     const ctx = { book: bookForGuard(), home: HOME };
     const out = guardResult(res, ctx);
@@ -751,7 +830,7 @@ tool(
     }),
   },
   async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, confirmer = false }) => {
-    const bloque = requireLicence();
+    const bloque = requireLicence() || requireTeam();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
@@ -1087,7 +1166,7 @@ tool(
     }),
   },
   async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, confirmer = false }) => {
-    const bloque = requireLicence();
+    const bloque = requireLicence() || requireTeam();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     const files = listBatchFiles(motif);
@@ -1258,7 +1337,7 @@ tool(
     }),
   },
   async ({ nom_fichier }) => {
-    const bloque = requireLicence();
+    const bloque = requireLicence() || requireTeam();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
@@ -1575,13 +1654,24 @@ tool(
         : `Licence : ${st.holder} · ${st.seats} poste(s) · valide jusqu'au ${st.expiresAt} (${st.daysLeft} j).`)
       : `Licence : aucune valide (${st.reason}). La dé-anonymisation reste disponible — elle le restera toujours. ` +
         `Licence à vie : ${OFFER.price}, sur WhatsApp ${OFFER.whatsappDisplay}.`;
+    let teamLine = "";
+    if (TEAM_DIR) {
+      if (!teamAllowed()) teamLine = "Clé d'équipe : configurée mais inactive — elle fait partie de la licence Équipe.";
+      else {
+        try {
+          const t = currentTeam();
+          const r = readTeamEntries(t);
+          teamLine = `Clé d'équipe ACTIVE : ${r.postes} poste(s) ont déjà partagé leurs codes, ${new Set(r.entries.map((e) => e.code)).size} code(s) connus de l'équipe. Même valeur = même code sur tous les postes. Dossier : ${shown(TEAM_DIR)}.`;
+        } catch (e) { teamLine = `🚨 Clé d'équipe injoignable (${e.message}) : ${shown(TEAM_DIR)} — l'anonymisation est suspendue, le décodage continue.`; }
+      }
+    }
     const book = loadBook();
     const audit = runAudit();
     const auditLine = audit.risks
       ? `🚨 Confinement : ${audit.risks} risque(s) — appelle verifier_confinement pour le détail.`
       : "Confinement : aucune autre porte repérée vers le dossier de travail.";
     if (!book.entries.length) {
-      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, licLine, auditLine].join("\n"));
+      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, licLine, teamLine, auditLine].filter(Boolean).join("\n"));
     }
     const byPrefix = {};
     for (const e of book.entries) {
@@ -1593,11 +1683,12 @@ tool(
       [
         `Clé de session : ${book.entries.length} codes (${detail}).`,
         licLine,
+        teamLine,
         auditLine,
         `Clé (à ne jamais partager) : ${shown(KEY_XLSX)}`,
         `Sorties : ${shown(OUTDIR)}`,
         "La même valeur garde le même code sur tous les fichiers traités avec cette clé.",
-      ].join("\n")
+      ].filter(Boolean).join("\n")
     );
   }
 );

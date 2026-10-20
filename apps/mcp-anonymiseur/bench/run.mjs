@@ -71,11 +71,14 @@ for (const d of DOCUMENTS) {
   }
 }
 
+const TEAM_DIR = process.argv.includes("--equipe") ? fs.mkdtempSync(path.join(os.tmpdir(), "anx-bench-equipe-")) : "";
 const client = new Client({ name: "banc-fuites", version: "1.0.0" });
 await client.connect(new StdioClientTransport({
   command: process.execPath,
   args: [path.join(root, "server", "index.js")],
-  env: { ...process.env, ANX_WORKDIR: workdir, ANX_LICENCE: mint({ v: 1, org: "Banc d'essai", seats: 1, iat: "2026-10-20", exp: "9999-12-31", life: true }) },
+  // --equipe : même banc avec la clé d'équipe (codes déterministes à 8 chiffres).
+  env: { ...process.env, ANX_WORKDIR: workdir, ANX_TEAM_DIR: TEAM_DIR,
+    ANX_LICENCE: mint({ v: 1, org: "Banc d'essai", seats: TEAM_DIR ? 20 : 1, iat: "2026-10-20", exp: "9999-12-31", life: true }) },
   stderr: "ignore",
 }));
 
@@ -204,9 +207,9 @@ const resultats = {
   },
   detail_fuites: leaks,
 };
-fs.writeFileSync(path.join(here, "resultats.json"), JSON.stringify(resultats, null, 2) + "\n");
+if (!TEAM_DIR) fs.writeFileSync(path.join(here, "resultats.json"), JSON.stringify(resultats, null, 2) + "\n");
 
-console.log(`\nBanc d'essai — connecteur v${manifest.version}, ${DOCUMENTS.length} documents, ${outputs.length} sorties lues par l'IA\n`);
+console.log(`\nBanc d'essai — connecteur v${manifest.version}${TEAM_DIR ? " (clé d'équipe)" : ""}, ${DOCUMENTS.length} documents, ${outputs.length} sorties lues par l'IA\n`);
 for (const [k, c] of Object.entries(perCat)) {
   if (c.total) console.log(`  ${CATEGORIES[k].padEnd(50)} ${String(c.total - c.leaked).padStart(3)}/${String(c.total).padEnd(3)} ${pct(c.total - c.leaked, c.total).padStart(5)} %`);
 }
@@ -226,3 +229,4 @@ if (keep.lost.length) {
 }
 if (process.argv.includes("--garder")) console.log(`\nDossier : ${workdir}`);
 else fs.rmSync(workdir, { recursive: true, force: true });
+if (TEAM_DIR) fs.rmSync(TEAM_DIR, { recursive: true, force: true });

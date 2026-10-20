@@ -9,6 +9,7 @@
 
 import * as XLSX from "xlsx";
 import * as _fs from "node:fs";
+import { teamCode } from "./equipe.js";
 
 // Build ESM de SheetJS : fs doit être branché explicitement, sinon
 // readFile/writeFile échouent (« cannot save file »).
@@ -196,12 +197,19 @@ export function normFor(prefix, text) {
    deux modes (tableau et document) — même clé, mêmes compteurs. */
 export function codeFor(book, typeId, text) {
   const t = typeById(typeId);
-  const mapKey = t.prefix + "||" + normFor(t.prefix, text);
+  const norm = normFor(t.prefix, text);
+  const mapKey = t.prefix + "||" + norm;
   let code = book.byKey[mapKey];
   let isNew = false;
   if (!code) {
-    book.counters[t.prefix] = (book.counters[t.prefix] || 0) + 1;
-    code = t.prefix + "-" + pad(book.counters[t.prefix]);
+    if (book.team) {
+      // Mode équipe : même valeur = même code sur tous les postes (equipe.js).
+      code = teamCode(book.team, t.prefix, norm, (c) => book.codes.has(c));
+      book.codes.add(code);
+    } else {
+      book.counters[t.prefix] = (book.counters[t.prefix] || 0) + 1;
+      code = t.prefix + "-" + pad(book.counters[t.prefix]);
+    }
     book.byKey[mapKey] = code;
     book.entries.push({ code, value: String(text), type: t.label });
     isNew = true;
@@ -215,6 +223,14 @@ export function pad(num) {
 
 export function newCodebook() {
   return { byKey: {}, counters: {}, entries: [] };
+}
+
+/* Branche une clé d'équipe sur un carnet. Propriétés NON énumérables : le
+   secret n'est jamais écrit dans la clé locale (JSON.stringify les ignore). */
+export function attachTeam(book, secret) {
+  Object.defineProperty(book, "team", { value: secret, enumerable: false, configurable: true });
+  Object.defineProperty(book, "codes", { value: new Set(book.entries.map((e) => e.code)), enumerable: false, configurable: true });
+  return book;
 }
 
 export function cellText(cell) {

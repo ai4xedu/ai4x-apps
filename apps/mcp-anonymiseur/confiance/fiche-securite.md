@@ -1,7 +1,7 @@
 # Nanomizer — fiche sécurité
 
 *Pour le service informatique, le DPO ou l'associé qui valide l'outil. Version
-du connecteur : 2.2.0. Tout ce qui est écrit ici se vérifie : voir « Comment le
+du connecteur : 2.3.0. Tout ce qui est écrit ici se vérifie : voir « Comment le
 vérifier vous-même ».*
 
 ## En une phrase
@@ -35,10 +35,14 @@ ses valeurs.
    connue de la clé redevient son code, toute forme sensible (e-mail,
    téléphone, IBAN, identifiant long) est masquée.
 4. **Les chiffres** (v2.2) : montants d'un tableur remplacés par défaut.
-5. **Le journal « Ce que Claude a vu »** (v2.2) : chaque réponse envoyée à l'IA
+5. **La clé d'équipe** (v2.3, licence Équipe) : mêmes codes sur tous les postes
+   du cabinet grâce à un secret partagé sur un serveur interne ; sans ce
+   secret, impossible de calculer le code d'un nom deviné. Aucun serveur
+   Nanomizer : le dossier d'équipe est chez vous.
+6. **Le journal « Ce que Claude a vu »** (v2.2) : chaque réponse envoyée à l'IA
    est notée sur le poste ; la page locale la revérifie contre la clé actuelle,
    y compris après coup.
-6. **L'audit de confinement** : signale toute autre porte vers le dossier
+7. **L'audit de confinement** : signale toute autre porte vers le dossier
    (autre extension, dossier synchronisé dans le cloud, pilotage du navigateur).
 
 ## Comment le vérifier vous-même
@@ -54,7 +58,7 @@ ses valeurs.
 - **La détection** : le banc d'essai public (`npm run bench`) mesure 201/201
   valeurs sensibles codées sur 15 documents fictifs (droit, finance, monétique),
   avec ses limites écrites.
-- **Le code** : JavaScript lisible, sans dépendance réseau ; 118 tests, dont une
+- **Le code** : JavaScript lisible, sans dépendance réseau ; 123 tests, dont une
   chasse aux fuites qui appelle tous les outils.
 
 ## Ce que Nanomizer ne couvre pas

@@ -6,7 +6,7 @@ réelles, dans les limites annoncées.*
 
 ## Périmètre
 
-- Connecteur Nanomizer v2.2 (extension `.mcpb` pour Claude Desktop), tel que
+- Connecteur Nanomizer v2.3 (extension `.mcpb` pour Claude Desktop), tel que
   livré aux clients : macOS et Windows.
 - Hors périmètre : l'assistant d'IA lui-même, le poste du client, l'appli web.
 
@@ -29,7 +29,7 @@ réelles, dans les limites annoncées.*
 
 ## Ce que nous fournissons
 
-- Le code source, la suite de tests (118 tests), le banc d'essai et son corpus,
+- Le code source, la suite de tests (123 tests), le banc d'essai et son corpus,
   la campagne de validation de l'artefact.
 - Une licence d'audit et l'accès à l'équipe pendant la mission.
 
