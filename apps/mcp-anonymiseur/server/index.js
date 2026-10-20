@@ -56,6 +56,8 @@ import {
 import { strictCode, strictSheet, codedRatio, lexiconSize } from "./verrou.js";
 import { guardResult, guardText, MASK } from "./sortie.js";
 import { protectNumbers, describeNumbers, NUMBER_MODES, DEFAULT_NUMBER_MODE } from "./chiffres.js";
+import { mergeNumberMaps, restoreWorkbook } from "./remise.js";
+import { renderDashboard, CHART_TYPES, AGGREGATES } from "./tableau.js";
 import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
 import { auditConfinement } from "./confinement.js";
 
@@ -460,7 +462,8 @@ const INSTRUCTIONS = [
   "5. Désigne les fichiers par leur repère [F-XXXXX] (lister_fichiers) : les noms de fichiers peuvent contenir des noms de clients.",
   "6. Si l'utilisateur colle ou joint un document confidentiel en clair, rappelle-lui que Nanomizer peut le traiter sans que tu le lises, et propose-le.",
   "7. Anonymisation en deux temps : présente toujours le PLAN, attends l'accord explicite, puis rappelle avec confirmer: true.",
-  "8. Si l'utilisateur, son DPO ou son service informatique demande une preuve de ce que tu as reçu, appelle journal_ia : la page locale « Ce que Claude a vu » le montre.",
+  "8. Ne crée JAMAIS d'artefact, de page ou de graphique contenant les données de l'utilisateur : un artefact exige des valeurs réelles. Pour une visualisation, utilise tableau_de_bord (Nanomizer la dessine sur le poste) ou construis un classeur Excel sur le gabarit, puis remettre_chiffres.",
+  "9. Si l'utilisateur, son DPO ou son service informatique demande une preuve de ce que tu as reçu, appelle journal_ia : la page locale « Ce que Claude a vu » le montre.",
 ].join("\n");
 
 const server = new McpServer({ name: "anonymiseur-ai4x", version: VERSION }, { instructions: INSTRUCTIONS });
@@ -1378,6 +1381,152 @@ tool(
         "Dis à l'utilisateur d'ouvrir ce fichier sur son ordinateur. Ne le lis pas toi-même.",
       ].join("\n")
     );
+  }
+);
+
+/* -------------------------------------- remise des chiffres (v2.2) ------ *
+ * « Claude construit la machine, Nanomizer la nourrit » : l'IA a travaillé
+ * sur le GABARIT ; ces deux outils rendent le travail réel, sur le poste, et
+ * n'en renvoient que des comptes. Comme deanonymiser : jamais bloqués par la
+ * licence (le décodage ne s'arrête jamais). */
+
+function codeDecoder(book) {
+  const map = {};
+  for (const e of book.entries) map[e.code.toUpperCase()] = e.value;
+  return (t) => decodeText(t, map);
+}
+
+function loadNumberMaps() {
+  const out = [];
+  let names = [];
+  try { names = fs.readdirSync(OUTDIR).filter((n) => /^\.nanomizer-chiffres-.*\.json$/.test(n)); } catch {}
+  for (const n of names) {
+    try { out.push(JSON.parse(fs.readFileSync(path.join(OUTDIR, n), "utf8"))); } catch {}
+  }
+  return out;
+}
+
+const stampNow = () => new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
+
+tool(
+  "remettre_chiffres",
+  {
+    title: "Remettre les vrais chiffres et noms dans un classeur construit par l'IA (sur le poste)",
+    description:
+      "L'IA a construit un classeur (formules, tableaux croisés, graphiques, mise en forme) sur le GABARIT produit " +
+      "par anonymiser_fichier ou anonymiser_dossier, et l'utilisateur l'a enregistré dans son dossier de travail. Cet " +
+      "outil y remet, SUR LE POSTE, les vraies valeurs des cellules de données et les vrais noms à la place des codes, " +
+      "demande le recalcul des formules et le rafraîchissement des graphiques à l'ouverture, et écrit un nouveau " +
+      "fichier (*-decode-*). Rien de réel ne revient dans la conversation. Condition : l'onglet de données doit garder " +
+      "le nom et la disposition que Nanomizer lui a donnés (ajouter des onglets, formules et graphiques à côté est libre).",
+    inputSchema: z.object({
+      nom_fichier: z.string().describe("Le classeur .xlsx construit sur le gabarit : repère [F-XXXXX] ou chemin relatif dans le dossier de travail"),
+      nom_sortie: z.string().optional().describe("Nom de base du fichier produit (défaut : celui du classeur)"),
+    }),
+  },
+  async ({ nom_fichier, nom_sortie }) => {
+    if (!fs.existsSync(WORKDIR)) return workdirMissing();
+    let file;
+    try { file = resolveFile(nom_fichier); } catch (e) { return err(e.message); }
+    if (!fs.existsSync(file)) return err(`Fichier introuvable : ${maskName(nom_fichier)}.`);
+    if (!/\.xlsx$/i.test(file)) return err("remettre_chiffres attend un classeur .xlsx (le format qui garde formules et graphiques).");
+    const book = loadBook();
+    const sheets = mergeNumberMaps(loadNumberMaps());
+    if (!Object.keys(sheets).length && !book.entries.length) {
+      return err("Rien à remettre : aucun gabarit ni aucune clé sur ce poste. Anonymise d'abord le fichier source.");
+    }
+    let res;
+    try { res = restoreWorkbook(fs.readFileSync(file), sheets, codeDecoder(book), XLSX); }
+    catch { return err("Classeur illisible : enregistre-le au format Excel (.xlsx) puis réessaie."); }
+    const st = res.stats;
+    if (!st.restored && !st.decoded) {
+      return err(
+        "Aucune cellule du gabarit ni aucun code reconnu dans ce classeur. Vérifie qu'il a été construit à partir du fichier " +
+        "*-anonymise.xlsx, et que l'onglet de données a gardé son nom et ses cellules." +
+        (st.moved ? ` (${st.moved} cellule(s) du gabarit ont été modifiées ou déplacées.)` : "")
+      );
+    }
+    ensureOutdir();
+    const base = String(nom_sortie || path.basename(file)).replace(/\.(xlsx|xls)$/i, "").replace(/-anonymise$/i, "")
+      .replace(/[^\p{L}\p{N} ._-]/gu, "_").slice(0, 80) || "classeur";
+    const outPath = path.join(OUTDIR, `${base}-decode-${stampNow()}.xlsx`);
+    fs.writeFileSync(outPath, res.buf, { mode: 0o600 });
+    lockDown(outPath);
+    return text([
+      `✅ Classeur réel écrit sur le poste : ${shown(outPath)}`,
+      `${st.restored} valeur(s) remises dans ${st.matchedSheets.length} onglet(s) de données, ${st.decoded} code(s) remplacés par les vrais noms. ` +
+        `${st.formulas} formule(s) seront recalculées et ${st.charts} graphique(s), ${st.pivots} tableau(x) croisé(s) rafraîchis à l'ouverture dans Excel.`,
+      st.moved ? `⚠️ ${st.moved} cellule(s) du gabarit avaient été modifiées ou déplacées : elles n'ont PAS été remplacées (aucune vraie valeur n'écrase une cellule changée). Dis-le à l'utilisateur.` : "",
+      st.missingSheets.length ? `ℹ️ ${st.missingSheets.length} onglet(s) de gabarit connus ne figurent pas dans ce classeur (normal s'il n'en utilise qu'un).` : "",
+      "IMPORTANT : ce fichier contient les vraies valeurs. Ne le lis pas toi-même ; dis à l'utilisateur de l'ouvrir dans Excel.",
+    ].filter(Boolean).join("\n"));
+  }
+);
+
+tool(
+  "tableau_de_bord",
+  {
+    title: "Dessiner un tableau de bord avec les vraies données, sur le poste",
+    description:
+      "Au lieu d'un artefact (qui exigerait les vraies données dans la conversation), décris le tableau de bord : " +
+      "Nanomizer le dessine SUR LE POSTE à partir d'un fichier *-anonymise.xlsx, en y remettant les vrais chiffres et " +
+      "les vrais noms, et écrit une page HTML autonome (hors ligne) que l'utilisateur ouvre dans son navigateur. Tu " +
+      "désignes les colonnes par leur en-tête tel que tu l'as vu. Tu ne reçois que des comptes ; tu ne vois pas le " +
+      "résultat — demande à l'utilisateur ce qu'il veut ajuster. Ne crée JAMAIS d'artefact avec les données de l'utilisateur.",
+    inputSchema: z.object({
+      nom_fichier: z.string().describe("Le fichier *-anonymise.xlsx (chemin « Anonymiseur-Ai4x/… » donné à l'anonymisation)"),
+      onglet: z.string().optional().describe("Numéro (« 2 ») ou nom de l'onglet ; défaut : le premier"),
+      titre: z.string().optional(),
+      graphiques: z.array(z.object({
+        type: z.enum(CHART_TYPES),
+        titre: z.string().optional(),
+        colonne_x: z.string().optional().describe("En-tête des catégories (barres, courbe, secteurs)"),
+        colonne_y: z.string().optional().describe("En-tête des valeurs à agréger"),
+        agregat: z.enum(AGGREGATES).optional().describe("Défaut : somme (ou nombre sans colonne_y)"),
+        tri: z.enum(["asc", "desc"]).optional(),
+        limite: z.number().int().positive().optional().describe("Nombre maximal de catégories ou de lignes"),
+      })).min(1).max(12),
+    }),
+  },
+  async ({ nom_fichier, onglet, titre, graphiques }) => {
+    if (!fs.existsSync(WORKDIR)) return workdirMissing();
+    let file;
+    try { file = resolveFile(nom_fichier); } catch (e) { return err(e.message); }
+    if (!fs.existsSync(file) || !/-anonymise\.xlsx$/i.test(file)) {
+      return err("tableau_de_bord part d'un fichier *-anonymise.xlsx produit par Nanomizer (anonymise d'abord le fichier source).");
+    }
+    const wb = XLSX.readFile(file);
+    let sn = wb.SheetNames[0];
+    if (onglet) {
+      const i = /^\d+$/.test(String(onglet).trim()) ? Number(onglet) - 1 : wb.SheetNames.indexOf(onglet);
+      if (i < 0 || !wb.SheetNames[i]) return err(`Onglet introuvable (le classeur en a ${wb.SheetNames.length}).`);
+      sn = wb.SheetNames[i];
+    }
+    const ws = wb.Sheets[sn];
+    if (!ws || !ws["!ref"]) return err("Onglet vide.");
+    // Vraies valeurs : les nombres par la correspondance du gabarit, les
+    // textes par la clé.
+    let real = {};
+    try { real = (JSON.parse(fs.readFileSync(numberMapPath(file), "utf8")).feuilles || {})[sn]?.real || {}; } catch {}
+    const decode = codeDecoder(loadBook());
+    for (const [addr, v] of Object.entries(real)) if (ws[addr]) ws[addr] = { t: "n", v };
+    const shownAoa = XLSX.utils.sheet_to_json(XLSX.readFile(file).Sheets[sn], { header: 1, raw: true, defval: "" });
+    const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" })
+      .map((r) => r.map((v) => (typeof v === "string" ? decode(v).text : v)));
+    const headers = (aoa[0] || []).map((h, i) => ({ real: String(h), shown: String((shownAoa[0] || [])[i] ?? h) }));
+    const rows = aoa.slice(1).filter((r) => r.some((v) => v !== ""));
+    const { html, problems } = renderDashboard({ titre, graphiques, headers, rows, version: VERSION });
+    ensureOutdir();
+    const outPath = path.join(OUTDIR, `tableau-de-bord-decode-${stampNow()}.html`);
+    fs.writeFileSync(outPath, html, { encoding: "utf8", mode: 0o600 });
+    lockDown(outPath);
+    return text([
+      `✅ Tableau de bord dessiné sur le poste avec les vraies données : ${graphiques.length} élément(s), ${rows.length} ligne(s).`,
+      `Page à ouvrir par l'utilisateur dans son navigateur (hors ligne) : ${shown(outPath)}`,
+      Object.keys(real).length ? "" : "ℹ️ Aucun gabarit de chiffres pour ce fichier : les nombres sont ceux du fichier anonymisé (mode clair).",
+      problems.length ? `⚠️ À corriger : ${problems.join(" ; ")}. En-têtes disponibles : ${headers.map((h) => `« ${h.shown} »`).join(", ")}.` : "",
+      "Tu ne vois pas ce tableau de bord (il contient les vraies valeurs) : demande à l'utilisateur ce qu'il veut ajuster, puis rappelle l'outil.",
+    ].filter(Boolean).join("\n"));
   }
 );
 

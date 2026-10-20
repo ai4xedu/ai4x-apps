@@ -37,9 +37,11 @@ function isDateCell(cell, XLSX) {
 
 /* Protège les nombres d'une feuille DÉJÀ anonymisée (texte codé), en place.
    headerRow : ligne d'en-têtes à ne pas toucher (mode tableau), ou null.
-   Renvoie { mode, cells, factor, real } — real : { "B2": 12400, … }. */
+   Renvoie { mode, cells, factor, real, fake } — real : { "B2": 12400, … },
+   fake : la valeur posée à la place (remettre_chiffres vérifie qu'elle est
+   toujours là avant de la remplacer : une donnée déplacée n'est pas écrasée). */
 export function protectNumbers(ws, XLSX, { mode = DEFAULT_NUMBER_MODE, headerRow = null, rand = crypto.randomInt } = {}) {
-  const out = { mode, cells: 0, factor: null, real: {} };
+  const out = { mode, cells: 0, factor: null, real: {}, fake: {} };
   if (mode === "clair" || !ws || !ws["!ref"]) return out;
   const targets = [];
   for (const addr of Object.keys(ws)) {
@@ -72,6 +74,7 @@ export function protectNumbers(ws, XLSX, { mode = DEFAULT_NUMBER_MODE, headerRow
     // Le texte formaté (`w`) porte la VRAIE valeur (« 12 400,00 MAD ») : il
     // part ; le format (`z`) reste, pour que le gabarit ressemble au fichier.
     ws[addr] = { t: "n", v, ...(cell.z ? { z: cell.z } : {}) };
+    out.fake[addr] = v;
     out.cells++;
   }
   return out;

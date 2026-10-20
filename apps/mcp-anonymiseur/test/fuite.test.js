@@ -171,6 +171,12 @@ test("chaque outil, chaque chemin : aucune valeur réelle ne sort", async () => 
   await call("lire_scan", { nom_fichier: handles[0] });
   await call("etat_cle");
   await call("verifier_confinement");
+  // v2.2 : remise des chiffres et tableau de bord — leurs comptes rendus ne
+  // citent rien de réel, même quand l'IA leur passe un vrai en-tête.
+  const anonX = fs.readdirSync(path.join(workdir, "Anonymiseur-Ai4x")).find((n) => /-anonymise\.xlsx$/.test(n));
+  await call("remettre_chiffres", { nom_fichier: `Anonymiseur-Ai4x/${anonX}` });
+  await call("tableau_de_bord", { nom_fichier: `Anonymiseur-Ai4x/${anonX}`, graphiques: [
+    { type: "barres", colonne_x: "Client", colonne_y: "Honoraires" }, { type: "tableau" }, { type: "barres", colonne_x: "Inexistante" }] });
   await call("journal_ia");
   await call("deanonymiser", { contenu: "Relancer NOM-001 et PRENOM-001 au TEL-001.", nom_sortie: "relance" });
 

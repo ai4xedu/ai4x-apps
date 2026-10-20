@@ -84,6 +84,14 @@
       "description": "Audit : une autre extension ou une synchronisation cloud voit-elle vos fichiers ?"
     },
     {
+      "name": "remettre_chiffres",
+      "description": "Remet les vrais chiffres et noms dans un classeur construit par l'IA, sur le poste"
+    },
+    {
+      "name": "tableau_de_bord",
+      "description": "Dessine un tableau de bord avec les vraies données, sur le poste (pas d'artefact)"
+    },
+    {
       "name": "journal_ia",
       "description": "Ce que Claude a vu : journal local et audit de tout ce qui est sorti"
     },
