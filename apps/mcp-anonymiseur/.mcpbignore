@@ -22,3 +22,6 @@ node_modules/@modelcontextprotocol/client/
 # l'OCR dans le bundle — le worker réclame aussi une variante « legacy » à un
 # moment de son cycle (Cannot find module tesseract-core-relaxedsimd).
 # Le poids est le prix de la fiabilité sur des machines inconnues.
+
+# Devis et factures produits par scripts/devis.mjs.
+devis-sortie/

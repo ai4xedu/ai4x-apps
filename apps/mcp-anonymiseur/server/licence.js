@@ -54,7 +54,35 @@ export const OFFER = {
   whatsappUrl: "https://wa.me/212680092567?text=" + encodeURIComponent(
     "Bonjour, je veux la licence à vie du connecteur Nanomizer (anonymiseur Ai4x pour Claude Desktop) à 500 Dhs HT. Comment on procède ?"
   ),
+  // v2.2 : une entreprise achète sur devis, pas sur un message WhatsApp.
+  quoteUrl: "https://wa.me/212680092567?text=" + encodeURIComponent(
+    "Bonjour, je voudrais un devis pour la licence Équipe de Nanomizer. Raison sociale : … ICE : … Nombre de postes : …"
+  ),
 };
+
+/* ESSAI GRATUIT (v2.2) — 14 jours, intégré, sans serveur ni demande. Sans
+   licence valide, la première anonymisation ouvre l'essai ; sa date de début
+   est notée sur le poste. Comme la licence, c'est une serrure de courtoisie :
+   effacer le fichier relance l'essai, et c'est le prix assumé du « zéro
+   réseau ». Une licence payée ÉCHUE n'ouvre pas d'essai : la relation
+   commerciale existe déjà. */
+export const TRIAL_DAYS = 14;
+
+export function trialStatus(base, startedAt, now = new Date()) {
+  if (base.valid || base.reason === "licence expirée") return base;
+  const refused = base.reason && base.reason !== "absente" ? base.reason : "";
+  if (!startedAt) {
+    return { valid: true, trial: true, notStarted: true, daysLeft: TRIAL_DAYS, holder: "Essai gratuit", seats: 1,
+      expiresAt: "", lifetime: false, expiringSoon: false, reason: "", refused };
+  }
+  const start = new Date(startedAt);
+  const elapsed = Number.isNaN(start.getTime()) ? Infinity : Math.floor((now - start) / 86400000);
+  const left = TRIAL_DAYS - Math.max(0, elapsed);
+  if (left <= 0) return { valid: false, trial: true, reason: "essai terminé", refused };
+  const end = new Date(start.getTime() + TRIAL_DAYS * 86400000).toISOString().slice(0, 10);
+  return { valid: true, trial: true, daysLeft: left, holder: "Essai gratuit", seats: 1, expiresAt: end,
+    lifetime: false, expiringSoon: true, reason: "", refused };
+}
 
 /* Date butoir des licences à vie. On garde un champ `exp` (et une vraie
    date) pour que les connecteurs déjà installés en v1.6 lisent aussi une clé
@@ -184,7 +212,10 @@ export function blockedMessage(status) {
      là mais fausse ou tronquée). Confondre les deux dernières fait perdre une
      demi-heure à quelqu'un qui a déjà payé. */
   const head = [];
-  if (status.reason === "licence expirée") {
+  if (status.reason === "essai terminé") {
+    head.push(`🔒 Votre essai gratuit de ${TRIAL_DAYS} jours est terminé.`);
+    if (status.refused) head.push(`La clé configurée a été refusée : ${status.refused}. Vérifiez qu'elle a été collée en entier, puis redémarrez Claude Desktop.`);
+  } else if (status.reason === "licence expirée") {
     head.push(`🔒 Votre licence a expiré le ${status.expiresAt}.`);
   } else if (!status.reason || status.reason === "absente") {
     head.push("🔒 Aucune clé de licence n'est configurée.");
@@ -199,6 +230,7 @@ export function blockedMessage(status) {
   return head.concat([
     `Le connecteur (verrou, traitement par lots, PDF, OCR) s'active avec une licence À VIE : ${OFFER.price}, une seule fois,`,
     `mises à jour comprises — ou ${OFFER.priceTeam}. Commande sur WhatsApp au ${OFFER.whatsappDisplay} : ${OFFER.whatsappUrl}`,
+    `Pour une entreprise (devis, facture au nom de l'entité) : ${OFFER.quoteUrl}`,
     "Ce qui continue de fonctionner, et continuera toujours : la DÉ-ANONYMISATION de vos fichiers déjà",
     "codés (outil deanonymiser) et l'état de votre clé. Vos données ne sont jamais prises en otage.",
     "L'appli gratuite reste disponible : https://ai4x.academy/anonymiseur-donnees",
@@ -207,6 +239,11 @@ export function blockedMessage(status) {
 
 /* Bandeau d'avertissement à coller aux réponses quand l'échéance approche. */
 export function warningBanner(status) {
+  if (status.valid && status.trial) {
+    return `🧪 Essai gratuit : ${status.daysLeft} jour(s) restant(s)${status.expiresAt ? ` (jusqu'au ${status.expiresAt})` : ""}, toutes fonctions ouvertes.` +
+      (status.refused ? ` ⚠️ La clé configurée a été refusée (${status.refused}) : vérifiez-la.` : "") +
+      ` Licence à vie : ${OFFER.price} (WhatsApp ${OFFER.whatsappDisplay}) ; entreprise, sur devis : ${OFFER.quoteUrl}`;
+  }
   if (!status.valid || status.lifetime || !status.expiringSoon) return "";
   return `⏳ Licence ${status.holder} : ${status.daysLeft} jour(s) restant(s) (expire le ${status.expiresAt}). ` +
     `Pensez au renouvellement, ou passez à la licence à vie (${OFFER.price}, WhatsApp ${OFFER.whatsappDisplay}) — à ` +

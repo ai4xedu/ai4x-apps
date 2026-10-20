@@ -47,7 +47,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 import { extractText } from "unpdf";
 import { extractPdfJpegs, ocrImages, reviewHints, isImageFile } from "./ocr.js";
-import { readLicence, licenceStatus, blockedMessage, warningBanner, isUnsubstituted, OFFER } from "./licence.js";
+import { readLicence, licenceStatus, trialStatus, blockedMessage, warningBanner, isUnsubstituted, OFFER } from "./licence.js";
 import {
   XLSX, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook,
@@ -113,15 +113,30 @@ const chiffresSchema = z.enum(NUMBER_MODES).optional()
  * vérification est locale et cryptographique : aucun appel réseau. */
 const LICENCE = readLicence(WORKDIR);
 
+const TRIAL_FILE = path.join(OUTDIR, ".nanomizer-essai.json");
+
+function trialStart() {
+  try { return JSON.parse(fs.readFileSync(TRIAL_FILE, "utf8")).debut || "invalide"; } catch (e) {
+    return e && e.code === "ENOENT" ? null : "invalide";   // illisible = essai consommé
+  }
+}
+
 function licence() {
-  return licenceStatus(LICENCE.raw);
+  return trialStatus(licenceStatus(LICENCE.raw), trialStart());
 }
 
 /* Garde-fou des outils qui PRODUISENT de l'anonymisation. Volontairement
    PAS appliqué à deanonymiser ni etat_cle : à l'expiration, on cesse de
-   servir, on ne prend rien en otage. */
+   servir, on ne prend rien en otage. La première anonymisation sans licence
+   ouvre l'essai gratuit. */
 function requireLicence() {
   const st = licence();
+  if (st.valid && st.trial && st.notStarted) {
+    try {
+      fs.mkdirSync(OUTDIR, { recursive: true, mode: 0o700 });
+      fs.writeFileSync(TRIAL_FILE, JSON.stringify({ debut: new Date().toISOString() }), { encoding: "utf8", mode: 0o600 });
+    } catch {}
+  }
   if (st.valid) return null;
   return err(blockedMessage(st));
 }
@@ -1549,7 +1564,12 @@ tool(
       return err(`Dossier de travail introuvable : ${shown(WORKDIR)} — impossible de dire s'il existe une clé. ${RESTART_HINT}`);
     }
     const st = licence();
-    const licLine = st.valid
+    const licLine = st.valid && st.trial
+      ? (st.notStarted
+        ? `Licence : aucune — essai gratuit de 14 jours disponible, il s'ouvre à la première anonymisation. Licence à vie : ${OFFER.price}.`
+        : `Licence : essai gratuit, ${st.daysLeft} jour(s) restant(s) (jusqu'au ${st.expiresAt}). Licence à vie : ${OFFER.price} ; entreprise, sur devis.`) +
+        (st.refused ? ` ⚠️ Clé configurée refusée : ${st.refused}.` : "")
+      : st.valid
       ? (st.lifetime
         ? `Licence : ${st.holder} · ${st.seats} poste(s) · À VIE.`
         : `Licence : ${st.holder} · ${st.seats} poste(s) · valide jusqu'au ${st.expiresAt} (${st.daysLeft} j).`)

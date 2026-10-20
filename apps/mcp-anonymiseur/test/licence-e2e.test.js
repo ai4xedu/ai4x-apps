@@ -33,8 +33,28 @@ async function connect(licence) {
   return client;
 }
 
+/* Un essai gratuit déjà consommé : ces tests vérifient le comportement SANS
+   droit d'usage (l'essai a ses propres tests, plus bas). */
+function expireTrial(dir) {
+  fs.mkdirSync(path.join(dir, "Anonymiseur-Ai4x"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "Anonymiseur-Ai4x", ".nanomizer-essai.json"), JSON.stringify({ debut: "2020-01-01T00:00:00Z" }));
+}
+
+async function freshConnect(licence) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "anx-essai-"));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Nom", "Téléphone"], ["El Amrani", "06 61 23 45 67"]]), "Clients");
+  XLSX.writeFile(wb, path.join(dir, "clients.xlsx"));
+  const client = new Client({ name: "essai", version: "1.0.0" });
+  await client.connect(new StdioClientTransport({
+    command: process.execPath, args: [serverPath], env: { ...process.env, ANX_WORKDIR: dir, ANX_LICENCE: licence },
+  }));
+  return { client, dir };
+}
+
 before(() => {
   workdir = fs.mkdtempSync(path.join(os.tmpdir(), "anx-lic-e2e-"));
+  expireTrial(workdir);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
     ["Nom", "Téléphone"],
@@ -129,4 +149,47 @@ test("licence bientôt expirée : le bandeau prévient AVANT l'échéance", asyn
     assert.match(out, /jour\(s\) restant/);
     assert.match(out, /dé-anonymisation continuera/);
   } finally { await client.close(); }
+});
+
+/* ---------------------------------------------------- essai gratuit (v2.2) */
+
+test("essai : sans licence, la première anonymisation ouvre 14 jours d'accès complet", async () => {
+  const { client, dir } = await freshConnect("");
+  try {
+    assert.match(resultText(await client.callTool({ name: "etat_cle", arguments: {} })), /essai gratuit de 14 jours disponible/);
+    const plan = resultText(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx" } }));
+    assert.match(plan, /PLAN D'ANONYMISATION/);
+    assert.match(plan, /🧪 Essai gratuit : 14 jour\(s\) restant\(s\)/);
+    assert.match(plan, /sur devis/);
+    assert.ok(fs.existsSync(path.join(dir, "Anonymiseur-Ai4x", ".nanomizer-essai.json")));
+    assert.match(resultText(await client.callTool({ name: "etat_cle", arguments: {} })), /essai gratuit, 14 jour\(s\) restant/);
+  } finally { await client.close(); fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("essai terminé : anonymiser est bloqué, le décodage jamais", async () => {
+  const { client, dir } = await freshConnect("");
+  expireTrial(dir);
+  try {
+    const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx" } });
+    assert.ok(res.isError);
+    assert.match(resultText(res), /essai gratuit de 14 jours est terminé/);
+    assert.match(resultText(res), /devis/);
+    const dec = await client.callTool({ name: "deanonymiser", arguments: { contenu: "NOM-001", nom_sortie: "x" } });
+    assert.ok(!/🔒/.test(resultText(dec)), "le décodage ne s'arrête jamais");
+  } finally { await client.close(); fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("essai : une licence payée échue n'en ouvre pas ; une clé refusée est signalée pendant l'essai", async () => {
+  const lapsed = await freshConnect(mint({ v: 1, org: "Cabinet Échu", seats: 3, iat: "2025-01-01", exp: "2025-12-31" }));
+  try {
+    const res = await lapsed.client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx" } });
+    assert.ok(res.isError);
+    assert.match(resultText(res), /expiré le 2025-12-31/);
+  } finally { await lapsed.client.close(); fs.rmSync(lapsed.dir, { recursive: true, force: true }); }
+  const bad = await freshConnect("NANO1.abc.def");
+  try {
+    const plan = resultText(await bad.client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx" } }));
+    assert.match(plan, /Essai gratuit/);
+    assert.match(plan, /clé configurée a été refusée/);
+  } finally { await bad.client.close(); fs.rmSync(bad.dir, { recursive: true, force: true }); }
 });

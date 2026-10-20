@@ -18,6 +18,33 @@ Circuit habituel Ai4x : aucun paiement en ligne. Le client écrit sur WhatsApp
 (bouton de la LP `/anonymiseur-donnees`, message pré-rempli), on envoie le RIB
 de YGH, il vire, on livre le fichier et la clé sur WhatsApp.
 
+## 0. Depuis la v2.2 : l'essai d'abord, le devis pour les entreprises
+
+**Essai gratuit de 14 jours, intégré.** On peut envoyer le `.mcpb` SANS clé :
+la première anonymisation ouvre 14 jours d'accès complet, annoncés dans chaque
+réponse (« 🧪 Essai gratuit : N jour(s) restant(s) »), avec le lien WhatsApp et
+le lien « devis entreprise ». À la fin de l'essai, l'anonymisation s'arrête ;
+la dé-anonymisation, jamais. Aucun serveur : la date de début est notée dans
+le dossier du client (effacer ce fichier relance l'essai — serrure de
+courtoisie assumée). Une licence payée échue n'ouvre pas d'essai.
+
+Le geste de vente devient : *« Installez, essayez 14 jours sur un vrai dossier,
+puis demandez à Claude : montre-moi ce que tu as vu (journal_ia). »*
+
+**Devis et facture pour une entreprise** (purchase order, facture au nom de
+l'entité, ICE des deux parties, montant en lettres) :
+
+```bash
+cp scripts/vendeur.exemple.json scripts/vendeur.json   # une fois : coordonnées légales de YGH (hors git)
+node scripts/devis.mjs --client "Raison sociale SA" --ice-client 001234567000089 --offre equipe --postes 25
+node scripts/devis.mjs --facture --numero FA-2026-014 --client "Raison sociale SA" --ice-client 001234567000089 --offre equipe --postes 25 --licence <référence>
+```
+
+Le document sort en HTML A4 dans `devis-sortie/` (hors git, hors bundle) :
+l'ouvrir dans le navigateur, puis Imprimer → Enregistrer en PDF. Numérotation
+des factures : continue, à tenir dans le suivi (CRM), comme la référence de
+licence.
+
 ## 1. Le client écrit (message pré-rempli)
 
 > Bonjour, je veux la licence à vie du connecteur Nanomizer (anonymiseur Ai4x
