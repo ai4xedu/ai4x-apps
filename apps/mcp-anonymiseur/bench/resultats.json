@@ -1,0 +1,353 @@
+{
+  "version": "2.1.0",
+  "date": "2026-10-20",
+  "documents": 15,
+  "sorties_lues": 49,
+  "valeurs_sensibles": 183,
+  "fuites": 1,
+  "taux_detection": "99.5",
+  "par_categorie": {
+    "personne": {
+      "libelle": "Noms et prénoms",
+      "total": 95,
+      "leaked": 0,
+      "taux": "100.0"
+    },
+    "societe": {
+      "libelle": "Sociétés et raisons sociales",
+      "total": 15,
+      "leaked": 0,
+      "taux": "100.0"
+    },
+    "adresse": {
+      "libelle": "Adresses",
+      "total": 9,
+      "leaked": 0,
+      "taux": "100.0"
+    },
+    "contact": {
+      "libelle": "Téléphones et e-mails",
+      "total": 13,
+      "leaked": 0,
+      "taux": "100.0"
+    },
+    "bancaire": {
+      "libelle": "IBAN / RIB",
+      "total": 9,
+      "leaked": 0,
+      "taux": "100.0"
+    },
+    "carte": {
+      "libelle": "Numéros de carte bancaire",
+      "total": 8,
+      "leaked": 0,
+      "taux": "100.0"
+    },
+    "identite": {
+      "libelle": "Pièces d'identité (CIN, NIR, passeport, permis)",
+      "total": 10,
+      "leaked": 0,
+      "taux": "100.0"
+    },
+    "entreprise": {
+      "libelle": "Identifiants d'entreprise (ICE, IF, RC, CNSS, patente, SIRET)",
+      "total": 16,
+      "leaked": 1,
+      "taux": "93.8"
+    },
+    "dossier": {
+      "libelle": "Références de dossier (RG, contrat, sinistre)",
+      "total": 4,
+      "leaked": 0,
+      "taux": "100.0"
+    },
+    "vehicule": {
+      "libelle": "Plaques d'immatriculation",
+      "total": 4,
+      "leaked": 0,
+      "taux": "100.0"
+    }
+  },
+  "par_domaine": {
+    "droit": {
+      "total": 78,
+      "leaked": 0,
+      "taux": "100.0"
+    },
+    "finance": {
+      "total": 69,
+      "leaked": 1,
+      "taux": "98.6"
+    },
+    "cartes": {
+      "total": 36,
+      "leaked": 0,
+      "taux": "100.0"
+    }
+  },
+  "lisibilite": {
+    "total": 60,
+    "gardees": 56,
+    "taux": "93.3",
+    "perdues": [
+      {
+        "document": "Conclusions prud'hommes - Garnier c. Vectura.md",
+        "valeur": "Conseil de prud'hommes"
+      },
+      {
+        "document": "Assignation bail commercial Moulin.md",
+        "valeur": "Tribunal judiciaire"
+      },
+      {
+        "document": "Flotte vehicules - permis chauffeurs.xlsx",
+        "valeur": "Renault Master"
+      },
+      {
+        "document": "Flotte vehicules - permis chauffeurs.xlsx",
+        "valeur": "non attribuée"
+      }
+    ]
+  },
+  "mots_courants": {
+    "total": 634,
+    "gardes": 544,
+    "taux": "85.8",
+    "par_document": [
+      {
+        "document": "Conclusions prud'hommes - Garnier c. Vectura.md",
+        "sortie": true,
+        "mots": 112,
+        "gardes": 105,
+        "codes_a_tort": [
+          "villeurbanne",
+          "logistique",
+          "sas",
+          "avenue",
+          "tony",
+          "plaise",
+          "courriels"
+        ],
+        "taux": "93.8"
+      },
+      {
+        "document": "Assignation bail commercial Moulin.md",
+        "sortie": true,
+        "mots": 80,
+        "gardes": 68,
+        "codes_a_tort": [
+          "devant",
+          "tribunal",
+          "judiciaire",
+          "deux",
+          "mille",
+          "vingt",
+          "six",
+          "dix",
+          "huit",
+          "mars",
+          "donne",
+          "sarl"
+        ],
+        "taux": "85.0"
+      },
+      {
+        "document": "Notes RDV client - divorce.md",
+        "sortie": true,
+        "mots": 51,
+        "gardes": 49,
+        "codes_a_tort": [
+          "sœur",
+          "airbus"
+        ],
+        "taux": "96.1"
+      },
+      {
+        "document": "Mise en demeure Atlantis.pdf",
+        "sortie": true,
+        "mots": 51,
+        "gardes": 43,
+        "codes_a_tort": [
+          "cabinet",
+          "associes",
+          "avocats",
+          "lettre",
+          "recommandee",
+          "avec",
+          "accuse",
+          "reception"
+        ],
+        "taux": "84.3"
+      },
+      {
+        "document": "Attestation temoin.md",
+        "sortie": true,
+        "mots": 50,
+        "gardes": 46,
+        "codes_a_tort": [
+          "demeurant",
+          "titulaire",
+          "passeport",
+          "kerlouan"
+        ],
+        "taux": "92.0"
+      },
+      {
+        "document": "Bordereau de pieces - affaire Benjelloun.xlsx",
+        "sortie": true,
+        "mots": 15,
+        "gardes": 14,
+        "codes_a_tort": [
+          "courriel"
+        ],
+        "taux": "93.3"
+      },
+      {
+        "document": "Client email - English.md",
+        "sortie": true,
+        "mots": 30,
+        "gardes": 11,
+        "codes_a_tort": [
+          "from",
+          "subject",
+          "share",
+          "purchase",
+          "ltd",
+          "dear",
+          "following",
+          "our",
+          "please",
+          "find",
+          "key",
+          "price",
+          "two",
+          "instalments",
+          "wants",
+          "warranty",
+          "before",
+          "friday",
+          "kind"
+        ],
+        "taux": "36.7"
+      },
+      {
+        "document": "Facture Atlas Distribution.xlsx",
+        "sortie": true,
+        "mots": 29,
+        "gardes": 24,
+        "codes_a_tort": [
+          "sarl",
+          "zone",
+          "industrielle",
+          "sidi",
+          "ghanem"
+        ],
+        "taux": "82.8"
+      },
+      {
+        "document": "Paie octobre - salaries.xlsx",
+        "sortie": true,
+        "mots": 11,
+        "gardes": 11,
+        "codes_a_tort": [],
+        "taux": "100.0"
+      },
+      {
+        "document": "Relance impayes clients.xlsx",
+        "sortie": true,
+        "mots": 21,
+        "gardes": 19,
+        "codes_a_tort": [
+          "cafe",
+          "mme"
+        ],
+        "taux": "90.5"
+      },
+      {
+        "document": "Contrat de pret - Fiduciaire.pdf",
+        "sortie": true,
+        "mots": 38,
+        "gardes": 36,
+        "codes_a_tort": [
+          "associes",
+          "sarl"
+        ],
+        "taux": "94.7"
+      },
+      {
+        "document": "Note de synthese audit - darija.md",
+        "sortie": true,
+        "mots": 54,
+        "gardes": 48,
+        "codes_a_tort": [
+          "joignable",
+          "hna",
+          "khassna",
+          "nchofo",
+          "dyal",
+          "qbel"
+        ],
+        "taux": "88.9"
+      },
+      {
+        "document": "Journal transactions TPE.xlsx",
+        "sortie": true,
+        "mots": 26,
+        "gardes": 15,
+        "codes_a_tort": [
+          "marjane",
+          "californie",
+          "pharmacie",
+          "agdal",
+          "station",
+          "afriquia",
+          "route",
+          "jadida",
+          "sofitel",
+          "tour",
+          "blanche"
+        ],
+        "taux": "57.7"
+      },
+      {
+        "document": "Litige chargeback - dossier CB-77812.md",
+        "sortie": true,
+        "mots": 50,
+        "gardes": 47,
+        "codes_a_tort": [
+          "maarif",
+          "motif",
+          "visa"
+        ],
+        "taux": "94.0"
+      },
+      {
+        "document": "Flotte vehicules - permis chauffeurs.xlsx",
+        "sortie": true,
+        "mots": 16,
+        "gardes": 8,
+        "codes_a_tort": [
+          "renault",
+          "master",
+          "dacia",
+          "logan",
+          "mercedes",
+          "sprinter",
+          "non",
+          "attribuee"
+        ],
+        "taux": "50.0"
+      }
+    ]
+  },
+  "detail_fuites": [
+    {
+      "document": "Contrat de pret - Fiduciaire.pdf",
+      "categorie": "entreprise",
+      "valeur": "145782",
+      "vu_dans": [
+        "anonymiser_fichier {\"nom_fichier\":\"F-HU6QE\",\"confirmer\":true}",
+        "fichier Contrat de pret - Fiduciaire-anonymise.md"
+      ]
+    }
+  ]
+}
