@@ -85,6 +85,36 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.2.0 (la confiance, 20/10/2026) : cinq chantiers pour qu'une entreprise
+puisse vérifier avant d'acheter.
+1. **Journal « Ce que Claude a vu »** (`server/journal.js`, outil `journal_ia`) :
+   chaque réponse envoyée à l'IA est notée sur le poste après le verrou de
+   sortie (`journal-ia/AAAA-MM.jsonl`, droits 600) ; la page locale
+   `CE-QUE-CLAUDE-A-VU.html` revérifie tout contre la clé ACTUELLE (audit
+   rétroactif), montre une fuite par son code, jamais par sa valeur, et ne cite
+   des demandes de l'IA que le nom des paramètres.
+2. **Chiffres protégés par défaut** (`server/chiffres.js`, paramètre `chiffres`) :
+   gabarit (valeurs factices, défaut), indice (facteur secret par feuille,
+   arithmétique juste) ou clair (sur demande). Dates lisibles. Correspondance
+   cellule → valeur dans `.nanomizer-chiffres-*.json`.
+3. **Remise des chiffres et tableau de bord local** (`remettre_chiffres`,
+   `tableau_de_bord`) : l'IA construit sur le gabarit ou décrit un tableau de
+   bord ; Nanomizer rend le résultat réel sur le poste, en éditant le XML du
+   .xlsx (graphiques conservés, caches retirés, une cellule retouchée n'est
+   jamais écrasée) ou en dessinant une page HTML autonome. Le protocole interdit
+   à l'IA de créer un artefact avec les données de l'utilisateur.
+4. **Essai gratuit de 14 jours intégré**, sans serveur ; **devis et factures**
+   (`scripts/devis.mjs`).
+5. **Dossier de confiance** (`confiance/`) : fiche sécurité, correspondance loi
+   09-08 / RGPD / guide CNB, modèle d'analyse d'impact, cahier des charges
+   d'audit. Et la preuve « zéro réseau » à l'exécution : `test/reseau.test.js`
+   fait tourner tout le parcours sous le modèle de permissions de Node, réseau
+   interdit (Node 25+).
+Aussi : le refus des fichiers interdits porte sur le chemin entier. Banc
+d'essai : 201/201 (montants des tableurs compris).
+Changement de comportement : les montants d'un tableur ne sont plus montrés à
+l'IA par défaut — `chiffres: "clair"` rétablit la v2.1.
+
 v2.1.1 (numéro RC après une ville, 20/10/2026) : trouvé par le banc d'essai
 des fuites (`npm run bench`, `bench/`) — « RC Rabat 145782 » sortait en clair
 d'un PDF, car le motif RC n'acceptait que de la ponctuation entre le libellé et
