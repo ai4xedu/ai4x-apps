@@ -25,7 +25,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { knownValueMatcher, CODE_SRC } from "./verrou.js";
-import { guardText, MASK } from "./sortie.js";
+import { guardText, MASK, OWN_LINKS } from "./sortie.js";
 import { PREFIX_LABEL } from "./engine.js";
 
 export const JOURNAL_DIRNAME = "journal-ia";
@@ -73,8 +73,14 @@ export function readJournal(dir) {
    cherche ce qui n'aurait pas dû y être. Renvoie le texte « propre » (fuites
    remplacées par leur code, marquées) et les comptes. */
 export function inspect(texte, book) {
+  // Nos propres tournures (« Ce que Claude a vu », « TABLEAU CODÉ »…) ne sont
+  // pas des données : si un mot qu'elles contiennent entre plus tard dans la
+  // clé (« Claude », « Tableau »), elles ne deviennent pas des fuites.
+  const own = [];
+  let s = String(texte);
+  for (const rx of OWN_LINKS) s = s.replace(rx, (m) => { own.push(m); return `\u0002${own.length - 1}\u0002`; });
   const shelter = [];
-  let s = String(texte).replace(CODE_RX, (m) => { shelter.push(m); return `\u0000${shelter.length - 1}\u0000`; });
+  s = s.replace(CODE_RX, (m) => { shelter.push(m); return `\u0000${shelter.length - 1}\u0000`; });
   const leaks = [];
   const known = book ? knownValueMatcher(book) : null;
   if (known) {
@@ -85,10 +91,10 @@ export function inspect(texte, book) {
   }
   const g = guardText(s, {});
   s = g.text;
-  const numbers = (s.replace(/\u0000\d+\u0000|\u0001[^\u0001]*\u0001/g, " ").match(NUMBER_RX) || [])
+  const numbers = (s.replace(/\u0000\d+\u0000|\u0001[^\u0001]*\u0001|\u0002\d+\u0002/g, " ").match(NUMBER_RX) || [])
     .filter((n) => n.replace(/\D/g, "").length >= 2);
   const codes = [...String(texte).matchAll(CODE_RX)].map((m) => m[0]);
-  s = s.replace(/\u0000(\d+)\u0000/g, (_, i) => shelter[Number(i)]);
+  s = s.replace(/\u0000(\d+)\u0000/g, (_, i) => shelter[Number(i)]).replace(/\u0002(\d+)\u0002/g, (_, i) => own[Number(i)]);
   return { clean: s, leaks, forms: g.masked, numbers: numbers.length, codes };
 }
 
@@ -148,7 +154,7 @@ function highlight(clean) {
   return esc(clean)
     .replace(/\u0001([^\u0001]*)\u0001/g, '<mark class="leak" title="était en clair">$1</mark>')
     .replace(new RegExp(CODE_SRC, "gu"), (m) => `<span class="code">${m}</span>`)
-    .replace(new RegExp(esc(MASK).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), '<mark class="leak">[MASQUÉ]</mark>');
+    .replace(new RegExp(esc(MASK).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), '<mark class="masked" title="retenu par le verrou">[MASQUÉ]</mark>');
 }
 
 /* La page locale. Hors ligne, autonome, aucune ressource externe. */
@@ -198,6 +204,7 @@ td.num { text-align:right; font-variant-numeric:tabular-nums; }
 .wrap { overflow-x:auto; }
 .code { font-family:var(--mono); font-size:.9em; background:var(--key-soft); color:var(--key); padding:0 .2em; }
 mark.leak { background:var(--leak-soft); color:var(--leak); font-weight:600; padding:0 .2em; }
+mark.masked { background:var(--key-soft); color:var(--key); padding:0 .2em; }
 details { background:var(--surface); border:1px solid var(--line); } details + details { border-top:0; }
 summary { cursor:pointer; padding:.55rem .8rem; display:flex; flex-wrap:wrap; gap:.4rem 1rem; align-items:baseline; }
 summary:focus-visible { outline:2px solid var(--key); outline-offset:-2px; }

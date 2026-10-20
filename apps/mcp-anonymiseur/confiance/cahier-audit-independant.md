@@ -29,7 +29,7 @@ réelles, dans les limites annoncées.*
 
 ## Ce que nous fournissons
 
-- Le code source, la suite de tests (123 tests), le banc d'essai et son corpus,
+- Le code source, la suite de tests (125 tests), le banc d'essai et son corpus,
   la campagne de validation de l'artefact.
 - Une licence d'audit et l'accès à l'équipe pendant la mission.
 

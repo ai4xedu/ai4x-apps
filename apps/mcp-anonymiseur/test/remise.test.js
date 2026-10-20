@@ -150,3 +150,11 @@ test("mode indice : les proportions vues par l'IA sont justes, la remise rend le
   const real = XLSX.readFile(path.join(outdir, newest(/^dashboard-decode-.*\.xlsx$/)));
   assert.equal(real.Sheets[data].D2.v, 14500);
 });
+
+test("le nom du classeur rendu réel est codé : un nom de client dans le nom de fichier ne sort pas", async () => {
+  const anon = newest(/-anonymise\.xlsx$/);
+  fs.copyFileSync(path.join(outdir, anon), path.join(workdir, "Bilan Kettani 2026.xlsx"));
+  const t = await call("remettre_chiffres", { nom_fichier: "Bilan Kettani 2026.xlsx" });
+  assert.match(t, /✅ Classeur réel écrit/);
+  assert.ok(!/Kettani/.test(t), `le nom du client apparaît dans le chemin annoncé :\n${t}`);
+});

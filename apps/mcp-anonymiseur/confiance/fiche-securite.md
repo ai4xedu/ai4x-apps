@@ -1,7 +1,7 @@
 # Nanomizer — fiche sécurité
 
 *Pour le service informatique, le DPO ou l'associé qui valide l'outil. Version
-du connecteur : 2.3.0. Tout ce qui est écrit ici se vérifie : voir « Comment le
+du connecteur : 2.3.1. Tout ce qui est écrit ici se vérifie : voir « Comment le
 vérifier vous-même ».*
 
 ## En une phrase
@@ -27,7 +27,7 @@ ses valeurs.
 ## Les protections, empilées
 
 1. **Le verrou** : codage *fail-closed*. Seul ce qui est prouvé inoffensif
-   reste lisible (mots d'un dictionnaire de 336 000 formes, nombres non
+   reste lisible (mots d'un dictionnaire de plus de 320 000 formes, nombres non
    identifiants, liste blanche) ; tout le reste est codé.
 2. **Le contrôle d'aperçu** : chaque cellule et chaque ligne montrée à l'IA
    repasse au verrou ; un doute la masque.
@@ -58,7 +58,7 @@ ses valeurs.
 - **La détection** : le banc d'essai public (`npm run bench`) mesure 201/201
   valeurs sensibles codées sur 15 documents fictifs (droit, finance, monétique),
   avec ses limites écrites.
-- **Le code** : JavaScript lisible, sans dépendance réseau ; 123 tests, dont une
+- **Le code** : JavaScript lisible, sans dépendance réseau ; 125 tests, dont une
   chasse aux fuites qui appelle tous les outils.
 
 ## Ce que Nanomizer ne couvre pas

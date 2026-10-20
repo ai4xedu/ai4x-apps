@@ -62,7 +62,7 @@ import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME
 import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 
-export const VERSION = "2.3.0";
+export const VERSION = "2.3.1";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -591,7 +591,7 @@ function unexpected(e) {
   const code = (e && e.code) || (e && e.name) || "erreur";
   if (/^E(ACCES|PERM)$/.test(code)) {
     return `Fichier inaccessible (${code}) : le connecteur n'a pas le droit de le lire. Sur Mac, vérifiez Réglages ` +
-      "Système → Confidentialité et sécurité → Fichiers et dossiers (Claude), ou les droits du fichier.";
+      "Système → Confidentialité et sécurité → Fichiers et dossiers (l'application Claude Desktop), ou les droits du fichier.";
   }
   if (code === "ENOENT") return "Fichier introuvable (il a peut-être été déplacé ou renommé). Relance lister_fichiers.";
   return `Erreur inattendue (${code}). Réessaie ; si elle persiste, redémarre Claude Desktop.`;
@@ -1541,8 +1541,12 @@ tool(
       );
     }
     ensureOutdir();
-    const base = String(nom_sortie || path.basename(file)).replace(/\.(xlsx|xls)$/i, "").replace(/-anonymise$/i, "")
-      .replace(/[^\p{L}\p{N} ._-]/gu, "_").slice(0, 80) || "classeur";
+    // Le nom du fichier produit est CODÉ comme toute autre sortie : un
+    // classeur « Bilan Benali.xlsx » ne doit pas faire apparaître « Benali »
+    // dans le chemin annoncé (trouvé par le journal lors de la répétition du
+    // 20/10/2026). Les codes créés pour le nom sont gardés dans la clé.
+    const base = codedBase(String(nom_sortie || path.basename(file)).replace(/\.(xlsx|xls)$/i, "").replace(/-anonymise$/i, ""), book, "classeur");
+    try { saveBook(book); } catch {}
     const outPath = path.join(OUTDIR, `${base}-decode-${stampNow()}.xlsx`);
     fs.writeFileSync(outPath, res.buf, { mode: 0o600 });
     lockDown(outPath);

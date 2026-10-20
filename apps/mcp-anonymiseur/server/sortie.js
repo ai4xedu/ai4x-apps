@@ -20,9 +20,21 @@ import { knownValueMatcher } from "./verrou.js";
 
 export const MASK = "[MASQUÉ]";
 
-/* Nos propres liens (achat, appli gratuite, téléchargement de Claude) ne
-   sont pas des données : ils sont mis à l'abri avant le filtrage. */
-const OWN_LINKS = [
+/* Nos propres liens (achat, appli gratuite, téléchargement de Claude) et nos
+   propres tournures ne sont pas des données : ils sont mis à l'abri avant le
+   filtrage. Répétition du 20/10/2026 : un fichier « … (fait par Claude) »
+   avait mis « Claude » (prénom réel, codé à bon droit) dans la clé ; le verrou
+   recodait alors « Ce que Claude a vu » en « Ce que PRENOM-035 a vu », et le
+   chemin de la page annoncé n'existait plus. Seules des tournures EXACTES du
+   produit sont abritées : un « Claude » isolé reste codable. */
+export const OWN_LINKS = [
+  /\bClaude Desktop\b/g,
+  /\b[Cc]e que Claude a vu\b/g,
+  /CE-QUE-CLAUDE-A-VU\.html/g,
+  /\b(?:TABLEAU|DOCUMENT|CONTENU) CODÉ(?![\p{L}\p{N}])/gu,
+  // Les noms de modes, en capitales dans nos plans et comptes rendus.
+  /(?<![\p{L}\p{N}])(?:TABLEAU|DOCUMENT|TEXTE|GABARIT|INDICE|CLAIR)(?![\p{L}\p{N}])/gu,
+  /\bTableau de bord\b/g,
   /https:\/\/wa\.me\/212680092567(?:\?text=[^\s)]*)?/g,
   /https:\/\/ai4x\.academy\/[^\s)]*/g,
   /https:\/\/claude\.ai\/download/g,

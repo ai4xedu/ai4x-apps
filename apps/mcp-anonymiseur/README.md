@@ -85,6 +85,21 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.3.1 (répétition de démo, 20/10/2026) : trois défauts trouvés en rejouant
+le parcours d'une démonstration, sans clé, sur un dossier fictif.
+1. Nos propres tournures (« Ce que Claude a vu », « Claude Desktop »,
+   « TABLEAU CODÉ », les noms de modes) sont abritées par le verrou de sortie et
+   par l'audit du journal (`OWN_LINKS`, sortie.js). Avant : un prénom réel
+   « Claude » entré dans la clé faisait annoncer `CE-QUE-PRENOM-035-A-VU.html`
+   (fichier inexistant) et le journal signalait de fausses fuites. Un « Claude »
+   isolé reste codable. Les messages de l'audit de confinement disent « l'IA »
+   plutôt que « Claude ».
+2. `remettre_chiffres` code le nom du classeur produit (avant : « Bilan
+   Benali.xlsx » faisait apparaître « Benali » dans le chemin annoncé). Trouvé
+   par l'audit rétroactif du journal — il a fait son travail.
+3. Dans la page du journal, un `[MASQUÉ]` (élément déjà retenu) n'est plus
+   affiché comme une fuite.
+
 v2.3.0 (la clé d'équipe, 20/10/2026) : tout le cabinet code « Benali » de la
 même façon, sans serveur ni synchronisation (`server/equipe.js`, réglage
 « Dossier de clé d'équipe » → `ANX_TEAM_DIR`). En mode équipe, le code est tiré

@@ -104,3 +104,18 @@ test("inspect : un code déjà posé n'est pas une fuite ; une valeur connue en 
   const html = renderReport(auditJournal({ entries: [{ t: "2026-10-20T10:00:00Z", outil: "x", args: "", texte: "Voir Kettani demain" }] }, [], book));
   assert.ok(!html.includes("Kettani"));
 });
+
+/* Répétition du 20/10/2026 : « Claude » (prénom réel) et « Tableau » (mot d'un
+   nom de fichier) étaient entrés dans la clé ; nos propres tournures étaient
+   alors recodées par le verrou et signalées comme fuites par le journal. */
+test("nos propres tournures ne sont ni recodées ni prises pour des fuites ; un « Claude » isolé, si", async () => {
+  const { guardText } = await import("../server/sortie.js");
+  const book = newCodebook();
+  const claude = codeFor(book, "prenom", "Claude").code;
+  codeFor(book, "nom", "Tableau");
+  const own = "Ouvrez CE-QUE-CLAUDE-A-VU.html : la page « Ce que Claude a vu ». Redémarrez Claude Desktop.\nPLAN — mode TABLEAU — rien n'est écrit.\nTABLEAU CODÉ :\nTableau de bord dessiné.";
+  assert.equal(guardText(own, { book }).text, own);
+  assert.equal(inspect(own, book).leaks.length, 0);
+  assert.match(guardText("Le client Claude a signé.", { book }).text, new RegExp(claude));
+  assert.deepEqual(inspect("Le client Claude a signé.", book).leaks, [claude]);
+});
