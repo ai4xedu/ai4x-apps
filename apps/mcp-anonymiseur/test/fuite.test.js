@@ -171,6 +171,7 @@ test("chaque outil, chaque chemin : aucune valeur réelle ne sort", async () => 
   await call("lire_scan", { nom_fichier: handles[0] });
   await call("etat_cle");
   await call("verifier_confinement");
+  await call("journal_ia");
   await call("deanonymiser", { contenu: "Relancer NOM-001 et PRENOM-001 au TEL-001.", nom_sortie: "relance" });
 
   assert.ok(outputs.length >= 15);
@@ -195,6 +196,10 @@ test("les fichiers produits pour l'IA ne contiennent aucune valeur réelle, ni d
     }
     assertNoLeak(`contenu de ${n}`, content);
   }
+});
+
+test("la page « Ce que Claude a vu » ne contient aucune valeur réelle", () => {
+  assertNoLeak("CE-QUE-CLAUDE-A-VU.html", fs.readFileSync(path.join(workdir, "Anonymiseur-Ai4x", "CE-QUE-CLAUDE-A-VU.html"), "utf8"));
 });
 
 test("…mais le travail reste possible : montants, dates et langage courant lisibles", () => {

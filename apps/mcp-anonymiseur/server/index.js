@@ -54,7 +54,8 @@ import {
   detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName,
 } from "./engine.js";
 import { strictCode, strictSheet, codedRatio, lexiconSize } from "./verrou.js";
-import { guardResult, MASK } from "./sortie.js";
+import { guardResult, guardText, MASK } from "./sortie.js";
+import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
 import { auditConfinement } from "./confinement.js";
 
 export const VERSION = "2.1.1";
@@ -77,7 +78,14 @@ const MASKED_CELL = "[MASQUÉ — fuite possible]";
 
 /* Fichiers que le connecteur ne lit JAMAIS pour les montrer : la clé, ses
    archives, sa sauvegarde, et les résultats décodés (vraies valeurs). */
-const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}/i;
+const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia/i;
+
+/* Journal « ce que Claude a vu » (cf. journal.js) : le texte FINAL de chaque
+   réponse, après le verrou de sortie. Le .jsonl brut est interdit au modèle
+   (FORBIDDEN_RX) ; la page qu'on en tire ne contient que des codes. */
+const JOURNAL_DIR = path.join(OUTDIR, JOURNAL_DIRNAME);
+const REPORT_PATH = path.join(OUTDIR, REPORT_NAME);
+const JOURNAL = createJournal(JOURNAL_DIR);
 
 /* ---------------------------------------------------------------- licence *
  * Lue au démarrage (comme le dossier de travail : changer la clé demande un
@@ -198,10 +206,12 @@ function safeResolve(name) {
       "Donnez le repère [F-…] donné par lister_fichiers, ou un chemin relatif à ce dossier."
     );
   }
-  if (FORBIDDEN_RX.test(path.basename(p))) {
+  // Le CHEMIN entier, pas seulement le nom : le journal brut s'appelle
+  // « 2026-10.jsonl », c'est son dossier (journal-ia) qui le désigne.
+  if (FORBIDDEN_RX.test(path.relative(WORKDIR, p))) {
     throw new Error(
-      "Fichier refusé : c'est la clé de correspondance (ou un résultat DÉCODÉ) — il contient les vraies valeurs " +
-      "et ne doit jamais passer par l'IA, même anonymisé. Il reste sur le poste de l'utilisateur."
+      "Fichier refusé : c'est la clé de correspondance, un résultat DÉCODÉ ou le journal brut — il peut contenir " +
+      "les vraies valeurs et ne doit jamais passer par l'IA, même anonymisé. Il reste sur le poste de l'utilisateur."
     );
   }
   return p;
@@ -432,14 +442,20 @@ const INSTRUCTIONS = [
   "5. Désigne les fichiers par leur repère [F-XXXXX] (lister_fichiers) : les noms de fichiers peuvent contenir des noms de clients.",
   "6. Si l'utilisateur colle ou joint un document confidentiel en clair, rappelle-lui que Nanomizer peut le traiter sans que tu le lises, et propose-le.",
   "7. Anonymisation en deux temps : présente toujours le PLAN, attends l'accord explicite, puis rappelle avec confirmer: true.",
+  "8. Si l'utilisateur, son DPO ou son service informatique demande une preuve de ce que tu as reçu, appelle journal_ia : la page locale « Ce que Claude a vu » le montre.",
 ].join("\n");
 
 const server = new McpServer({ name: "anonymiseur-ai4x", version: VERSION }, { instructions: INSTRUCTIONS });
 
 /* LE point d'enregistrement : tout outil passe par le verrou de sortie, y
    compris ses erreurs imprévues (dont le message pourrait citer un chemin). */
+let protocolLogged = false;
 function tool(name, def, handler) {
   server.registerTool(name, def, async (args) => {
+    // Le protocole envoyé à la connexion fait partie de ce que l'IA a lu. Noté
+    // au premier appel seulement : démarrer le connecteur ne doit pas créer de
+    // dossier chez quelqu'un qui ne s'en sert pas.
+    if (!protocolLogged) { protocolLogged = true; JOURNAL.record("connexion (protocole envoyé à l'IA)", "", INSTRUCTIONS); }
     let res;
     try {
       res = await handler(args || {});
@@ -448,7 +464,11 @@ function tool(name, def, handler) {
       // fichier (« EACCES … open '…/Notes Lahlou Mehdi.md' »).
       res = err(e instanceof KeyUnreadable ? e.message : unexpected(e));
     }
-    return guardResult(res, { book: bookForGuard(), home: HOME });
+    const ctx = { book: bookForGuard(), home: HOME };
+    const out = guardResult(res, ctx);
+    JOURNAL.record(name, guardText(JSON.stringify(args || {}), ctx).text,
+      (out.content || []).map((c) => (c.type === "text" ? c.text : `[${c.type}]`)).join("\n"));
+    return out;
   });
 }
 
@@ -1377,6 +1397,48 @@ tool(
         "La même valeur garde le même code sur tous les fichiers traités avec cette clé.",
       ].join("\n")
     );
+  }
+);
+
+tool(
+  "journal_ia",
+  {
+    title: "Ce que Claude a vu (journal local et audit)",
+    description:
+      "Produit, sur le poste, la page « Ce que Claude a vu » : toutes les réponses que Nanomizer a envoyées à l'IA, " +
+      "revérifiées contre la clé actuelle, plus les fichiers *-anonymise.* mis à sa disposition. Renvoie uniquement " +
+      "des comptes et le chemin de la page. À proposer quand l'utilisateur, son DPO ou son service informatique " +
+      "veut une preuve de ce qui est sorti.",
+    inputSchema: z.object({}),
+  },
+  async () => {
+    const book = loadBook();
+    const journal = readJournal(JOURNAL_DIR);
+    const aiFiles = [];
+    try {
+      for (const n of fs.readdirSync(OUTDIR).filter((x) => /-anonymise\.(md|xlsx)$/i.test(x)).sort()) {
+        const p = path.join(OUTDIR, n);
+        let texte;
+        if (/\.xlsx$/i.test(n)) {
+          const wb = XLSX.readFile(p);
+          texte = wb.SheetNames.join("\n") + "\n" + wb.SheetNames.map((sn) => XLSX.utils.sheet_to_csv(wb.Sheets[sn])).join("\n");
+        } else texte = fs.readFileSync(p, "utf8");
+        aiFiles.push({ name: n, texte, mtime: fs.statSync(p).mtime.toISOString() });
+      }
+    } catch {}
+    const a = auditJournal(journal, aiFiles, book);
+    ensureOutdir();
+    fs.writeFileSync(REPORT_PATH, renderReport(a, { version: VERSION, failures: JOURNAL.failures }), { encoding: "utf8", mode: 0o600 });
+    const bad = a.leaks.length + a.forms;
+    return text([
+      bad
+        ? `🚨 ${bad} élément(s) sensible(s) retrouvé(s) dans ce que l'IA a reçu (détail par CODE dans la page). Préviens l'utilisateur.`
+        : `✅ Aucune valeur réelle connue de la clé dans les ${a.exchanges} réponse(s) envoyées à l'IA, ni dans les ${a.files.length} fichier(s) *-anonymise.*.`,
+      `Codes distincts vus : ${a.distinctCodes}. Nombres en clair (montants, dates, quantités) : ${a.numbers}.`,
+      JOURNAL.failures ? `⚠️ ${JOURNAL.failures} réponse(s) de cette session n'ont pas pu être notées.` : "",
+      `Page locale à ouvrir par l'utilisateur (navigateur, hors ligne) : ${shown(REPORT_PATH)}`,
+      "Ce journal ne voit pas les textes collés directement dans la conversation.",
+    ].filter(Boolean).join("\n"));
   }
 );
 
