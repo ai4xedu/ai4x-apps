@@ -4,8 +4,8 @@
   "documents": 15,
   "sorties_lues": 49,
   "valeurs_sensibles": 183,
-  "fuites": 1,
-  "taux_detection": "99.5",
+  "fuites": 0,
+  "taux_detection": "100.0",
   "par_categorie": {
     "personne": {
       "libelle": "Noms et prénoms",
@@ -52,8 +52,8 @@
     "entreprise": {
       "libelle": "Identifiants d'entreprise (ICE, IF, RC, CNSS, patente, SIRET)",
       "total": 16,
-      "leaked": 1,
-      "taux": "93.8"
+      "leaked": 0,
+      "taux": "100.0"
     },
     "dossier": {
       "libelle": "Références de dossier (RG, contrat, sinistre)",
@@ -76,8 +76,8 @@
     },
     "finance": {
       "total": 69,
-      "leaked": 1,
-      "taux": "98.6"
+      "leaked": 0,
+      "taux": "100.0"
     },
     "cartes": {
       "total": 36,
@@ -339,15 +339,5 @@
       }
     ]
   },
-  "detail_fuites": [
-    {
-      "document": "Contrat de pret - Fiduciaire.pdf",
-      "categorie": "entreprise",
-      "valeur": "145782",
-      "vu_dans": [
-        "anonymiser_fichier {\"nom_fichier\":\"F-HU6QE\",\"confirmer\":true}",
-        "fichier Contrat de pret - Fiduciaire-anonymise.md"
-      ]
-    }
-  ]
+  "detail_fuites": []
 }

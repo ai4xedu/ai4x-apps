@@ -38,6 +38,8 @@ const CANARIES = [
   "Lahlou", "Mehdi", "Kettani", "youssef.tazi@gmail.com", "0661234567", "612345678", "(0)6 12",
   // v2.1 : cartes de test Visa/Mastercard et permis marocains.
   "4111 1111 1111 1111", "4111111111111111", "5555 5555 5555 4444", "4012 8888 8888 1881", "284731", "551902", "090417",
+  // Banc d'essai du 20/10/2026 : numéro RC précédé d'une ville.
+  "145782",
 ];
 // Mots des canaris qui sont AUSSI des mots courants : cherchés avec leur
 // majuscule seulement (« blanc » peut légitimement apparaître, « Blanc » non).
@@ -91,7 +93,8 @@ before(async () => {
     "Rendez-vous avec pierre rousseau chez Transports Moreau & Fils SAS.\n" +
     "Son email : p.rousseau@moreau-transports.fr, son IBAN FR76 3000 6000 0112 3456 7890 189.\n" +
     "M. Petit a confirmé. Le témoin, El Idrissi, habite 12 rue des Lilas.\n" +
-    "La société Maghreb Logistique est la partie adverse.\n", "utf8");
+    "La société Maghreb Logistique est la partie adverse.\n" +
+    "Elle est immatriculée RC Rabat 145782.\n", "utf8");
 
   // 3. Des conclusions en PDF natif (générateur ASCII).
   writeMinimalPdf(path.join(workdir, "Conclusions Dupont.pdf"), [
