@@ -398,6 +398,32 @@ check("C2", "sans licence, la DÉ-ANONYMISATION fonctionne toujours (rien n'est 
 await sansLicence.close();
 fs.rmSync(wd2, { recursive: true, force: true });
 
+// La suite de tests signe ses licences avec une clé de TEST publiée dans le
+// dépôt. Le serveur ne l'accepte que lancé depuis les sources : l'artefact ne
+// doit ni la contenir, ni honorer une licence qu'elle a signée.
+const testKeyFile = path.join(here, "fixtures", "licence-test.key");
+check("C3a", "l'artefact n'embarque pas la clé de test",
+  !fs.existsSync(path.join(unpacked, "test", "fixtures", "licence-test.pub")));
+if (fs.existsSync(testKeyFile)) {
+  const testKey = crypto.createPrivateKey({
+    key: Buffer.from(fs.readFileSync(testKeyFile, "utf8").trim(), "base64"), format: "der", type: "pkcs8",
+  });
+  const body = b64url(Buffer.from(JSON.stringify({ v: 1, org: "Clé de test", seats: 1, iat: "2026-01-01", exp: "9999-12-31", life: true }), "utf8"));
+  const wd3 = fs.mkdtempSync(path.join(os.tmpdir(), "anx-testkey-"));
+  makeFiles(wd3);
+  const cleTest = new Client({ name: "campagne-testkey", version: "1.0.0" });
+  await cleTest.connect(new StdioClientTransport({
+    command: process.execPath,
+    args: [path.join(unpacked, "server", "index.js")],
+    env: { ...process.env, ANX_WORKDIR: wd3, ANX_LICENCE: `NANO1.${body}.${b64url(crypto.sign(null, Buffer.from(body), testKey))}` },
+  }));
+  const refus = record(await cleTest.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx" } }));
+  check("C3b", "une licence signée par la clé de test est REFUSÉE par l'artefact",
+    /signature invalide/.test(refus) && !/TABLEAU CODÉ/.test(refus));
+  await cleTest.close();
+  fs.rmSync(wd3, { recursive: true, force: true });
+}
+
 /* --------------------------------------------------------------- bilan */
 const failed = results.filter((r) => !r.ok);
 const a5 = results.find((r) => r.id === "A5");

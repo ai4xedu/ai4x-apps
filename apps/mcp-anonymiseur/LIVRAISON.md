@@ -60,9 +60,9 @@ mail, un dépôt git, un drive.
 Pour reconstruire le fichier après une mise à jour du code :
 
 ```bash
-npm test                                   # 88 tests, dont la chasse aux fuites
+npm test                                   # 94 tests, dont la chasse aux fuites (sans clé privée)
 npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb
-node test/campagne-mvp.mjs                 # 42 contrôles sur l'artefact — A5 doit être vert
+node test/campagne-mvp.mjs                 # 44 contrôles sur l'artefact (clé privée requise) — A5 et C3 verts
 ```
 
 ## 4. Après l'installation (2 minutes avec le client)

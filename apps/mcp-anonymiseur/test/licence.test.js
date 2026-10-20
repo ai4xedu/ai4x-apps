@@ -7,11 +7,13 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { TEST_KEY, mint as mintTest } from "./licence-test.mjs";
 import { parseKey, licenceStatus, readLicence, blockedMessage, warningBanner, b64urlEncode, isUnsubstituted } from "../server/licence.js";
 
-/* Émet une clé signée par la VRAIE clé privée si elle est disponible sur ce
-   poste ; sinon, les tests de signature valide sont ignorés (un contributeur
-   sans la clé privée doit quand même pouvoir lancer la suite). */
+/* Les clés sont signées par la clé de TEST du dépôt (cf. licence-test.mjs) :
+   la suite tourne sur tous les postes. La VRAIE clé privée, si elle est sur
+   ce poste, ne sert qu'à un contrôle : qu'elle corresponde toujours à la clé
+   publique embarquée. */
 const PRIVATE_KEY_FILE = process.env.NANOMIZER_PRIVATE_KEY_FILE ||
   path.join(os.homedir(), "Desktop", "nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt");
 
@@ -30,8 +32,19 @@ function mint(payload, key) {
   return `NANO1.${body}.${sig}`;
 }
 
-const KEY = privateKeyOrNull();
-const skip = KEY ? false : "clé privée absente de ce poste";
+const KEY = TEST_KEY;
+const PROD_KEY = privateKeyOrNull();
+
+test("la vraie clé privée correspond à la clé publique embarquée", { skip: PROD_KEY ? false : "clé privée absente de ce poste" }, () => {
+  assert.equal(parseKey(mintTest({ v: 1, org: "Prod", seats: 1, iat: "2026-01-01", exp: "2099-01-01" }, PROD_KEY)).ok, true);
+});
+
+test("une clé signée par une clé INCONNUE est refusée", () => {
+  const { privateKey } = crypto.generateKeyPairSync("ed25519");
+  const res = parseKey(mintTest({ v: 1, org: "Pirate", seats: 1, iat: "2026-01-01", exp: "2099-01-01" }, privateKey));
+  assert.equal(res.ok, false);
+  assert.match(res.reason, /signature invalide/);
+});
 
 test("une clé absente ou malformée est refusée, avec une raison lisible", () => {
   assert.equal(parseKey("").ok, false);
@@ -40,7 +53,7 @@ test("une clé absente ou malformée est refusée, avec une raison lisible", () 
   assert.match(parseKey("NANO1.abc").reason, /format inconnu/);
 });
 
-test("une clé inventée ou modifiée est rejetée par la signature", { skip }, () => {
+test("une clé inventée ou modifiée est rejetée par la signature", () => {
   const good = mint({ v: 1, org: "Cabinet Test", seats: 5, iat: "2026-01-01", exp: "2027-01-01" }, KEY);
   assert.equal(parseKey(good).ok, true);
   // On gonfle le nombre de postes dans le payload : la signature ne suit pas.
@@ -53,7 +66,7 @@ test("une clé inventée ou modifiée est rejetée par la signature", { skip }, 
   assert.match(res.reason, /signature invalide/);
 });
 
-test("statut : valide, bientôt expirée, expirée — sur une horloge injectée", { skip }, () => {
+test("statut : valide, bientôt expirée, expirée — sur une horloge injectée", () => {
   const key = mint({ v: 1, org: "Cabinet Sekkat", seats: 5, iat: "2026-01-01", exp: "2026-12-31" }, KEY);
 
   const large = licenceStatus(key, new Date("2026-06-01T10:00:00"));
@@ -75,7 +88,7 @@ test("statut : valide, bientôt expirée, expirée — sur une horloge injectée
   assert.match(expiree.reason, /expirée/);
 });
 
-test("le message de blocage vend, ne punit pas, et promet le décodage", { skip }, () => {
+test("le message de blocage vend, ne punit pas, et promet le décodage", () => {
   const key = mint({ v: 1, org: "X", seats: 1, iat: "2026-01-01", exp: "2026-01-02" }, KEY);
   const msg = blockedMessage(licenceStatus(key, new Date("2026-06-01")));
   assert.match(msg, /expiré/);
@@ -137,7 +150,7 @@ test("la clé se lit dans l'env, ou dans licence.txt du dossier de travail", () 
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-test("licence À VIE : valide dans 100 ans, jamais d'avertissement, affichée « à vie »", { skip }, () => {
+test("licence À VIE : valide dans 100 ans, jamais d'avertissement, affichée « à vie »", () => {
   const key = mint({ v: 1, org: "Maître Sekkat", seats: 1, iat: "2026-09-18", exp: "9999-12-31", life: true }, KEY);
   for (const when of ["2026-09-18", "2031-01-01", "2126-06-30"]) {
     const st = licenceStatus(key, new Date(when + "T10:00:00"));
@@ -149,7 +162,7 @@ test("licence À VIE : valide dans 100 ans, jamais d'avertissement, affichée «
   }
 });
 
-test("licence À VIE : une v1.6 déjà installée l'accepte aussi (exp lointain, pas seulement le drapeau)", { skip }, () => {
+test("licence À VIE : une v1.6 déjà installée l'accepte aussi (exp lointain, pas seulement le drapeau)", () => {
   // Ce que fait emettre-licence.mjs --a-vie : exp « 9999-12-31 » ET life: true.
   const key = mint({ v: 1, org: "Cabinet Ancien", seats: 1, iat: "2026-09-18", exp: "9999-12-31", life: true }, KEY);
   const payload = parseKey(key).payload;
@@ -158,7 +171,7 @@ test("licence À VIE : une v1.6 déjà installée l'accepte aussi (exp lointain,
   assert.ok(!Number.isNaN(expires.getTime()) && expires > new Date("2126-01-01"));
 });
 
-test("une licence à vie falsifiée (drapeau ajouté à une clé datée) est refusée", { skip }, () => {
+test("une licence à vie falsifiée (drapeau ajouté à une clé datée) est refusée", () => {
   const key = mint({ v: 1, org: "Malin", seats: 1, iat: "2026-01-01", exp: "2026-02-01" }, KEY);
   const [head, body, sig] = key.split(".");
   const p = JSON.parse(Buffer.from(body.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8"));

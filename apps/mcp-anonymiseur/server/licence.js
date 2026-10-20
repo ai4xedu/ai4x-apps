@@ -31,6 +31,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
 
 /* Clé PUBLIQUE de signature (SPKI, base64). La privée n'est pas dans ce
    dépôt : sans elle, personne ne peut émettre de licence ; avec elle,
@@ -60,12 +61,26 @@ export const OFFER = {
    à vie : ils afficheront une échéance lointaine au lieu de la refuser. */
 export const LIFETIME_EXP = "9999-12-31";
 
-function publicKey() {
-  return crypto.createPublicKey({
-    key: Buffer.from(PUBLIC_KEY_B64, "base64"),
-    format: "der",
-    type: "spki",
-  });
+/* Clé publique de TEST (test/fixtures/licence-test.pub, privée jumelle à
+   côté, toutes deux dans le dépôt) : elle permet à n'importe qui — CI,
+   contributeur — de lancer toute la suite, chasse aux fuites comprise, sans
+   la vraie clé privée. Elle n'est acceptée QUE si ce fichier existe à côté
+   des sources : `test/` est exclu du bundle (.mcpbignore), donc l'artefact
+   distribué ne fait confiance qu'à la clé de production — la campagne le
+   vérifie (C3). Une licence signée par la clé de test ne vaut rien chez un
+   client. */
+const TEST_PUBLIC_KEY_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "test", "fixtures", "licence-test.pub");
+
+function spki(b64) {
+  return crypto.createPublicKey({ key: Buffer.from(b64, "base64"), format: "der", type: "spki" });
+}
+
+let trusted;
+function publicKeys() {
+  if (trusted) return trusted;
+  trusted = [spki(PUBLIC_KEY_B64)];
+  try { trusted.push(spki(fs.readFileSync(TEST_PUBLIC_KEY_FILE, "utf8").trim())); } catch {}
+  return trusted;
 }
 
 function b64urlDecode(s) {
@@ -103,7 +118,7 @@ export function parseKey(raw) {
     // ⚠️ La signature porte sur la charge ENCODÉE (parts[1] tel quel), pas sur
     // le JSON décodé — c'est ce que signe scripts/emettre-licence.mjs. Vérifier
     // le décodé rejetterait toutes les licences, y compris les vraies.
-    valid = crypto.verify(null, Buffer.from(parts[1]), publicKey(), b64urlDecode(parts[2]));
+    valid = publicKeys().some((k) => crypto.verify(null, Buffer.from(parts[1]), k, b64urlDecode(parts[2])));
   } catch { valid = false; }
   if (!valid) return { ok: false, reason: "signature invalide (clé modifiée ou inventée)" };
   return { ok: true, payload };
