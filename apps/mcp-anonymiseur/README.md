@@ -145,6 +145,14 @@ npm test           # node --test : moteur + E2E stdio (vrai protocole MCP)
 npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb
 ```
 
+La suite tourne **sans la clé privée** : elle signe ses licences avec une clé
+de TEST publiée dans le dépôt (`test/fixtures/licence-test.key`,
+`test/licence-test.mjs`). Le serveur ne fait confiance à cette clé que lancé
+depuis les sources : `test/` est exclu du bundle, donc l'artefact distribué
+la refuse (contrôle C3 de la campagne). Une licence signée par la clé de test
+ne vaut rien chez un client. La vraie clé privée, si elle est sur le poste,
+ne sert qu'à un test : qu'elle corresponde toujours à la clé publique embarquée.
+
 Piège : le build ESM de SheetJS exige `XLSX.set_fs(fs)` avant tout
 readFile/writeFile.
 
@@ -215,6 +223,8 @@ dossier de travail ; les trois situations (absente / refusée / expirée) ont
 maintenant trois messages distincts, chacun disant quel geste faire. Verrouillé
 par la série C de `test/campagne-mvp.mjs`, qui rejoue le cas sur l'artefact.
 
-La campagne de validation (`node test/campagne-mvp.mjs`, 42 contrôles) émet
+La campagne de validation (`node test/campagne-mvp.mjs`, 44 contrôles) émet
 elle-même une licence d'un jour avec la clé privée du poste — sans quoi elle ne
-testerait que l'écran de blocage.
+testerait que l'écran de blocage. Elle exige la VRAIE clé (elle teste
+l'artefact, qui ne connaît que la clé de production) et vérifie que la clé de
+test n'y est ni embarquée ni honorée (C3).

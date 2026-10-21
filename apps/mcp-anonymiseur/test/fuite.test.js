@@ -11,33 +11,20 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import * as XLSX from "xlsx";
 import * as _fs from "node:fs";
 import { writeMinimalPdf } from "./util-pdf.mjs";
-import { b64urlEncode } from "../server/licence.js";
+import { mint } from "./licence-test.mjs";
 XLSX.set_fs(_fs);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const serverPath = path.join(here, "..", "server", "index.js");
 
-function privateKey() {
-  try {
-    const f = process.env.NANOMIZER_PRIVATE_KEY_FILE ||
-      path.join(os.homedir(), "Desktop", "nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt");
-    const raw = fs.readFileSync(f, "utf8").split("\n").map((l) => l.trim())
-      .filter((l) => l.length > 40 && /^[A-Za-z0-9+/=]+$/.test(l)).pop();
-    return crypto.createPrivateKey({ key: Buffer.from(raw, "base64"), format: "der", type: "pkcs8" });
-  } catch { return null; }
-}
-const KEY = privateKey();
-const skip = KEY ? false : "clé privée absente de ce poste";
 function licenceAVie() {
-  const body = b64urlEncode(Buffer.from(JSON.stringify({ v: 1, org: "Suite fuites", seats: 1, iat: "2026-09-18", exp: "9999-12-31", life: true }), "utf8"));
-  return `NANO1.${body}.${b64urlEncode(crypto.sign(null, Buffer.from(body), KEY))}`;
+  return mint({ v: 1, org: "Suite fuites", seats: 1, iat: "2026-09-18", exp: "9999-12-31", life: true });
 }
 
 /* Les valeurs qui ne doivent JAMAIS sortir. Comparaison insensible à la
@@ -142,7 +129,7 @@ before(async () => {
   await client.connect(new StdioClientTransport({
     command: process.execPath,
     args: [serverPath],
-    env: { ...process.env, ANX_WORKDIR: workdir, ANX_LICENCE: KEY ? licenceAVie() : "" },
+    env: { ...process.env, ANX_WORKDIR: workdir, ANX_LICENCE: licenceAVie() },
   }));
 });
 
@@ -152,7 +139,7 @@ after(async () => {
   fs.rmSync(workdir, { recursive: true, force: true });
 });
 
-test("chaque outil, chaque chemin : aucune valeur réelle ne sort", { skip }, async () => {
+test("chaque outil, chaque chemin : aucune valeur réelle ne sort", async () => {
   // Lister : les noms de fichiers sont masqués, chaque fichier a un repère.
   const { t: liste } = await call("lister_fichiers");
   const handles = [...liste.matchAll(/\[(F-[A-Z2-7]{5})\]/g)].map((m) => m[1]);
@@ -187,7 +174,7 @@ test("chaque outil, chaque chemin : aucune valeur réelle ne sort", { skip }, as
   for (const o of outputs) assertNoLeak(`${o.name} ${JSON.stringify(o.args)}`, o.t);
 });
 
-test("les fichiers produits pour l'IA ne contiennent aucune valeur réelle, ni dans leur nom", { skip }, () => {
+test("les fichiers produits pour l'IA ne contiennent aucune valeur réelle, ni dans leur nom", () => {
   const out = path.join(workdir, "Anonymiseur-Ai4x");
   const produced = fs.readdirSync(out).filter((n) => /-anonymise\.(xlsx|md)$/.test(n) || /^rapport-lot-/.test(n));
   assert.ok(produced.length >= 5, `sorties attendues : ${produced.join(", ")}`);
@@ -207,7 +194,7 @@ test("les fichiers produits pour l'IA ne contiennent aucune valeur réelle, ni d
   }
 });
 
-test("…mais le travail reste possible : montants, dates et langage courant lisibles", { skip }, () => {
+test("…mais le travail reste possible : montants, dates et langage courant lisibles", () => {
   const all = outputs.map((o) => o.t).join("\n");
   assert.match(all, /4500/);
   assert.match(all, /Rappeler Mme/);           // le titre reste, le nom part
@@ -224,7 +211,7 @@ test("…mais le travail reste possible : montants, dates et langage courant lis
   assert.ok(CANARIES.concat(CANARIES_CASED).some((c) => fold(decoded).includes(fold(c))), `décodage vide : ${decoded}`);
 });
 
-test("la clé et les résultats décodés ne passent jamais par l'IA, même demandés", { skip }, async () => {
+test("la clé et les résultats décodés ne passent jamais par l'IA, même demandés", async () => {
   for (const f of ["Anonymiseur-Ai4x/cle-correspondance-NE-JAMAIS-PARTAGER.xlsx", "Anonymiseur-Ai4x/cle-de-session.json"]) {
     const { res, t } = await call("anonymiser_fichier", { nom_fichier: f });
     assert.ok(res.isError, `${f} aurait dû être refusé`);
@@ -235,7 +222,7 @@ test("la clé et les résultats décodés ne passent jamais par l'IA, même dema
   assert.ok(res.isError, "un résultat décodé ne doit pas repasser par l'IA");
 });
 
-test("la clé est lisible par le seul compte de l'utilisateur", { skip: skip || process.platform === "win32" }, () => {
+test("la clé est lisible par le seul compte de l'utilisateur", { skip: process.platform === "win32" }, () => {
   const out = path.join(workdir, "Anonymiseur-Ai4x");
   for (const n of ["cle-de-session.json", "cle-correspondance-NE-JAMAIS-PARTAGER.xlsx"]) {
     const mode = fs.statSync(path.join(out, n)).mode & 0o777;
@@ -243,7 +230,7 @@ test("la clé est lisible par le seul compte de l'utilisateur", { skip: skip || 
   }
 });
 
-test("une clé corrompue n'est JAMAIS écrasée par une clé vierge", { skip }, async () => {
+test("une clé corrompue n'est JAMAIS écrasée par une clé vierge", async () => {
   const keyPath = path.join(workdir, "Anonymiseur-Ai4x", "cle-de-session.json");
   const before = fs.readFileSync(keyPath, "utf8");
   fs.writeFileSync(keyPath, before.slice(0, 40), "utf8");            // clé tronquée

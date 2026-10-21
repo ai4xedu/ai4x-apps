@@ -1,0 +1,29 @@
+name: mcp-anonymiseur
+
+# La suite signe ses licences avec la clé de TEST du dépôt : elle tourne
+# ici sans aucun secret, chasse aux fuites comprise.
+on:
+  push:
+    paths: ["apps/mcp-anonymiseur/**", ".github/workflows/mcp-anonymiseur.yml"]
+  pull_request:
+    paths: ["apps/mcp-anonymiseur/**", ".github/workflows/mcp-anonymiseur.yml"]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: apps/mcp-anonymiseur
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mcp-anonymiseur/package-lock.json
+      - run: npm ci
+      - run: npm test

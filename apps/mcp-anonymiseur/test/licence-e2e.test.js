@@ -6,36 +6,16 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import * as XLSX from "xlsx";
 import * as _fs from "node:fs";
-import { b64urlEncode } from "../server/licence.js";
+import { mint } from "./licence-test.mjs";
 XLSX.set_fs(_fs);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const serverPath = path.join(here, "..", "server", "index.js");
-
-function privateKeyOrNull() {
-  try {
-    const f = process.env.NANOMIZER_PRIVATE_KEY_FILE ||
-      path.join(os.homedir(), "Desktop", "nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt");
-    const raw = fs.readFileSync(f, "utf8").split("\n").map((l) => l.trim())
-      .filter((l) => l.length > 40 && /^[A-Za-z0-9+/=]+$/.test(l)).pop();
-    return crypto.createPrivateKey({ key: Buffer.from(raw, "base64"), format: "der", type: "pkcs8" });
-  } catch { return null; }
-}
-
-function mint(payload) {
-  const key = privateKeyOrNull();
-  if (!key) return "";
-  const body = b64urlEncode(Buffer.from(JSON.stringify(payload), "utf8"));
-  return `NANO1.${body}.${b64urlEncode(crypto.sign(null, Buffer.from(body), key))}`;
-}
-
-const skip = privateKeyOrNull() ? false : "clé privée absente de ce poste";
 
 let workdir;
 function resultText(res) {
@@ -80,7 +60,7 @@ test("sans licence : anonymiser, lot et OCR sont bloqués, avec un message qui o
   } finally { await client.close(); }
 });
 
-test("sans licence : la DÉ-ANONYMISATION et l'état de la clé restent disponibles", { skip }, async () => {
+test("sans licence : la DÉ-ANONYMISATION et l'état de la clé restent disponibles", async () => {
   // On code d'abord avec une licence valide…
   const ok = await connect(mint({ v: 1, org: "T", seats: 1, iat: "2026-01-01", exp: "2099-01-01" }));
   await ok.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx", confirmer: true } });
@@ -105,7 +85,7 @@ test("sans licence : la DÉ-ANONYMISATION et l'état de la clé restent disponib
   } finally { await client.close(); }
 });
 
-test("licence expirée : même traitement — bloqué à l'écriture, libre au décodage", { skip }, async () => {
+test("licence expirée : même traitement — bloqué à l'écriture, libre au décodage", async () => {
   const expired = mint({ v: 1, org: "Cabinet Échu", seats: 3, iat: "2025-01-01", exp: "2025-12-31" });
   const client = await connect(expired);
   try {
@@ -117,7 +97,7 @@ test("licence expirée : même traitement — bloqué à l'écriture, libre au d
   } finally { await client.close(); }
 });
 
-test("licence valide : etat_cle affiche titulaire, postes et échéance", { skip }, async () => {
+test("licence valide : etat_cle affiche titulaire, postes et échéance", async () => {
   const client = await connect(mint({ v: 1, org: "Cabinet Sekkat", seats: 5, iat: "2026-01-01", exp: "2099-01-01" }));
   try {
     const out = resultText(await client.callTool({ name: "etat_cle", arguments: {} }));
@@ -127,7 +107,7 @@ test("licence valide : etat_cle affiche titulaire, postes et échéance", { skip
   } finally { await client.close(); }
 });
 
-test("licence À VIE : acceptée, affichée « à vie », jamais d'avertissement d'échéance", { skip }, async () => {
+test("licence À VIE : acceptée, affichée « à vie », jamais d'avertissement d'échéance", async () => {
   const client = await connect(mint({ v: 1, org: "Maître Sekkat", seats: 1, iat: "2026-09-18", exp: "9999-12-31", life: true }));
   try {
     const out = resultText(await client.callTool({ name: "etat_cle", arguments: {} }));
@@ -139,7 +119,7 @@ test("licence À VIE : acceptée, affichée « à vie », jamais d'avertissement
   } finally { await client.close(); }
 });
 
-test("licence bientôt expirée : le bandeau prévient AVANT l'échéance", { skip }, async () => {
+test("licence bientôt expirée : le bandeau prévient AVANT l'échéance", async () => {
   const soon = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10);
   const client = await connect(mint({ v: 1, org: "Cabinet Pressé", seats: 2, iat: "2026-01-01", exp: soon }));
   try {
