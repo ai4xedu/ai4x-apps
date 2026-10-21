@@ -9,7 +9,7 @@ sont des exemples ; tout ce qui concerne Nanomizer est factuel et vérifiable.*
   contentieux) avec l'aide d'un assistant d'IA générative.*
 - **Responsable du traitement** : *raison sociale, adresse, contact DPO.*
 - **Outils** : assistant d'IA *(Claude Desktop, éditeur Anthropic)* ;
-  Nanomizer v2.3, extension locale, éditeur TARDIGRADE SARL — Ai4x (aucun accès aux données).
+  Nanomizer v2.4, extension locale, éditeur TARDIGRADE SARL — Ai4x (aucun accès aux données).
 - **Personnes concernées** : *clients, parties adverses, salariés, témoins.*
 - **Catégories de données** : *identité, coordonnées, identifiants officiels,
   données financières, données de procédure.* Données sensibles : *à préciser
@@ -37,7 +37,7 @@ sont des exemples ; tout ce qui concerne Nanomizer est factuel et vérifiable.*
 |---|---|---|---|
 | Lecture de données identifiantes par le fournisseur d'IA | Élevée | Codage avant l'IA (banc : 201/201), verrou de sortie, journal vérifiable | Faible |
 | Réidentification par recoupement (quasi-identifiants) | Moyenne | Plan à relire avant chaque anonymisation ; indice / gabarit pour les montants | Faible à moyen — *à évaluer selon les dossiers* |
-| Contournement : texte collé directement dans la conversation | Moyenne | Protocole transmis à l'IA ; formation des utilisateurs | *À évaluer* |
+| Contournement : texte collé directement dans la conversation | Moyenne | Charte IA (`charte-ia-modele.md`) : Nanomizer seule voie autorisée ; rapport de couverture mensuel (postes inactifs, montants en clair) ; formation des utilisateurs | *À évaluer* — Faible à moyen si la charte est signée et le rapport revu |
 | Autre extension ou synchronisation cloud du dossier | Moyenne | Audit de confinement à l'installation et à chaque plan | Faible si les alertes sont traitées |
 | Perte ou vol de la clé | Faible | Droits 600, sauvegarde automatique, chiffrement du disque *(FileVault / BitLocker — à vérifier)* | *À évaluer* |
 | Erreur de détection (valeur rare non codée) | Faible | Banc d'essai à chaque version ; journal rétroactif | Faible |

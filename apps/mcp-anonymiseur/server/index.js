@@ -61,8 +61,9 @@ import { renderDashboard, CHART_TYPES, AGGREGATES } from "./tableau.js";
 import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
 import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
+import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 
-export const VERSION = "2.3.1";
+export const VERSION = "2.4.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -82,7 +83,9 @@ const MASKED_CELL = "[MASQUÉ — fuite possible]";
 
 /* Fichiers que le connecteur ne lit JAMAIS pour les montrer : la clé, ses
    archives, sa sauvegarde, et les résultats décodés (vraies valeurs). */
-const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia|cle-poste-/i;
+// stats-poste- et le rapport de couverture : que des comptes, mais avec le nom
+// que chaque poste s'est donné (souvent celui d'une personne).
+const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia|cle-poste-|stats-poste-|RAPPORT-COUVERTURE/i;
 
 /* Journal « ce que Claude a vu » (cf. journal.js) : le texte FINAL de chaque
    réponse, après le verrou de sortie. Le .jsonl brut est interdit au modèle
@@ -150,6 +153,9 @@ function requireLicence() {
 const ENV_TEAM = isUnsubstituted(process.env.ANX_TEAM_DIR) ? "" : String(process.env.ANX_TEAM_DIR || "").trim();
 const TEAM_DIR = ENV_TEAM ? path.resolve(ENV_TEAM) : "";
 const POSTE_FILE = path.join(OUTDIR, ".nanomizer-poste");
+/* Nom du poste dans le rapport de couverture (« Me Benali », « Accueil ») :
+   montré au DPO, jamais à l'IA. */
+const ENV_POSTE_NOM = isUnsubstituted(process.env.ANX_POSTE_NOM) ? "" : String(process.env.ANX_POSTE_NOM || "").trim();
 
 function posteId() {
   try { const id = fs.readFileSync(POSTE_FILE, "utf8").trim(); if (/^[a-f0-9]{12}$/.test(id)) return id; } catch {}
@@ -557,6 +563,7 @@ const INSTRUCTIONS = [
   "7. Anonymisation en deux temps : présente toujours le PLAN, attends l'accord explicite, puis rappelle avec confirmer: true.",
   "8. Ne crée JAMAIS d'artefact, de page ou de graphique contenant les données de l'utilisateur : un artefact exige des valeurs réelles. Pour une visualisation, utilise tableau_de_bord (Nanomizer la dessine sur le poste) ou construis un classeur Excel sur le gabarit, puis remettre_chiffres.",
   "9. Si l'utilisateur, son DPO ou son service informatique demande une preuve de ce que tu as reçu, appelle journal_ia : la page locale « Ce que Claude a vu » le montre.",
+  "10. Pour une vue d'équipe (qui protège quoi, postes inactifs, fuites, portes ouvertes), appelle rapport_couverture : des comptes seulement. N'ouvre pas la page produite, elle nomme les postes.",
 ].join("\n");
 
 const server = new McpServer({ name: "anonymiseur-ai4x", version: VERSION }, { instructions: INSTRUCTIONS });
@@ -583,8 +590,37 @@ function tool(name, def, handler) {
     const out = guardResult(res, ctx);
     JOURNAL.record(name, guardText(JSON.stringify(args || {}), ctx).text,
       (out.content || []).map((c) => (c.type === "text" ? c.text : `[${c.type}]`)).join("\n"));
+    publishStats();
     return out;
   });
+}
+
+/* --------------------------------------- rapport de couverture (v2.4) *
+ * Cf. couverture.js. Les comptes de CE poste, tirés du journal. En équipe,
+ * ils sont déposés dans le dossier d'équipe — au plus toutes les 15 minutes
+ * (relire et auditer tout le journal à chaque appel serait du temps perdu),
+ * et à chaque rapport_couverture. Jamais bloquant. */
+const STATS_EVERY_MS = 15 * 60 * 1000;
+let statsAt = 0;
+function myStats() {
+  const st = licence();
+  let risques = 0;
+  try { risques = runAudit().risks; } catch {}
+  return posteStats(readJournal(JOURNAL_DIR), loadBook(), {
+    poste: posteId(), nom: ENV_POSTE_NOM, version: VERSION, risques, echecs: JOURNAL.failures,
+    licence: st.trial ? "essai" : (st.seats || 1) >= 2 ? "equipe" : "solo",
+  });
+}
+function publishStats(force = false) {
+  if (!force && Date.now() - statsAt < STATS_EVERY_MS) return null;
+  statsAt = Date.now();
+  try {
+    const team = currentTeam();
+    if (!team) return null;
+    const s = myStats();
+    writePosteStats(team.dir, s);
+    return s;
+  } catch { return null; }
 }
 
 function unexpected(e) {
@@ -1735,6 +1771,52 @@ tool(
       JOURNAL.failures ? `⚠️ ${JOURNAL.failures} réponse(s) de cette session n'ont pas pu être notées.` : "",
       `Page locale à ouvrir par l'utilisateur (navigateur, hors ligne) : ${shown(REPORT_PATH)}`,
       "Ce journal ne voit pas les textes collés directement dans la conversation.",
+    ].filter(Boolean).join("\n"));
+  }
+);
+
+tool(
+  "rapport_couverture",
+  {
+    title: "Rapport de couverture (qui protège quoi, dans l'équipe)",
+    description:
+      "Produit la page locale « Rapport de couverture » pour le DPO ou la direction : par poste, les fichiers " +
+      "protégés avant l'IA, les plans non confirmés, les décodages, les montants protégés, les valeurs réelles " +
+      "retrouvées, les portes ouvertes au confinement et la dernière activité. Avec une clé d'équipe, chaque poste " +
+      "dépose ses comptes dans le dossier d'équipe et la page couvre tout le cabinet ; sinon, ce poste seul. " +
+      "Que des comptes : aucune valeur, aucun code, aucun nom de fichier. Renvoie les totaux et le chemin de la page.",
+    inputSchema: z.object({
+      mois: z.number().int().min(1).max(12).optional().describe("Nombre de mois couverts (défaut 3, mois en cours compris)"),
+    }),
+  },
+  async ({ mois = 3 }) => {
+    let team = null;
+    try { team = currentTeam(); } catch (e) {
+      return err(`Clé d'équipe injoignable (${e.message}) : ${shown(TEAM_DIR)}. Le rapport d'équipe se lit dans ce dossier ; ` +
+        "vérifiez qu'il est monté, puis réessayez.");
+    }
+    const mine = team ? publishStats(true) || myStats() : myStats();
+    const postes = team ? readTeamStats(team.dir) : [mine];
+    if (team && !postes.some((p) => p.poste === mine.poste)) postes.push(mine);
+    const g = aggregate(postes, { months: mois });
+    const st = licence();
+    const html = renderCoverage(g, { version: VERSION, org: st.trial ? "" : st.holder || "", team: !!team });
+    ensureOutdir();
+    const local = path.join(OUTDIR, COVERAGE_NAME);
+    fs.writeFileSync(local, html, { encoding: "utf8", mode: 0o600 });
+    let shared = "";
+    if (team) {
+      try { fs.writeFileSync(path.join(team.dir, COVERAGE_NAME), html, "utf8"); shared = path.join(team.dir, COVERAGE_NAME); } catch {}
+    }
+    const risques = g.alertes.filter((a) => a.niveau === "risque").length;
+    return text([
+      g.fuites || g.risques
+        ? `🚨 ${g.fuites} valeur(s) réelle(s) retrouvée(s) et ${g.risques} porte(s) ouverte(s) sur la période — détail par poste dans la page. Préviens l'utilisateur.`
+        : `✅ ${g.fichiers} fichier(s) protégé(s) sur ${mois} mois, aucune valeur réelle retrouvée, aucune porte ouverte.`,
+      team ? `Équipe : ${g.actifs}/${g.postes} poste(s) actif(s) (fichier protégé depuis moins de 30 jours).` : "Ce poste seul (pas de clé d'équipe configurée).",
+      `Plans présentés non confirmés : ${g.plans}. Décodages : ${g.decodages}. Alertes : ${g.alertes.length} (dont ${risques} risque(s)).`,
+      `Page à ouvrir par l'utilisateur (navigateur, hors ligne) : ${shown(local)}` + (shared ? ` — copie pour le DPO dans le dossier d'équipe : ${shown(shared)}` : ""),
+      "Ne lis pas cette page : elle nomme les postes. Ce rapport ne voit pas ce qui est envoyé à l'IA sans passer par Nanomizer.",
     ].filter(Boolean).join("\n"));
   }
 );

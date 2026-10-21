@@ -35,6 +35,8 @@ export const OWN_LINKS = [
   // Les noms de modes, en capitales dans nos plans et comptes rendus.
   /(?<![\p{L}\p{N}])(?:TABLEAU|DOCUMENT|TEXTE|GABARIT|INDICE|CLAIR)(?![\p{L}\p{N}])/gu,
   /\bTableau de bord\b/g,
+  /\b[Rr]apport de couverture\b/g,
+  /RAPPORT-COUVERTURE-NANOMIZER\.html/g,
   /https:\/\/wa\.me\/212680092567(?:\?text=[^\s)]*)?/g,
   /https:\/\/ai4x\.academy\/[^\s)]*/g,
   /https:\/\/claude\.ai\/download/g,

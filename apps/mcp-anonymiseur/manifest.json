@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "anonymiseur-ai4x",
   "display_name": "Nanomizer — Anonymiseur de données Ai4x",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Nanomizer : vos dossiers sont anonymisés sur votre poste AVANT que Claude ne les lise, et le résultat est dé-anonymisé localement. Aucune valeur réelle n'entre dans la conversation — noms, cartes bancaires, permis, identifiants compris.",
   "long_description": "La règle « l'IA n'a jamais besoin de savoir qui est qui », en connecteur — pour les professionnels tenus au secret.\n\nDemandez simplement à Claude : « anonymise mes conclusions et prépare une synthèse ». Nanomizer code vos fichiers sur votre poste (Excel, CSV, PDF, scans, notes), Claude travaille sur les codes (NOM-001…), et l'outil `deanonymiser` écrit le résultat retraduit **sur votre disque** — les vraies valeurs n'apparaissent jamais dans la conversation.\n\n**Le verrou (v2.0)** : n'entre dans la conversation que ce qui est prouvé inoffensif — codes, nombres, mots du dictionnaire courant. Noms propres (même écrits au fil d'une phrase, même derrière « Maître » ou « M. »), mots inconnus, références, identifiants : codés. Un dernier filet repasse sur chaque réponse, noms de fichiers et chemins compris.\n\n- Même entité = même code, sur tout un dossier (clé cumulée multi-fichiers)\n- Audit de confinement : signale toute autre extension qui verrait vos fichiers, et un dossier synchronisé dans le cloud\n- 100 % hors ligne : aucune connexion, licence vérifiée sur votre poste\n- Cartes bancaires (clé de Luhn) et permis de conduire reconnus et codés sous leur nom (v2.1)\n- Clé compatible avec l'appli web gratuite ai4x.academy/anonymiseur-donnees\n\nLicence à vie : 500 Dhs HT par poste, ou 5 000 Dhs HT pour une équipe (jusqu'à 20 postes), sur WhatsApp. Développé par Ai4x.",
   "author": {
@@ -35,7 +35,8 @@
       "env": {
         "ANX_WORKDIR": "${user_config.dossier_travail}",
         "ANX_LICENCE": "${user_config.licence}",
-        "ANX_TEAM_DIR": "${user_config.dossier_equipe}"
+        "ANX_TEAM_DIR": "${user_config.dossier_equipe}",
+        "ANX_POSTE_NOM": "${user_config.poste_nom}"
       }
     }
   },
@@ -51,6 +52,12 @@
       "type": "directory",
       "title": "Dossier de clé d'équipe (licence Équipe, facultatif)",
       "description": "Pour que tout le cabinet utilise les mêmes codes : choisissez le même dossier partagé sur chaque poste (NAS ou serveur de fichiers interne, PAS un dossier synchronisé dans le cloud). Il contiendra le secret d'équipe et les correspondances de chaque poste. Laissez vide pour travailler seul.",
+      "required": false
+    },
+    "poste_nom": {
+      "type": "string",
+      "title": "Nom de ce poste (rapport d'équipe, facultatif)",
+      "description": "Comment ce poste apparaît dans le rapport de couverture lu par votre DPO ou la direction (ex. « Me Benali », « Accueil »). Il n'est jamais montré à l'IA. Laissez vide pour un identifiant anonyme.",
       "required": false
     },
     "licence": {
@@ -101,6 +108,10 @@
     {
       "name": "journal_ia",
       "description": "Ce que Claude a vu : journal local et audit de tout ce qui est sorti"
+    },
+    {
+      "name": "rapport_couverture",
+      "description": "Rapport de couverture pour le DPO : par poste, fichiers protégés, décodages, valeurs retrouvées, portes ouvertes, dernière activité — des comptes seulement."
     },
     {
       "name": "reinitialiser_cle",

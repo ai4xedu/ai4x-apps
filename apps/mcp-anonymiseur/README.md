@@ -83,7 +83,30 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `deanonymiser` | Retraduit texte/TSV → fichier local (.md ou .xlsx, droits 600), jamais dans le chat |
 | `etat_cle` | Comptes par type, licence, résumé de l'audit de confinement |
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
+| `rapport_couverture` | Page locale pour le DPO : par poste, fichiers protégés, plans non confirmés, décodages, montants en clair, valeurs retrouvées, portes ouvertes, dernière activité. Que des comptes ; en équipe, chaque poste dépose les siens dans le dossier d'équipe |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v2.4.0 (rapport de couverture et charte IA, 21/10/2026) : de l'outil personnel
+à la règle d'entreprise.
+1. **Rapport de couverture** (`server/couverture.js`, outil `rapport_couverture`).
+   Chaque poste tire de son journal des COMPTES par mois (fichiers protégés,
+   plans non confirmés, refus, décodages, mode des montants, valeurs
+   retrouvées, portes ouvertes au confinement) et, en équipe, les dépose dans
+   `stats-poste-<id>.json` du dossier d'équipe — au plus toutes les 15 minutes
+   et à chaque rapport. La page `RAPPORT-COUVERTURE-NANOMIZER.html` (copiée dans
+   le dossier d'équipe pour le DPO) agrège les postes et liste les alertes :
+   poste sans fichier protégé depuis 30 jours, montants envoyés en clair,
+   version en retard, valeur retrouvée, porte ouverte. Ni valeur, ni code, ni
+   nom de fichier ; la réponse à l'IA ne nomme aucun poste, et les comptes
+   comme la page sont refusés à l'IA (`FORBIDDEN_RX`).
+2. **Nom du poste** (réglage facultatif `poste_nom`, variable `ANX_POSTE_NOM`) :
+   comment le poste apparaît dans le rapport. Jamais montré à l'IA.
+3. **Modèle de charte IA** (`confiance/charte-ia-modele.md`) : la règle d'or
+   (aucune donnée identifiante vers une IA autrement que par Nanomizer), la
+   configuration des postes, le contrôle mensuel par le rapport de couverture,
+   la procédure d'incident (on cite le code, jamais la valeur). Le rapport ne
+   voit pas ce qui contourne Nanomizer : la charte en fait la seule voie
+   autorisée, le rapport vérifie qu'elle est suivie.
 
 v2.3.1 (répétition de démo, 20/10/2026) : trois défauts trouvés en rejouant
 le parcours d'une démonstration, sans clé, sur un dossier fictif.
