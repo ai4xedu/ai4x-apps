@@ -87,7 +87,7 @@ export function compilerPolitique(source, { cabinet, sel, version, maintenant = 
   // Périmètre
   const per = source.perimetre ?? {};
   if (!estObjet(per)) err.push("perimetre doit être un objet");
-  const surfaces = per.surfaces ?? ["claude_code", "claude_web"];
+  const surfaces = per.surfaces ?? ["claude_code", "claude_desktop", "claude_web"];
   if (!Array.isArray(surfaces) || surfaces.length === 0) err.push("perimetre.surfaces : au moins une surface");
   else for (const s of surfaces) if (!SURFACES.has(s)) err.push(`perimetre.surfaces : surface inconnue « ${s} » (${[...SURFACES].join(", ")})`);
   const enCasErreur = per.en_cas_erreur ?? "bloquer";
@@ -346,7 +346,7 @@ export function modeleSource() {
     format: "nanomizer.politique-source/1",
     emise_par: "admin@votre-cabinet.fr",
     expiration_jours: EXPIRATION_DEFAUT_JOURS,
-    perimetre: { surfaces: ["claude_code", "claude_web"], en_cas_erreur: "bloquer" },
+    perimetre: { surfaces: ["claude_code", "claude_desktop", "claude_web"], en_cas_erreur: "bloquer" },
     equipes: [
       {
         id: "eq_contentieux",

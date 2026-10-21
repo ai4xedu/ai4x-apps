@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "anonymiseur-ai4x",
   "display_name": "Nanomizer — Anonymiseur de données Ai4x",
-  "version": "2.8.0",
+  "version": "2.9.0",
   "description": "Nanomizer : vos dossiers sont anonymisés sur votre poste AVANT que Claude ne les lise, et le résultat est dé-anonymisé localement. Aucune valeur réelle n'entre dans la conversation — noms, cartes bancaires, permis, identifiants compris.",
   "long_description": "La règle « l'IA n'a jamais besoin de savoir qui est qui », en connecteur — pour les professionnels tenus au secret.\n\nDemandez simplement à Claude : « anonymise mes conclusions et prépare une synthèse ». Nanomizer code vos fichiers sur votre poste (Word, Excel, CSV, PDF, scans, notes), Claude travaille sur les codes (NOM-001…), et l'outil `deanonymiser` écrit le résultat retraduit **sur votre disque** — les vraies valeurs n'apparaissent jamais dans la conversation.\n\n**Le verrou (v2.0)** : n'entre dans la conversation que ce qui est prouvé inoffensif — codes, nombres, mots du dictionnaire courant. Noms propres (même écrits au fil d'une phrase, même derrière « Maître » ou « M. »), mots inconnus, références, identifiants : codés. Un dernier filet repasse sur chaque réponse, noms de fichiers et chemins compris.\n\n- **Word (v2.7)** : une copie .docx codée, mise en forme conservée ; métadonnées, commentaires, suivi des modifications, liens et images retirés ; le résultat revient en Word, décodé sur votre poste\n- Même entité = même code, sur tout un dossier (clé cumulée multi-fichiers)\n- Audit de confinement : signale toute autre extension qui verrait vos fichiers, et un dossier synchronisé dans le cloud\n- 100 % hors ligne : aucune connexion, licence vérifiée sur votre poste\n- Cartes bancaires (clé de Luhn) et permis de conduire reconnus et codés sous leur nom (v2.1)\n- Clé compatible avec l'appli web gratuite ai4x.academy/anonymiseur-donnees\n\nEssai gratuit de 14 jours intégré. Abonnement annuel : 390 € HT par poste (cabinet de 2 à 20 postes : 290 € HT par poste, clé d'équipe comprise) — ai4x.academy/nanomizer. À l'échéance, le décodage de vos fichiers continue toujours. Développé par Ai4x.",
   "author": {
@@ -36,7 +36,8 @@
         "ANX_WORKDIR": "${user_config.dossier_travail}",
         "ANX_LICENCE": "${user_config.licence}",
         "ANX_TEAM_DIR": "${user_config.dossier_equipe}",
-        "ANX_POSTE_NOM": "${user_config.poste_nom}"
+        "ANX_POSTE_NOM": "${user_config.poste_nom}",
+        "ANX_ENROLEMENT": "${user_config.enrolement}"
       }
     }
   },
@@ -52,6 +53,12 @@
       "type": "directory",
       "title": "Dossier de clé d'équipe (licence Équipe, facultatif)",
       "description": "Pour que tout le cabinet utilise les mêmes codes : choisissez le même dossier partagé sur chaque poste (NAS ou serveur de fichiers interne, PAS un dossier synchronisé dans le cloud). Il contiendra le secret d'équipe et les correspondances de chaque poste. Laissez vide pour travailler seul.",
+      "required": false
+    },
+    "enrolement": {
+      "type": "file",
+      "title": "Fichier d'enrôlement du cabinet (facultatif)",
+      "description": "Remis par l'administrateur de votre cabinet (enrolement-….nanomizer). Ce poste applique alors la politique signée par le cabinet : si elle est absente, modifiée, plus ancienne ou expirée, l'anonymisation s'arrête (le décodage continue). Laissez vide si votre cabinet n'a pas de politique.",
       "required": false
     },
     "poste_nom": {

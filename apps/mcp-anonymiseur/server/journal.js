@@ -42,12 +42,14 @@ export function createJournal(dir, now = () => new Date()) {
   return {
     dir,
     get failures() { return failures; },
-    record(outil, args, texte) {
+    // meta : la version et l'empreinte de la politique du cabinet sous
+    // laquelle la réponse a été produite (US-4, spec §4.3), jamais du texte.
+    record(outil, args, texte, meta) {
       try {
         fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         const t = now();
         const file = path.join(dir, `${t.toISOString().slice(0, 7)}.jsonl`);
-        fs.appendFileSync(file, JSON.stringify({ t: t.toISOString(), outil, args, texte }) + "\n", { encoding: "utf8", mode: 0o600 });
+        fs.appendFileSync(file, JSON.stringify({ t: t.toISOString(), outil, args, texte, ...(meta || {}) }) + "\n", { encoding: "utf8", mode: 0o600 });
       } catch {
         failures++;   // jamais bloquant ; mais la page le dira
       }

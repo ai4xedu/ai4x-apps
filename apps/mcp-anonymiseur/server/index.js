@@ -65,9 +65,10 @@ import { renderDashboard, CHART_TYPES, AGGREGATES } from "./tableau.js";
 import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
 import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
+import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque } from "./politique.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 
-export const VERSION = "2.8.0";
+export const VERSION = "2.9.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -156,6 +157,49 @@ function requireLicence() {
  * collègues ne connaissent pas. Le décodage, lui, continue avec ce qu'on a. */
 const ENV_TEAM = isUnsubstituted(process.env.ANX_TEAM_DIR) ? "" : String(process.env.ANX_TEAM_DIR || "").trim();
 const TEAM_DIR = ENV_TEAM ? path.resolve(ENV_TEAM) : "";
+
+/* ------------------------------------- politique du cabinet (US-4) *
+ * Cf. politique.js. Un poste ENRÔLÉ (réglage « Fichier d'enrôlement »)
+ * applique la politique signée par l'admin : contrôlée à l'entrée de chaque
+ * outil qui code, fail closed. Sans enrôlement, rien ne change. */
+const ENV_ENROLEMENT = isUnsubstituted(process.env.ANX_ENROLEMENT) ? "" : String(process.env.ANX_ENROLEMENT || "").trim();
+const POLITIQUE = ENV_ENROLEMENT ? creerPolitiquePoste({ enrolement: path.resolve(ENV_ENROLEMENT), etatDir: OUTDIR }) : null;
+let politiqueCourante = null;   // dernier contrôle, pour le journal et les gardes d'écriture
+
+function controlerPolitique() {
+  if (!POLITIQUE) return null;
+  politiqueCourante = POLITIQUE.controler();
+  return politiqueCourante;
+}
+
+/* À l'entrée des outils qui codent (avec requireLicence et requireTeam). */
+function requirePolitique() {
+  const c = controlerPolitique();
+  if (!c || !POLITIQUE.bloquant(c)) return null;
+  return err(decrirePolitique(c));
+}
+
+/* Avant d'écrire une copie pour l'IA : une règle « interdit » touchée = la
+   copie n'est pas écrite (ni la clé enrichie). texteCode : ce que l'IA lirait. */
+function gardeInterdit(texteCode) {
+  if (!POLITIQUE) return;
+  const c = politiqueCourante || controlerPolitique();
+  if (POLITIQUE.bloquant(c)) throw new PolitiqueBloque(decrirePolitique(c), { decision: "BLOQUE_POLITIQUE" });
+  const hit = regleInterditeTouchee(POLITIQUE.interditsDetecteurs(c), texteCode);
+  if (hit) {
+    throw new PolitiqueBloque(
+      `🛑 Bloqué par la règle ${hit.regle.id} de la politique du cabinet — « ${hit.regle.libelle} » : le document contient ` +
+      `un élément de type ${PREFIX_LABEL[hit.detecteur] || hit.detecteur}. RIEN n'a été écrit pour l'IA. Retirez cet élément du ` +
+      "document (ou demandez à votre responsable), puis relancez.", { decision: "BLOQUE_ROUGE", regle: hit.regle.id });
+  }
+}
+
+/* La ligne de politique des plans : visible avant toute confirmation. */
+function politiqueAlerte() {
+  if (!POLITIQUE) return "";
+  const c = politiqueCourante || controlerPolitique();
+  return decrirePolitique(c, { nomsNonAppliques: POLITIQUE.reglesNomsNonAppliquees(c) });
+}
 const POSTE_FILE = path.join(OUTDIR, ".nanomizer-poste");
 /* Nom du poste dans le rapport de couverture (« Me Benali », « Accueil ») :
    montré au DPO, jamais à l'IA. */
@@ -546,12 +590,16 @@ function maskPreviewSheet(ws, opts = {}) {
 /* Alerte de confinement à coller aux PLANS (pas à chaque réponse : on
    prévient au moment où l'utilisateur décide, sans noyer la conversation). */
 function confinementAlert() {
+  let ligne = "";
   try {
     const a = runAudit();
-    if (!a.risks) return "";
-    return `🚨 AUDIT DE CONFINEMENT : ${a.risks} risque(s) — une autre porte que Nanomizer mène à ces fichiers. ` +
-      "Appelle verifier_confinement et montre le détail à l'utilisateur AVANT de continuer.";
-  } catch { return ""; }
+    if (a.risks) {
+      ligne = `🚨 AUDIT DE CONFINEMENT : ${a.risks} risque(s) — une autre porte que Nanomizer mène à ces fichiers. ` +
+        "Appelle verifier_confinement et montre le détail à l'utilisateur AVANT de continuer.";
+    }
+  } catch {}
+  // Les plans passent tous par ici : la politique du cabinet s'y annonce.
+  return [ligne, politiqueAlerte()].filter(Boolean).join("\n");
 }
 
 function runAudit() {
@@ -605,12 +653,14 @@ function tool(name, def, handler) {
       // Jamais le message brut : il cite souvent un chemin, donc un nom de
       // fichier (« EACCES … open '…/Notes Lahlou Mehdi.md' »).
       res = err(e instanceof KeyUnreadable ? e.message
-        : e instanceof TeamUnavailable ? `Clé d'équipe : ${e.message}` : unexpected(e));
+        : e instanceof TeamUnavailable ? `Clé d'équipe : ${e.message}`
+        : e instanceof PolitiqueBloque ? e.message : unexpected(e));
     }
     const ctx = { book: bookForGuard(), home: HOME };
     const out = guardResult(res, ctx);
     JOURNAL.record(name, guardText(JSON.stringify(args || {}), ctx).text,
-      (out.content || []).map((c) => (c.type === "text" ? c.text : `[${c.type}]`)).join("\n"));
+      (out.content || []).map((c) => (c.type === "text" ? c.text : `[${c.type}]`)).join("\n"),
+      politiqueCourante ? { politique: { version: politiqueCourante.version ?? null, empreinte: politiqueCourante.empreinte ?? null, etat: politiqueCourante.etat } } : undefined);
     publishStats();
     return out;
   });
@@ -796,6 +846,7 @@ function handlePlainText(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = 
   const book = loadBook();
   const res = codeFreeText(raw, book, extras, valeurs_a_exclure, { generaliser });
   if (!res.stats.replaced) return err("Rien à coder dans ce fichier texte.");
+  gardeInterdit(res.text);
   ensureOutdir();
   const outPath = path.join(OUTDIR, `${codedBase(path.basename(file), book, "texte")}-anonymise.md`);
   saveBook(book);
@@ -821,6 +872,7 @@ async function handlePdf(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = 
   const book = loadBook();
   const res = codeFreeText(fullText, book, extras, valeurs_a_exclure, { generaliser });
   if (!res.stats.replaced) return err("Rien à coder : aucun identifiant, nom propre ni mot inconnu dans ce PDF.");
+  gardeInterdit(res.text);
   ensureOutdir();
   const base = codedBase(path.basename(file), book, "document");
   const outPath = path.join(OUTDIR, `${base}-anonymise.md`);
@@ -922,6 +974,7 @@ async function handleDocx(file, rel, { valeurs_a_coder = [], valeurs_a_exclure =
       `(${leaks.map((p) => p.replace(/^.*\//, "").replace(/\d*\.(xml|rels)$/, "")).join(", ")}). Par sécurité, AUCUNE copie n'est écrite. ` +
       "Propose à l'utilisateur d'enregistrer le document en PDF et de le traiter ainsi, et signale le cas au support (sans la valeur).");
   }
+  gardeInterdit(res.text);
   ensureOutdir();
   const base = codedBase(path.basename(file), book, "document");
   const outPath = path.join(OUTDIR, `${base}-anonymise.docx`);
@@ -1010,7 +1063,7 @@ tool(
     }),
   },
   async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, generaliser = false, confirmer = false }) => {
-    const bloque = requireLicence() || requireTeam();
+    const bloque = requireLicence() || requireTeam() || requirePolitique();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
@@ -1057,6 +1110,7 @@ tool(
     const docOpts = { excludes: valeurs_a_exclure };
 
     const writeOut = (outWs, book, nums) => {
+      gardeInterdit(XLSX.utils.sheet_to_csv(outWs));
       ensureOutdir();
       const outPath = path.join(OUTDIR, `${codedBase(path.basename(file), book, "fichier")}-anonymise.xlsx`);
       const outWb = XLSX.utils.book_new();
@@ -1352,7 +1406,7 @@ tool(
     }),
   },
   async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, generaliser = false, confirmer = false }) => {
-    const bloque = requireLicence() || requireTeam();
+    const bloque = requireLicence() || requireTeam() || requirePolitique();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     const files = listBatchFiles(motif);
@@ -1515,8 +1569,21 @@ tool(
     // déjà présents dans un fichier restent décodables.
     // Filet final des copies Word, sur la clé COMPLÈTE du lot : une copie
     // où une valeur traîne encore n'est pas écrite (fail-closed).
+    // Politique du cabinet : une copie qui touche une règle « interdit » n'est
+    // pas écrite ; les autres fichiers du lot le sont.
+    const bloquesPolitique = [];
     for (const w of writes) {
-      if (!w.docx) continue;
+      const lu = w.wb ? w.wb.SheetNames.map((n) => XLSX.utils.sheet_to_csv(w.wb.Sheets[n])).join("\n") : w.md;
+      try { gardeInterdit(lu); } catch (e) {
+        if (!(e instanceof PolitiqueBloque)) throw e;
+        w.skip = true;
+        done--;
+        bloquesPolitique.push(`${path.basename(w.path)} (${e.regle ? `règle ${e.regle}` : "politique invalide"})`);
+        report.push(`- 🛑 ${path.basename(w.path)} : ${e.decision === "BLOQUE_ROUGE" ? `bloqué par la règle ${e.regle} de la politique du cabinet` : "politique du cabinet invalide"}, copie NON écrite`);
+      }
+    }
+    for (const w of writes) {
+      if (!w.docx || w.skip) continue;
       const leaks = docxLeakCheck(w.docx, book, valeurs_a_exclure);
       if (leaks.length) {
         w.skip = true;
@@ -1547,6 +1614,10 @@ tool(
       `Clé (JAMAIS à partager, restée sur le poste) : ${shown(KEY_XLSX)}`,
     ];
     if (failed.length) lines.push(`⚠️ Ignorés (illisibles ou scannés) : ${failed.join(", ")}.`);
+    if (bloquesPolitique.length) {
+      lines.push(`🛑 Non écrits, bloqués par la politique du cabinet : ${bloquesPolitique.join(", ")}. Dis-le à l'utilisateur : ` +
+        "l'élément interdit doit être retiré du document source avant de relancer.");
+    }
     lines.push(
       "Aucun contenu n'est affiché ici — c'est voulu. Pour travailler sur un fichier précis dans la conversation, " +
       "appelle anonymiser_fichier sur ce fichier (il renverra le contenu codé)."
@@ -1599,7 +1670,7 @@ tool(
     }),
   },
   async ({ nom_fichier }) => {
-    const bloque = requireLicence() || requireTeam();
+    const bloque = requireLicence() || requireTeam() || requirePolitique();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
@@ -1696,7 +1767,7 @@ tool(
     }),
   },
   async ({ nom_fichier, valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false, envoyer = false }) => {
-    const bloque = requireLicence() || requireTeam();
+    const bloque = requireLicence() || requireTeam() || requirePolitique();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
@@ -2097,6 +2168,9 @@ tool(
         : `Licence : ${st.holder} · ${st.seats} poste(s) · valide jusqu'au ${st.expiresAt} (${st.daysLeft} j).`)
       : `Licence : aucune valide (${st.reason}). La dé-anonymisation reste disponible — elle le restera toujours. ` +
         `Abonnement : ${OFFER.price} — ${OFFER.orderUrl}.`;
+    // Transparence (spec, invariant 5) : le salarié voit la politique qui
+    // s'applique à lui, ses règles et la notice du cabinet.
+    const politiqueLine = POLITIQUE ? (controlerPolitique(), politiqueAlerte()) : "";
     let teamLine = "";
     if (TEAM_DIR) {
       if (!teamAllowed()) teamLine = "Clé d'équipe : configurée mais inactive — elle fait partie de l'offre Cabinet (2 postes et plus).";
@@ -2116,7 +2190,7 @@ tool(
       ? `🚨 Confinement : ${audit.risks} risque(s) — appelle verifier_confinement pour le détail.`
       : "Confinement : aucune autre porte repérée vers le dossier de travail.";
     if (!book.entries.length) {
-      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, licLine, teamLine, auditLine].filter(Boolean).join("\n"));
+      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, licLine, teamLine, politiqueLine, auditLine].filter(Boolean).join("\n"));
     }
     const byPrefix = {};
     for (const e of book.entries) {
@@ -2129,6 +2203,7 @@ tool(
         `Clé de session : ${book.entries.length} codes (${detail}).`,
         licLine,
         teamLine,
+        politiqueLine,
         auditLine,
         `Clé (à ne jamais partager) : ${shown(KEY_XLSX)}`,
         `Sorties : ${shown(OUTDIR)}`,

@@ -4,9 +4,11 @@ name: mcp-anonymiseur
 # ici sans aucun secret, chasse aux fuites comprise.
 on:
   push:
-    paths: ["apps/mcp-anonymiseur/**", ".github/workflows/mcp-anonymiseur.yml"]
+    # La console admin aussi : test/politique.test.js vérifie le contrat poste ↔ console.
+    paths: ["apps/mcp-anonymiseur/**", "apps/nanomizer-admin/lib/**", ".github/workflows/mcp-anonymiseur.yml"]
   pull_request:
-    paths: ["apps/mcp-anonymiseur/**", ".github/workflows/mcp-anonymiseur.yml"]
+    # La console admin aussi : test/politique.test.js vérifie le contrat poste ↔ console.
+    paths: ["apps/mcp-anonymiseur/**", "apps/nanomizer-admin/lib/**", ".github/workflows/mcp-anonymiseur.yml"]
 
 jobs:
   test:
