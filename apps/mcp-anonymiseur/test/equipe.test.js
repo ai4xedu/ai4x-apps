@@ -96,11 +96,11 @@ test("dossier d'équipe injoignable : rien n'est codé, le décodage continue", 
   assert.ok(!/injoignable/.test(out(dec)));
 });
 
-test("la clé d'équipe est réservée à la licence Équipe ; sans dossier, rien ne change (codes NOM-001)", async () => {
+test("la clé d'équipe est réservée à l'offre Cabinet ; sans dossier, rien ne change (codes NOM-001)", async () => {
   const solo = await connect(poste("poste-solo", [["Kettani", "Rita", "Bail"]]), SOLO);
   const res = await solo.raw("anonymiser_fichier", { nom_fichier: "clients.xlsx", confirmer: true });
   assert.ok(res.isError);
-  assert.match(out(res), /licence Équipe/);
+  assert.match(out(res), /offre Cabinet/);
   const seul = await connect(path.join(root, "poste-solo"), SOLO, "");
   const t = await seul.call("anonymiser_fichier", { nom_fichier: "clients.xlsx", confirmer: true });
   assert.match(t, /NOM-001/);
@@ -119,4 +119,25 @@ test("le dossier d'équipe n'est jamais servi à l'IA", async () => {
     const res = await c.raw("anonymiser_fichier", { nom_fichier: `equipe/${f}` });
     assert.ok(res.isError, `${f} servi à l'IA`);
   }
+});
+
+test("collision d'équipe : un code qui désigne deux valeurs n'est jamais décodé en silence", async () => {
+  const dir = poste("poste-C", [["Lahlou", "Nadia", "Cession"]]);
+  const c = await connect(dir, EQUIPE);
+  const plan = await c.call("anonymiser_fichier", { nom_fichier: "clients.xlsx", confirmer: true });
+  const code = codesOf(plan, "NOM").find(Boolean);
+  assert.ok(code, "un code NOM doit avoir été attribué");
+  // Un collègue a créé AU MÊME MOMENT le même code pour une autre personne.
+  fs.writeFileSync(path.join(teamDir, "cle-poste-collegue0001.json"),
+    JSON.stringify({ maj: new Date().toISOString(), entries: [{ code, value: "Bennani", type: "Nom" }] }));
+  const res = await c.call("deanonymiser", { contenu: `Dossier suivi par ${code}.`, nom_sortie: "conflit" });
+  assert.match(res, /désignent deux valeurs différentes/);
+  assert.ok(!res.includes("Lahlou") && !res.includes("Bennani"), "aucune des deux valeurs ne sort dans le chat");
+  const outDir = path.join(dir, "Anonymiseur-Ai4x");
+  const f = fs.readdirSync(outDir).find((n) => /^conflit-decode-.*\.md$/.test(n));
+  const md = fs.readFileSync(path.join(outDir, f), "utf8");
+  assert.ok(md.includes(`[À VÉRIFIER : ${code}]`), "le fichier marque le code au lieu de choisir une valeur");
+  assert.ok(!md.includes("Lahlou") && !md.includes("Bennani"));
+  assert.match(await c.call("etat_cle"), /1 code\(s\) en conflit/);
+  fs.rmSync(path.join(teamDir, "cle-poste-collegue0001.json"));
 });

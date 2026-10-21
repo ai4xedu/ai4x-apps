@@ -7,10 +7,13 @@
 // Ne jamais l'envoyer, ne jamais la committer, ne jamais la coller dans un chat.
 //
 // Usage :
-//   node scripts/emettre-licence.mjs --org "Maître Sekkat" --a-vie                 ← Solo, 500 Dhs HT
-//   node scripts/emettre-licence.mjs --org "Payzone" --postes 20 --a-vie          ← Équipe, 5 000 Dhs HT
-//   node scripts/emettre-licence.mjs --org "Cabinet Sekkat" --postes 5 --mois 12
-//   node scripts/emettre-licence.mjs --org "Pilote X" --postes 3 --mois 3 --note "pilote gratuit"
+//   node scripts/emettre-licence.mjs --org "Maître Sekkat"                        ← Solo, 1 an (390 € HT)
+//   node scripts/emettre-licence.mjs --org "Cabinet Sekkat" --postes 5            ← Cabinet, 1 an (5 × 290 € HT)
+//   node scripts/emettre-licence.mjs --org "Cabinet Sekkat" --postes 5 --depuis 2027-10-21
+//                                     ← RENOUVELLEMENT : l'année repart de l'échéance précédente, pas d'aujourd'hui
+//   node scripts/emettre-licence.mjs --org "Pilote X" --postes 3 --mois 3 --note "pilote payant"
+//   node scripts/emettre-licence.mjs --org "Maître X" --a-vie                     ← DROITS ACQUIS uniquement :
+//                                     réémission d'une licence à vie vendue avant le 21/10/2026
 //
 // Sortie : la clé NANO1.… à copier au client (réglage « Clé de licence » de
 // l'extension, ou fichier licence.txt dans son dossier de travail).
@@ -33,6 +36,7 @@ const seats = parseInt(arg("postes", "1"), 10);
 const months = parseInt(arg("mois", "12"), 10);
 const note = arg("note", "");
 const lifetime = process.argv.includes("--a-vie");
+const since = arg("depuis", "");
 
 if (!org) {
   console.error("Il faut au moins --org \"Nom du cabinet\". Voir l'en-tête du script.");
@@ -54,7 +58,12 @@ const privateKey = crypto.createPrivateKey({
 });
 
 const now = new Date();
-const exp = new Date(now.getTime());
+if (since && Number.isNaN(new Date(since + "T00:00:00").getTime())) {
+  console.error(`--depuis attend une date AAAA-MM-JJ (l'échéance de la licence précédente), reçu : ${since}`);
+  process.exit(1);
+}
+const start = since && new Date(since + "T00:00:00") > now ? new Date(since + "T00:00:00") : now;
+const exp = new Date(start.getTime());
 exp.setMonth(exp.getMonth() + months);
 const iso = (d) => d.toISOString().slice(0, 10);
 
@@ -90,7 +99,7 @@ console.log("\nInstallation côté client : Claude Desktop → réglages de l'ex
 console.log("« Nanomizer » → champ « Clé de licence » → coller → REDÉMARRER Claude Desktop.");
 console.log("(Ou déposer la clé dans un fichier licence.txt à la racine du dossier de travail.)\n");
 console.log("──── Message WhatsApp prêt à envoyer (avec le fichier .mcpb en pièce jointe) ────\n");
-console.log(`Merci ${payload.org} ! Votre paiement est bien reçu. Voici votre connecteur et votre clé ${lifetime ? "à vie" : ""}.
+console.log(`Merci ${payload.org} ! Votre paiement est bien reçu. Voici votre connecteur et votre clé ${lifetime ? "à vie" : `(abonnement valable jusqu'au ${payload.exp})`}.
 
 1. Ouvrez le fichier joint anonymiseur-ai4x.mcpb : Claude Desktop propose « Installer ».
 2. Choisissez votre dossier de travail (hors iCloud / Google Drive / Dropbox).

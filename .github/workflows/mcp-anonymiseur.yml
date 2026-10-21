@@ -27,3 +27,23 @@ jobs:
           cache-dependency-path: apps/mcp-anonymiseur/package-lock.json
       - run: npm ci
       - run: npm test
+
+  # La preuve « zéro réseau » (test/reseau.test.js) a besoin du modèle de
+  # permissions de Node 25+ : sous Node 22, elle serait ignorée en vert. Ici
+  # elle est EXIGÉE — un Node qui ne sait pas couper le réseau fait échouer.
+  preuve-reseau:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mcp-anonymiseur
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+          cache-dependency-path: apps/mcp-anonymiseur/package-lock.json
+      - run: npm ci
+      - run: node --test test/reseau.test.js
+        env:
+          NANOMIZER_PREUVE_RESEAU: "1"

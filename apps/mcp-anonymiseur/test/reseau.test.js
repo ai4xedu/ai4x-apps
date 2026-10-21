@@ -30,7 +30,15 @@ function networkIsBlocked() {
     return out.trim() === "ERR_ACCESS_DENIED";
   } catch { return false; }
 }
-const skip = networkIsBlocked() ? false : `le modèle de permissions de Node ${process.version} ne bloque pas le réseau (Node 25+ requis)`;
+const blocked = networkIsBlocked();
+/* En CI, la preuve est EXIGÉE (NANOMIZER_PREUVE_RESEAU=1, job Node 26) : un
+   Node trop ancien ne doit pas la faire passer en « ignoré » vert. */
+if (!blocked && process.env.NANOMIZER_PREUVE_RESEAU === "1") {
+  test("la preuve « zéro réseau » est exigée ici, mais ce Node ne sait pas interdire le réseau", () => {
+    assert.fail(`Node ${process.version} : le modèle de permissions ne bloque pas le réseau (Node 25+ requis)`);
+  });
+}
+const skip = blocked ? false : `le modèle de permissions de Node ${process.version} ne bloque pas le réseau (Node 25+ requis)`;
 
 let client, workdir;
 const out = (res) => res.content.map((c) => (c.type === "text" ? c.text : "")).join("\n");

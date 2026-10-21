@@ -40,25 +40,32 @@ const PUBLIC_KEY_B64 = "MCowBQYDK2VwAyEA2ecQy6JVQUtn9e+yrbuzQf7I9dcplI8T6dr2fiWT
 
 export const WARN_DAYS = 30;
 
-/* Offre en vigueur (décision du 08/10/2026, qui précise celle du 18/09) :
-   licence À VIE, 500 Dhs HT par poste — ou 5 000 Dhs HT pour une entité,
-   jusqu'à 20 postes sur une seule clé — une seule fois, commandée sur
-   WhatsApp, comme le reste du catalogue Ai4x : pas de paiement en ligne, le
-   RIB est envoyé sur WhatsApp, la clé part à réception du virement. Pas
-   d'abonnement : un outil hors ligne n'a rien à renouveler, et c'est la
-   facture de l'entité qui porte la prise en main. */
+/* Offre en vigueur (décision du 21/10/2026, qui remplace la licence à vie du
+   08/10) : ABONNEMENT ANNUEL PAR POSTE, France d'abord. Solo 390 € HT par an ;
+   Cabinet, 2 à 20 postes sur une clé, 290 € HT par poste et par an, clé
+   d'équipe et rapport de couverture compris ; au-delà, sur devis. Au Maroc,
+   même structure en Dhs. La clé porte sa date de fin : à l'échéance (et après
+   le délai de grâce) le codage s'arrête, le décodage JAMAIS. Les licences à
+   vie déjà vendues restent honorées, mises à jour comprises (LIFETIME_EXP).
+   L'abonnement paie ce qu'un outil hors ligne doit quand même : les mises à
+   jour (la plateforme MCP bouge vite) et le support. */
 export const OFFER = {
-  price: "500 Dhs HT par poste",
-  priceTeam: "5 000 Dhs HT pour une équipe (jusqu'à 20 postes, une seule clé)",
+  price: "390 € HT par poste et par an (Maroc : 1 200 Dhs HT)",
+  priceTeam: "290 € HT par poste et par an pour un cabinet de 2 à 20 postes (Maroc : 900 Dhs HT), clé d'équipe et rapport de couverture compris",
+  orderUrl: "https://ai4x.academy/nanomizer#plans",
   whatsappDisplay: "+212 680 092 567",
   whatsappUrl: "https://wa.me/212680092567?text=" + encodeURIComponent(
-    "Bonjour, je veux la licence à vie du connecteur Nanomizer (anonymiseur Ai4x pour Claude Desktop) à 500 Dhs HT. Comment on procède ?"
+    "Bonjour, je veux l'abonnement annuel Nanomizer (connecteur Claude Desktop). Comment on procède ?"
   ),
-  // v2.2 : une entreprise achète sur devis, pas sur un message WhatsApp.
-  quoteUrl: "https://wa.me/212680092567?text=" + encodeURIComponent(
-    "Bonjour, je voudrais un devis pour la licence Équipe de Nanomizer. Raison sociale : … ICE : … Nombre de postes : …"
-  ),
+  // Une entreprise achète sur devis : formulaire de la page, puis devis et
+  // facture au nom de l'entité.
+  quoteUrl: "https://ai4x.academy/nanomizer#devis",
 };
+
+/* Délai de grâce après l'échéance d'un abonnement : une facture d'entreprise
+   se règle rarement le jour même. Pendant ces jours, tout fonctionne et chaque
+   réponse le rappelle ; ensuite, le codage s'arrête (le décodage, jamais). */
+export const GRACE_DAYS = 15;
 
 /* ESSAI GRATUIT (v2.2) — 14 jours, intégré, sans serveur ni demande. Sans
    licence valide, la première anonymisation ouvre l'essai ; sa date de début
@@ -169,9 +176,12 @@ export function licenceStatus(raw, now = new Date()) {
   const expires = new Date(p.exp + "T23:59:59");
   if (Number.isNaN(expires.getTime())) return { valid: false, reason: "date d'expiration illisible" };
   const days = Math.ceil((expires - now) / 86400000);
+  const grace = days < 0 && days >= -GRACE_DAYS;
   return {
-    valid: days >= 0,
-    reason: days >= 0 ? "" : "licence expirée",
+    valid: days >= 0 || grace,
+    reason: days >= 0 || grace ? "" : "licence expirée",
+    grace,
+    graceLeft: grace ? GRACE_DAYS + days : 0,
     lifetime: false,
     holder: p.org || "—",
     seats: p.seats || 1,
@@ -228,8 +238,9 @@ export function blockedMessage(status) {
     head.push("puis redémarrez Claude Desktop.");
   }
   return head.concat([
-    `Le connecteur (verrou, traitement par lots, PDF, OCR) s'active avec une licence À VIE : ${OFFER.price}, une seule fois,`,
-    `mises à jour comprises — ou ${OFFER.priceTeam}. Commande sur WhatsApp au ${OFFER.whatsappDisplay} : ${OFFER.whatsappUrl}`,
+    `Le connecteur (verrou, traitement par lots, PDF, OCR) s'active avec un ABONNEMENT ANNUEL : ${OFFER.price},`,
+    `mises à jour et support compris — ou ${OFFER.priceTeam}.`,
+    `Commander : ${OFFER.orderUrl} (ou WhatsApp ${OFFER.whatsappDisplay} : ${OFFER.whatsappUrl})`,
     `Pour une entreprise (devis, facture au nom de l'entité) : ${OFFER.quoteUrl}`,
     "Ce qui continue de fonctionner, et continuera toujours : la DÉ-ANONYMISATION de vos fichiers déjà",
     "codés (outil deanonymiser) et l'état de votre clé. Vos données ne sont jamais prises en otage.",
@@ -242,10 +253,15 @@ export function warningBanner(status) {
   if (status.valid && status.trial) {
     return `🧪 Essai gratuit : ${status.daysLeft} jour(s) restant(s)${status.expiresAt ? ` (jusqu'au ${status.expiresAt})` : ""}, toutes fonctions ouvertes.` +
       (status.refused ? ` ⚠️ La clé configurée a été refusée (${status.refused}) : vérifiez-la.` : "") +
-      ` Licence à vie : ${OFFER.price} (WhatsApp ${OFFER.whatsappDisplay}) ; entreprise, sur devis : ${OFFER.quoteUrl}`;
+      ` Abonnement : ${OFFER.price} — ${OFFER.orderUrl} ; entreprise, sur devis : ${OFFER.quoteUrl}`;
+  }
+  if (status.valid && status.grace) {
+    return `⏳ Licence ${status.holder} : échue le ${status.expiresAt}, délai de grâce de ${status.graceLeft} jour(s). ` +
+      `Renouvelez l'abonnement (${OFFER.orderUrl}) — ensuite, l'anonymisation s'arrêtera, mais la dé-anonymisation ` +
+      "continuera de fonctionner.";
   }
   if (!status.valid || status.lifetime || !status.expiringSoon) return "";
   return `⏳ Licence ${status.holder} : ${status.daysLeft} jour(s) restant(s) (expire le ${status.expiresAt}). ` +
-    `Pensez au renouvellement, ou passez à la licence à vie (${OFFER.price}, WhatsApp ${OFFER.whatsappDisplay}) — à ` +
+    `Pensez au renouvellement de l'abonnement (${OFFER.orderUrl}, ou WhatsApp ${OFFER.whatsappDisplay}) — à ` +
     "l'échéance, l'anonymisation s'arrêtera, mais la dé-anonymisation continuera de fonctionner.";
 }

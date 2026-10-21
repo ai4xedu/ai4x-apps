@@ -1,27 +1,38 @@
-# Vendre et livrer Nanomizer — licence à vie
+# Vendre et livrer Nanomizer — abonnement annuel
 
-Deux tarifs (décision du 08/10/2026), tous deux **à vie, une seule fois,
-mises à jour comprises**, vendus et facturés HT par **TARDIGRADE SARL**
-(nom commercial Ai4x — décision du 21/10/2026 : Nanomizer est commercialisé
-par Tardigrade, comme le reste du catalogue Ai4x ; elle remplace, pour ce
-logiciel, la frontière « logiciel vendu = YGH » du 24/08/2026). Identifiants
-légaux : `YG-OS/2_TARDIGRADE/1_MEMORY/10_CONTEXT/legal.md` — jamais recopiés ici.
+**Décision du 21/10/2026** : Nanomizer se vend en **abonnement annuel par
+poste**, France d'abord ; il remplace la licence à vie du 08/10/2026 pour
+toute NOUVELLE vente. Vendu et facturé HT par **TARDIGRADE SARL** (nom
+commercial Ai4x — décision du 21/10/2026). Identifiants légaux :
+`YG-OS/2_TARDIGRADE/1_MEMORY/10_CONTEXT/legal.md` — jamais recopiés ici.
+Conditions applicables : contrat de licence et d'abonnement publié sur
+ai4x.academy/nanomizer-conditions.
 
-| | Prix | Clé | Inclus |
-|---|---|---|---|
-| **Solo** | 500 Dhs HT | 1 poste (`--postes 1`) | le connecteur, **l'appli web débloquée par la même clé**, le mode d'emploi |
-| **Équipe** | 5 000 Dhs HT | jusqu'à 20 postes, **une seule clé** (`--postes 20`) | + 1 h de prise en main en visio, facture au nom de l'entité |
+| | France (HT / an) | Maroc (HT / an) | Clé | Inclus |
+|---|---|---|---|---|
+| **Solo** | 390 € | 1 200 Dhs | 1 poste (`--postes 1`) | le connecteur, **l'appli web débloquée par la même clé**, mises à jour, support par e-mail |
+| **Cabinet** | 290 € par poste | 900 Dhs par poste | 2 à 20 postes, **une seule clé** (`--postes N`) | + clé d'équipe, rapport de couverture, modèle de charte IA, 1 h de prise en main en visio |
+| **Entreprise** | sur devis | sur devis | plus de 20 postes | + accompagnement du DPO, conditions particulières |
 
-Au-delà de 20 postes : 200 Dhs HT par poste supplémentaire, sur la même clé.
-Pas d'abonnement : un outil hors ligne n'a rien à renouveler. Sans clé, l'appli web est la
-version Découverte (50 lignes par fichier, une clé par fichier, tableaux seulement) ; la
-clé l'ouvre en entier — c'est l'argument pour qui n'a pas Claude Desktop.
+Pas de compteur d'usage, pas de serveur : la clé porte sa date de fin.
+**J-30** : chaque réponse prévient. **Échéance + 15 jours** (délai de grâce) :
+tout fonctionne encore, avec un rappel. **Ensuite** : le codage s'arrête,
+**le décodage jamais**. Renouveler = émettre une nouvelle clé qui repart de
+l'échéance précédente (`--depuis`), pas du jour du paiement.
 
-Paiement : **par carte** sur ai4x.academy (Solo, 600 Dhs TTC, page sécurisée
-PayZone — `/paiement?offre=nanomizer-solo`), ou **par virement** : le client
-écrit sur WhatsApp (bouton de la LP, message pré-rempli), on envoie le RIB de
-Tardigrade, il vire, on livre la clé (et le fichier s'il ne l'a pas déjà
-téléchargé sur ai4x.academy/nanomizer).
+**Droits acquis.** Les licences à vie vendues avant le 21/10/2026 (500 Dhs
+Solo, 5 000 Dhs Équipe) restent valables, mises à jour comprises — c'était la
+promesse. Ne plus jamais en émettre de nouvelles ; `--a-vie` ne sert qu'à
+réémettre une licence déjà vendue (perte, changement de titulaire).
+
+Paiement :
+- **France** : devis (formulaire de ai4x.academy/nanomizer#devis), facture,
+  **virement** international. Les prix s'entendent HT ; facturation
+  d'une prestation à un professionnel établi dans l'UE : à valider avec le
+  comptable de Tardigrade (TVA, retenue éventuelle) avant la première
+  facture.
+- **Maroc** : Solo **par carte** sur ai4x.academy (1 440 Dhs TTC, PayZone —
+  `/paiement?offre=nanomizer-solo`) ou par virement ; Cabinet sur devis.
 
 ## 0. Depuis la v2.2 : l'essai d'abord, le devis pour les entreprises
 
@@ -64,30 +75,31 @@ Pour que tout le cabinet ait les mêmes codes :
 Le dossier d'équipe contient TOUTES les vraies valeurs du cabinet : il se
 sauvegarde et se protège comme le serveur de fichiers lui-même.
 
-## 1. Le client écrit (message pré-rempli)
+## 1. Le client commande
 
-> Bonjour, je veux la licence à vie du connecteur Nanomizer (anonymiseur Ai4x
-> pour Claude Desktop) à 500 Dhs HT. Comment on procède ?
+Il remplit le formulaire de commande de ai4x.academy/nanomizer (raison
+sociale, SIREN/ICE, nombre de postes, e-mail) — ou écrit sur WhatsApp. Le
+formulaire arrive dans le CRM (statut « Entreprise », relance le jour même).
 
 Réponse type :
 
-> Bonjour ! Avec plaisir. C'est 500 Dhs HT, une seule fois, mises à jour
-> comprises. Voici le RIB : … (au nom de TARDIGRADE). Envoyez-moi la capture du
-> virement et le nom à inscrire sur la licence (vous ou votre cabinet) : je
-> vous envoie le connecteur et votre clé dès réception.
+> Bonjour, merci pour votre commande. Vous trouverez ci-joint le devis
+> D-2026-… : N poste(s) × 290 € HT, abonnement d'un an à compter de la
+> livraison de la clé, mises à jour et support compris. Les conditions sont
+> celles de ai4x.academy/nanomizer-conditions. Dès réception du virement,
+> je vous envoie votre clé et la facture.
 > Il faut l'application Claude Desktop (Mac ou Windows) : https://claude.ai/download
-
-Pour une équipe (message « licence Équipe ») : même réponse, 5 000 Dhs HT,
-le nom de l'entité sur la clé, et on propose la date de la prise en main.
 
 ## 2. À réception du virement : émettre la clé
 
 ```bash
 cd ai4x-apps/apps/mcp-anonymiseur
 NANOMIZER_PRIVATE_KEY_FILE="…/nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt" \
-  node scripts/emettre-licence.mjs --org "Maître Nom Prénom" --a-vie --note "WhatsApp 18/09/2026"
-# équipe :
-NANOMIZER_PRIVATE_KEY_FILE="…" node scripts/emettre-licence.mjs --org "Payzone" --postes 20 --a-vie --note "Équipe, facture FAC-2026-…"
+  node scripts/emettre-licence.mjs --org "Maître Nom Prénom" --note "FAC-2026-…"
+# cabinet :
+NANOMIZER_PRIVATE_KEY_FILE="…" node scripts/emettre-licence.mjs --org "Cabinet X" --postes 6 --note "FAC-2026-…"
+# renouvellement (l'année repart de l'échéance précédente) :
+NANOMIZER_PRIVATE_KEY_FILE="…" node scripts/emettre-licence.mjs --org "Cabinet X" --postes 6 --depuis 2027-10-21 --note "FAC-2027-…"
 ```
 
 Le script imprime la clé (`NANO1.…`) ET le message WhatsApp de livraison,
@@ -106,7 +118,7 @@ mail, un dépôt git, un drive.
 Pour reconstruire le fichier après une mise à jour du code :
 
 ```bash
-npm test                                   # 94 tests, dont la chasse aux fuites (sans clé privée)
+npm test                                   # 127 tests, dont la chasse aux fuites (sans clé privée)
 npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb
 node test/campagne-mvp.mjs                 # 44 contrôles sur l'artefact (clé privée requise) — A5 et C3 verts
 ```
@@ -132,7 +144,7 @@ node test/campagne-mvp.mjs                 # 44 contrôles sur l'artefact (clé 
   SES systèmes ; Nanomizer est imbattable sur le reste (noms, CIN, permis,
   téléphones, texte libre). Le dire avant que leur RSSI ne le dise.
 - ✅ 100 % hors ligne, licence vérifiée sur le poste, aucune télémétrie. Sans
-  licence, le décodage marche toujours.
+  licence (abonnement échu compris), le décodage marche toujours.
 - ❌ On ne dit JAMAIS « conforme » ni « anonymisation parfaite » : c'est de la
   **pseudonymisation réversible + relecture du plan**. Un texte collé
   directement dans la conversation ne passe par aucun verrou ; un contexte très
