@@ -1,6 +1,6 @@
 {
   "name": "anonymiseur-ai4x",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Nanomizer — Anonymiseur de données Ai4x : serveur MCP local (pseudonymisation fail-closed avant IA)",
   "main": "index.js",
   "directories": {
@@ -17,6 +17,7 @@
   "type": "module",
   "dependencies": {
     "@modelcontextprotocol/server": "^2.0.0",
+    "pngjs": "^7.0.0",
     "qrcode-generator": "^2.0.4",
     "tesseract.js": "^7.0.0",
     "unpdf": "^1.8.0",

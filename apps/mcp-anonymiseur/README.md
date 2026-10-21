@@ -80,6 +80,7 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) ; modes TABLEAU (colonnes entières), DOCUMENT (facture → codage intra-cellule, dictionnaire marocain), WORD (copie .docx codée, mise en forme conservée) et TEXTE/PDF ; le verrou passe ENSUITE partout (colonnes lisibles et en-têtes compris). `onglet` par numéro. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
 | `anonymiser_dossier` | LOT : tous les fichiers (ou filtrés par `motif`), toutes les feuilles, UNE clé, plan→confirmer, compte rendu en comptes seuls + rapport `rapport-lot-*.md` (noms de fichiers codés) |
 | `lire_scan` | OCR LOCAL d'un scan — le texte reconnu n'entre JAMAIS dans la conversation : il est écrit en `…-ocr-A-RELIRE.md` (nom codé), l'utilisateur le relit, PUIS on anonymise ce fichier |
+| `caviarder_image` | Bandeaux noirs sur une capture ou un scan : OCR local, même moteur et même verrou qu'un texte, mot mal lu et inconnu noirci d'office, bandeaux GRAVÉS dans un nouveau PNG. Trois temps : plan → image écrite sur le poste (l'utilisateur la regarde) → `envoyer: true` seulement après sa validation |
 | `deanonymiser` | Retraduit texte/TSV → fichier local (.md, .xlsx ou, avec `format: "docx"`, un document Word mis en forme ; droits 600), jamais dans le chat |
 | `decoder_word` | Décode un .docx contenant des codes (la copie codée retravaillée, ou un .docx de l'IA) : mise en forme conservée, corps, en-têtes, pieds de page, notes et commentaires ; écrit sur le poste, jamais dans le chat |
 | `etat_cle` | Comptes par type, licence, résumé de l'audit de confinement |
@@ -87,6 +88,18 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `rapport_couverture` | Page locale pour le DPO : par poste, fichiers protégés, plans non confirmés, décodages, montants en clair, valeurs retrouvées, portes ouvertes, dernière activité. Que des comptes ; en équipe, chaque poste dépose les siens dans le dossier d'équipe |
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v2.8.0 (le caviardage des images, 21/10/2026).
+**`caviarder_image`** (`caviardage.js`) : le texte était pseudonymisé partout,
+l'IMAGE (capture d'écran, photo de pièce, scan) passait en clair. L'OCR local
+donne chaque mot et sa boîte ; le moteur et le verrou décident ; les bandeaux
+sont gravés dans les pixels d'un nouveau PNG (pas de calque : l'original ne
+survit pas, l'EXIF non plus). Un mot mal lu et inconnu est noirci d'office.
+L'OCR ne voit ni signature, ni tampon, ni manuscrit, ni visage : l'image est
+écrite sur le poste, l'utilisateur la regarde, et elle n'est envoyée à l'IA
+(`envoyer: true`, avec son empreinte SHA-256 au journal) qu'après sa validation.
+Testé en relisant l'image caviardée par OCR : ICE, IF, RC, RIB et noms ne s'y
+lisent plus. Nouvelle dépendance : `pngjs` (MIT, sans dépendances).
 
 v2.7.0 (Word, 21/10/2026) : le format n° 1 d'un avocat — chantier S1-S3 du
 chemin critique vers 9/10 (`CHEMIN-CRITIQUE-9-10.md`, dépôt Nanomizer).

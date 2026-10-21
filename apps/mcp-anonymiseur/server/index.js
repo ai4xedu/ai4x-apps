@@ -46,7 +46,8 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 import { extractText } from "unpdf";
-import { extractPdfJpegs, ocrImages, reviewHints, isImageFile } from "./ocr.js";
+import { extractPdfJpegs, ocrImages, ocrWords, reviewHints, isImageFile } from "./ocr.js";
+import { selectRedactions, burnBoxes } from "./caviardage.js";
 import { readLicence, licenceStatus, trialStatus, blockedMessage, warningBanner, isUnsubstituted, OFFER, parseKey, publicKeys } from "./licence.js";
 import { sealIdentity, buildSeal, verifySeal, renderSealPage, verifyLink, CLAUSE } from "./sceau.js";
 import {
@@ -66,7 +67,7 @@ import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 
-export const VERSION = "2.7.0";
+export const VERSION = "2.8.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -1557,6 +1558,31 @@ tool(
 
 /* ------------------------------------------------------------------ OCR --- */
 
+/* Les images d'un scan : le fichier lui-même si c'est une image, sinon les
+   images embarquées dans le PDF. Renvoie { images, source } ou { error }. */
+async function scanImages(file, label, outil) {
+  if (isImageFile(file)) return { images: [fs.readFileSync(file)], source: "image" };
+  if (!/\.pdf$/i.test(file)) return { error: err(`${label} n'est ni une image ni un PDF. ${outil} attend un scan ou une capture.`) };
+  const buf = fs.readFileSync(file);
+  // Un PDF qui a DÉJÀ du texte n'a pas besoin d'OCR — on évite de
+  // dégrader une donnée exacte par une reconnaissance approximative.
+  try {
+    const { text: t } = await extractText(new Uint8Array(buf), { mergePages: true });
+    if (String(t || "").replace(/\s/g, "").length > 40) {
+      return { error: err(`${label} contient déjà du texte : ce n'est pas un scan. Utilise directement anonymiser_fichier — l'OCR dégraderait une donnée exacte.`) };
+    }
+  } catch {}
+  const images = extractPdfJpegs(buf);
+  if (!images.length) {
+    return { error: err(
+      `Aucune image exploitable dans ${label}. Les scans en JPEG sont pris en charge ; ` +
+      "les compressions CCITT/JBIG2 (fax, noir et blanc) ne le sont pas encore. " +
+      "Contournement : réenregistrer le scan en JPEG/PNG, ou activer le réglage « PDF recherchable / OCR » du scanner."
+    ) };
+  }
+  return { images, source: "PDF scanné" };
+}
+
 tool(
   "lire_scan",
   {
@@ -1566,7 +1592,8 @@ tool(
       "ligne. Le texte reconnu N'EST JAMAIS renvoyé ici : il est écrit dans un fichier « …-ocr-A-RELIRE.md » " +
       "que l'UTILISATEUR doit relire et corriger — l'OCR se trompe, et un identifiant mal reconnu ne serait " +
       "pas détecté à l'anonymisation (ce serait une fuite silencieuse). Une fois le fichier relu, appelle " +
-      "anonymiser_fichier sur CE fichier. Ne propose jamais d'envoyer l'image elle-même à une IA.",
+      "anonymiser_fichier sur CE fichier. Ne propose jamais d'envoyer l'image d'origine à une IA : pour donner l'image " +
+      "elle-même, c'est caviarder_image.",
     inputSchema: z.object({
       nom_fichier: z.string().describe("Repère [F-XXXXX] ou nom du scan dans le dossier de travail (.pdf, .png, .jpg, .tif…)"),
     }),
@@ -1583,35 +1610,9 @@ tool(
     const rel = path.relative(WORKDIR, file).split(path.sep).join("/");
     const label = fileLabel(rel);
 
-    /* Rassemble les images à reconnaître : le fichier lui-même si c'est une
-       image, sinon les images embarquées dans le PDF. */
-    let images = [];
-    let source = "";
-    if (isImageFile(file)) {
-      images = [fs.readFileSync(file)];
-      source = "image";
-    } else if (/\.pdf$/i.test(file)) {
-      const buf = fs.readFileSync(file);
-      // Un PDF qui a DÉJÀ du texte n'a pas besoin d'OCR — on évite de
-      // dégrader une donnée exacte par une reconnaissance approximative.
-      try {
-        const { text: t } = await extractText(new Uint8Array(buf), { mergePages: true });
-        if (String(t || "").replace(/\s/g, "").length > 40) {
-          return err(`${label} contient déjà du texte : ce n'est pas un scan. Utilise directement anonymiser_fichier — l'OCR dégraderait une donnée exacte.`);
-        }
-      } catch {}
-      images = extractPdfJpegs(buf);
-      source = "PDF scanné";
-      if (!images.length) {
-        return err(
-          `Aucune image exploitable dans ${label}. Les scans en JPEG sont pris en charge ; ` +
-          "les compressions CCITT/JBIG2 (fax, noir et blanc) ne le sont pas encore. " +
-          "Contournement : réenregistrer le scan en JPEG/PNG, ou activer le réglage « PDF recherchable / OCR » du scanner."
-        );
-      }
-    } else {
-      return err(`${label} n'est ni une image ni un PDF. lire_scan attend un scan.`);
-    }
+    const got = await scanImages(file, label, "lire_scan");
+    if (got.error) return got.error;
+    const { images, source } = got;
 
     let res;
     try { res = await ocrImages(images); }
@@ -1657,6 +1658,137 @@ tool(
       "N'envoie JAMAIS l'image d'origine à une IA — c'est précisément ce que cet outil évite."
     );
     return textWithLicence(lines.join("\n"));
+  }
+);
+
+/* --------------------------------------------------- caviardage (v2.8) *
+ * Cf. caviardage.js. Trois temps : le PLAN (comptes, rien d'écrit), l'image
+ * caviardée écrite sur le poste (confirmer), puis — seulement après que
+ * l'utilisateur l'a regardée — l'image envoyée à l'IA (envoyer). */
+const MAX_IMAGE_BYTES = 4.5 * 1024 * 1024;
+
+function caviardePaths(base, n) {
+  return Array.from({ length: n }, (_, i) => path.join(OUTDIR, `${base}-caviarde${n > 1 ? `-p${i + 1}` : ""}.png`));
+}
+
+tool(
+  "caviarder_image",
+  {
+    title: "Caviarder une capture ou un scan (bandeaux noirs, sur le poste)",
+    description:
+      "Pose des BANDEAUX NOIRS sur une image (capture d'écran, photo de pièce, scan .png/.jpg/.tif ou PDF scanné), " +
+      "entièrement sur le poste : OCR local, puis le même moteur et le même verrou que pour un texte décident ce qui " +
+      "est sensible (noms, identifiants, comptes, adresses, références, mots inconnus) ; un mot mal lu et inconnu est " +
+      "noirci d'office. Les bandeaux sont GRAVÉS dans une nouvelle image PNG (pas superposés). " +
+      "TROIS TEMPS : sans confirmer, renvoie le PLAN (rien n'est écrit) ; avec confirmer: true, écrit l'image " +
+      "caviardée sur le poste — l'UTILISATEUR doit l'ouvrir et vérifier (l'OCR ne voit ni signature, ni tampon, " +
+      "ni écriture manuscrite, ni visage) ; seulement s'il confirme qu'il ne reste rien de lisible, rappelle avec " +
+      "envoyer: true pour recevoir l'image caviardée. Pour travailler sur le TEXTE d'un scan, préférer lire_scan.",
+    inputSchema: z.object({
+      nom_fichier: z.string().describe("Repère [F-XXXXX] ou nom de l'image / du PDF scanné dans le dossier de travail"),
+      valeurs_a_coder: z.array(z.string()).optional()
+        .describe("Noms propres à noircir EN PLUS — demande-les à l'utilisateur, ne les invente jamais"),
+      valeurs_a_exclure: z.array(z.string()).optional()
+        .describe("Valeurs que l'utilisateur veut EXPLICITEMENT laisser visibles"),
+      confirmer: z.boolean().optional().describe("true = écrire l'image caviardée sur le poste (après accord sur le plan)"),
+      envoyer: z.boolean().optional()
+        .describe("true = renvoyer ici l'image caviardée DÉJÀ écrite — uniquement après que l'utilisateur l'a ouverte et validée"),
+    }),
+  },
+  async ({ nom_fichier, valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false, envoyer = false }) => {
+    const bloque = requireLicence() || requireTeam();
+    if (bloque) return bloque;
+    if (!fs.existsSync(WORKDIR)) return workdirMissing();
+    let file;
+    try { file = resolveFile(nom_fichier); } catch (e) { return err(e.message); }
+    if (!fs.existsSync(file)) {
+      return err(`Fichier introuvable : ${maskName(nom_fichier)}. Utilise lister_fichiers pour voir les fichiers disponibles.`);
+    }
+    const label = fileLabel(path.relative(WORKDIR, file).split(path.sep).join("/"));
+
+    if (envoyer) {
+      // Le nom codé est déjà dans la clé (écrit au temps « confirmer ») : une copie suffit.
+      const base = codedBase(path.basename(file), probeBook(), "image");
+      const found = [];
+      for (let n = 1; n <= 30 && !found.length; n++) {
+        const ps = caviardePaths(base, n);
+        if (ps.every((p) => fs.existsSync(p))) found.push(...ps);
+      }
+      if (!found.length) {
+        return err("Aucune image caviardée pour ce fichier. D'abord confirmer: true, puis faire VÉRIFIER l'image par " +
+          "l'utilisateur, et seulement ensuite envoyer: true.");
+      }
+      if (found.some((p) => fs.statSync(p).mtimeMs < fs.statSync(file).mtimeMs)) {
+        return err(`${label} a été modifié depuis son caviardage : recommence (confirmer: true) puis fais vérifier la nouvelle image.`);
+      }
+      const bufs = found.map((p) => fs.readFileSync(p));
+      const total = bufs.reduce((s, b) => s + b.length, 0);
+      if (total > MAX_IMAGE_BYTES) {
+        return err(`Image(s) caviardée(s) trop lourde(s) pour la conversation (${(total / 1048576).toFixed(1)} Mo). ` +
+          "L'utilisateur peut recadrer la capture sur la partie utile, puis recommencer.");
+      }
+      return {
+        content: [
+          { type: "text", text: [
+            `🖼️ Image caviardée de ${label}, validée par l'utilisateur (${found.length} page(s)). Les zones noires sont ` +
+              "définitivement effacées : ne cherche pas à deviner ce qu'elles cachaient.",
+            ...bufs.map((b, i) => `Empreinte SHA-256${found.length > 1 ? ` page ${i + 1}` : ""} : ${crypto.createHash("sha256").update(b).digest("hex")}`),
+          ].join("\n") },
+          ...bufs.map((b) => ({ type: "image", data: b.toString("base64"), mimeType: "image/png" })),
+        ],
+      };
+    }
+
+    const got = await scanImages(file, label, "caviarder_image");
+    if (got.error) return got.error;
+    let pages;
+    try { pages = await ocrWords(got.images); }
+    catch (e) { return err(`OCR impossible : ${e.message}`); }
+
+    const extra = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
+    const pb = probeBook();
+    const results = pages.map((p) => selectRedactions(p.lines, pb, { extra, excludes: valeurs_a_exclure }));
+    const mots = results.reduce((s, r) => s + r.mots, 0);
+    if (mots < 5) {
+      return err(`L'OCR ne lit presque aucun mot dans ${label} : impossible de savoir ce qu'il faut noircir, donc rien n'est ` +
+        "caviardé. Une image sans texte (photo, signature seule) ne se caviarde pas automatiquement.");
+    }
+    const byType = {};
+    for (const r of results) for (const [k, v] of Object.entries(r.byType)) byType[k] = (byType[k] || 0) + v;
+    const bandeaux = results.reduce((s, r) => s + r.boxes.length, 0);
+    const illisibles = results.reduce((s, r) => s + r.illisibles, 0);
+    const resume = [
+      `${bandeaux} bandeau(x) sur ${mots} mot(s) lus — ${Object.keys(byType).length ? fmt(byType) : "aucune donnée reconnue"}` +
+        (illisibles ? ` ; dont ${illisibles} mot(s) mal lu(s) noircis d'office` : "") + ".",
+      "⚠️ L'OCR ne voit ni signature, ni tampon, ni écriture manuscrite, ni visage, ni texte en très petit ou de travers.",
+    ];
+
+    if (!confirmer) {
+      return textWithLicence([
+        `📋 PLAN DE CAVIARDAGE — ${got.source} ${label}, ${pages.length} page(s). RIEN n'a encore été écrit.`,
+        ...resume,
+        "Présente ce plan à l'utilisateur, attends son accord, puis rappelle avec confirmer: true : l'image caviardée " +
+          "sera écrite sur son poste, pour qu'il la regarde AVANT tout envoi.",
+      ].join("\n"));
+    }
+
+    const book = loadBook();
+    const base = codedBase(path.basename(file), book, "image");
+    saveBook(book);
+    ensureOutdir();
+    const outs = caviardePaths(base, pages.length);
+    pages.forEach((p, i) => {
+      fs.writeFileSync(outs[i], burnBoxes(p.png, results[i].boxes).png, { mode: 0o600 });
+    });
+    return textWithLicence([
+      `✅ Image caviardée écrite sur le poste (${pages.length} page(s)) — ${label}.`,
+      ...resume,
+      ...outs.map((o) => `→ ${shown(o)}`),
+      "",
+      "Demande à l'utilisateur d'OUVRIR l'image et de vérifier qu'il ne reste rien de lisible qui l'identifie. " +
+        "Ne l'envoie à l'IA (envoyer: true) que s'il le confirme explicitement ; sinon, il ajoute ce qui reste " +
+        "dans valeurs_a_coder et on recommence. L'image d'origine n'est pas modifiée.",
+    ].join("\n"));
   }
 );
 
