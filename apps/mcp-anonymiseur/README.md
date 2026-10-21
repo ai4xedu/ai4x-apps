@@ -89,6 +89,26 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.9.0 (la politique du cabinet sur le poste — US-4, 21/10/2026).
+**`politique.js`** : un poste enrôlé (réglage « Fichier d'enrôlement »,
+`ANX_ENROLEMENT`) applique la politique signée par la console
+`apps/nanomizer-admin`. À l'entrée de chaque outil qui code, la politique du
+dossier partagé est relue et revérifiée : signature par la clé ÉPINGLÉE au
+premier usage, cabinet, format, contrôles de chargement (détecteur inconnu,
+plancher retiré, expiration > 365 j, `en_cas_erreur` ≠ bloquer), anti-retour
+(version inférieure, ou même numéro au contenu différent), expiration (72 h
+d'avertissement puis blocage). Dossier partagé injoignable : la dernière copie
+vérifiée s'applique, avec un avertissement au-delà de 24 h. ABSENTE, ALTEREE,
+RETROGRADEE et EXPIREE (après la grâce) bloquent le codage — plans compris —,
+jamais le décodage. Les règles « interdit » par détecteur empêchent l'écriture
+de la copie pour l'IA (fichier seul, ou ce fichier dans un lot). La politique,
+ses règles et la notice du cabinet s'affichent dans `etat_cle` et dans chaque
+plan ; la version et l'empreinte de la politique sont notées dans chaque
+entrée du journal. **Pas encore appliquées** : les règles par noms
+(empreintes — US-5) ; elles sont annoncées comme telles au salarié.
+Tests : `test/politique.test.js` signe avec la VRAIE console (critères
+d'acceptation 1, 2 et 8 de la spec).
+
 v2.8.0 (le caviardage des images, 21/10/2026).
 **`caviarder_image`** (`caviardage.js`) : le texte était pseudonymisé partout,
 l'IMAGE (capture d'écran, photo de pièce, scan) passait en clair. L'OCR local

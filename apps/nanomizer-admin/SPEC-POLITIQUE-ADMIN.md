@@ -70,7 +70,7 @@ soit stable.
   "emise_par": "admin@cabinet-exemple.fr",
 
   "perimetre": {
-    "surfaces": ["claude_code", "claude_web"],
+    "surfaces": ["claude_code", "claude_desktop", "claude_web"],
     "en_cas_erreur": "bloquer"
   },
 

@@ -31,8 +31,11 @@ npm test
 
 ## Pas encore fait (stories suivantes)
 
-- **US-4** : anti-retour, expiration, rechargement côté poste (`verifierSignature`
-  ne contrôle pour l'instant que la clé et le cabinet).
+- ~~**US-4**~~ : livré côté connecteur (v2.9.0, `mcp-anonymiseur/server/politique.js`) —
+  épinglage de la clé, anti-retour, expiration (72 h de grâce), rechargement,
+  copie locale vérifiée, règles « interdit » par détecteur. Surface : Claude
+  Desktop (fichiers) ; une politique doit lister `claude_desktop` dans
+  `perimetre.surfaces` (c'est désormais le défaut).
 - **US-5** : reconnaissance des noms par n-grammes — la normalisation de
   `lib/empreinte.js` est le contrat à respecter.
 - Rotation de clé, code QR de secours, console graphique.
