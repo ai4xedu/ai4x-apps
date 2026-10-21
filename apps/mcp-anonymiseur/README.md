@@ -86,6 +86,23 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `rapport_couverture` | Page locale pour le DPO : par poste, fichiers protégés, plans non confirmés, décodages, montants en clair, valeurs retrouvées, portes ouvertes, dernière activité. Que des comptes ; en équipe, chaque poste dépose les siens dans le dossier d'équipe |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.5.0 (l'abonnement, 21/10/2026) : prêt pour la vente B2B.
+1. **Abonnement annuel par poste** (`OFFER`, licence.js) : Solo 390 € HT/an,
+   Cabinet (2 à 20 postes) 290 € HT par poste et par an ; Maroc 1 200 / 900 Dhs
+   HT. Les licences à vie déjà vendues restent honorées. **Délai de grâce** de
+   15 jours après l'échéance (`GRACE_DAYS`) : une facture d'entreprise se règle
+   rarement le jour même. Le décodage ne s'arrête toujours jamais.
+   `emettre-licence.mjs --depuis` renouvelle à partir de l'échéance précédente.
+2. **Collision des codes d'équipe** : deux postes qui créent au même moment le
+   même code pour deux valeurs (8 chiffres, rare mais possible) — avant, le
+   code du collègue était ignoré et le décodage rendait la mauvaise personne,
+   sans alerte. Désormais le code est marqué en conflit : jamais décodé, le
+   fichier porte « [À VÉRIFIER : code] », `deanonymiser` et `etat_cle` le
+   signalent (`test/equipe.test.js`).
+3. **Preuve « zéro réseau » exigée en CI** : un job Node 26 lance
+   `test/reseau.test.js` avec `NANOMIZER_PREUVE_RESEAU=1` (sous Node 22, elle
+   était ignorée en vert). SDK MCP serveur 2.3.1 (`npm audit` : 0 vulnérabilité).
+
 v2.4.0 (rapport de couverture et charte IA, 21/10/2026) : de l'outil personnel
 à la règle d'entreprise.
 1. **Rapport de couverture** (`server/couverture.js`, outil `rapport_couverture`).
@@ -256,16 +273,16 @@ bouton « J'ai une clé » ; vérification Ed25519 dans le navigateur, même cl�
 clé, l'appli est la version *Découverte* — 50 lignes par fichier, une clé par fichier,
 tableaux seulement, dé-anonymisation toujours possible.
 
-Distribution (décisions du 18/09 et du 08/10/2026) : **licence à vie, 500 Dhs
-HT par poste — ou 5 000 Dhs HT pour une équipe, jusqu'à 20 postes sur une
-seule clé —, commande sur WhatsApp** (+212 680 092 567), comme le reste du
-catalogue Ai4x — par carte sur ai4x.academy (Solo) ou par virement (RIB
-envoyé sur WhatsApp), puis la clé part sur WhatsApp ; le `.mcpb` se télécharge
-sur ai4x.academy/nanomizer (essai de 14 jours intégré). **Vendu et facturé par
-TARDIGRADE SARL** (Ai4x), décision du 21/10/2026 ; devis et factures par le
-moteur unique de Tardigrade (YG-OS). Voir `LIVRAISON.md`. La LP
-`/anonymiseur-donnees` présente l'offre (#connecteur, #plans). Installation
-côté client : double-clic sur le `.mcpb` → Claude Desktop propose « Installer ».
+Distribution (décision du 21/10/2026, qui remplace la licence à vie) :
+**abonnement annuel par poste** — Solo 390 € HT/an, Cabinet de 2 à 20 postes
+290 € HT par poste et par an, au-delà sur devis ; Maroc 1 200 / 900 Dhs HT.
+**Vendu et facturé par TARDIGRADE SARL** (Ai4x) ; devis et factures par le
+moteur unique de Tardigrade (YG-OS). Commande : formulaire de
+ai4x.academy/nanomizer (devis, virement), ou par carte pour le Solo marocain ;
+le `.mcpb` se télécharge sur la même page (essai de 14 jours intégré).
+Conditions : ai4x.academy/nanomizer-conditions. Voir `LIVRAISON.md`.
+Installation côté client : double-clic sur le `.mcpb` → Claude Desktop
+propose « Installer ».
 
 ## Licences
 
@@ -291,8 +308,9 @@ course aux armements — un vrai DRM se paierait en promesse de confidentialité
 Émettre une clé (interne, jamais dans le bundle) :
 
 ```bash
-node scripts/emettre-licence.mjs --org "Maître X" --a-vie          # l'offre 500 Dhs
-node scripts/emettre-licence.mjs --org "Cabinet X" --postes 5 --mois 12
+node scripts/emettre-licence.mjs --org "Maître X"                     # Solo, 1 an
+node scripts/emettre-licence.mjs --org "Cabinet X" --postes 5         # Cabinet, 1 an
+node scripts/emettre-licence.mjs --org "Cabinet X" --postes 5 --depuis 2027-10-21   # renouvellement
 ```
 
 Une licence à vie porte `exp: "9999-12-31"` ET `life: true` : la v2 affiche

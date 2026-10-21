@@ -73,8 +73,9 @@ test("sans licence : anonymiser, lot et OCR sont bloqués, avec un message qui o
       const res = await client.callTool({ name, arguments: args });
       assert.ok(res.isError, `${name} devrait être bloqué sans licence`);
       const out = resultText(res);
-      assert.match(out, /À VIE : 500 Dhs/, `${name} : le message doit orienter vers l'offre`);
-      assert.match(out, /https:\/\/wa\.me\/212680092567/, `${name} : la commande se fait sur WhatsApp`);
+      assert.match(out, /ABONNEMENT ANNUEL : 390 € HT/, `${name} : le message doit orienter vers l'offre`);
+      assert.match(out, /https:\/\/ai4x\.academy\/nanomizer#plans/, `${name} : la commande se fait sur la page`);
+      assert.match(out, /https:\/\/wa\.me\/212680092567/, `${name} : ou sur WhatsApp`);
       assert.match(out, /jamais prises en otage/, `${name} : le message doit rassurer sur les données`);
     }
   } finally { await client.close(); }

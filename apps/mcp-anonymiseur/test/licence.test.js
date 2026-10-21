@@ -83,8 +83,18 @@ test("statut : valide, bientôt expirée, expirée — sur une horloge injectée
   // L'avertissement rappelle que le décodage survit.
   assert.match(warningBanner(bientot), /dé-anonymisation continuera/);
 
-  const expiree = licenceStatus(key, new Date("2027-01-05T10:00:00"));
+  // Délai de grâce (abonnement, v2.5) : une facture d'entreprise se règle
+  // rarement le jour de l'échéance.
+  const grace = licenceStatus(key, new Date("2027-01-05T10:00:00"));
+  assert.equal(grace.valid, true);
+  assert.equal(grace.grace, true);
+  assert.equal(grace.graceLeft, 11);   // grâce jusqu'au 15/01 inclus
+  assert.match(warningBanner(grace), /délai de grâce de 11 jour\(s\)/);
+  assert.match(warningBanner(grace), /dé-anonymisation continuera/);
+
+  const expiree = licenceStatus(key, new Date("2027-01-20T10:00:00"));
   assert.equal(expiree.valid, false);
+  assert.equal(expiree.grace, false);
   assert.match(expiree.reason, /expirée/);
 });
 
@@ -95,8 +105,10 @@ test("le message de blocage vend, ne punit pas, et promet le décodage", () => {
   assert.match(msg, /DÉ-ANONYMISATION/);
   assert.match(msg, /jamais prises en otage/);
   assert.match(msg, /anonymiseur-donnees/);       // l'appli gratuite reste
-  assert.match(msg, /500 Dhs/);                   // et l'offre à vie…
-  assert.match(msg, /wa\.me\/212680092567/);     // …commandée sur WhatsApp
+  assert.match(msg, /ABONNEMENT ANNUEL : 390 € HT/);   // l'offre (v2.5)…
+  assert.match(msg, /ai4x\.academy\/nanomizer#plans/); // …commandée sur la page
+  assert.match(msg, /wa\.me\/212680092567/);          // …ou sur WhatsApp
+  assert.doesNotMatch(msg, /à vie/i);                    // plus vendue
 });
 
 test("clé absente ≠ clé refusée : deux messages, deux gestes à faire", () => {

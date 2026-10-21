@@ -705,7 +705,7 @@ export function decodeText(input, map) {
     replaced++;
     return v;
   });
-  return { text: out, replaced, used: Object.keys(used).length };
+  return { text: out, replaced, used: Object.keys(used).length, usedCodes: used };
 }
 
 /* Tableau codé -> TSV (aperçu inline pour le modèle : uniquement des codes

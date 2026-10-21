@@ -63,7 +63,7 @@ import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 
-export const VERSION = "2.4.0";
+export const VERSION = "2.5.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -179,7 +179,7 @@ function currentTeam() {
 function requireTeam() {
   if (!TEAM_DIR) return null;
   if (!teamAllowed()) {
-    return err("Un dossier de clé d'équipe est configuré, mais la clé d'équipe fait partie de la licence Équipe " +
+    return err("Un dossier de clé d'équipe est configuré, mais la clé d'équipe fait partie de l'offre Cabinet " +
       `(${OFFER.priceTeam}). Videz le réglage « Dossier de clé d'équipe » pour travailler seul, ou demandez un devis : ${OFFER.quoteUrl}`);
   }
   try { currentTeam(); return null; } catch (e) {
@@ -196,14 +196,26 @@ function withTeam(book) {
   let team;
   try { team = currentTeam(); } catch { return book; }
   if (!team) return book;
-  const known = new Set(book.entries.map((e) => e.code));
+  /* code -> valeur normalisée. Deux postes qui codent AU MÊME MOMENT deux
+     valeurs différentes peuvent tomber sur le même code (8 chiffres : rare,
+     pas impossible sur un gros cabinet) avant d'avoir lu le fichier de
+     l'autre. Ce code désigne alors deux personnes : on ne choisit pas en
+     silence, on le marque en conflit et le décodage le signale. */
+  const normOf = (e) => normFor(String(e.code).split("-")[0], e.value);
+  const known = new Map(book.entries.map((e) => [e.code, normOf(e)]));
+  // Non énumérable : jamais écrit dans la clé (recalculé à chaque lecture).
+  Object.defineProperty(book, "conflicts", { value: new Set(), enumerable: false, configurable: true });
   for (const e of readTeamEntries(team).entries) {
-    if (!e || !e.code || known.has(e.code)) continue;
+    if (!e || !e.code) continue;
+    if (known.has(e.code)) {
+      if (known.get(e.code) !== normOf(e)) book.conflicts.add(e.code.toUpperCase());
+      continue;
+    }
     const prefix = String(e.code).split("-")[0];
-    const k = `${prefix}||${normFor(prefix, e.value)}`;
+    const k = `${prefix}||${normOf(e)}`;
     if (!book.byKey[k]) book.byKey[k] = e.code;
     book.entries.push({ code: e.code, value: e.value, type: e.type });
-    known.add(e.code);
+    known.set(e.code, normOf(e));
   }
   return attachTeam(book, team.secret);
 }
@@ -1481,9 +1493,9 @@ tool(
     if (!book.entries.length) {
       return err("Aucune clé de session — anonymise d'abord un fichier avec anonymiser_fichier.");
     }
-    const map = {};
-    for (const e of book.entries) map[e.code.toUpperCase()] = e.value;
+    const map = decodeMap(book);
     const res = decodeText(contenu, map);
+    const conflicts = Object.keys(res.usedCodes || {}).filter((c) => book.conflicts && book.conflicts.has(c)).length;
     if (!res.replaced) {
       return err(`Aucun code de la clé trouvé dans ce contenu (clé : ${book.entries.length} codes). Vérifie que les codes sont recopiés tels quels.`);
     }
@@ -1507,9 +1519,14 @@ tool(
       [
         `✅ ${res.replaced} code(s) remplacé(s) (${res.used} distincts sur les ${book.entries.length} de la clé).`,
         `Fichier décodé écrit sur le poste : ${shown(outPath)}`,
+        conflicts
+          ? `⚠️ ${conflicts} code(s) désignent deux valeurs différentes dans la clé d'équipe (deux postes les ont créés ` +
+            "au même moment) : ils ne sont PAS décodés, le fichier les marque « [À VÉRIFIER : code] ». Dis à " +
+            "l'utilisateur de retrouver la bonne valeur dans la pièce d'origine — ne cherche pas à la deviner."
+          : "",
         "IMPORTANT : les valeurs réelles n'apparaissent pas dans cette conversation — c'est voulu. " +
         "Dis à l'utilisateur d'ouvrir ce fichier sur son ordinateur. Ne le lis pas toi-même.",
-      ].join("\n")
+      ].filter(Boolean).join("\n")
     );
   }
 );
@@ -1520,9 +1537,17 @@ tool(
  * n'en renvoient que des comptes. Comme deanonymiser : jamais bloqués par la
  * licence (le décodage ne s'arrête jamais). */
 
-function codeDecoder(book) {
+/* CODE -> valeur réelle. Un code en conflit d'équipe (withTeam) n'est jamais
+   remplacé par l'une de ses deux valeurs : il devient une mention à vérifier. */
+function decodeMap(book) {
   const map = {};
   for (const e of book.entries) map[e.code.toUpperCase()] = e.value;
+  for (const c of book.conflicts || []) map[c] = `[À VÉRIFIER : ${c}]`;
+  return map;
+}
+
+function codeDecoder(book) {
+  const map = decodeMap(book);
   return (t) => decodeText(t, map);
 }
 
@@ -1685,23 +1710,27 @@ tool(
     const st = licence();
     const licLine = st.valid && st.trial
       ? (st.notStarted
-        ? `Licence : aucune — essai gratuit de 14 jours disponible, il s'ouvre à la première anonymisation. Licence à vie : ${OFFER.price}.`
-        : `Licence : essai gratuit, ${st.daysLeft} jour(s) restant(s) (jusqu'au ${st.expiresAt}). Licence à vie : ${OFFER.price} ; entreprise, sur devis.`) +
+        ? `Licence : aucune — essai gratuit de 14 jours disponible, il s'ouvre à la première anonymisation. Abonnement : ${OFFER.price}.`
+        : `Licence : essai gratuit, ${st.daysLeft} jour(s) restant(s) (jusqu'au ${st.expiresAt}). Abonnement : ${OFFER.price} ; entreprise, sur devis.`) +
         (st.refused ? ` ⚠️ Clé configurée refusée : ${st.refused}.` : "")
       : st.valid
       ? (st.lifetime
         ? `Licence : ${st.holder} · ${st.seats} poste(s) · À VIE.`
+        : st.grace
+        ? `Licence : ${st.holder} · ${st.seats} poste(s) · échue le ${st.expiresAt}, délai de grâce : ${st.graceLeft} j.`
         : `Licence : ${st.holder} · ${st.seats} poste(s) · valide jusqu'au ${st.expiresAt} (${st.daysLeft} j).`)
       : `Licence : aucune valide (${st.reason}). La dé-anonymisation reste disponible — elle le restera toujours. ` +
-        `Licence à vie : ${OFFER.price}, sur WhatsApp ${OFFER.whatsappDisplay}.`;
+        `Abonnement : ${OFFER.price} — ${OFFER.orderUrl}.`;
     let teamLine = "";
     if (TEAM_DIR) {
-      if (!teamAllowed()) teamLine = "Clé d'équipe : configurée mais inactive — elle fait partie de la licence Équipe.";
+      if (!teamAllowed()) teamLine = "Clé d'équipe : configurée mais inactive — elle fait partie de l'offre Cabinet (2 postes et plus).";
       else {
         try {
           const t = currentTeam();
           const r = readTeamEntries(t);
           teamLine = `Clé d'équipe ACTIVE : ${r.postes} poste(s) ont déjà partagé leurs codes, ${new Set(r.entries.map((e) => e.code)).size} code(s) connus de l'équipe. Même valeur = même code sur tous les postes. Dossier : ${shown(TEAM_DIR)}.`;
+          const nConflicts = (loadBook().conflicts || new Set()).size;
+          if (nConflicts) teamLine += ` ⚠️ ${nConflicts} code(s) en conflit (deux valeurs pour un même code) : ils ne sont plus décodés, mais marqués « À VÉRIFIER ».`;
         } catch (e) { teamLine = `🚨 Clé d'équipe injoignable (${e.message}) : ${shown(TEAM_DIR)} — l'anonymisation est suspendue, le décodage continue.`; }
       }
     }

@@ -396,8 +396,8 @@ check("C1a", "champ vide : on dit « aucune clé configurée », pas « format i
 check("C1b", "le message donne le geste exact (champ + redémarrage)",
   /Clé de licence/.test(bloque) && /REDÉMARREZ/.test(bloque));
 check("C1c", "et il n'anonymise rien", !/TABLEAU CODÉ/.test(bloque));
-check("C1d", "et il dit comment acheter : licence à vie 500 Dhs, sur WhatsApp",
-  /500 Dhs/.test(bloque) && /https:\/\/wa\.me\/212680092567/.test(bloque));
+check("C1d", "et il dit comment acheter : abonnement 390 € HT/an, sur la page ou WhatsApp",
+  /390 € HT/.test(bloque) && /ai4x\.academy\/nanomizer#plans/.test(bloque) && /https:\/\/wa\.me\/212680092567/.test(bloque));
 
 // La promesse fondatrice : sans licence, le décodage marche quand même.
 const decodeSansLicence = record(await sansLicence.callTool({
