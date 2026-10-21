@@ -99,11 +99,11 @@ after(async () => {
   fs.rmSync(workdir, { recursive: true, force: true });
 });
 
-test("tools/list expose les 14 outils", async () => {
+test("tools/list expose les 15 outils", async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name).sort();
   assert.deepEqual(names, [
-    "anonymiser_dossier", "anonymiser_fichier", "deanonymiser", "decoder_word", "etat_cle", "journal_ia", "lire_scan",
+    "anonymiser_dossier", "anonymiser_fichier", "caviarder_image", "deanonymiser", "decoder_word", "etat_cle", "journal_ia", "lire_scan",
     "lister_fichiers", "rapport_couverture", "reinitialiser_cle", "remettre_chiffres", "sceau_dossier", "tableau_de_bord", "verifier_confinement",
   ]);
 });

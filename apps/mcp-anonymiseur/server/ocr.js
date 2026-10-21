@@ -108,6 +108,37 @@ export async function ocrImages(images, opts = {}) {
   };
 }
 
+/* Pour le caviardage (caviardage.js) : chaque mot reconnu avec sa boîte et sa
+   confiance, ligne par ligne, plus l'image décodée en PNG (Tesseract la rend :
+   aucune dépendance native pour lire un JPEG). Même règle : rien de ceci ne
+   sort du poste. Renvoie [{ png: Buffer, lines: [[{ text, conf, bbox }]] }]. */
+export async function ocrWords(images, opts = {}) {
+  if (!fs.existsSync(path.join(TESSDATA_DIR, "fra.traineddata"))) {
+    throw new Error("Modèle de langue OCR introuvable dans l'extension (tessdata/fra.traineddata). Réinstalle le connecteur.");
+  }
+  const worker = await createWorker("fra", 1, {
+    langPath: TESSDATA_DIR,
+    gzip: false,
+    cachePath: opts.cachePath || path.join(os.tmpdir(), "anonymiseur-ai4x-ocr"),
+    logger: () => {},
+  });
+  const pages = [];
+  try {
+    for (const img of images) {
+      const { data } = await worker.recognize(img, {}, { blocks: true, imageColor: true });
+      const lines = [];
+      for (const b of data.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) {
+        lines.push((l.words || []).map((w) => ({ text: String(w.text || ""), conf: Number(w.confidence) || 0, bbox: w.bbox })));
+      }
+      const png = Buffer.from(String(data.imageColor || "").replace(/^data:image\/png;base64,/, ""), "base64");
+      pages.push({ png, lines });
+    }
+  } finally {
+    await worker.terminate();
+  }
+  return pages;
+}
+
 /* Signale à l'utilisateur ce qu'il doit regarder EN PRIORITÉ dans sa
    relecture, sans citer aucune valeur : les zones où l'OCR se trompe le
    plus (chiffres collés, l/I/1, O/0) et les lignes très courtes. */
