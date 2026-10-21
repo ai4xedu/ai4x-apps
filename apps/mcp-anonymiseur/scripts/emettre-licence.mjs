@@ -66,7 +66,10 @@ if (since && Number.isNaN(new Date(since + "T00:00:00").getTime())) {
 const start = since && new Date(since + "T00:00:00") > now ? new Date(since + "T00:00:00") : now;
 const exp = new Date(start.getTime());
 exp.setMonth(exp.getMonth() + months);
-const iso = (d) => d.toISOString().slice(0, 10);
+// Date LOCALE, pas UTC : « --depuis 2027-03-15 » est minuit à Casablanca ou
+// Paris, soit la veille en UTC — toISOString() faisait perdre un jour à
+// chaque renouvellement.
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 /* Licence à vie : `exp` lointain ET drapeau `life`. Le drapeau fait afficher
    « à vie » par la v2 ; la date lointaine fait accepter la clé par une v1.6

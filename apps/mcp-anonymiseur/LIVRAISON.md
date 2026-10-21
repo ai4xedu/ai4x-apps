@@ -102,6 +102,20 @@ NANOMIZER_PRIVATE_KEY_FILE="…" node scripts/emettre-licence.mjs --org "Cabinet
 NANOMIZER_PRIVATE_KEY_FILE="…" node scripts/emettre-licence.mjs --org "Cabinet X" --postes 6 --depuis 2027-10-21 --note "FAC-2027-…"
 ```
 
+**Réémission (sceau v2.6) — même échéance, rien d'autre ne change.** Les clés
+émises avant la v2.6 n'ont pas d'identité de sceau. Pour chaque abonné, avec
+SON nombre de postes et SON échéance actuelle (`--mois 0` = l'échéance reste
+celle de `--depuis`) :
+
+```bash
+NANOMIZER_PRIVATE_KEY_FILE="…" node scripts/emettre-licence.mjs --org "Cabinet X" --postes 6 --depuis 2027-10-21 --mois 0 --note "réémission sceau v2.6"
+# licence à vie (droits acquis) :
+NANOMIZER_PRIVATE_KEY_FILE="…" node scripts/emettre-licence.mjs --org "Maître Y" --a-vie --note "réémission sceau v2.6"
+```
+
+L'ancienne clé continue de marcher : le client remplace la sienne quand il veut
+délivrer un sceau (réglage « Clé de licence », puis redémarrer Claude Desktop).
+
 Le script imprime la clé (`NANO1.…`) ET le message WhatsApp de livraison,
 prêt à copier. Notez la « Référence » affichée dans votre suivi (CRM) : c'est
 le seul lien entre un paiement et une clé.
