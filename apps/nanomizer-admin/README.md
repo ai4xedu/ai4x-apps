@@ -36,6 +36,8 @@ npm test
   copie locale vérifiée, règles « interdit » par détecteur. Surface : Claude
   Desktop (fichiers) ; une politique doit lister `claude_desktop` dans
   `perimetre.surfaces` (c'est désormais le défaut).
-- **US-5** : reconnaissance des noms par n-grammes — la normalisation de
-  `lib/empreinte.js` est le contrat à respecter.
+- ~~**US-5**~~ : livré côté connecteur (v2.10.0) — n-grammes de 1 à 6 mots,
+  normalisation de `lib/empreinte.js` (le contrat, testé des deux côtés) ;
+  catégories → codes `CLI-`, `PAR-`, `SOC-`… ; noms interdits → copie non
+  écrite ; contrôle résiduel.
 - Rotation de clé, code QR de secours, console graphique.

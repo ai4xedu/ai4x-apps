@@ -68,7 +68,7 @@ import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from ".
 import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque } from "./politique.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 
-export const VERSION = "2.9.0";
+export const VERSION = "2.10.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -185,6 +185,21 @@ function gardeInterdit(texteCode) {
   if (!POLITIQUE) return;
   const c = politiqueCourante || controlerPolitique();
   if (POLITIQUE.bloquant(c)) throw new PolitiqueBloque(decrirePolitique(c), { decision: "BLOQUE_POLITIQUE" });
+  if (/(?<![\p{L}\p{N}])INTERDIT-\d{3,}(?![\p{L}\p{N}])/u.test(String(texteCode))) {
+    const r = [...interditsVus.values()][0];
+    throw new PolitiqueBloque(
+      `🛑 Bloqué par la règle ${r ? r.id : "« interdit »"} de la politique du cabinet${r ? ` — « ${r.libelle} »` : ""} : le document ` +
+      "cite un nom que le cabinet interdit d'envoyer à l'IA. RIEN n'a été écrit pour l'IA. Retirez-le du document (ou demandez à " +
+      "votre responsable), puis relancez.", { decision: "BLOQUE_ROUGE", regle: r ? r.id : null });
+  }
+  // Contrôle résiduel : un nom listé encore en clair après codage → rien ne part.
+  const reste = POLITIQUE.residuNoms(c, texteCode);
+  if (reste) {
+    throw new PolitiqueBloque(
+      `🛑 Contrôle final de la politique : un nom protégé par la règle ${reste.id} (« ${reste.libelle} ») est encore en clair après ` +
+      "codage (par exemple parce qu'il figure dans les valeurs à laisser en clair). Par sécurité, RIEN n'a été écrit pour l'IA. " +
+      "Retirez-le des exclusions, ou signalez le cas au support (sans la valeur).", { decision: "BLOQUE_ERREUR", regle: reste.id });
+  }
   const hit = regleInterditeTouchee(POLITIQUE.interditsDetecteurs(c), texteCode);
   if (hit) {
     throw new PolitiqueBloque(
@@ -198,7 +213,31 @@ function gardeInterdit(texteCode) {
 function politiqueAlerte() {
   if (!POLITIQUE) return "";
   const c = politiqueCourante || controlerPolitique();
-  return decrirePolitique(c, { nomsNonAppliques: POLITIQUE.reglesNomsNonAppliquees(c) });
+  return decrirePolitique(c, { nbNoms: POLITIQUE.nbNoms(c) });
+}
+
+/* US-5 : les noms listés par l'admin, trouvés par empreintes dans ces textes
+   BRUTS, deviennent des valeurs à coder (même chemin que valeurs_a_coder).
+   Les règles « interdit » touchées sont retenues pour gardeInterdit. */
+const interditsVus = new Map();
+function nomsPolitique(textes) {
+  if (!POLITIQUE) return [];
+  const c = politiqueCourante || controlerPolitique();
+  if (POLITIQUE.bloquant(c)) return [];   // requirePolitique a déjà refusé
+  const r = POLITIQUE.analyserNoms(c, textes);
+  for (const x of r.interdits) interditsVus.set(x.id, x);
+  return r.extras;
+}
+/* Les textes d'une feuille, cellule par cellule (un n-gramme ne doit pas
+   enjamber deux cellules). */
+function textesFeuille(ws) {
+  const out = [];
+  for (const k of Object.keys(ws || {})) {
+    if (k[0] === "!") continue;
+    const v = ws[k] && ws[k].v;
+    if (typeof v === "string" && v.trim()) out.push(v);
+  }
+  return out;
 }
 const POSTE_FILE = path.join(OUTDIR, ".nanomizer-poste");
 /* Nom du poste dans le rapport de couverture (« Me Benali », « Accueil ») :
@@ -760,6 +799,7 @@ function readWorkbook(file) {
    réidentification sur ce qui sortira — et, si demandé, la généralisation.
    Renvoie { text, stats, reid, generalized }. */
 function codeFreeText(raw, book, extras, excludes, { generaliser = false } = {}) {
+  extras = [...(extras || []), ...nomsPolitique([raw])];
   const base = anonymizeText(raw, book, extras, { excludes });
   const strict = strictCode(base.text, { book, extra: extras, excludes });
   const stats = { ...mergeStats(base.stats, strict), autoNames: base.stats.autoNames };
@@ -1106,7 +1146,7 @@ tool(
     const ws = wb.Sheets[sheetName];
     const layout = detectLayout(ws);
     const effectiveMode = mode === "tableau" || mode === "document" ? mode : layout.layout;
-    const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
+    const extras = [...valeurs_a_coder.map((v) => ({ value: v, type: "autre" })), ...nomsPolitique(textesFeuille(ws))];
     const docOpts = { excludes: valeurs_a_exclure };
 
     const writeOut = (outWs, book, nums) => {
@@ -1322,6 +1362,7 @@ function listBatchFiles(motif) {
 /* Traite toutes les feuilles d'un classeur avec le carnet fourni : mode
    choisi feuille par feuille (tableau ou document), PUIS le verrou partout. */
 function anonymizeWorkbook(wb, book, extras, docOpts, numberMode = DEFAULT_NUMBER_MODE) {
+  extras = [...(extras || []), ...nomsPolitique(wb.SheetNames.flatMap((n) => textesFeuille(wb.Sheets[n])))];
   const outWb = XLSX.utils.book_new();
   const perSheet = [];
   const numbers = {};
@@ -1578,7 +1619,7 @@ tool(
         if (!(e instanceof PolitiqueBloque)) throw e;
         w.skip = true;
         done--;
-        bloquesPolitique.push(`${path.basename(w.path)} (${e.regle ? `règle ${e.regle}` : "politique invalide"})`);
+        bloquesPolitique.push(`${path.basename(w.path)} (${e.regle ? `règle ${e.regle}` : "politique invalide"}${e.decision === "BLOQUE_ERREUR" ? ", nom protégé resté en clair" : ""})`);
         report.push(`- 🛑 ${path.basename(w.path)} : ${e.decision === "BLOQUE_ROUGE" ? `bloqué par la règle ${e.regle} de la politique du cabinet` : "politique du cabinet invalide"}, copie NON écrite`);
       }
     }
