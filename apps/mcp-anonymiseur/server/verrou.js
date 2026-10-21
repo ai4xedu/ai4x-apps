@@ -257,13 +257,24 @@ const LEGAL_FORMS_SRC =
 /* ---------------------------------------------------------------- lexique - */
 
 let LEX = null;
+let PROVIDED = null;
+
+/* Pour l'appli web (paquet navigateur, cf. scripts/build-web-verrou.mjs) : le
+   dictionnaire et les listes de noms arrivent DÉJÀ décompressés, embarqués
+   dans le fichier de l'appli — pas de disque, pas de réseau. Le connecteur,
+   lui, ne l'appelle jamais : il lit lexique/ sur le disque. */
+export function fournirLexique({ mots, noms }) {
+  PROVIDED = { mots: String(mots), noms: typeof noms === "string" ? JSON.parse(noms) : noms };
+  LEX = null;
+  NAMES = null;
+}
 
 /* Chargé une fois (~130 ms). S'il manque, on REFUSE de travailler : un
    verrou sans dictionnaire laisserait passer n'importe quoi. */
 export function lexicon() {
   if (LEX) return LEX;
   let raw;
-  try { raw = zlib.gunzipSync(fs.readFileSync(LEXICON_FILE)).toString("utf8"); }
+  try { raw = PROVIDED ? PROVIDED.mots : zlib.gunzipSync(fs.readFileSync(LEXICON_FILE)).toString("utf8"); }
   catch {
     throw new Error(
       "Dictionnaire du verrou introuvable dans l'extension (lexique/fr.txt.gz). Par sécurité, rien n'est " +
@@ -298,7 +309,7 @@ let NAMES = null;
 export function names() {
   if (NAMES) return NAMES;
   let data;
-  try { data = JSON.parse(zlib.gunzipSync(fs.readFileSync(NAMES_FILE)).toString("utf8")); }
+  try { data = PROVIDED ? PROVIDED.noms : JSON.parse(zlib.gunzipSync(fs.readFileSync(NAMES_FILE)).toString("utf8")); }
   catch {
     throw new Error("Listes de noms du verrou introuvables (lexique/noms.json.gz). Réinstalle le connecteur.");
   }

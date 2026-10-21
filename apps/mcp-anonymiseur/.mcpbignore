@@ -28,3 +28,11 @@ devis-sortie/
 
 # Dossier de confiance (documents clients, pas du code).
 confiance/
+
+# Outil de construction du paquet navigateur (dépendance de développement) et
+# ce paquet lui-même : rien à faire dans l'extension Claude Desktop.
+node_modules/esbuild/
+node_modules/@esbuild/
+# Ancré à la racine : « dist/ » tout court exclurait aussi node_modules/*/dist
+# (xlsx, SDK MCP…) et l'extension ne démarrerait plus.
+/dist/
