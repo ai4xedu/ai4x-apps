@@ -211,6 +211,25 @@ test("un code déjà posé n'est jamais recodé (« RC : RC-001 » ne devient pa
   assert.equal(strictCode(once, { mask: true }).text, once);
 });
 
+/* Banc d'essai du 20/10/2026 : « RC Rabat 145782 » sortait en clair d'un PDF —
+   la ville entre le libellé et le numéro cassait le motif. */
+test("RC suivi d'une ville puis du numéro : le numéro est codé, la ville reste", () => {
+  const cases = [
+    ["Et la societe X, ICE 003219874000045, RC Rabat 145782, representee par", "145782"],
+    ["immatriculée au RC de Casablanca sous le n° 389412", "389412"],
+    ["R.C. Agadir : 45210", "45210"],
+    ["RC Ain Sebaa - Casablanca 77231", "77231"],
+  ];
+  for (const [s, num] of cases) {
+    const b = newCodebook();
+    const out = code(s, b);
+    assert.ok(!out.includes(num), `numéro RC en clair : ${out}`);
+    assert.match(out, /RC-\d{3}/, out);
+    assert.equal(code(out, b), out, `recodé au second passage : ${out}`);
+  }
+  assert.match(code("RC Rabat 145782"), /^RC Rabat RC-001$/);
+});
+
 /* ---------------------------------- relecture adverse du 18/09/2026 ---- */
 
 test("R1 — patronymes qui sont aussi des mots (INSEE) : codés en tête de phrase, en capitales, derrière un rôle", () => {

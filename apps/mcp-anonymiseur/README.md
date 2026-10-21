@@ -85,6 +85,16 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.1.1 (numéro RC après une ville, 20/10/2026) : trouvé par le banc d'essai
+des fuites (`npm run bench`, `bench/`) — « RC Rabat 145782 » sortait en clair
+d'un PDF, car le motif RC n'acceptait que de la ponctuation entre le libellé et
+le numéro. Il accepte désormais une ville (1 à 3 mots capitalisés, ou déjà
+codés), « de/du » et « sous le n° » ; la ville reste lisible (« RC Rabat
+RC-001 »). Verrouillé par `verrou.test.js` et un canari de `fuite.test.js`.
+Banc : 183/183 valeurs codées (182/183 en v2.1.0), lisibilité inchangée.
+Aussi : la suite de tests tourne sans la clé privée (clé de test du dépôt,
+refusée par l'artefact — contrôle C3 de la campagne).
+
 v2.1.0 (cartes et permis, 08/10/2026) : demandé la veille d'une formation par
 le DG d'un acteur de la monétique — « nous utilisons des numéros de cartes
 bancaires et de permis ». Le moteur codait déjà ces valeurs, mais une carte

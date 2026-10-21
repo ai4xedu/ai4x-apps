@@ -4,6 +4,9 @@ scripts/
 # le client (il exige de toute façon la clé privée, qui vit hors dépôt).
 test/
 
+# Banc d'essai des fuites (corpus fictif, outillage interne).
+bench/
+
 # Docs internes : elles citent l'emplacement de la clé privée et le circuit de
 # vente — rien à faire chez le client.
 README.md

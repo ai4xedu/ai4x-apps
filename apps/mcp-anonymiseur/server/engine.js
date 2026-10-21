@@ -338,7 +338,11 @@ const DOC_PATTERNS = [
     check: (v) => isMoroccanPhone(v.replace(/[\s.\-]/g, "")) },
   { type: "ice",     rx: /\b(?:ICE|I\.C\.E\.?)[^0-9A-Za-z\n]{0,6}(\d{15})\b/gi },
   { type: "if",      rx: /\b(?:IF|I\.F\.?)[^0-9A-Za-z\n]{0,6}(\d{6,8})\b/g },
-  { type: "rc",      rx: /\b(?:RC|R\.C\.?)[^0-9A-Za-z\n]{0,6}(\d{3,7})\b/g },
+  // Le RC se cite souvent avec sa ville : « RC Rabat 145782 », « RC de
+  // Casablanca sous le n° 389412 » (banc d'essai du 20/10/2026 — le numéro
+  // sortait en clair). Ville optionnelle, 1 à 3 mots capitalisés ou déjà
+  // codés (NOM-012), puis au plus « sous le n° » avant le numéro.
+  { type: "rc",      rx: /\b(?:RC|R\.C\.?)(?:[^0-9A-Za-z\n]{1,6}(?:d[eu]\s+)?(?:\p{Lu}[\p{L}'’]+|[A-Z]+-\d{3})(?:[\s-]{1,3}(?:\p{Lu}[\p{L}'’]+|[A-Z]+-\d{3})){0,2}(?:\s+sous\s+le)?)?[^0-9A-Za-z\n]{0,6}(?:n[°º.]\s*)?(\d{3,7})\b/gu },
   { type: "cnss",    rx: /\bCNSS[^0-9A-Za-z\n]{0,6}(\d{6,9})\b/gi },
   { type: "patente", rx: /\bpatente[^0-9A-Za-z\n]{0,6}(\d{5,9})\b/gi },
   { type: "cin",     rx: /\b(?:CIN|C\.I\.N\.?)[^0-9A-Za-z\n]{0,4}([A-Za-z]{1,2}\d{3,8})\b/gi },

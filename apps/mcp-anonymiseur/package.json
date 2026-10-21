@@ -1,13 +1,14 @@
 {
   "name": "anonymiseur-ai4x",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Nanomizer — Anonymiseur de données Ai4x : serveur MCP local (pseudonymisation fail-closed avant IA)",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "bench": "node bench/run.mjs"
   },
   "keywords": [],
   "author": "",

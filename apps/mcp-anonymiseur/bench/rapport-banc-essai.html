@@ -1,0 +1,204 @@
+<title>Banc d'essai Nanomizer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout : une colonne de lecture (rapport), un extrait avant/après en deux
+   panneaux, des tableaux chiffrés alignés en colonnes tabulaires. */
+:root {
+  --paper: #F5F5F8;
+  --ink: #0B0D12;
+  --muted: #555A6B;
+  --line: #DCDCE6;
+  --surface: #FFFFFF;
+  --key: #6A48F0;          /* violet « clé » de la marque, foncé pour le texte */
+  --key-soft: #ECE7FF;
+  --leak: #B4232F;
+  --leak-soft: #FBE9EA;
+  --font-display: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0B0D12; --ink: #ECECF2; --muted: #9A9EB0; --line: #262A38; --surface: #12141C;
+    --key: #A792FF; --key-soft: #231C45; --leak: #FF7A84; --leak-soft: #3A1418; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0B0D12; --ink: #ECECF2; --muted: #9A9EB0; --line: #262A38; --surface: #12141C;
+  --key: #A792FF; --key-soft: #231C45; --leak: #FF7A84; --leak-soft: #3A1418; color-scheme: dark;
+}
+
+body {
+  background: var(--paper); color: var(--ink);
+  font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.6;
+}
+.page {
+  max-width: 46rem; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 3rem 4rem;
+  display: flex; flex-direction: column; gap: 2.75rem;
+}
+h1, h2 { font-family: var(--font-display); font-weight: 700; text-wrap: balance; margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
+h1 { font-size: clamp(1.6rem, 4.5vw, 2.25rem); }
+h2 { font-size: 1.2rem; }
+p { margin: 0; max-width: 65ch; }
+section { display: flex; flex-direction: column; gap: 1rem; }
+.eyebrow { font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.15rem; color: var(--muted); }
+.lede strong { color: var(--ink); font-weight: 600; }
+
+.mark { display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-display); font-weight: 700; font-size: 0.95rem; }
+.mark .bar { display: inline-block; width: 1.6rem; height: 0.55rem; background: var(--ink); }
+
+.figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.figure { background: var(--surface); padding: 1.1rem 1rem; display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.figure .n { font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.figure .n.key { color: var(--key); }
+.figure .l { font-size: 0.9rem; color: var(--muted); line-height: 1.4; }
+@media (max-width: 560px) { .figures { grid-template-columns: 1fr; } }
+
+.code {
+  font-family: var(--font-display); font-size: 0.86em; font-weight: 500;
+  background: var(--key-soft); color: var(--key); padding: 0.05em 0.3em; white-space: nowrap;
+}
+.leaked { background: var(--leak-soft); color: var(--leak); font-weight: 600; padding: 0 0.2em; }
+
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.pane { background: var(--surface); border: 1px solid var(--line); padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.6rem; min-width: 0; }
+.pane p { font-size: 0.95rem; line-height: 1.65; }
+@media (max-width: 640px) { .compare { grid-template-columns: 1fr; } }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 0.55rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-display); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tr.total td { font-weight: 600; }
+.pill { font-family: var(--font-display); font-size: 0.78rem; padding: 0.1em 0.45em; white-space: nowrap; }
+.pill.ok { background: var(--key-soft); color: var(--key); }
+.pill.ko { background: var(--leak-soft); color: var(--leak); }
+
+ul { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; max-width: 65ch; }
+.callout { border-left: 3px solid var(--leak); padding: 0.2rem 0 0.2rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+footer { font-size: 0.85rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.4rem; border-top: 1px solid var(--line); padding-top: 1.25rem; }
+footer code { font-family: var(--font-display); font-size: 0.85em; }
+</style>
+
+<main class="page">
+  <header style="display:flex;flex-direction:column;gap:1rem">
+    <span class="mark"><span class="bar" aria-hidden="true"></span>Nanomizer · banc d'essai</span>
+    <h1>183 valeurs sensibles sur 183 arrivent codées chez l'IA</h1>
+    <p class="lede">Nous avons fait passer 15 documents fictifs, rédigés comme ceux d'un cabinet d'avocats, d'une fiduciaire et d'un acteur de la monétique, dans le connecteur Nanomizer. Puis nous avons cherché chaque nom, numéro et adresse dans <strong>tout ce que Claude peut lire</strong>. La première mesure, sur la version 2.1.0, a trouvé une fuite. Elle est corrigée dans la version 2.1.1, et la nouvelle mesure n'en trouve plus aucune.</p>
+  </header>
+
+  <div class="figures" role="list">
+    <div class="figure" role="listitem"><span class="n key">100 %</span><span class="l">des valeurs sensibles codées (183 sur 183), contre 99,5 % avant correction</span></div>
+    <div class="figure" role="listitem"><span class="n">85,8 %</span><span class="l">des mots courants restent lisibles pour que l'IA travaille</span></div>
+    <div class="figure" role="listitem"><span class="n">49</span><span class="l">sorties lues par l'IA, toutes inspectées</span></div>
+  </div>
+
+  <section>
+    <span class="eyebrow">Ce que l'IA reçoit</span>
+    <h2>Le dossier reste lisible, les personnes disparaissent</h2>
+    <p>Extrait des conclusions prud'homales du corpus. À gauche, le document du cabinet ; à droite, ce que Claude lit. Chaque personne garde le même code dans tout le dossier, et la clé qui permet de revenir aux vrais noms ne quitte pas le poste.</p>
+    <div class="compare">
+      <div class="pane">
+        <span class="eyebrow">Sur le poste</span>
+        <p>POUR : Madame Élodie Garnier, demeurant 27 rue Paul Bert, 69003 Lyon, ayant pour avocat Maître Thomas Lacroix.</p>
+        <p>CONTRE : La société VECTURA LOGISTIQUE SAS, SIRET 812 445 903 00027, prise en la personne de son Président, M. Olivier Chambon.</p>
+        <p>Le 11 janvier 2024, M. Chambon lui a notifié une mise à pied conservatoire.</p>
+      </div>
+      <div class="pane">
+        <span class="eyebrow">Chez Claude</span>
+        <p>POUR : Madame <span class="code">PRENOM-035</span> <span class="code">NOM-075</span>, demeurant <span class="code">ADRESSE-006</span>, 69003 Lyon, ayant pour avocat Maître <span class="code">PRENOM-036</span> <span class="code">NOM-077</span>.</p>
+        <p>CONTRE : La société <span class="code">SOCIETE-019</span>, SIRET <span class="code">REF-013</span>, prise en la personne de son Président, M. <span class="code">PRENOM-037</span> <span class="code">NOM-078</span>.</p>
+        <p>Le 11 janvier 2024, M. <span class="code">NOM-078</span> lui a notifié une mise à pied conservatoire.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Résultats par type de donnée</span>
+    <h2>Détection mesurée</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Type de donnée</th><th class="num">Valeurs</th><th class="num">v2.1.0</th><th class="num">v2.1.1</th></tr></thead>
+        <tbody>
+          <tr><td>Noms et prénoms</td><td class="num">95</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Sociétés et raisons sociales</td><td class="num">15</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Identifiants d'entreprise (ICE, IF, RC, CNSS, patente, SIRET)</td><td class="num">16</td><td class="num"><span class="pill ko">93,8 %</span></td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Téléphones et e-mails</td><td class="num">13</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Pièces d'identité (CIN, NIR, passeport, permis)</td><td class="num">10</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Adresses</td><td class="num">9</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>IBAN / RIB</td><td class="num">9</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Numéros de carte bancaire</td><td class="num">8</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Références de dossier (RG, contrat, litige)</td><td class="num">4</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Plaques d'immatriculation</td><td class="num">4</td><td class="num">100 %</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr class="total"><td>Total</td><td class="num">183</td><td class="num"><span class="pill ko">99,5 %</span></td><td class="num"><span class="pill ok">100 %</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Domaine</th><th>Documents</th><th class="num">Valeurs</th><th class="num">v2.1.1</th></tr></thead>
+        <tbody>
+          <tr><td>Droit (France)</td><td>conclusions, assignation, notes de rendez-vous, mise en demeure, attestation, bordereau, e-mail en anglais</td><td class="num">78</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Finance (Maroc)</td><td>facture, paie, relances d'impayés, contrat de prêt, note d'audit avec passages en darija</td><td class="num">69</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+          <tr><td>Monétique</td><td>journal de transactions, dossier de contestation, flotte et permis</td><td class="num">36</td><td class="num"><span class="pill ok">100 %</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">La fuite trouvée</span>
+    <h2>Un numéro de registre de commerce précédé d'une ville</h2>
+    <div class="callout">
+      <p>Sur la version 2.1.0, dans un contrat de prêt en PDF, la ligne « ICE <span class="code">ICE-001</span>, RC Rabat <span class="leaked">145782</span> » a gardé le numéro RC en clair. Le libellé « RC » était reconnu quand le numéro le suivait directement ; ici, le nom de la ville s'intercalait. Le même type de numéro écrit « RC : 389412 (Casablanca) » dans la facture était bien codé.</p>
+      <p>Corrigé en v2.1.1 : le numéro est désormais codé quand une ville, même de plusieurs mots, sépare le libellé du numéro (« RC de Casablanca sous le n° … », « R.C. Agadir : … »). La ville reste lisible : « RC Rabat <span class="code">RC-001</span> ». Deux tests empêchent le retour de cette fuite, dont un dans la chasse aux fuites qui appelle tous les outils.</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">L'autre mesure</span>
+    <h2>Ce que la prudence coûte en lisibilité</h2>
+    <p>Un outil qui coderait tout aurait 100 % de détection et serait inutile. Nous mesurons donc aussi ce qui doit rester lisible : 56 termes clés sur 60 (juridictions, articles de loi, montants, taux) et 85,8 % des mots courants. Quand Nanomizer se trompe, il code trop, jamais trop peu. Les cas où il code trop :</p>
+    <ul>
+      <li><strong>Les titres en capitales</strong>, par exemple « TRIBUNAL JUDICIAIRE » ou « LETTRE RECOMMANDEE AVEC ACCUSE DE RECEPTION ». Les capitales ressemblent à un nom de famille, alors le doute profite à la confidentialité.</li>
+      <li><strong>Le texte qui n'est pas en français courant</strong> : un e-mail en anglais garde 37 % de ses mots, et les passages en darija sont codés. La protection tient, l'utilité baisse, et l'outil l'annonce dans son plan.</li>
+      <li><strong>Les colonnes entières d'un tableau</strong> : commerçants dans un journal de transactions (58 % lisible), modèles de véhicules dans une flotte (50 %).</li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="eyebrow">Méthode</span>
+    <h2>Comment le test a été mené</h2>
+    <ul>
+      <li>15 documents fictifs aux formats réels : Markdown, Excel et PDF ; ICE, RIB de 24 chiffres, CIN, NIR, IBAN, numéros de carte de test valides (clé de Luhn), permis marocains, plaques.</li>
+      <li>Chaque valeur sensible est étiquetée à l'avance : 183 au total, noms et prénoms comptés séparément.</li>
+      <li>Le connecteur est appelé par le protocole MCP, comme le fait Claude Desktop. Le parcours est celui d'un utilisateur : liste des fichiers, plan, exécution fichier par fichier, puis traitement du dossier entier avec une seule clé.</li>
+      <li>On inspecte tout ce que l'IA peut lire : réponses des outils, fichiers codés, noms de fichiers et d'onglets, rapport de lot. Une seule apparition d'une valeur compte comme une fuite. Les numéros sont comparés chiffres seuls, quel que soit leur format d'écriture.</li>
+      <li>Contrôle du détecteur : sur les documents originaux, il doit retrouver 100 % des valeurs. Sinon, le test est déclaré invalide.</li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="eyebrow">Limites</span>
+    <h2>Ce que ce test ne prouve pas</h2>
+    <ul>
+      <li>100 % sur ce corpus ne veut pas dire 100 % sur vos documents. Ce banc a trouvé une fuite qu'aucun test ne voyait ; vos documents en trouveront peut-être d'autres. C'est pour cela que le plan s'affiche avant chaque anonymisation.</li>
+      <li>Le corpus est petit et nous l'avons rédigé nous-mêmes. Ce n'est pas un audit indépendant. Il a été écrit avant de consulter les règles de détection, et contient volontairement des cas difficiles : noms qui sont aussi des mots (Moulin, Petit, Robin), notes en minuscules, translittérations, anglais.</li>
+      <li>Les quasi-identifiants ne sont pas comptés : dates de naissance, âges, contexte (« ingénieur chez Airbus »). Ils restent lisibles et peuvent permettre une réidentification par recoupement. La relecture humaine reste nécessaire.</li>
+      <li>La garantie porte sur ce qui passe par Nanomizer. Un texte collé directement dans la conversation, ou une autre extension qui voit le dossier, échappent au connecteur. L'outil « vérifier le confinement » signale ces cas.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>Mesuré le 20 octobre 2026 sur le connecteur Nanomizer v2.1.0, puis sur la v2.1.1, qui corrige la fuite RC. Toutes les personnes, sociétés et numéros du corpus sont fictifs.</span>
+    <span>Reproductible : le corpus et le banc sont dans le code du connecteur (<code>npm run bench</code>).</span>
+  </footer>
+</main>
