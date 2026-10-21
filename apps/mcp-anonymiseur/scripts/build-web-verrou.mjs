@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // ============================================================================
-// PAQUET NAVIGATEUR DU VERROU — le même moteur que le connecteur, pour l'appli
+// PAQUET NAVIGATEUR DU VERROU (+ CHIFFRES, + REMISE) — le même moteur que le
+// connecteur, pour l'appli
 // web (ai4x-website/anonymiseur-local.html). Le connecteur reste la SEULE
 // source : ce script assemble server/verrou.js (+ engine.js) pour un
 // navigateur, sans recopier une ligne.
@@ -40,6 +41,8 @@ const SHIMS = {
 
 const entry = `
 import { strictCode, strictSheet, knownValueMatcher, fournirLexique, lexiconSize, codedRatio } from "./server/verrou.js";
+import { protectNumbers, describeNumbers, NUMBER_MODES, DEFAULT_NUMBER_MODE, MODE_LABEL } from "./server/chiffres.js";
+import { restoreWorkbook } from "./server/remise.js";
 async function gunzip(b64) {
   const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
   const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
@@ -50,7 +53,9 @@ const pret = (async () => {
   fournirLexique({ mots, noms });
   return lexiconSize();
 })();
-globalThis.NanomizerVerrou = { version: ${JSON.stringify(manifest.version)}, pret, strictCode, strictSheet, knownValueMatcher, codedRatio };
+globalThis.NanomizerVerrou = { version: ${JSON.stringify(manifest.version)}, pret, strictCode, strictSheet, knownValueMatcher, codedRatio,
+  // v2.4 : les chiffres (montants protégés) et leur remise dans un classeur.
+  protectNumbers, describeNumbers, NUMBER_MODES, DEFAULT_NUMBER_MODE, MODE_LABEL, restoreWorkbook };
 `;
 
 const res = await build({

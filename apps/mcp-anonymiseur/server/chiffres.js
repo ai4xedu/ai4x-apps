@@ -19,7 +19,15 @@
 // La correspondance cellule → vraie valeur est gardée sur le poste, dans un
 // fichier .nanomizer-chiffres-*.json (droits 600), jamais servi à l'IA.
 // ============================================================================
-import crypto from "node:crypto";
+/* Entier aléatoire dans [min, max[ par l'API Web Crypto, présente dans Node
+   et dans les navigateurs : ce module sert au connecteur ET à l'appli web. */
+function randomInt(min, max) {
+  const span = max - min;
+  const buf = new Uint32Array(1);
+  const limit = Math.floor(0x100000000 / span) * span;   // sans biais de modulo
+  do globalThis.crypto.getRandomValues(buf); while (buf[0] >= limit);
+  return min + (buf[0] % span);
+}
 
 export const NUMBER_MODES = ["gabarit", "indice", "clair"];
 export const DEFAULT_NUMBER_MODE = "gabarit";
@@ -40,7 +48,7 @@ function isDateCell(cell, XLSX) {
    Renvoie { mode, cells, factor, real, fake } — real : { "B2": 12400, … },
    fake : la valeur posée à la place (remettre_chiffres vérifie qu'elle est
    toujours là avant de la remplacer : une donnée déplacée n'est pas écrasée). */
-export function protectNumbers(ws, XLSX, { mode = DEFAULT_NUMBER_MODE, headerRow = null, rand = crypto.randomInt } = {}) {
+export function protectNumbers(ws, XLSX, { mode = DEFAULT_NUMBER_MODE, headerRow = null, rand = randomInt } = {}) {
   const out = { mode, cells: 0, factor: null, real: {}, fake: {} };
   if (mode === "clair" || !ws || !ws["!ref"]) return out;
   const targets = [];

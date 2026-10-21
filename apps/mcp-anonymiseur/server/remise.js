@@ -57,13 +57,15 @@ function sheetPaths(get) {
   return out;
 }
 
-/* Remet vraies valeurs et vrais noms dans un .xlsx (Buffer). sheets : sortie
+/* Remet vraies valeurs et vrais noms dans un .xlsx (octets : Buffer ou
+   Uint8Array — ce module sert au connecteur ET à l'appli web). sheets : sortie
    de mergeNumberMaps ; decode : fonction texte → { text, replaced }. */
 export function restoreWorkbook(buf, sheets, decode, XLSX) {
-  const cfb = XLSX.CFB.read(buf, { type: "buffer" });
+  const cfb = XLSX.CFB.read(buf instanceof Uint8Array ? buf : new Uint8Array(buf), { type: "array" });
+  const dec = new TextDecoder("utf-8"), enc = new TextEncoder();
   const entry = (p) => XLSX.CFB.find(cfb, `/${p}`);
-  const get = (p) => { const e = entry(p); return e && e.content ? Buffer.from(e.content).toString("utf8") : null; };
-  const put = (p, s) => { const e = entry(p); if (e) e.content = Buffer.from(s, "utf8"); };
+  const get = (p) => { const e = entry(p); return e && e.content ? dec.decode(e.content instanceof Uint8Array ? e.content : Uint8Array.from(e.content)) : null; };
+  const put = (p, s) => { const e = entry(p); if (e) e.content = enc.encode(s); };
   const stats = { matchedSheets: [], missingSheets: [], restored: 0, moved: 0, decoded: 0, formulas: 0, charts: 0, pivots: 0 };
 
   const decodeIn = (xml, rx) => xml.replace(rx, (m, open, inner, close) => {
@@ -143,5 +145,6 @@ export function restoreWorkbook(buf, sheets, decode, XLSX) {
     put("xl/workbook.xml", wbXml);
   }
 
-  return { buf: Buffer.from(XLSX.CFB.write(cfb, { type: "buffer", fileType: "zip" })), stats };
+  const out = XLSX.CFB.write(cfb, { type: "array", fileType: "zip" });
+  return { buf: out instanceof Uint8Array ? out : Uint8Array.from(out), stats };
 }

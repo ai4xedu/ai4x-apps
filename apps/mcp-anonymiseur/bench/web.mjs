@@ -32,7 +32,7 @@ const verrouBlock = blocks.find((b) => b.includes("globalThis.NanomizerVerrou=")
 const fake = () => ({ style: {}, dataset: {}, files: [], value: "", textContent: "", innerHTML: "", hidden: false,
   classList: { add() {}, remove() {}, toggle() {}, contains: () => false }, addEventListener() {}, appendChild: (c) => c,
   setAttribute() {}, getAttribute: () => null, querySelector: () => fake(), querySelectorAll: () => [], closest: () => fake(), click() {}, focus() {} });
-const sb = { console, setTimeout, clearTimeout, URLSearchParams, TextDecoder, TextEncoder, Blob, Response, DecompressionStream, atob,
+const sb = { console, setTimeout, clearTimeout, URLSearchParams, TextDecoder, TextEncoder, Blob, Response, DecompressionStream, atob, crypto: globalThis.crypto,
   location: { search: "" }, navigator: {}, URL: { createObjectURL: () => "", revokeObjectURL() {} }, FileReader: class {},
   document: { getElementById: () => fake(), createElement: () => fake(), querySelector: () => fake(), querySelectorAll: () => [], body: fake(), addEventListener() {} } };
 sb.window = sb; sb.self = sb; sb.globalThis = sb;
