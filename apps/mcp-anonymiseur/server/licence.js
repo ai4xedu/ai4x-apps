@@ -111,7 +111,9 @@ function spki(b64) {
 }
 
 let trusted;
-function publicKeys() {
+/* Clés de confiance : celle des licences sert aussi à certifier les sceaux
+   (sceau.js), avec une séparation de domaine. */
+export function publicKeys() {
   if (trusted) return trusted;
   trusted = [spki(PUBLIC_KEY_B64)];
   try { trusted.push(spki(fs.readFileSync(TEST_PUBLIC_KEY_FILE, "utf8").trim())); } catch {}

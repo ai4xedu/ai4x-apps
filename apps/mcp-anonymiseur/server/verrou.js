@@ -109,6 +109,9 @@ rodez rouen saint-brieuc saint-etienne saint-malo saint-nazaire saint-omer saint
 saumur senlis sens soissons tarascon tarbes thionville thonon-les-bains toulon tours troyes tulle valenciennes
 vannes verdun versailles vesoul villefranche-sur-saone
 `);
+/* Toutes les villes connues du verrou : le test de réidentification
+   (reidentification.js) les compte comme indices de lieu. */
+export const CITY_WORDS = new Set([...MAJOR_CITIES, ...CITIES]);
 
 /* Mots qui peuvent porter une majuscule en milieu de phrase sans être un nom
    de personne : institutions, pays, villes, mois, jours. */

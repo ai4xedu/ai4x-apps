@@ -39,6 +39,9 @@ export const TYPES = [
   // v2.0 (verrou) : références alphanumériques / n° de dossier, et liens web.
   { id: "reference", prefix: "REF",     label: "Référence / n° de dossier" },
   { id: "lien",     prefix: "LIEN",     label: "Lien / site web" },
+  // v2.6 : une ville codée à la demande (test de réidentification, option
+  // generaliser) — « domicilié à LIEU-001 », décodée comme les autres.
+  { id: "lieu",     prefix: "LIEU",     label: "Lieu (ville)" },
   { id: "autre",    prefix: "CODE",     label: "Autre donnée sensible" },
 ];
 
