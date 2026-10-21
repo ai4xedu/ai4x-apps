@@ -47,17 +47,22 @@ import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 import { extractText } from "unpdf";
 import { extractPdfJpegs, ocrImages, reviewHints, isImageFile } from "./ocr.js";
-import { readLicence, licenceStatus, blockedMessage, warningBanner, isUnsubstituted, OFFER } from "./licence.js";
+import { readLicence, licenceStatus, trialStatus, blockedMessage, warningBanner, isUnsubstituted, OFFER } from "./licence.js";
 import {
   XLSX, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook,
-  detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName,
+  detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName, attachTeam, normFor,
 } from "./engine.js";
 import { strictCode, strictSheet, codedRatio, lexiconSize } from "./verrou.js";
-import { guardResult, MASK } from "./sortie.js";
-import { auditConfinement } from "./confinement.js";
+import { guardResult, guardText, MASK } from "./sortie.js";
+import { protectNumbers, describeNumbers, NUMBER_MODES, DEFAULT_NUMBER_MODE } from "./chiffres.js";
+import { mergeNumberMaps, restoreWorkbook } from "./remise.js";
+import { renderDashboard, CHART_TYPES, AGGREGATES } from "./tableau.js";
+import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
+import { auditConfinement, cloudSync } from "./confinement.js";
+import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 
-export const VERSION = "2.1.1";
+export const VERSION = "2.3.1";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -77,7 +82,31 @@ const MASKED_CELL = "[MASQUÉ — fuite possible]";
 
 /* Fichiers que le connecteur ne lit JAMAIS pour les montrer : la clé, ses
    archives, sa sauvegarde, et les résultats décodés (vraies valeurs). */
-const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}/i;
+const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia|cle-poste-/i;
+
+/* Journal « ce que Claude a vu » (cf. journal.js) : le texte FINAL de chaque
+   réponse, après le verrou de sortie. Le .jsonl brut est interdit au modèle
+   (FORBIDDEN_RX) ; la page qu'on en tire ne contient que des codes. */
+const JOURNAL_DIR = path.join(OUTDIR, JOURNAL_DIRNAME);
+const REPORT_PATH = path.join(OUTDIR, REPORT_NAME);
+const JOURNAL = createJournal(JOURNAL_DIR);
+
+/* Correspondance cellule → vraie valeur des nombres protégés (cf. chiffres.js),
+   à côté du classeur produit. Nom en .nanomizer- : jamais servi à l'IA. */
+function numberMapPath(outXlsx) {
+  return path.join(OUTDIR, `.nanomizer-chiffres-${path.basename(outXlsx).replace(/\.xlsx$/i, "")}.json`);
+}
+function saveNumberMap(outXlsx, sheets) {
+  const p = numberMapPath(outXlsx);
+  if (!Object.values(sheets).some((x) => x.cells)) { try { fs.rmSync(p, { force: true }); } catch {} return; }
+  fs.writeFileSync(p, JSON.stringify({ fichier: path.basename(outXlsx), cree: new Date().toISOString(), feuilles: sheets }), { encoding: "utf8", mode: 0o600 });
+  lockDown(p);
+}
+const chiffresSchema = z.enum(NUMBER_MODES).optional()
+  .describe("Protection des nombres (montants, quantités, taux) : « gabarit » (défaut — valeurs factices, l'IA construit " +
+    "formules et graphiques, remettre_chiffres remet les vraies valeurs sur le poste), « indice » (un facteur secret : " +
+    "proportions et totaux justes, niveaux cachés — pour commenter une tendance) ou « clair » (sur demande explicite " +
+    "de l'utilisateur). Les dates restent toujours lisibles.");
 
 /* ---------------------------------------------------------------- licence *
  * Lue au démarrage (comme le dossier de travail : changer la clé demande un
@@ -85,17 +114,92 @@ const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer
  * vérification est locale et cryptographique : aucun appel réseau. */
 const LICENCE = readLicence(WORKDIR);
 
+const TRIAL_FILE = path.join(OUTDIR, ".nanomizer-essai.json");
+
+function trialStart() {
+  try { return JSON.parse(fs.readFileSync(TRIAL_FILE, "utf8")).debut || "invalide"; } catch (e) {
+    return e && e.code === "ENOENT" ? null : "invalide";   // illisible = essai consommé
+  }
+}
+
 function licence() {
-  return licenceStatus(LICENCE.raw);
+  return trialStatus(licenceStatus(LICENCE.raw), trialStart());
 }
 
 /* Garde-fou des outils qui PRODUISENT de l'anonymisation. Volontairement
    PAS appliqué à deanonymiser ni etat_cle : à l'expiration, on cesse de
-   servir, on ne prend rien en otage. */
+   servir, on ne prend rien en otage. La première anonymisation sans licence
+   ouvre l'essai gratuit. */
 function requireLicence() {
   const st = licence();
+  if (st.valid && st.trial && st.notStarted) {
+    try {
+      fs.mkdirSync(OUTDIR, { recursive: true, mode: 0o700 });
+      fs.writeFileSync(TRIAL_FILE, JSON.stringify({ debut: new Date().toISOString() }), { encoding: "utf8", mode: 0o600 });
+    } catch {}
+  }
   if (st.valid) return null;
   return err(blockedMessage(st));
+}
+
+/* --------------------------------------------------- clé d'équipe (v2.3) *
+ * Cf. equipe.js. Réservée à la licence Équipe (≥ 2 postes) et à l'essai. Si
+ * le dossier d'équipe est configuré mais injoignable (NAS éteint), on REFUSE
+ * de coder : coder avec la clé locale seule fabriquerait des codes que les
+ * collègues ne connaissent pas. Le décodage, lui, continue avec ce qu'on a. */
+const ENV_TEAM = isUnsubstituted(process.env.ANX_TEAM_DIR) ? "" : String(process.env.ANX_TEAM_DIR || "").trim();
+const TEAM_DIR = ENV_TEAM ? path.resolve(ENV_TEAM) : "";
+const POSTE_FILE = path.join(OUTDIR, ".nanomizer-poste");
+
+function posteId() {
+  try { const id = fs.readFileSync(POSTE_FILE, "utf8").trim(); if (/^[a-f0-9]{12}$/.test(id)) return id; } catch {}
+  const id = crypto.randomBytes(6).toString("hex");
+  fs.mkdirSync(OUTDIR, { recursive: true, mode: 0o700 });
+  fs.writeFileSync(POSTE_FILE, id, { encoding: "utf8", mode: 0o600 });
+  return id;
+}
+
+function teamAllowed() {
+  const st = licence();
+  return st.valid && (st.trial || (st.seats || 1) >= 2);
+}
+
+function currentTeam() {
+  if (!TEAM_DIR || !teamAllowed()) return null;
+  return openTeam(TEAM_DIR, posteId());
+}
+
+/* À l'entrée des outils qui codent. */
+function requireTeam() {
+  if (!TEAM_DIR) return null;
+  if (!teamAllowed()) {
+    return err("Un dossier de clé d'équipe est configuré, mais la clé d'équipe fait partie de la licence Équipe " +
+      `(${OFFER.priceTeam}). Videz le réglage « Dossier de clé d'équipe » pour travailler seul, ou demandez un devis : ${OFFER.quoteUrl}`);
+  }
+  try { currentTeam(); return null; } catch (e) {
+    return err(`Clé d'équipe injoignable (${e.message}) : ${shown(TEAM_DIR)}. Par sécurité RIEN n'est codé — des codes ` +
+      "créés sans elle ne seraient pas ceux de vos collègues. Vérifiez que le dossier partagé est monté, puis réessayez. " +
+      "Le décodage reste disponible.");
+  }
+}
+
+/* Ajoute au carnet local les correspondances des collègues, et branche le
+   secret d'équipe (codes déterministes). Silencieux si l'équipe est
+   injoignable : requireTeam l'a déjà dit aux outils qui codent. */
+function withTeam(book) {
+  let team;
+  try { team = currentTeam(); } catch { return book; }
+  if (!team) return book;
+  const known = new Set(book.entries.map((e) => e.code));
+  for (const e of readTeamEntries(team).entries) {
+    if (!e || !e.code || known.has(e.code)) continue;
+    const prefix = String(e.code).split("-")[0];
+    const k = `${prefix}||${normFor(prefix, e.value)}`;
+    if (!book.byKey[k]) book.byKey[k] = e.code;
+    book.entries.push({ code: e.code, value: e.value, type: e.type });
+    known.add(e.code);
+  }
+  return attachTeam(book, team.secret);
 }
 
 /* ------------------------------------------------------------ clé (disque) *
@@ -122,10 +226,10 @@ function validBook(raw) {
 }
 
 function loadBook() {
-  if (!fs.existsSync(KEY_JSON)) return newCodebook();
+  if (!fs.existsSync(KEY_JSON)) return withTeam(newCodebook());
   let raw;
   try { raw = JSON.parse(fs.readFileSync(KEY_JSON, "utf8")); } catch { raw = null; }
-  if (validBook(raw)) return raw;
+  if (validBook(raw)) return withTeam(raw);
   throw new KeyUnreadable(
     `La clé de correspondance (${shown(KEY_JSON)}) est illisible. Par sécurité, RIEN n'a été écrit : repartir d'une clé ` +
     "vierge ferait perdre les correspondances de tous vos fichiers déjà codés. " +
@@ -162,6 +266,10 @@ function saveBook(book) {
   fs.writeFileSync(tmp, JSON.stringify(book), { encoding: "utf8", mode: 0o600 });
   fs.renameSync(tmp, KEY_JSON);
   lockDown(KEY_JSON);
+  if (book.team) {
+    try { writePosteEntries(currentTeam(), book.entries); }
+    catch (e) { throw new TeamUnavailable(`la clé locale est enregistrée, mais pas dans le dossier d'équipe (${e.code || e.message}) : vos collègues ne pourront pas décoder ces codes tant que l'écriture n'aura pas réussi. Réessayez quand le dossier partagé est accessible.`); }
+  }
   // Export xlsx : même format que l'appli web (réimportable dans /anonymiseur-donnees).
   const aoa = [["Code", "Valeur d'origine", "Type"]];
   for (const e of book.entries) aoa.push([e.code, e.value, e.type]);
@@ -184,7 +292,9 @@ function saveBook(book) {
 }
 
 function probeBook() {
-  return JSON.parse(JSON.stringify(loadBook()));
+  const book = loadBook();
+  const copy = JSON.parse(JSON.stringify(book));
+  return book.team ? attachTeam(copy, book.team) : copy;
 }
 
 /* --------------------------------------------------------------- sécurité */
@@ -198,10 +308,12 @@ function safeResolve(name) {
       "Donnez le repère [F-…] donné par lister_fichiers, ou un chemin relatif à ce dossier."
     );
   }
-  if (FORBIDDEN_RX.test(path.basename(p))) {
+  // Le CHEMIN entier, pas seulement le nom : le journal brut s'appelle
+  // « 2026-10.jsonl », c'est son dossier (journal-ia) qui le désigne.
+  if (FORBIDDEN_RX.test(path.relative(WORKDIR, p))) {
     throw new Error(
-      "Fichier refusé : c'est la clé de correspondance (ou un résultat DÉCODÉ) — il contient les vraies valeurs " +
-      "et ne doit jamais passer par l'IA, même anonymisé. Il reste sur le poste de l'utilisateur."
+      "Fichier refusé : c'est la clé de correspondance, un résultat DÉCODÉ ou le journal brut — il peut contenir " +
+      "les vraies valeurs et ne doit jamais passer par l'IA, même anonymisé. Il reste sur le poste de l'utilisateur."
     );
   }
   return p;
@@ -348,8 +460,11 @@ function mergeStats(a, b) {
 /* Les consignes qui voyagent AVEC les données codées : c'est ce qui empêche
    le modèle de reformuler les codes (cause n°1 d'un décodage raté). */
 function rulesBlock(book) {
-  const prefixes = [...new Set(book.entries.map((e) => e.code.split("-")[0]))];
-  const ex = prefixes.length ? prefixes.slice(0, 6).map((p) => p + "-001").join(", ") : "NOM-001, TEL-002";
+  // Des codes RÉELS de la clé en exemple : en mode équipe ils ont 8 chiffres
+  // (NOM-48291374), et un exemple « NOM-001 » pousserait l'IA à les abréger.
+  const firstByPrefix = new Map();
+  for (const e of book.entries) { const p = e.code.split("-")[0]; if (!firstByPrefix.has(p)) firstByPrefix.set(p, e.code); }
+  const ex = firstByPrefix.size ? [...firstByPrefix.values()].slice(0, 6).join(", ") : "NOM-001, TEL-002";
   return [
     "RÈGLES SUR LES CODES (à respecter dans toutes tes réponses) :",
     `1. Les données personnelles sont remplacées par des codes de la forme ${ex}, etc. Recopie chaque code EXACTEMENT tel quel — jamais « le client 1 » ni un nom inventé.`,
@@ -413,12 +528,20 @@ function confinementAlert() {
 }
 
 function runAudit() {
-  return auditConfinement({
+  const a = auditConfinement({
     workdir: WORKDIR,
     keyFiles: [KEY_JSON, KEY_XLSX, KEY_BAK].filter((p) => fs.existsSync(p)),
     shown,
     home: HOME,
   });
+  // Le dossier d'équipe contient TOUTES les correspondances du cabinet : dans
+  // un nuage synchronisé, elles partent avec lui.
+  const cloud = TEAM_DIR && fs.existsSync(TEAM_DIR) ? cloudSync(TEAM_DIR, { home: HOME }) : "";
+  if (cloud) {
+    a.findings.push({ level: "risque", text: `Le dossier de clé d'équipe est synchronisé par ${cloud} : les correspondances de tout le cabinet y partent. Placez-le sur un partage interne (NAS, serveur de fichiers).` });
+    a.risks++;
+  }
+  return a;
 }
 
 /* ------------------------------------------------------------------ MCP */
@@ -432,23 +555,35 @@ const INSTRUCTIONS = [
   "5. Désigne les fichiers par leur repère [F-XXXXX] (lister_fichiers) : les noms de fichiers peuvent contenir des noms de clients.",
   "6. Si l'utilisateur colle ou joint un document confidentiel en clair, rappelle-lui que Nanomizer peut le traiter sans que tu le lises, et propose-le.",
   "7. Anonymisation en deux temps : présente toujours le PLAN, attends l'accord explicite, puis rappelle avec confirmer: true.",
+  "8. Ne crée JAMAIS d'artefact, de page ou de graphique contenant les données de l'utilisateur : un artefact exige des valeurs réelles. Pour une visualisation, utilise tableau_de_bord (Nanomizer la dessine sur le poste) ou construis un classeur Excel sur le gabarit, puis remettre_chiffres.",
+  "9. Si l'utilisateur, son DPO ou son service informatique demande une preuve de ce que tu as reçu, appelle journal_ia : la page locale « Ce que Claude a vu » le montre.",
 ].join("\n");
 
 const server = new McpServer({ name: "anonymiseur-ai4x", version: VERSION }, { instructions: INSTRUCTIONS });
 
 /* LE point d'enregistrement : tout outil passe par le verrou de sortie, y
    compris ses erreurs imprévues (dont le message pourrait citer un chemin). */
+let protocolLogged = false;
 function tool(name, def, handler) {
   server.registerTool(name, def, async (args) => {
+    // Le protocole envoyé à la connexion fait partie de ce que l'IA a lu. Noté
+    // au premier appel seulement : démarrer le connecteur ne doit pas créer de
+    // dossier chez quelqu'un qui ne s'en sert pas.
+    if (!protocolLogged) { protocolLogged = true; JOURNAL.record("connexion (protocole envoyé à l'IA)", "", INSTRUCTIONS); }
     let res;
     try {
       res = await handler(args || {});
     } catch (e) {
       // Jamais le message brut : il cite souvent un chemin, donc un nom de
       // fichier (« EACCES … open '…/Notes Lahlou Mehdi.md' »).
-      res = err(e instanceof KeyUnreadable ? e.message : unexpected(e));
+      res = err(e instanceof KeyUnreadable ? e.message
+        : e instanceof TeamUnavailable ? `Clé d'équipe : ${e.message}` : unexpected(e));
     }
-    return guardResult(res, { book: bookForGuard(), home: HOME });
+    const ctx = { book: bookForGuard(), home: HOME };
+    const out = guardResult(res, ctx);
+    JOURNAL.record(name, guardText(JSON.stringify(args || {}), ctx).text,
+      (out.content || []).map((c) => (c.type === "text" ? c.text : `[${c.type}]`)).join("\n"));
+    return out;
   });
 }
 
@@ -456,7 +591,7 @@ function unexpected(e) {
   const code = (e && e.code) || (e && e.name) || "erreur";
   if (/^E(ACCES|PERM)$/.test(code)) {
     return `Fichier inaccessible (${code}) : le connecteur n'a pas le droit de le lire. Sur Mac, vérifiez Réglages ` +
-      "Système → Confidentialité et sécurité → Fichiers et dossiers (Claude), ou les droits du fichier.";
+      "Système → Confidentialité et sécurité → Fichiers et dossiers (l'application Claude Desktop), ou les droits du fichier.";
   }
   if (code === "ENOENT") return "Fichier introuvable (il a peut-être été déplacé ou renommé). Relance lister_fichiers.";
   return `Erreur inattendue (${code}). Réessaie ; si elle persiste, redémarre Claude Desktop.`;
@@ -671,8 +806,8 @@ tool(
       "Modes choisis automatiquement : TABLEAU (colonnes sensibles codées en entier), DOCUMENT (facture, document " +
       "mis en page → codage à l'intérieur des cellules) et PDF/TEXTE (contenu extrait, anonymisé, livré en .md). " +
       "Dans tous les modes, le VERROU code en plus tout ce qui n'est pas prouvé inoffensif : noms propres, mots " +
-      "inconnus du dictionnaire, références, identifiants (cartes bancaires et permis de conduire compris) — les " +
-      "montants, dates et mots courants restent lisibles. " +
+      "inconnus du dictionnaire, références, identifiants (cartes bancaires et permis de conduire compris). Les NOMBRES d'un tableur sont " +
+      "protégés par défaut (paramètre chiffres) ; dates et mots courants restent lisibles. " +
       "FONCTIONNEMENT EN DEUX TEMPS : sans confirmer, renvoie le PLAN (rien n'est écrit) — présente-le à " +
       "l'utilisateur, puis rappelle avec confirmer: true. Les valeurs réelles ne sont jamais renvoyées. " +
       "Toujours utiliser cet outil AVANT de travailler sur un fichier contenant des données personnelles.",
@@ -689,12 +824,13 @@ tool(
         .describe("Noms propres à coder EN PLUS de la détection automatique — demande-les à l'utilisateur, ne les invente jamais"),
       valeurs_a_exclure: z.array(z.string()).optional()
         .describe("Valeurs que l'utilisateur veut EXPLICITEMENT laisser en clair dans le fichier (elles restent masquées dans l'aperçu)"),
+      chiffres: chiffresSchema,
       confirmer: z.boolean().optional()
         .describe("false/absent = renvoyer le PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) => {
-    const bloque = requireLicence();
+  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, confirmer = false }) => {
+    const bloque = requireLicence() || requireTeam();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
@@ -735,12 +871,14 @@ tool(
     const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
     const docOpts = { excludes: valeurs_a_exclure };
 
-    const writeOut = (outWs, book) => {
+    const writeOut = (outWs, book, nums) => {
       ensureOutdir();
       const outPath = path.join(OUTDIR, `${codedBase(path.basename(file), book, "fichier")}-anonymise.xlsx`);
       const outWb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(outWb, outWs, codedSheetName(sheetName, book, new Set()));
+      const outSheet = codedSheetName(sheetName, book, new Set());
+      XLSX.utils.book_append_sheet(outWb, outWs, outSheet);
       saveBook(book);
+      saveNumberMap(outPath, { [outSheet]: nums });
       XLSX.writeFile(outWb, outPath);
       return outPath;
     };
@@ -750,7 +888,8 @@ tool(
       const run = (book) => {
         const res = anonymizeDocument(ws, book, extras, docOpts);
         const strict = strictSheet(res.ws, XLSX, { book, extra: extras, excludes: valeurs_a_exclure });
-        return { ws: res.ws, stats: { ...mergeStats(res.stats, strict), autoNames: res.stats.autoNames } };
+        const nums = protectNumbers(res.ws, XLSX, { mode: chiffres });
+        return { ws: res.ws, nums, stats: { ...mergeStats(res.stats, strict), autoNames: res.stats.autoNames } };
       };
 
       if (!confirmer) {
@@ -762,7 +901,7 @@ tool(
             ? `Serait codé, à l'intérieur des cellules (libellés conservés) : ${fmt(s.byType)} — soit ${s.replaced} valeur(s).`
             : "Rien détecté (ni dictionnaire ICE/IF/RC/CNSS/patente/RIB/carte bancaire/permis/téléphone/email/CIN, ni nom propre).",
           `Dont ${s.autoNames} nom(s)/adresse(s) probables CODÉS D'OFFICE et ${s.names} nom(s) propre(s) + ${s.unknown} mot(s) inconnu(s) codés par le VERROU — leurs valeurs ne sont jamais citées ici, c'est voulu. Sur-coder est inoffensif ; pour garder une valeur en clair, l'utilisateur l'indique dans valeurs_a_exclure.`,
-          "Les montants, quantités, dates et libellés ne sont JAMAIS codés — c'est la matière de travail de l'IA.",
+          describeNumbers([probe.nums], chiffres),
           wb.SheetNames.length > 1 ? `ℹ️ Le classeur a ${wb.SheetNames.length} onglets (${sheetList()}) — seul celui-ci sera traité ; anonymiser_dossier les traite tous.` : "",
           confinementAlert(),
           "Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.",
@@ -771,14 +910,14 @@ tool(
 
       const book = loadBook();
       const res = run(book);
-      if (!res.stats.replaced) return err("Rien à coder : aucun identifiant ni nom propre dans ce document.");
-      const outPath = writeOut(res.ws, book);
+      if (!res.stats.replaced && !res.nums.cells) return err("Rien à coder : aucun identifiant, nom propre ni nombre dans ce document.");
+      const outPath = writeOut(res.ws, book, res.nums);
       const { preview, masked } = maskPreviewSheet(res.ws, { document: true, excludes: valeurs_a_exclure });
       const { tsv, totalRows, shownRows } = sheetToTsv(preview, MAX_PREVIEW_ROWS);
       const lines = [
         `✅ Anonymisation terminée (mode DOCUMENT) — ${sheetLabel} de ${label}.`,
         `Codé à l'intérieur des cellules (libellés conservés) : ${fmt(res.stats.byType)} — ${res.stats.replaced} valeur(s), ${res.stats.newCodes} nouveau(x) code(s). Clé cumulée : ${book.entries.length} codes.`,
-        "Montants, quantités, dates et libellés laissés en clair.",
+        describeNumbers([res.nums], chiffres),
         `Fichier anonymisé écrit : ${shown(outPath)}`,
         `Clé (JAMAIS à partager, restée sur le poste) : ${shown(KEY_XLSX)}`,
       ];
@@ -834,7 +973,8 @@ tool(
       }
       const strictHead = strictSheet(headerOnly, XLSX, { book, extra: extras, excludes: valeurs_a_exclure });
       for (const k of Object.keys(headerOnly)) if (k[0] !== "!") res.ws[k] = headerOnly[k];
-      return { ws: res.ws, base: res.stats, strict: mergeStats(strictData, strictHead) };
+      const nums = protectNumbers(res.ws, XLSX, { mode: chiffres, headerRow: range.s.r });
+      return { ws: res.ws, nums, base: res.stats, strict: mergeStats(strictData, strictHead) };
     };
 
     const planLeaks = leakScan(ws, cols);
@@ -855,6 +995,7 @@ tool(
           " — le verrou les coderait à l'intérieur des cellules ; pour coder ces colonnes EN ENTIER, ajoute-les à colonnes_a_coder."
         );
       }
+      planLines.push(describeNumbers([probe.nums], chiffres));
       if (wb.SheetNames.length > 1) planLines.push(`ℹ️ Le classeur a ${wb.SheetNames.length} onglets (${sheetList()}) — seul celui-ci sera traité ; anonymiser_dossier les traite tous.`);
       const alert = confinementAlert();
       if (alert) planLines.push(alert);
@@ -865,9 +1006,9 @@ tool(
     const book = loadBook();
     const res = run(book);
     const total = res.base.replaced + res.strict.replaced;
-    if (!total) return err("Aucune valeur à coder dans cet onglet.");
+    if (!total && !res.nums.cells) return err("Aucune valeur à coder dans cet onglet.");
     const newCodes = res.base.newCodes + res.strict.newCodes;
-    const outPath = writeOut(res.ws, book);
+    const outPath = writeOut(res.ws, book, res.nums);
 
     // Aperçu : chaque cellule repasse au contrôle d'aperçu. (Avant la v2.0,
     // une colonne où traînait un email était masquée EN ENTIER ; le verrou
@@ -882,6 +1023,7 @@ tool(
       `Colonnes codées en entier : ${codedCols || "aucune"}.`,
       `${total} cellules/valeurs remplacées (${newCodes} nouveaux codes, ${total - newCodes} réutilisés — même valeur = même code, y compris entre fichiers). ` +
         `Dont ${res.strict.replaced} par le VERROU dans les colonnes lisibles et les en-têtes. Clé cumulée : ${book.entries.length} codes.`,
+      describeNumbers([res.nums], chiffres),
       `Fichier anonymisé écrit : ${shown(outPath)}`,
       `Clé (JAMAIS à partager, restée sur le poste) : ${shown(KEY_XLSX)}`,
     ];
@@ -940,16 +1082,17 @@ function listBatchFiles(motif) {
 
 /* Traite toutes les feuilles d'un classeur avec le carnet fourni : mode
    choisi feuille par feuille (tableau ou document), PUIS le verrou partout. */
-function anonymizeWorkbook(wb, book, extras, docOpts) {
+function anonymizeWorkbook(wb, book, extras, docOpts, numberMode = DEFAULT_NUMBER_MODE) {
   const outWb = XLSX.utils.book_new();
   const perSheet = [];
+  const numbers = {};
   const used = new Set();
   for (const sn of wb.SheetNames) {
     const ws = wb.Sheets[sn];
     const outName = codedSheetName(sn, book, used);
     if (!ws || !ws["!ref"]) {
       XLSX.utils.book_append_sheet(outWb, XLSX.utils.aoa_to_sheet([[]]), outName);
-      perSheet.push({ name: sn, mode: "vide", replaced: 0, byType: {} });
+      perSheet.push({ name: sn, mode: "vide", replaced: 0, byType: {}, nums: { cells: 0 } });
       continue;
     }
     const layout = detectLayout(ws).layout;
@@ -988,10 +1131,13 @@ function anonymizeWorkbook(wb, book, extras, docOpts) {
       }
     }
     const merged = mergeStats(base, strict);
+    const nums = protectNumbers(outWs, XLSX, { mode: numberMode,
+      headerRow: skipCols ? XLSX.utils.decode_range(outWs["!ref"]).s.r : null });
+    numbers[outName] = nums;
     XLSX.utils.book_append_sheet(outWb, outWs, outName);
-    perSheet.push({ name: sn, mode: layout, replaced: merged.replaced, byType: merged.byType });
+    perSheet.push({ name: sn, mode: layout, replaced: merged.replaced, byType: merged.byType, nums });
   }
-  return { outWb, perSheet };
+  return { outWb, perSheet, numbers };
 }
 
 tool(
@@ -1014,12 +1160,13 @@ tool(
         .describe("Noms propres à coder en plus dans tout le lot — demande-les à l'utilisateur, ne les invente jamais"),
       valeurs_a_exclure: z.array(z.string()).optional()
         .describe("Valeurs à laisser en clair dans tout le lot (sur demande explicite de l'utilisateur)"),
+      chiffres: chiffresSchema,
       confirmer: z.boolean().optional()
         .describe("false/absent = PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) => {
-    const bloque = requireLicence();
+  async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, confirmer = false }) => {
+    const bloque = requireLicence() || requireTeam();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     const files = listBatchFiles(motif);
@@ -1038,6 +1185,7 @@ tool(
       const lines = [`📋 PLAN DE LOT — ${files.length} fichier(s) dans ${shown(WORKDIR)}. RIEN n'a encore été écrit.`];
       let total = 0;
       let unreadable = 0;
+      const planNums = [];
       for (const name of files) {
         const lbl = fileLabel(name);
         if (/\.pdf$/i.test(name)) {
@@ -1061,7 +1209,8 @@ tool(
         let wb;
         try { wb = readWorkbook(path.join(WORKDIR, name)); }
         catch { lines.push(`— ${lbl} : ILLISIBLE (sera ignoré)`); unreadable++; continue; }
-        const { perSheet } = anonymizeWorkbook(wb, pb, extras, docOpts);
+        const { perSheet } = anonymizeWorkbook(wb, pb, extras, docOpts, chiffres);
+        planNums.push(...perSheet.map((x) => x.nums));
         const agg = {};
         let fileTotal = 0;
         for (const s of perSheet) {
@@ -1074,8 +1223,8 @@ tool(
       }
       lines.push(
         `TOTAL : ~${total} valeur(s) seraient codées avec UNE SEULE clé (même valeur = même code sur tout le lot).`,
-        "Les montants, quantités, dates et mots courants ne sont jamais codés. Les noms propres, mots inconnus et " +
-        "identifiants sont codés d'office par le verrou (ajuste avec valeurs_a_exclure).",
+        "Les noms propres, mots inconnus et identifiants sont codés d'office par le verrou (ajuste avec valeurs_a_exclure).",
+        describeNumbers(planNums, chiffres) + " (Les nombres écrits dans un PDF ou un texte restent lisibles.)",
         confinementAlert(),
         "Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true."
       );
@@ -1127,23 +1276,24 @@ tool(
       try { wb = readWorkbook(path.join(WORKDIR, name)); }
       catch { failed.push(lbl); report.push(`- ❌ [${handleOf(name)}] : illisible, ignoré`); continue; }
       const before = book.entries.length;
-      const { outWb, perSheet } = anonymizeWorkbook(wb, book, extras, docOpts);
+      const { outWb, perSheet, numbers } = anonymizeWorkbook(wb, book, extras, docOpts, chiffres);
       const base = codedBase(name, book, "fichier");
-      writes.push({ path: path.join(OUTDIR, `${base}-anonymise.xlsx`), wb: outWb });
+      writes.push({ path: path.join(OUTDIR, `${base}-anonymise.xlsx`), wb: outWb, numbers });
       done++;
       const fileReplaced = perSheet.reduce((s, x) => s + x.replaced, 0);
       totalReplaced += fileReplaced;
       totalNew += book.entries.length - before;
       report.push(`- ✅ ${base}${path.extname(name)} → ${base}-anonymise.xlsx`);
       perSheet.forEach((s, i) => {
-        report.push(`    - onglet ${i + 1} (${s.mode}) : ${s.replaced ? s.replaced + " valeur(s) — " + fmt(s.byType) : "rien détecté, copié tel quel"}`);
+        report.push(`    - onglet ${i + 1} (${s.mode}) : ${s.replaced ? s.replaced + " valeur(s) — " + fmt(s.byType) : "aucun texte codé"}` +
+          (s.nums.cells ? `, ${s.nums.cells} nombre(s) protégé(s) (${chiffres})` : ""));
       });
     }
     // La clé d'abord : si l'écriture d'une sortie échoue ensuite, les codes
     // déjà présents dans un fichier restent décodables.
     saveBook(book);
     for (const w of writes) {
-      if (w.wb) XLSX.writeFile(w.wb, w.path);
+      if (w.wb) { saveNumberMap(w.path, w.numbers); XLSX.writeFile(w.wb, w.path); }
       else fs.writeFileSync(w.path, w.md, "utf8");
     }
     report.push(
@@ -1187,7 +1337,7 @@ tool(
     }),
   },
   async ({ nom_fichier }) => {
-    const bloque = requireLicence();
+    const bloque = requireLicence() || requireTeam();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
@@ -1328,6 +1478,156 @@ tool(
   }
 );
 
+/* -------------------------------------- remise des chiffres (v2.2) ------ *
+ * « Claude construit la machine, Nanomizer la nourrit » : l'IA a travaillé
+ * sur le GABARIT ; ces deux outils rendent le travail réel, sur le poste, et
+ * n'en renvoient que des comptes. Comme deanonymiser : jamais bloqués par la
+ * licence (le décodage ne s'arrête jamais). */
+
+function codeDecoder(book) {
+  const map = {};
+  for (const e of book.entries) map[e.code.toUpperCase()] = e.value;
+  return (t) => decodeText(t, map);
+}
+
+function loadNumberMaps() {
+  const out = [];
+  let names = [];
+  try { names = fs.readdirSync(OUTDIR).filter((n) => /^\.nanomizer-chiffres-.*\.json$/.test(n)); } catch {}
+  for (const n of names) {
+    try { out.push(JSON.parse(fs.readFileSync(path.join(OUTDIR, n), "utf8"))); } catch {}
+  }
+  return out;
+}
+
+const stampNow = () => new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
+
+tool(
+  "remettre_chiffres",
+  {
+    title: "Remettre les vrais chiffres et noms dans un classeur construit par l'IA (sur le poste)",
+    description:
+      "L'IA a construit un classeur (formules, tableaux croisés, graphiques, mise en forme) sur le GABARIT produit " +
+      "par anonymiser_fichier ou anonymiser_dossier, et l'utilisateur l'a enregistré dans son dossier de travail. Cet " +
+      "outil y remet, SUR LE POSTE, les vraies valeurs des cellules de données et les vrais noms à la place des codes, " +
+      "demande le recalcul des formules et le rafraîchissement des graphiques à l'ouverture, et écrit un nouveau " +
+      "fichier (*-decode-*). Rien de réel ne revient dans la conversation. Condition : l'onglet de données doit garder " +
+      "le nom et la disposition que Nanomizer lui a donnés (ajouter des onglets, formules et graphiques à côté est libre).",
+    inputSchema: z.object({
+      nom_fichier: z.string().describe("Le classeur .xlsx construit sur le gabarit : repère [F-XXXXX] ou chemin relatif dans le dossier de travail"),
+      nom_sortie: z.string().optional().describe("Nom de base du fichier produit (défaut : celui du classeur)"),
+    }),
+  },
+  async ({ nom_fichier, nom_sortie }) => {
+    if (!fs.existsSync(WORKDIR)) return workdirMissing();
+    let file;
+    try { file = resolveFile(nom_fichier); } catch (e) { return err(e.message); }
+    if (!fs.existsSync(file)) return err(`Fichier introuvable : ${maskName(nom_fichier)}.`);
+    if (!/\.xlsx$/i.test(file)) return err("remettre_chiffres attend un classeur .xlsx (le format qui garde formules et graphiques).");
+    const book = loadBook();
+    const sheets = mergeNumberMaps(loadNumberMaps());
+    if (!Object.keys(sheets).length && !book.entries.length) {
+      return err("Rien à remettre : aucun gabarit ni aucune clé sur ce poste. Anonymise d'abord le fichier source.");
+    }
+    let res;
+    try { res = restoreWorkbook(fs.readFileSync(file), sheets, codeDecoder(book), XLSX); }
+    catch { return err("Classeur illisible : enregistre-le au format Excel (.xlsx) puis réessaie."); }
+    const st = res.stats;
+    if (!st.restored && !st.decoded) {
+      return err(
+        "Aucune cellule du gabarit ni aucun code reconnu dans ce classeur. Vérifie qu'il a été construit à partir du fichier " +
+        "*-anonymise.xlsx, et que l'onglet de données a gardé son nom et ses cellules." +
+        (st.moved ? ` (${st.moved} cellule(s) du gabarit ont été modifiées ou déplacées.)` : "")
+      );
+    }
+    ensureOutdir();
+    // Le nom du fichier produit est CODÉ comme toute autre sortie : un
+    // classeur « Bilan Benali.xlsx » ne doit pas faire apparaître « Benali »
+    // dans le chemin annoncé (trouvé par le journal lors de la répétition du
+    // 20/10/2026). Les codes créés pour le nom sont gardés dans la clé.
+    const base = codedBase(String(nom_sortie || path.basename(file)).replace(/\.(xlsx|xls)$/i, "").replace(/-anonymise$/i, ""), book, "classeur");
+    try { saveBook(book); } catch {}
+    const outPath = path.join(OUTDIR, `${base}-decode-${stampNow()}.xlsx`);
+    fs.writeFileSync(outPath, res.buf, { mode: 0o600 });
+    lockDown(outPath);
+    return text([
+      `✅ Classeur réel écrit sur le poste : ${shown(outPath)}`,
+      `${st.restored} valeur(s) remises dans ${st.matchedSheets.length} onglet(s) de données, ${st.decoded} code(s) remplacés par les vrais noms. ` +
+        `${st.formulas} formule(s) seront recalculées et ${st.charts} graphique(s), ${st.pivots} tableau(x) croisé(s) rafraîchis à l'ouverture dans Excel.`,
+      st.moved ? `⚠️ ${st.moved} cellule(s) du gabarit avaient été modifiées ou déplacées : elles n'ont PAS été remplacées (aucune vraie valeur n'écrase une cellule changée). Dis-le à l'utilisateur.` : "",
+      st.missingSheets.length ? `ℹ️ ${st.missingSheets.length} onglet(s) de gabarit connus ne figurent pas dans ce classeur (normal s'il n'en utilise qu'un).` : "",
+      "IMPORTANT : ce fichier contient les vraies valeurs. Ne le lis pas toi-même ; dis à l'utilisateur de l'ouvrir dans Excel.",
+    ].filter(Boolean).join("\n"));
+  }
+);
+
+tool(
+  "tableau_de_bord",
+  {
+    title: "Dessiner un tableau de bord avec les vraies données, sur le poste",
+    description:
+      "Au lieu d'un artefact (qui exigerait les vraies données dans la conversation), décris le tableau de bord : " +
+      "Nanomizer le dessine SUR LE POSTE à partir d'un fichier *-anonymise.xlsx, en y remettant les vrais chiffres et " +
+      "les vrais noms, et écrit une page HTML autonome (hors ligne) que l'utilisateur ouvre dans son navigateur. Tu " +
+      "désignes les colonnes par leur en-tête tel que tu l'as vu. Tu ne reçois que des comptes ; tu ne vois pas le " +
+      "résultat — demande à l'utilisateur ce qu'il veut ajuster. Ne crée JAMAIS d'artefact avec les données de l'utilisateur.",
+    inputSchema: z.object({
+      nom_fichier: z.string().describe("Le fichier *-anonymise.xlsx (chemin « Anonymiseur-Ai4x/… » donné à l'anonymisation)"),
+      onglet: z.string().optional().describe("Numéro (« 2 ») ou nom de l'onglet ; défaut : le premier"),
+      titre: z.string().optional(),
+      graphiques: z.array(z.object({
+        type: z.enum(CHART_TYPES),
+        titre: z.string().optional(),
+        colonne_x: z.string().optional().describe("En-tête des catégories (barres, courbe, secteurs)"),
+        colonne_y: z.string().optional().describe("En-tête des valeurs à agréger"),
+        agregat: z.enum(AGGREGATES).optional().describe("Défaut : somme (ou nombre sans colonne_y)"),
+        tri: z.enum(["asc", "desc"]).optional(),
+        limite: z.number().int().positive().optional().describe("Nombre maximal de catégories ou de lignes"),
+      })).min(1).max(12),
+    }),
+  },
+  async ({ nom_fichier, onglet, titre, graphiques }) => {
+    if (!fs.existsSync(WORKDIR)) return workdirMissing();
+    let file;
+    try { file = resolveFile(nom_fichier); } catch (e) { return err(e.message); }
+    if (!fs.existsSync(file) || !/-anonymise\.xlsx$/i.test(file)) {
+      return err("tableau_de_bord part d'un fichier *-anonymise.xlsx produit par Nanomizer (anonymise d'abord le fichier source).");
+    }
+    const wb = XLSX.readFile(file);
+    let sn = wb.SheetNames[0];
+    if (onglet) {
+      const i = /^\d+$/.test(String(onglet).trim()) ? Number(onglet) - 1 : wb.SheetNames.indexOf(onglet);
+      if (i < 0 || !wb.SheetNames[i]) return err(`Onglet introuvable (le classeur en a ${wb.SheetNames.length}).`);
+      sn = wb.SheetNames[i];
+    }
+    const ws = wb.Sheets[sn];
+    if (!ws || !ws["!ref"]) return err("Onglet vide.");
+    // Vraies valeurs : les nombres par la correspondance du gabarit, les
+    // textes par la clé.
+    let real = {};
+    try { real = (JSON.parse(fs.readFileSync(numberMapPath(file), "utf8")).feuilles || {})[sn]?.real || {}; } catch {}
+    const decode = codeDecoder(loadBook());
+    for (const [addr, v] of Object.entries(real)) if (ws[addr]) ws[addr] = { t: "n", v };
+    const shownAoa = XLSX.utils.sheet_to_json(XLSX.readFile(file).Sheets[sn], { header: 1, raw: true, defval: "" });
+    const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" })
+      .map((r) => r.map((v) => (typeof v === "string" ? decode(v).text : v)));
+    const headers = (aoa[0] || []).map((h, i) => ({ real: String(h), shown: String((shownAoa[0] || [])[i] ?? h) }));
+    const rows = aoa.slice(1).filter((r) => r.some((v) => v !== ""));
+    const { html, problems } = renderDashboard({ titre, graphiques, headers, rows, version: VERSION });
+    ensureOutdir();
+    const outPath = path.join(OUTDIR, `tableau-de-bord-decode-${stampNow()}.html`);
+    fs.writeFileSync(outPath, html, { encoding: "utf8", mode: 0o600 });
+    lockDown(outPath);
+    return text([
+      `✅ Tableau de bord dessiné sur le poste avec les vraies données : ${graphiques.length} élément(s), ${rows.length} ligne(s).`,
+      `Page à ouvrir par l'utilisateur dans son navigateur (hors ligne) : ${shown(outPath)}`,
+      Object.keys(real).length ? "" : "ℹ️ Aucun gabarit de chiffres pour ce fichier : les nombres sont ceux du fichier anonymisé (mode clair).",
+      problems.length ? `⚠️ À corriger : ${problems.join(" ; ")}. En-têtes disponibles : ${headers.map((h) => `« ${h.shown} »`).join(", ")}.` : "",
+      "Tu ne vois pas ce tableau de bord (il contient les vraies valeurs) : demande à l'utilisateur ce qu'il veut ajuster, puis rappelle l'outil.",
+    ].filter(Boolean).join("\n"));
+  }
+);
+
 /* -------------------------------------------------------------- état ----- */
 
 tool(
@@ -1347,19 +1647,35 @@ tool(
       return err(`Dossier de travail introuvable : ${shown(WORKDIR)} — impossible de dire s'il existe une clé. ${RESTART_HINT}`);
     }
     const st = licence();
-    const licLine = st.valid
+    const licLine = st.valid && st.trial
+      ? (st.notStarted
+        ? `Licence : aucune — essai gratuit de 14 jours disponible, il s'ouvre à la première anonymisation. Licence à vie : ${OFFER.price}.`
+        : `Licence : essai gratuit, ${st.daysLeft} jour(s) restant(s) (jusqu'au ${st.expiresAt}). Licence à vie : ${OFFER.price} ; entreprise, sur devis.`) +
+        (st.refused ? ` ⚠️ Clé configurée refusée : ${st.refused}.` : "")
+      : st.valid
       ? (st.lifetime
         ? `Licence : ${st.holder} · ${st.seats} poste(s) · À VIE.`
         : `Licence : ${st.holder} · ${st.seats} poste(s) · valide jusqu'au ${st.expiresAt} (${st.daysLeft} j).`)
       : `Licence : aucune valide (${st.reason}). La dé-anonymisation reste disponible — elle le restera toujours. ` +
         `Licence à vie : ${OFFER.price}, sur WhatsApp ${OFFER.whatsappDisplay}.`;
+    let teamLine = "";
+    if (TEAM_DIR) {
+      if (!teamAllowed()) teamLine = "Clé d'équipe : configurée mais inactive — elle fait partie de la licence Équipe.";
+      else {
+        try {
+          const t = currentTeam();
+          const r = readTeamEntries(t);
+          teamLine = `Clé d'équipe ACTIVE : ${r.postes} poste(s) ont déjà partagé leurs codes, ${new Set(r.entries.map((e) => e.code)).size} code(s) connus de l'équipe. Même valeur = même code sur tous les postes. Dossier : ${shown(TEAM_DIR)}.`;
+        } catch (e) { teamLine = `🚨 Clé d'équipe injoignable (${e.message}) : ${shown(TEAM_DIR)} — l'anonymisation est suspendue, le décodage continue.`; }
+      }
+    }
     const book = loadBook();
     const audit = runAudit();
     const auditLine = audit.risks
       ? `🚨 Confinement : ${audit.risks} risque(s) — appelle verifier_confinement pour le détail.`
       : "Confinement : aucune autre porte repérée vers le dossier de travail.";
     if (!book.entries.length) {
-      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, licLine, auditLine].join("\n"));
+      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, licLine, teamLine, auditLine].filter(Boolean).join("\n"));
     }
     const byPrefix = {};
     for (const e of book.entries) {
@@ -1371,12 +1687,55 @@ tool(
       [
         `Clé de session : ${book.entries.length} codes (${detail}).`,
         licLine,
+        teamLine,
         auditLine,
         `Clé (à ne jamais partager) : ${shown(KEY_XLSX)}`,
         `Sorties : ${shown(OUTDIR)}`,
         "La même valeur garde le même code sur tous les fichiers traités avec cette clé.",
-      ].join("\n")
+      ].filter(Boolean).join("\n")
     );
+  }
+);
+
+tool(
+  "journal_ia",
+  {
+    title: "Ce que Claude a vu (journal local et audit)",
+    description:
+      "Produit, sur le poste, la page « Ce que Claude a vu » : toutes les réponses que Nanomizer a envoyées à l'IA, " +
+      "revérifiées contre la clé actuelle, plus les fichiers *-anonymise.* mis à sa disposition. Renvoie uniquement " +
+      "des comptes et le chemin de la page. À proposer quand l'utilisateur, son DPO ou son service informatique " +
+      "veut une preuve de ce qui est sorti.",
+    inputSchema: z.object({}),
+  },
+  async () => {
+    const book = loadBook();
+    const journal = readJournal(JOURNAL_DIR);
+    const aiFiles = [];
+    try {
+      for (const n of fs.readdirSync(OUTDIR).filter((x) => /-anonymise\.(md|xlsx)$/i.test(x)).sort()) {
+        const p = path.join(OUTDIR, n);
+        let texte;
+        if (/\.xlsx$/i.test(n)) {
+          const wb = XLSX.readFile(p);
+          texte = wb.SheetNames.join("\n") + "\n" + wb.SheetNames.map((sn) => XLSX.utils.sheet_to_csv(wb.Sheets[sn])).join("\n");
+        } else texte = fs.readFileSync(p, "utf8");
+        aiFiles.push({ name: n, texte, mtime: fs.statSync(p).mtime.toISOString() });
+      }
+    } catch {}
+    const a = auditJournal(journal, aiFiles, book);
+    ensureOutdir();
+    fs.writeFileSync(REPORT_PATH, renderReport(a, { version: VERSION, failures: JOURNAL.failures }), { encoding: "utf8", mode: 0o600 });
+    const bad = a.leaks.length + a.forms;
+    return text([
+      bad
+        ? `🚨 ${bad} élément(s) sensible(s) retrouvé(s) dans ce que l'IA a reçu (détail par CODE dans la page). Préviens l'utilisateur.`
+        : `✅ Aucune valeur réelle connue de la clé dans les ${a.exchanges} réponse(s) envoyées à l'IA, ni dans les ${a.files.length} fichier(s) *-anonymise.*.`,
+      `Codes distincts vus : ${a.distinctCodes}. Nombres en clair (montants, dates, quantités) : ${a.numbers}.`,
+      JOURNAL.failures ? `⚠️ ${JOURNAL.failures} réponse(s) de cette session n'ont pas pu être notées.` : "",
+      `Page locale à ouvrir par l'utilisateur (navigateur, hors ligne) : ${shown(REPORT_PATH)}`,
+      "Ce journal ne voit pas les textes collés directement dans la conversation.",
+    ].filter(Boolean).join("\n"));
   }
 );
 

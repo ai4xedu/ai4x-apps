@@ -121,13 +121,13 @@ export function auditConfinement(ctx) {
     const hit = paths.find((p) => overlaps(p, ctx.workdir));
     if (hit) {
       overlapping++;
-      risk(`L'extension « ${name} » a accès à ${shown(hit)}, qui recouvre votre dossier de travail : Claude peut y lire ` +
+      risk(`L'extension « ${name} » a accès à ${shown(hit)}, qui recouvre votre dossier de travail : l'IA peut y lire ` +
         `vos originaux SANS passer par le verrou. → Retirez ce dossier de ses autorisations (Réglages → Extensions → ${name}), ` +
         `ou désactivez-la pendant que vous travaillez sur des dossiers sensibles.`);
     }
     if (/chrome|browser|navigat|computer|screen|[eé]cran/i.test(`${id} ${name}`)) {
-      info(`L'extension « ${name} » permet à Claude de piloter le navigateur ou l'écran : un navigateur peut ouvrir un ` +
-        `fichier local, une capture montre ce qui est affiché. Nanomizer interdit à Claude de s'en servir sur vos ` +
+      info(`L'extension « ${name} » permet à l'IA de piloter le navigateur ou l'écran : un navigateur peut ouvrir un ` +
+        `fichier local, une capture montre ce qui est affiché. Nanomizer interdit à l'IA de s'en servir sur vos ` +
         `dossiers, mais pour une étanchéité totale, désactivez-la pendant vos dossiers sensibles.`);
     }
   }
@@ -141,13 +141,13 @@ export function auditConfinement(ctx) {
     if (hit) {
       overlapping++;
       risk(`Le serveur MCP « ${name} » (claude_desktop_config.json) a accès à ${shown(hit)}, qui recouvre votre dossier ` +
-        `de travail : Claude peut y lire vos originaux sans passer par le verrou. → Retirez ce chemin de sa configuration.`);
+        `de travail : l'IA peut y lire vos originaux sans passer par le verrou. → Retirez ce chemin de sa configuration.`);
     }
   }
   if (cfg.coworkUserFilesPath && overlaps(expandHome(cfg.coworkUserFilesPath, home), ctx.workdir)) {
     overlapping++;
     risk(`Le dossier du mode Cowork (${shown(expandHome(cfg.coworkUserFilesPath, home))}) recouvre votre dossier de ` +
-      `travail : en Cowork, Claude y lit les fichiers directement. → Choisissez des dossiers séparés.`);
+      `travail : en Cowork, l'IA y lit les fichiers directement. → Choisissez des dossiers séparés.`);
   }
   if (!overlapping) ok("Aucune autre extension ni aucun serveur MCP n'a accès à votre dossier de travail.");
 

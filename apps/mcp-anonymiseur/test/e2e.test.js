@@ -99,12 +99,12 @@ after(async () => {
   fs.rmSync(workdir, { recursive: true, force: true });
 });
 
-test("tools/list expose les 8 outils", async () => {
+test("tools/list expose les 11 outils", async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name).sort();
   assert.deepEqual(names, [
-    "anonymiser_dossier", "anonymiser_fichier", "deanonymiser", "etat_cle", "lire_scan",
-    "lister_fichiers", "reinitialiser_cle", "verifier_confinement",
+    "anonymiser_dossier", "anonymiser_fichier", "deanonymiser", "etat_cle", "journal_ia", "lire_scan",
+    "lister_fichiers", "reinitialiser_cle", "remettre_chiffres", "tableau_de_bord", "verifier_confinement",
   ]);
 });
 
@@ -194,15 +194,23 @@ test("mode document : facture → identifiants codés, montants et libellés int
   assert.ok(!out.includes("65908714"), "l'IF réel a fui");
   assert.ok(!out.includes("Sophatel"), "le nom de société a fui");
   assert.ok(!out.includes("TARDIGRADE"), "le nom en majuscules a fui");
-  // La matière de travail reste : libellés et montants en clair.
+  // v2.2 : les libellés restent, les montants sont protégés par défaut (gabarit).
   assert.match(out, /Total HT/);
-  assert.match(out, /2150/);
-  const decoded = XLSX.readFile(path.join(workdir, "Anonymiseur-Ai4x", "facture-anonymise.xlsx"));
-  const aoa = XLSX.utils.sheet_to_json(decoded.Sheets[decoded.SheetNames[0]], { header: 1, raw: false, defval: "" });
-  const flat = aoa.flat().join(" | ");
+  assert.match(out, /GABARIT/);
+  assert.ok(!/\b2150\b/.test(out), "le montant réel a fui");
+  const readOut = () => {
+    const decoded = XLSX.readFile(path.join(workdir, "Anonymiseur-Ai4x", "facture-anonymise.xlsx"));
+    return XLSX.utils.sheet_to_json(decoded.Sheets[decoded.SheetNames[0]], { header: 1, raw: false, defval: "" }).flat().join(" | ");
+  };
+  let flat = readOut();
   assert.match(flat, /ICE : ICE-\d{3}/);          // libellé conservé, valeur codée
   assert.ok(!/003463957000076/.test(flat));
-  assert.ok(/Total HT/.test(flat) && /2150/.test(flat));
+  assert.ok(/Total HT/.test(flat) && !/\b2150\b/.test(flat));
+  // Sur demande explicite, les montants passent en clair (comportement v2.1).
+  const clair = resultText(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.xlsx", confirmer: true, chiffres: "clair" } }));
+  assert.match(clair, /2150/);
+  assert.match(clair, /mode CLAIR/);
+  assert.ok(!clair.includes("003463957000076"));
 });
 
 test("valeurs_a_exclure : le nom reste en clair dans le FICHIER, masqué dans l'aperçu", async () => {

@@ -18,6 +18,50 @@ Circuit habituel Ai4x : aucun paiement en ligne. Le client écrit sur WhatsApp
 (bouton de la LP `/anonymiseur-donnees`, message pré-rempli), on envoie le RIB
 de YGH, il vire, on livre le fichier et la clé sur WhatsApp.
 
+## 0. Depuis la v2.2 : l'essai d'abord, le devis pour les entreprises
+
+**Essai gratuit de 14 jours, intégré.** On peut envoyer le `.mcpb` SANS clé :
+la première anonymisation ouvre 14 jours d'accès complet, annoncés dans chaque
+réponse (« 🧪 Essai gratuit : N jour(s) restant(s) »), avec le lien WhatsApp et
+le lien « devis entreprise ». À la fin de l'essai, l'anonymisation s'arrête ;
+la dé-anonymisation, jamais. Aucun serveur : la date de début est notée dans
+le dossier du client (effacer ce fichier relance l'essai — serrure de
+courtoisie assumée). Une licence payée échue n'ouvre pas d'essai.
+
+Le geste de vente devient : *« Installez, essayez 14 jours sur un vrai dossier,
+puis demandez à Claude : montre-moi ce que tu as vu (journal_ia). »*
+
+**Devis et facture pour une entreprise** (purchase order, facture au nom de
+l'entité, ICE des deux parties, montant en lettres) :
+
+```bash
+cp scripts/vendeur.exemple.json scripts/vendeur.json   # une fois : coordonnées légales de YGH (hors git)
+node scripts/devis.mjs --client "Raison sociale SA" --ice-client 001234567000089 --offre equipe --postes 25
+node scripts/devis.mjs --facture --numero FA-2026-014 --client "Raison sociale SA" --ice-client 001234567000089 --offre equipe --postes 25 --licence <référence>
+```
+
+Le document sort en HTML A4 dans `devis-sortie/` (hors git, hors bundle) :
+l'ouvrir dans le navigateur, puis Imprimer → Enregistrer en PDF. Numérotation
+des factures : continue, à tenir dans le suivi (CRM), comme la référence de
+licence.
+
+## 0 bis. Licence Équipe : la clé d'équipe (v2.3)
+
+Pour que tout le cabinet ait les mêmes codes :
+
+1. Créer un dossier sur un partage INTERNE (NAS, serveur de fichiers), accessible
+   à tous les postes — **jamais** un dossier iCloud / Google Drive / Dropbox /
+   OneDrive (l'audit de confinement le signalerait : toutes les correspondances
+   du cabinet y partiraient).
+2. Sur chaque poste : réglages de l'extension → « Dossier de clé d'équipe » → ce
+   même dossier ; la même clé de licence Équipe ; redémarrer Claude Desktop.
+3. Le premier poste qui anonymise crée le secret d'équipe dans le dossier.
+   Demander ensuite à Claude « état de la clé » : la ligne « Clé d'équipe
+   ACTIVE : N poste(s) » le confirme.
+
+Le dossier d'équipe contient TOUTES les vraies valeurs du cabinet : il se
+sauvegarde et se protège comme le serveur de fichiers lui-même.
+
 ## 1. Le client écrit (message pré-rempli)
 
 > Bonjour, je veux la licence à vie du connecteur Nanomizer (anonymiseur Ai4x

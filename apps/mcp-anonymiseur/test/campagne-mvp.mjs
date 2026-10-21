@@ -215,8 +215,11 @@ check("A3f", "le plan DOCUMENT annonce des noms codés d'office sans les citer",
 const docT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.xlsx", confirmer: true } }));
 check("A3g", "identifiants marocains codés (ICE/IF/RC/patente)",
   /ICE-\d{3}/.test(docT) && /IF-\d{3}/.test(docT) && /RC-\d{3}/.test(docT) && /PATENTE-\d{3}/.test(docT));
-check("A3h", "montants et libellés préservés dans l'aperçu",
-  docT.includes("20500") && docT.includes("Total HT") && docT.includes("TVA"));
+check("A3h", "v2.2 : montants protégés par défaut (gabarit), libellés préservés",
+  !docT.includes("20500") && /GABARIT/.test(docT) && docT.includes("Total HT") && docT.includes("TVA"));
+const docClairT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.xlsx", confirmer: true, chiffres: "clair" } }));
+check("A3h2", "sur demande (chiffres: clair), les montants passent, les identifiants restent codés",
+  docClairT.includes("20500") && /mode CLAIR/.test(docClairT) && !docClairT.includes(SECRETS.ice1));
 
 /* PDF natif (v1.4+) */
 if (toolNames.includes("anonymiser_fichier")) {
@@ -372,8 +375,15 @@ check("B4b", "l'onglet Lisez-moi accompagne la clé", keyWb.SheetNames.includes(
 // « format inconnu » à quelqu'un qui n'avait rien collé. On rejoue ici la
 // situation exacte, sur l'artefact distribué.
 console.log("\n── Série C — licence (le message doit dire quoi FAIRE)\n");
+// v2.2 : sans licence, un essai gratuit de 14 jours s'ouvre. La série C teste
+// le comportement SANS droit d'usage : essai déjà consommé (C4 teste l'essai).
+const expireTrial = (dir) => {
+  fs.mkdirSync(path.join(dir, "Anonymiseur-Ai4x"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "Anonymiseur-Ai4x", ".nanomizer-essai.json"), JSON.stringify({ debut: "2020-01-01T00:00:00Z" }));
+};
 const wd2 = fs.mkdtempSync(path.join(os.tmpdir(), "anx-nolic-"));
 makeFiles(wd2);
+expireTrial(wd2);
 const sansLicence = new Client({ name: "campagne-nolic", version: "1.0.0" });
 await sansLicence.connect(new StdioClientTransport({
   command: process.execPath,
@@ -411,6 +421,7 @@ if (fs.existsSync(testKeyFile)) {
   const body = b64url(Buffer.from(JSON.stringify({ v: 1, org: "Clé de test", seats: 1, iat: "2026-01-01", exp: "9999-12-31", life: true }), "utf8"));
   const wd3 = fs.mkdtempSync(path.join(os.tmpdir(), "anx-testkey-"));
   makeFiles(wd3);
+  expireTrial(wd3);
   const cleTest = new Client({ name: "campagne-testkey", version: "1.0.0" });
   await cleTest.connect(new StdioClientTransport({
     command: process.execPath,
@@ -423,6 +434,22 @@ if (fs.existsSync(testKeyFile)) {
   await cleTest.close();
   fs.rmSync(wd3, { recursive: true, force: true });
 }
+
+// Essai gratuit, sur l'artefact : sans aucune clé, la première anonymisation
+// ouvre 14 jours d'accès complet, et le dit.
+const wd4 = fs.mkdtempSync(path.join(os.tmpdir(), "anx-essai-"));
+makeFiles(wd4);
+const essai = new Client({ name: "campagne-essai", version: "1.0.0" });
+await essai.connect(new StdioClientTransport({
+  command: process.execPath,
+  args: [path.join(unpacked, "server", "index.js")],
+  env: { ...process.env, ANX_WORKDIR: wd4, ANX_LICENCE: "${user_config.licence}" },
+}));
+const planEssai = record(await essai.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx" } }));
+check("C4", "sans clé : essai gratuit de 14 jours ouvert, annoncé, avec le devis entreprise",
+  /PLAN D'ANONYMISATION/.test(planEssai) && /Essai gratuit : 14 jour/.test(planEssai) && /devis/.test(planEssai));
+await essai.close();
+fs.rmSync(wd4, { recursive: true, force: true });
 
 /* --------------------------------------------------------------- bilan */
 const failed = results.filter((r) => !r.ok);
