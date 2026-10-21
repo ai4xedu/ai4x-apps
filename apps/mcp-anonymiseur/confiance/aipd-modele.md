@@ -9,7 +9,7 @@ sont des exemples ; tout ce qui concerne Nanomizer est factuel et vérifiable.*
   contentieux) avec l'aide d'un assistant d'IA générative.*
 - **Responsable du traitement** : *raison sociale, adresse, contact DPO.*
 - **Outils** : assistant d'IA *(Claude Desktop, éditeur Anthropic)* ;
-  Nanomizer v2.3, extension locale, éditeur YGH (aucun accès aux données).
+  Nanomizer v2.3, extension locale, éditeur TARDIGRADE SARL — Ai4x (aucun accès aux données).
 - **Personnes concernées** : *clients, parties adverses, salariés, témoins.*
 - **Catégories de données** : *identité, coordonnées, identifiants officiels,
   données financières, données de procédure.* Données sensibles : *à préciser
@@ -21,7 +21,7 @@ sont des exemples ; tout ce qui concerne Nanomizer est factuel et vérifiable.*
 2. Nanomizer les code sur le poste ; l'assistant d'IA ne reçoit que la version
    codée (noms, identifiants et montants remplacés).
 3. Le résultat de l'IA est décodé sur le poste, dans un fichier local.
-4. La clé de correspondance ne quitte jamais le poste ; aucun flux vers YGH.
+4. La clé de correspondance ne quitte jamais le poste ; aucun flux vers l'éditeur (Tardigrade).
 
 ## 3. Nécessité et proportionnalité
 
