@@ -12,7 +12,8 @@ import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import { mint } from "./licence-test.mjs";
 import { XLSX } from "../server/engine.js";
-import { creerPolitiquePoste, regleInterditeTouchee, ETAT_FILE } from "../server/politique.js";
+import { creerPolitiquePoste, regleInterditeTouchee, ETAT_FILE, normaliser, creerReconnaisseur } from "../server/politique.js";
+import { normaliser as normaliserConsole, empreinte } from "../../nanomizer-admin/lib/empreinte.js";
 import { creerCabinet, ouvrirCabinet } from "../../nanomizer-admin/lib/cabinet.js";
 import { creerEnrolement, ecrireEnrolement } from "../../nanomizer-admin/lib/enrolement.js";
 import { publierPolitique, signerPolitique, modeleSource, FICHIER_POLITIQUE, FICHIER_SIGNATURE } from "../../nanomizer-admin/lib/politique.js";
@@ -37,7 +38,10 @@ function source() {
   s.equipes[0].membres = ["s.alaoui@cabinet-test.fr"];
   s.equipes[0].responsables = ["associe@cabinet-test.fr"];
   s.alertes.admin_technique = ["it@cabinet-test.fr"];
-  s.regles[0].noms = ["SARL Benjelloun Frères", "Benjelloun"];
+  // « Lumière » est aussi un mot du dictionnaire : le verrou le laisserait
+  // lisible — c'est tout l'intérêt d'une liste du cabinet.
+  s.regles[0].noms = ["SARL Benjelloun Frères", "Benjelloun", "Lumière"];
+  s.regles.push({ id: "R-030", type: "interdit", libelle: "Opération confidentielle en cours", noms: ["Projet Faucon"] });
   return s;
 }
 /* Un cabinet, un poste enrôlé, la politique v1 publiée. */
@@ -182,7 +186,7 @@ test("connecteur enrôlé : interdit RIB bloque l'écriture, le reste passe, la 
   assert.match(etat, /Politique du cabinet Cabinet Test : v1/);
   assert.match(etat, /R-010 \(interdit\)/);
   assert.match(etat, /Notice du cabinet/);
-  assert.match(etat, /R-001 : PAS ENCORE appliquées/, "les règles par noms sont annoncées comme non appliquées");
+  assert.match(etat, /4 forme\(s\) de noms protégée\(s\) par empreintes/);
 
   const bloque = await s.raw("anonymiser_fichier", { nom_fichier: "virement.md", confirmer: true });
   assert.ok(bloque.isError);
@@ -246,4 +250,67 @@ test("sans enrôlement, rien ne change", async () => {
   const r = out(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "virement.md", confirmer: true } }));
   assert.match(r, /anonymise\.md/);
   assert.ok(!/Politique du cabinet/.test(r));
+});
+
+test("US-5 contrat : même normalisation et mêmes empreintes que la console", () => {
+  const formes = ["SARL Benjelloun Frères", "Ets  Moreau-Lefèvre", "L\u0027Oréal", "ÉTABLISSEMENTS ÂGÉS", "Lefe\u0300vre", "Dr. Ünal & fils", "Œuvre 2026", "İstanbul"];
+  for (const f of formes) assert.equal(normaliser(f), normaliserConsole(f), f);
+  const sel = Buffer.alloc(32, 9);
+  const trouver = creerReconnaisseur(sel, ["SARL Benjelloun Frères", "Benjelloun", "Moreau-Lefèvre"].map((n) => empreinte(sel, n)));
+  const t = "Courrier à la sarl  BENJELLOUN-frères (Casablanca) ; copie à M. Benjelloun et à Mme More\u0301au-Lefe\u0300vre.";
+  assert.deepEqual(trouver(t).map((m) => m.value), ["sarl  BENJELLOUN-frères", "Benjelloun", "More\u0301au-Lefe\u0300vre"]);
+  assert.deepEqual(trouver("Benjellouni n'est pas Benjelloun"), [trouver("Benjelloun")[0]].map((m) => ({ ...m })));
+});
+
+test("US-5 de bout en bout : un nom listé que les détecteurs laissaient passer est codé ; un nom interdit bloque ; un nom exclu à la main bloque", async () => {
+  const c = installer("noms");
+  fs.writeFileSync(path.join(c.poste, "note.md"), "Le dossier lumière avance : relancer la SARL Benjelloun Frères avant vendredi.\n");
+  fs.writeFileSync(path.join(c.poste, "faucon.md"), "Point sur le projet faucon avec Karim Tazi.\n");
+  const s = await connect(c);
+  const ok = await s.call("anonymiser_fichier", { nom_fichier: "note.md", confirmer: true });
+  assert.ok(!/lumière|Benjelloun/i.test(ok), ok);
+  assert.match(ok, /CLI-\d{3}/);
+  const sortie = path.join(c.poste, "Anonymiseur-Ai4x");
+  const copie = fs.readdirSync(sortie).find((n) => /-anonymise\.md$/.test(n));
+  const texte = fs.readFileSync(path.join(sortie, copie), "utf8");
+  assert.ok(!/lumi[eè]re|benjelloun/i.test(texte), texte);
+  assert.match(texte, /Le dossier CLI-\d{3} avance/);
+
+  const plan = await s.call("anonymiser_fichier", { nom_fichier: "faucon.md" });
+  assert.ok(!/faucon/i.test(plan), "le plan ne cite pas le nom interdit");
+  const rouge = await s.raw("anonymiser_fichier", { nom_fichier: "faucon.md", confirmer: true });
+  assert.ok(rouge.isError);
+  assert.match(out(rouge), /Bloqué par la règle R-030 de la politique du cabinet — « Opération confidentielle en cours »/);
+  assert.ok(!/faucon/i.test(out(rouge)));
+
+  // Le salarié ne peut pas affaiblir la politique : « lumière » demandé en
+  // clair reste codé (invariant 6 — l'admin durcit, on n'affaiblit pas).
+  const exclu = await s.call("anonymiser_fichier", { nom_fichier: "note.md", confirmer: true, valeurs_a_exclure: ["lumière"] });
+  assert.ok(!/lumi[eè]re/i.test(exclu), exclu);
+  assert.ok(!/lumi[eè]re/i.test(fs.readFileSync(path.join(sortie, copie), "utf8")));
+});
+
+test("US-5 contrôle résiduel : un nom listé encore en clair dans la copie est signalé avec sa règle", () => {
+  const c = installer("residu");
+  const poste = pp(c);
+  const ctl = poste.controler();
+  assert.equal(poste.residuNoms(ctl, "Le dossier CLI-001 avance.")?.id, undefined);
+  assert.equal(poste.residuNoms(ctl, "Le dossier Lumière avance.").id, "R-001");
+  assert.equal(poste.residuNoms(ctl, "le PROJET-FAUCON")?.id, "R-030");
+  assert.equal(poste.nbNoms(ctl), 4);
+});
+
+test("US-5 dans un classeur : le nom listé est codé dans n'importe quelle colonne", async () => {
+  const c = installer("noms-xlsx");
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Objet", "Montant"], ["Honoraires dossier Lumière", 1200], ["Conseil SARL Benjelloun Frères", 800]]), "Factures");
+  XLSX.writeFile(wb, path.join(c.poste, "factures.xlsx"));
+  const s = await connect(c);
+  const r = await s.call("anonymiser_fichier", { nom_fichier: "factures.xlsx", confirmer: true });
+  assert.ok(!/Lumière|Benjelloun/.test(r), r);
+  const sortie = path.join(c.poste, "Anonymiseur-Ai4x");
+  const f = fs.readdirSync(sortie).find((n) => /-anonymise\.xlsx$/.test(n));
+  const csv = Object.values(XLSX.readFile(path.join(sortie, f)).Sheets).map((ws) => XLSX.utils.sheet_to_csv(ws)).join("\n");
+  assert.ok(!/lumi[eè]re|benjelloun/i.test(csv), csv);
+  assert.match(csv, /CLI-\d{3}/);
 });

@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { DETECTEURS, PLANCHER } from "../lib/catalogue.js";
+import { DETECTEURS, PLANCHER, CATEGORIES } from "../lib/catalogue.js";
 
 const ENGINE = new URL("../../mcp-anonymiseur/server/engine.js", import.meta.url);
 
@@ -22,4 +22,12 @@ test("le catalogue reprend exactement les détecteurs du moteur", () => {
 
 test("le plancher ne cite que des détecteurs du catalogue", () => {
   for (const d of PLANCHER) assert.ok(d in DETECTEURS, d);
+});
+
+test("chaque catégorie de règle a son préfixe de code dans le moteur (US-5)", () => {
+  const src = fs.readFileSync(ENGINE, "utf8");
+  const bloc = src.match(/export const CATEGORY_TYPES = \[([\s\S]*?)\n\];/);
+  assert.ok(bloc, "CATEGORY_TYPES introuvable dans engine.js");
+  const prefixes = new Set([...bloc[1].matchAll(/prefix:\s*"([A-Z]+)"/g)].map((m) => m[1]));
+  for (const [cat, p] of Object.entries(CATEGORIES)) assert.ok(prefixes.has(p), `${cat} → ${p}`);
 });

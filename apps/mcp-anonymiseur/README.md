@@ -89,6 +89,26 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.10.0 (les noms du cabinet — US-5, 21/10/2026).
+Les règles par NOMS de la politique s'appliquent. La politique ne contient que
+des empreintes HMAC ; le poste découpe chaque texte BRUT en n-grammes de 1 à
+6 mots, normalisés exactement comme la console (`nanomizer-admin/lib/empreinte.js`
+— contrat testé), les hache avec le sel du cabinet et compare (le plus long
+gagne ; une cellule à la fois dans un classeur). Un nom
+« toujours_pseudonymiser » trouvé est injecté dans les valeurs à coder, en un
+seul point (`codeFreeText`, `anonymizeWorkbook`, chemin Excel) : il est codé
+`CLI-001`, `PAR-…`, `SOC-…` (nouveaux types `CATEGORY_TYPES` du moteur) même si
+les détecteurs l'auraient laissé lisible (« Lumière », mot du dictionnaire),
+et même si le salarié l'a mis dans `valeurs_a_exclure` (l'admin durcit, on
+n'affaiblit pas). Un nom « interdit » est codé `INTERDIT-…` et la copie n'est
+pas écrite (BLOQUE_ROUGE, règle et libellé cités, jamais le nom). Contrôle
+résiduel : un nom listé encore en clair dans la copie codée bloque l'écriture
+(BLOQUE_ERREUR). Mesure : ~100 ms pour 10 000 caractères et 5 000 empreintes
+(cible de la spec : 150 ms). Limites : pas de correspondance floue (une
+variante non listée est laissée aux détecteurs), pas de translittération
+arabe ↔ latin, et les captures (`caviarder_image`) ne lisent pas encore la
+liste.
+
 v2.9.0 (la politique du cabinet sur le poste — US-4, 21/10/2026).
 **`politique.js`** : un poste enrôlé (réglage « Fichier d'enrôlement »,
 `ANX_ENROLEMENT`) applique la politique signée par la console

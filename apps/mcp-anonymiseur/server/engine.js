@@ -15,6 +15,21 @@ import { teamCode } from "./equipe.js";
 // readFile/writeFile échouent (« cannot save file »).
 XLSX.set_fs(_fs);
 
+/* v2.10 (US-5) — les catégories des règles de la politique du cabinet
+   (apps/nanomizer-admin/lib/catalogue.js, CATEGORIES) : un nom listé par
+   l'admin est codé CLI-001, PAR-003… ; un nom INTERDIT est codé, puis la
+   copie n'est pas écrite. Hors du bloc TYPES littéral : la console compare ce
+   bloc à ses détecteurs, et une catégorie n'est pas un détecteur. */
+export const CATEGORY_TYPES = [
+  { id: "cat_client",   prefix: "CLI",      label: "Client (politique du cabinet)" },
+  { id: "cat_partie",   prefix: "PAR",      label: "Partie (politique du cabinet)" },
+  { id: "cat_personne", prefix: "PERS",     label: "Personne (politique du cabinet)" },
+  { id: "cat_societe",  prefix: "SOC",      label: "Société (politique du cabinet)" },
+  { id: "cat_dossier",  prefix: "DOS",      label: "Dossier (politique du cabinet)" },
+  { id: "cat_projet",   prefix: "PROJ",     label: "Projet (politique du cabinet)" },
+  { id: "cat_interdit", prefix: "INTERDIT", label: "Élément interdit par la politique du cabinet" },
+];
+
 export const TYPES = [
   { id: "prenom",   prefix: "PRENOM",   label: "Prénom" },
   { id: "nom",      prefix: "NOM",      label: "Nom" },
@@ -42,6 +57,7 @@ export const TYPES = [
   // v2.6 : une ville codée à la demande (test de réidentification, option
   // generaliser) — « domicilié à LIEU-001 », décodée comme les autres.
   { id: "lieu",     prefix: "LIEU",     label: "Lieu (ville)" },
+  ...CATEGORY_TYPES,
   { id: "autre",    prefix: "CODE",     label: "Autre donnée sensible" },
 ];
 
