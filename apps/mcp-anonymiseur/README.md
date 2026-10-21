@@ -135,7 +135,8 @@ puisse vérifier avant d'acheter.
    jamais écrasée) ou en dessinant une page HTML autonome. Le protocole interdit
    à l'IA de créer un artefact avec les données de l'utilisateur.
 4. **Essai gratuit de 14 jours intégré**, sans serveur ; **devis et factures**
-   (`scripts/devis.mjs`).
+   (`scripts/devis.mjs` — retiré le 21/10/2026 : devis et factures passent par
+   le moteur unique de Tardigrade, cf. `LIVRAISON.md`).
 5. **Dossier de confiance** (`confiance/`) : fiche sécurité, correspondance loi
    09-08 / RGPD / guide CNB, modèle d'analyse d'impact, cahier des charges
    d'audit. Et la preuve « zéro réseau » à l'exécution : `test/reseau.test.js`
@@ -235,9 +236,11 @@ tableaux seulement, dé-anonymisation toujours possible.
 Distribution (décisions du 18/09 et du 08/10/2026) : **licence à vie, 500 Dhs
 HT par poste — ou 5 000 Dhs HT pour une équipe, jusqu'à 20 postes sur une
 seule clé —, commande sur WhatsApp** (+212 680 092 567), comme le reste du
-catalogue Ai4x — pas de paiement en ligne : RIB envoyé sur WhatsApp, virement,
-puis le `.mcpb` et la clé partent sur WhatsApp. Facturé par YGH (le logiciel
-vendu est chez YGH, décision du 24/08/2026). Voir `LIVRAISON.md`. La LP
+catalogue Ai4x — par carte sur ai4x.academy (Solo) ou par virement (RIB
+envoyé sur WhatsApp), puis la clé part sur WhatsApp ; le `.mcpb` se télécharge
+sur ai4x.academy/nanomizer (essai de 14 jours intégré). **Vendu et facturé par
+TARDIGRADE SARL** (Ai4x), décision du 21/10/2026 ; devis et factures par le
+moteur unique de Tardigrade (YG-OS). Voir `LIVRAISON.md`. La LP
 `/anonymiseur-donnees` présente l'offre (#connecteur, #plans). Installation
 côté client : double-clic sur le `.mcpb` → Claude Desktop propose « Installer ».
 

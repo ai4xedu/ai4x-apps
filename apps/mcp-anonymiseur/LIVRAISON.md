@@ -1,8 +1,11 @@
-# Vendre et livrer Nanomizer — licence à vie, sur WhatsApp
+# Vendre et livrer Nanomizer — licence à vie
 
 Deux tarifs (décision du 08/10/2026), tous deux **à vie, une seule fois,
-mises à jour comprises**, facturés HT par **YGH** (le logiciel vendu est chez
-YGH, décision du 24/08/2026) :
+mises à jour comprises**, vendus et facturés HT par **TARDIGRADE SARL**
+(nom commercial Ai4x — décision du 21/10/2026 : Nanomizer est commercialisé
+par Tardigrade, comme le reste du catalogue Ai4x ; elle remplace, pour ce
+logiciel, la frontière « logiciel vendu = YGH » du 24/08/2026). Identifiants
+légaux : `YG-OS/2_TARDIGRADE/1_MEMORY/10_CONTEXT/legal.md` — jamais recopiés ici.
 
 | | Prix | Clé | Inclus |
 |---|---|---|---|
@@ -14,9 +17,11 @@ Pas d'abonnement : un outil hors ligne n'a rien à renouveler. Sans clé, l'appl
 version Découverte (50 lignes par fichier, une clé par fichier, tableaux seulement) ; la
 clé l'ouvre en entier — c'est l'argument pour qui n'a pas Claude Desktop.
 
-Circuit habituel Ai4x : aucun paiement en ligne. Le client écrit sur WhatsApp
-(bouton de la LP `/anonymiseur-donnees`, message pré-rempli), on envoie le RIB
-de YGH, il vire, on livre le fichier et la clé sur WhatsApp.
+Paiement : **par carte** sur ai4x.academy (Solo, 600 Dhs TTC, page sécurisée
+PayZone — `/paiement?offre=nanomizer-solo`), ou **par virement** : le client
+écrit sur WhatsApp (bouton de la LP, message pré-rempli), on envoie le RIB de
+Tardigrade, il vire, on livre la clé (et le fichier s'il ne l'a pas déjà
+téléchargé sur ai4x.academy/nanomizer).
 
 ## 0. Depuis la v2.2 : l'essai d'abord, le devis pour les entreprises
 
@@ -31,19 +36,16 @@ courtoisie assumée). Une licence payée échue n'ouvre pas d'essai.
 Le geste de vente devient : *« Installez, essayez 14 jours sur un vrai dossier,
 puis demandez à Claude : montre-moi ce que tu as vu (journal_ia). »*
 
-**Devis et facture pour une entreprise** (purchase order, facture au nom de
-l'entité, ICE des deux parties, montant en lettres) :
-
-```bash
-cp scripts/vendeur.exemple.json scripts/vendeur.json   # une fois : coordonnées légales de YGH (hors git)
-node scripts/devis.mjs --client "Raison sociale SA" --ice-client 001234567000089 --offre equipe --postes 25
-node scripts/devis.mjs --facture --numero FA-2026-014 --client "Raison sociale SA" --ice-client 001234567000089 --offre equipe --postes 25 --licence <référence>
-```
-
-Le document sort en HTML A4 dans `devis-sortie/` (hors git, hors bundle) :
-l'ouvrir dans le navigateur, puis Imprimer → Enregistrer en PDF. Numérotation
-des factures : continue, à tenir dans le suivi (CRM), comme la référence de
-licence.
+**Devis et facture pour une entreprise** : par le **moteur unique de
+facturation de Tardigrade**, dans YG-OS (`0_SHARED/OPERATOR/facturation/`,
+décision du 29/09/2026 — tout devis, facture ou pro forma de Tardigrade passe
+par lui : un document hors moteur est hors registre). Un modèle prêt à l'emploi
+(Équipe, postes supplémentaires, prise en main et dossier de confiance compris,
+paiement à la commande, clé délivrée au virement) : `YG-OS/2_TARDIGRADE/3_FILES/
+33_SALES/Offres commerciales/Nanomizer/modele-devis-nanomizer-equipe.json` —
+son champ `_mode_emploi` dit quoi remplir. Numéros : série `D-2026-…` /
+`FAC-2026-…` du registre. Notez la référence de licence émise dans le registre
+ou le CRM : c'est le seul lien entre une facture et une clé.
 
 ## 0 bis. Licence Équipe : la clé d'équipe (v2.3)
 
@@ -70,7 +72,7 @@ sauvegarde et se protège comme le serveur de fichiers lui-même.
 Réponse type :
 
 > Bonjour ! Avec plaisir. C'est 500 Dhs HT, une seule fois, mises à jour
-> comprises. Voici le RIB : … (au nom de YGH). Envoyez-moi la capture du
+> comprises. Voici le RIB : … (au nom de TARDIGRADE). Envoyez-moi la capture du
 > virement et le nom à inscrire sur la licence (vous ou votre cabinet) : je
 > vous envoie le connecteur et votre clé dès réception.
 > Il faut l'application Claude Desktop (Mac ou Windows) : https://claude.ai/download
@@ -85,7 +87,7 @@ cd ai4x-apps/apps/mcp-anonymiseur
 NANOMIZER_PRIVATE_KEY_FILE="…/nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt" \
   node scripts/emettre-licence.mjs --org "Maître Nom Prénom" --a-vie --note "WhatsApp 18/09/2026"
 # équipe :
-NANOMIZER_PRIVATE_KEY_FILE="…" node scripts/emettre-licence.mjs --org "Payzone" --postes 20 --a-vie --note "Équipe, facture YGH n° …"
+NANOMIZER_PRIVATE_KEY_FILE="…" node scripts/emettre-licence.mjs --org "Payzone" --postes 20 --a-vie --note "Équipe, facture FAC-2026-…"
 ```
 
 Le script imprime la clé (`NANO1.…`) ET le message WhatsApp de livraison,
