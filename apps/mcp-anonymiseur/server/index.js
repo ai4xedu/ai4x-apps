@@ -54,18 +54,19 @@ import {
   decodeText, sheetToTsv, looksLikeTable, newCodebook,
   detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName, attachTeam, normFor,
 } from "./engine.js";
-import { strictCode, strictSheet, codedRatio, lexiconSize } from "./verrou.js";
+import { strictCode, strictSheet, codedRatio, lexiconSize, knownValueMatcher, foldKey } from "./verrou.js";
 import { assessReidentification, generalize, describeReidentification } from "./reidentification.js";
 import { guardResult, guardText, MASK } from "./sortie.js";
 import { protectNumbers, describeNumbers, NUMBER_MODES, DEFAULT_NUMBER_MODE } from "./chiffres.js";
 import { mergeNumberMaps, restoreWorkbook } from "./remise.js";
+import { codeDocx, decodeDocx, buildDocx, residue as docxResidue } from "./word.js";
 import { renderDashboard, CHART_TYPES, AGGREGATES } from "./tableau.js";
 import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
 import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 
-export const VERSION = "2.6.0";
+export const VERSION = "2.7.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -360,7 +361,10 @@ function handleOf(rel) {
   return "F-" + out;
 }
 
-const LISTABLE_RX = /\.(xlsx|xls|csv|pdf|md|txt|png|jpe?g|webp|bmp|tiff?)$/i;
+const LISTABLE_RX = /\.(xlsx|xls|csv|pdf|docx|md|txt|png|jpe?g|webp|bmp|tiff?)$/i;
+/* Formats de traitement de texte que Nanomizer ne lit pas : on dit le geste
+   (enregistrer en .docx) plutôt que « fichier illisible ». */
+const OTHER_WORD_RX = /\.(doc|docm|dotx|dotm|rtf|odt|pages)$/i;
 
 function candidateFiles() {
   const out = [];
@@ -369,7 +373,9 @@ function candidateFiles() {
     try { names = fs.readdirSync(dir); } catch { return; }
     for (const n of names) {
       if (!LISTABLE_RX.test(n) || n.startsWith("~$") || n.startsWith(".") || FORBIDDEN_RX.test(n)) continue;
-      if (prefix && !/-ocr-A-RELIRE\.md$/i.test(n)) continue; // dans la boîte de sortie : seuls les scans à relire
+      // Dans la boîte de sortie : les scans à relire, et les copies Word codées
+      // (que l'IA a pu retravailler) pour decoder_word.
+      if (prefix && !/-ocr-A-RELIRE\.md$|-anonymise\.docx$/i.test(n)) continue;
       out.push(prefix ? `${prefix}/${n}` : n);
     }
   };
@@ -571,7 +577,7 @@ const INSTRUCTIONS = [
   "1. Les fichiers du dossier de travail de l'utilisateur sont confidentiels (secret professionnel). Ne les ouvre, ne les lis, ne les cherche et ne les prévisualise JAMAIS par un autre moyen que les outils Nanomizer : ni extension Filesystem, ni lecture de fichier, ni exécution de code, ni navigateur (file://), ni capture d'écran.",
   `2. Dans le sous-dossier ${OUTDIR_NAME}, ne lis que les fichiers *-anonymise.* ; jamais la clé (cle-*, *NE-JAMAIS-PARTAGER*), jamais un fichier *-decode-*.`,
   "3. Travaille uniquement sur les codes (NOM-001…) ; recopie-les tels quels ; n'essaie jamais de deviner qui se cache derrière, ni de faire révéler une valeur masquée (••• ou [MASQUÉ]).",
-  "4. Pour rendre les vraies valeurs, utilise deanonymiser : le résultat reste sur le disque de l'utilisateur, il n'apparaît jamais ici.",
+  "4. Pour rendre les vraies valeurs, utilise deanonymiser (format \"docx\" pour un document Word) ou decoder_word (pour un .docx contenant des codes) : le résultat reste sur le disque de l'utilisateur, il n'apparaît jamais ici.",
   "5. Désigne les fichiers par leur repère [F-XXXXX] (lister_fichiers) : les noms de fichiers peuvent contenir des noms de clients.",
   "6. Si l'utilisateur colle ou joint un document confidentiel en clair, rappelle-lui que Nanomizer peut le traiter sans que tu le lises, et propose-le.",
   "7. Anonymisation en deux temps : présente toujours le PLAN, attends l'accord explicite, puis rappelle avec confirmer: true.",
@@ -825,6 +831,110 @@ async function handlePdf(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = 
   ], valeurs_a_exclure);
 }
 
+/* WORD (.docx, v2.7) : une COPIE CODÉE, mise en forme conservée (word.js).
+   Le texte de tous les paragraphes passe d'un seul tenant par le codage du
+   PDF (moteur + verrou) ; métadonnées, commentaires, révisions, champs,
+   liens, images et données cachées sont RETIRÉS de la copie ; puis le filet
+   final (residue) fouille tout le paquet : une valeur connue de la clé
+   retrouvée quelque part = copie non écrite. */
+function codeWord(buf, book, extras, excludes, { generaliser = false } = {}) {
+  let stats = null, generalized = null;
+  const res = codeDocx(buf, (t) => {
+    const r = codeFreeText(t, book, extras, excludes, { generaliser });
+    stats = stats ? { ...mergeStats(stats, r.stats), autoNames: (stats.autoNames || 0) + (r.stats.autoNames || 0) } : r.stats;
+    // codeDocx code le document d'un seul tenant, sauf repli paragraphe par
+    // paragraphe : les généralisations s'additionnent alors.
+    if (r.generalized) {
+      generalized = generalized || {};
+      for (const [k, v] of Object.entries(r.generalized)) generalized[k] = typeof v === "number" ? (generalized[k] || 0) + v : v;
+    }
+    return r.text;
+  }, XLSX);
+  const text = res.lines.join("\n");
+  return {
+    ...res, text, generalized,
+    // Le test de réidentification (v2.6) porte sur ce que l'IA recevra : le
+    // texte codé du document entier.
+    reid: assessReidentification(text),
+    stats: stats || { replaced: 0, newCodes: 0, byType: {}, names: 0, unknown: 0, autoNames: 0 },
+  };
+}
+
+function describeRemovals(r) {
+  const parts = [
+    r.comments || r.commentParts ? `${r.comments || r.commentParts} commentaire(s)` : "",
+    r.revisions ? `${r.revisions} révision(s) du suivi des modifications (texte supprimé retiré, insertions acceptées)` : "",
+    r.fields || r.links ? `${r.fields + r.links} champ(s) ou lien(s) — le texte affiché reste, la cible part` : "",
+    r.images ? `${r.images} image(s)` : "",
+    r.objects ? `${r.objects} objet(s) incorporé(s)` : "",
+  ].filter(Boolean);
+  return "Retiré de la copie : métadonnées (auteur, société, titre…)" + (parts.length ? ", " + parts.join(", ") : "") + ".";
+}
+
+/* Le détecteur du verrou de sortie, sur la clé moins les valeurs que
+   l'utilisateur a demandé de laisser en clair. */
+function docxLeakCheck(buf, book, excludes) {
+  const ex = new Set(excludes.map((v) => foldKey(v)));
+  const byKey = {};
+  for (const [k, code] of Object.entries(book.byKey)) if (!ex.has(foldKey(k.slice(k.indexOf("||") + 2)))) byKey[k] = code;
+  const find = knownValueMatcher({ byKey, entries: [] });
+  return find ? docxResidue(buf, (t) => find(t).replaced > 0, XLSX) : [];
+}
+
+async function handleDocx(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false, generaliser = false }) {
+  let buf;
+  try { buf = fs.readFileSync(file); } catch (e) { return err(`${fileLabel(rel)} : ${unexpected(e)}`); }
+  const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
+  const kind = "document Word";
+
+  if (!confirmer) {
+    let probe;
+    try { probe = codeWord(buf, probeBook(), extras, valeurs_a_exclure, { generaliser }); }
+    catch { return err(`Document Word illisible (${fileLabel(rel)}) — le fichier est peut-être corrompu ou protégé par mot de passe.`); }
+    const s = probe.stats;
+    return textWithLicence([
+      `📋 PLAN D'ANONYMISATION — ${kind}, ${probe.lines.length} paragraphe(s) (${fileLabel(rel)}). RIEN n'a encore été écrit.`,
+      "Une COPIE CODÉE du .docx sera écrite, mise en forme conservée (corps, en-têtes, pieds de page, notes, zones de texte) ; le fichier d'origine n'est pas modifié.",
+      s.replaced
+        ? `Serait codé : ${fmt(s.byType)} — soit ${s.replaced} valeur(s).`
+        : "Rien à coder : ni identifiant, ni nom propre, ni mot inconnu du dictionnaire.",
+      `Dont ${s.autoNames || 0} nom(s)/adresse(s) repérés par le moteur et ${s.names} nom(s) propre(s) + ${s.unknown} mot(s) ` +
+        "inconnu(s) codés par le VERROU (leurs valeurs ne sont jamais citées ici).",
+      describeRemovals(probe.removed),
+      describeReidentification(probe.reid, { generalized: probe.generalized }),
+      "Les montants, quantités, dates et libellés courants ne sont JAMAIS codés.",
+      languageWarning(probe.lines.join("\n"), probe.text),
+      confinementAlert(),
+      "Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.",
+    ].filter(Boolean).join("\n"));
+  }
+
+  const book = loadBook();
+  let res;
+  try { res = codeWord(buf, book, extras, valeurs_a_exclure, { generaliser }); }
+  catch { return err(`Document Word illisible (${fileLabel(rel)}) — le fichier est peut-être corrompu ou protégé par mot de passe.`); }
+  if (!res.stats.replaced) return err("Rien à coder : aucun identifiant, nom propre ni mot inconnu dans ce document Word.");
+  const leaks = docxLeakCheck(res.buf, book, valeurs_a_exclure);
+  if (leaks.length) {
+    // FAIL-CLOSED : la clé n'est pas enregistrée, rien n'est écrit.
+    return err(`🚨 Contrôle final : ${leaks.length} partie(s) du paquet Word contiennent encore une valeur de la clé ` +
+      `(${leaks.map((p) => p.replace(/^.*\//, "").replace(/\d*\.(xml|rels)$/, "")).join(", ")}). Par sécurité, AUCUNE copie n'est écrite. ` +
+      "Propose à l'utilisateur d'enregistrer le document en PDF et de le traiter ainsi, et signale le cas au support (sans la valeur).");
+  }
+  ensureOutdir();
+  const base = codedBase(path.basename(file), book, "document");
+  const outPath = path.join(OUTDIR, `${base}-anonymise.docx`);
+  saveBook(book);
+  fs.writeFileSync(outPath, res.buf);
+  fs.writeFileSync(path.join(OUTDIR, `${base}-anonymise.md`), `# ${base} — contenu anonymisé (extrait du document Word)\n\n${res.text}\n`, "utf8");
+  return freeTextDone(kind, fileLabel(rel), res.lines.join("\n"), res.text, res.stats, book, outPath, [
+    "Copie Word codée, mise en forme conservée — le document d'origine n'est PAS modifié. Le même contenu est aussi en .md à côté.",
+    describeRemovals(res.removed),
+    describeReidentification(res.reid, { generalized: res.generalized }),
+    "Pour rendre un résultat en Word : deanonymiser avec format: \"docx\" ; pour décoder un .docx (cette copie retravaillée, ou un .docx que tu as produit) : decoder_word.",
+  ], valeurs_a_exclure);
+}
+
 /* ------------------------------------------------------------ lister ---- */
 
 tool(
@@ -832,7 +942,7 @@ tool(
   {
     title: "Lister les fichiers du dossier de travail (noms masqués)",
     description:
-      "Liste les fichiers traitables du dossier de travail (Excel, CSV, PDF, texte, scans), sans lire leur contenu. " +
+      "Liste les fichiers traitables du dossier de travail (Excel, CSV, Word, PDF, texte, scans), sans lire leur contenu. " +
       "Les noms de fichiers peuvent contenir des noms de clients : ils sont MASQUÉS (•••) et chaque fichier reçoit " +
       "un repère stable [F-XXXXX] à utiliser dans les autres outils. Si l'utilisateur donne le nom exact d'un " +
       "fichier, il peut aussi être utilisé tel quel.",
@@ -853,7 +963,7 @@ tool(
     }
     const list = rows.slice(0, 150)
       .map((r) => `- ${fileLabel(r.rel)} (${Math.max(1, Math.round(r.size / 1024))} Ko, modifié le ${r.m.toISOString().slice(0, 10)})` +
-        (r.rel.startsWith(OUTDIR_NAME) ? " — scan à relire" : ""))
+        (r.rel.startsWith(OUTDIR_NAME) ? (/\.docx$/i.test(r.rel) ? " — copie Word codée (pour decoder_word)" : " — scan à relire") : ""))
       .join("\n");
     return text(
       `Fichiers dans ${shown(WORKDIR)} (${rows.length}) — les noms propres sont masqués (•••), désigne chaque fichier par son repère :\n${list}` +
@@ -869,9 +979,10 @@ tool(
   {
     title: "Anonymiser un fichier (sur le poste)",
     description:
-      "Pseudonymise un fichier du dossier de travail (Excel/CSV, PDF natif, texte .md/.txt) AVANT toute analyse. " +
+      "Pseudonymise un fichier du dossier de travail (Excel/CSV, Word .docx, PDF natif, texte .md/.txt) AVANT toute analyse. " +
       "Modes choisis automatiquement : TABLEAU (colonnes sensibles codées en entier), DOCUMENT (facture, document " +
-      "mis en page → codage à l'intérieur des cellules) et PDF/TEXTE (contenu extrait, anonymisé, livré en .md). " +
+      "mis en page → codage à l'intérieur des cellules), WORD (copie .docx codée, mise en forme conservée, métadonnées et " +
+      "commentaires retirés) et PDF/TEXTE (contenu extrait, anonymisé, livré en .md). " +
       "Dans tous les modes, le VERROU code en plus tout ce qui n'est pas prouvé inoffensif : noms propres, mots " +
       "inconnus du dictionnaire, références, identifiants (cartes bancaires et permis de conduire compris). Les NOMBRES d'un tableur sont " +
       "protégés par défaut (paramètre chiffres) ; dates et mots courants restent lisibles. " +
@@ -910,6 +1021,11 @@ tool(
     const label = fileLabel(rel);
 
     if (/\.pdf$/i.test(file)) return handlePdf(file, rel, { valeurs_a_coder, valeurs_a_exclure, confirmer, generaliser });
+    if (/\.docx$/i.test(file)) return handleDocx(file, rel, { valeurs_a_coder, valeurs_a_exclure, confirmer, generaliser });
+    if (OTHER_WORD_RX.test(file)) {
+      return err(`${label} est dans un format de traitement de texte que Nanomizer ne lit pas. Demande à l'utilisateur de ` +
+        "l'enregistrer au format Word (.docx) — Fichier → Enregistrer sous — puis relance avec le nouveau fichier.");
+    }
     // C'est ici qu'atterrit un scan relu : lire_scan écrit un « À RELIRE »,
     // l'utilisateur le corrige, et l'anonymisation le traite comme un texte.
     if (/\.(md|txt)$/i.test(file)) return handlePlainText(file, rel, { valeurs_a_coder, valeurs_a_exclure, confirmer, generaliser });
@@ -922,7 +1038,7 @@ tool(
 
     let wb;
     try { wb = readWorkbook(file); }
-    catch { return err(`Fichier illisible (${label}) — .xlsx, .xls, .csv, .pdf, .md ou .txt attendu.`); }
+    catch { return err(`Fichier illisible (${label}) — .xlsx, .xls, .csv, .docx, .pdf, .md ou .txt attendu.`); }
 
     const sheetList = () => wb.SheetNames.map((n, i) => `${i + 1}. « ${maskName(n)} »`).join(", ");
     let sheetName = wb.SheetNames[0];
@@ -1134,9 +1250,9 @@ function listBatchFiles(motif) {
   const needle = String(motif || "").trim().toLowerCase();
   const out = [];
   for (const n of fs.readdirSync(WORKDIR)) {
-    if (!/\.(xlsx|xls|csv|pdf)$/i.test(n)) continue;
+    if (!/\.(xlsx|xls|csv|pdf|docx)$/i.test(n)) continue;
     if (n.startsWith("~$") || n.startsWith(".")) continue;
-    if (/-anonymise\.(xlsx|md)$/i.test(n) || FORBIDDEN_RX.test(n)) continue;
+    if (/-anonymise\.(xlsx|md|docx)$/i.test(n) || FORBIDDEN_RX.test(n)) continue;
     // Le filtre ne voit que ce que Claude voit (nom masqué, repère) : filtrer
     // sur le vrai nom permettrait de le deviner lettre à lettre (« lahlou » →
     // 1 fichier, « lahlox » → 0).
@@ -1213,7 +1329,7 @@ tool(
   {
     title: "Anonymiser un LOT de fichiers (dossier entier, une seule clé)",
     description:
-      "Traite d'un coup tous les fichiers Excel/CSV/PDF du dossier de travail (ou ceux dont le nom contient `motif`) : " +
+      "Traite d'un coup tous les fichiers Excel/CSV/Word/PDF du dossier de travail (ou ceux dont le nom contient `motif`) : " +
       "chaque feuille est anonymisée en mode tableau ou document selon sa mise en page, puis passée au VERROU ; les " +
       "PDF natifs sortent en .md, les PDF scannés sont ignorés et signalés. UNE SEULE clé — la même valeur garde le " +
       "même code d'un fichier à l'autre, c'est ce qui permet de croiser les fichiers codés. " +
@@ -1241,8 +1357,8 @@ tool(
     const files = listBatchFiles(motif);
     if (!files.length) {
       return err(motif
-        ? `Aucun fichier Excel/CSV/PDF correspondant au filtre dans ${shown(WORKDIR)}.`
-        : `Aucun fichier Excel/CSV/PDF dans ${shown(WORKDIR)}.`);
+        ? `Aucun fichier Excel/CSV/Word/PDF correspondant au filtre dans ${shown(WORKDIR)}.`
+        : `Aucun fichier Excel/CSV/Word/PDF dans ${shown(WORKDIR)}.`);
     }
     const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
     const docOpts = { excludes: valeurs_a_exclure };
@@ -1258,6 +1374,19 @@ tool(
       const planNums = [];
       for (const name of files) {
         const lbl = fileLabel(name);
+        if (/\.docx$/i.test(name)) {
+          try {
+            const probe = codeWord(fs.readFileSync(path.join(WORKDIR, name)), pb, extras, valeurs_a_exclure, { generaliser });
+            total += probe.stats.replaced;
+            if (probe.reid.niveau !== "anonyme") reidRisk++;
+            lines.push(`— ${lbl} : document Word, ${probe.lines.length} paragraphe(s), ${probe.stats.replaced} valeur(s) (${fmt(probe.stats.byType)}) → copie .docx codée ; ` +
+              `réidentification : ${probe.reid.niveau}`);
+          } catch {
+            lines.push(`— ${lbl} : DOCUMENT WORD ILLISIBLE (sera ignoré)`);
+            unreadable++;
+          }
+          continue;
+        }
         if (/\.pdf$/i.test(name)) {
           try {
             const pdf = await readPdfPages(path.join(WORKDIR, name));
@@ -1298,7 +1427,7 @@ tool(
         "Les noms propres, mots inconnus et identifiants sont codés d'office par le verrou (ajuste avec valeurs_a_exclure).",
         describeNumbers(planNums, chiffres) + " (Les nombres écrits dans un PDF ou un texte restent lisibles.)",
         reidRisk && !generaliser
-          ? `🟠 ${reidRisk} PDF réuni(ssen)t des indices (ville, âge, date de naissance, fonction rare) qui laissent deviner une personne sans son nom : ` +
+          ? `🟠 ${reidRisk} document(s) PDF ou Word réuni(ssen)t des indices (ville, âge, date de naissance, fonction rare) qui laissent deviner une personne sans son nom : ` +
             "propose generaliser: true (villes codées, naissance → décennie, âge → tranche)."
           : "",
         confinementAlert(),
@@ -1325,6 +1454,22 @@ tool(
     const writes = [];
     for (const name of files) {
       const lbl = fileLabel(name);
+      if (/\.docx$/i.test(name)) {
+        const before = book.entries.length;
+        try {
+          const res = codeWord(fs.readFileSync(path.join(WORKDIR, name)), book, extras, valeurs_a_exclure, { generaliser });
+          const base = codedBase(name, book, "document");
+          writes.push({ path: path.join(OUTDIR, `${base}-anonymise.docx`), docx: res.buf, md: `# ${base} — contenu anonymisé (extrait du document Word)\n\n${res.text}\n` });
+          done++;
+          totalReplaced += res.stats.replaced;
+          totalNew += book.entries.length - before;
+          report.push(`- ✅ ${base}.docx → ${base}-anonymise.docx (document Word, ${res.lines.length} paragraphe(s)) : ${res.stats.replaced} valeur(s) — ${fmt(res.stats.byType)} ; réidentification : ${res.reid.niveau}`);
+        } catch {
+          failed.push(lbl);
+          report.push(`- ❌ [${handleOf(name)}] : document Word illisible, ignoré`);
+        }
+        continue;
+      }
       if (/\.pdf$/i.test(name)) {
         const before = book.entries.length;
         try {
@@ -1367,9 +1512,23 @@ tool(
     }
     // La clé d'abord : si l'écriture d'une sortie échoue ensuite, les codes
     // déjà présents dans un fichier restent décodables.
+    // Filet final des copies Word, sur la clé COMPLÈTE du lot : une copie
+    // où une valeur traîne encore n'est pas écrite (fail-closed).
+    for (const w of writes) {
+      if (!w.docx) continue;
+      const leaks = docxLeakCheck(w.docx, book, valeurs_a_exclure);
+      if (leaks.length) {
+        w.skip = true;
+        done--;
+        failed.push(path.basename(w.path));
+        report.push(`- 🚨 ${path.basename(w.path)} : contrôle final — une valeur de la clé reste dans ${leaks.length} partie(s) du paquet Word, copie NON écrite`);
+      }
+    }
     saveBook(book);
     for (const w of writes) {
+      if (w.skip) continue;
       if (w.wb) { saveNumberMap(w.path, w.numbers); XLSX.writeFile(w.wb, w.path); }
+      else if (w.docx) { fs.writeFileSync(w.path, w.docx); fs.writeFileSync(w.path.replace(/\.docx$/, ".md"), w.md, "utf8"); }
       else fs.writeFileSync(w.path, w.md, "utf8");
     }
     report.push(
@@ -1510,13 +1669,17 @@ tool(
     description:
       "Remplace les codes (NOM-001…) d'un texte ou d'un tableau par les vraies valeurs, LOCALEMENT : le résultat " +
       "décodé est écrit dans un fichier sur le poste de l'utilisateur et n'apparaît JAMAIS dans la conversation. " +
-      "À utiliser en fin de travail, sur ta réponse finale (texte ou tableau TSV contenant les codes).",
+      "À utiliser en fin de travail, sur ta réponse finale (texte ou tableau TSV contenant les codes). Pour un " +
+      "courrier, des conclusions, un contrat : format \"docx\" rend un document Word (titres #, listes, **gras**, " +
+      "*italique* et tableaux | a | b | du Markdown sont mis en forme).",
     inputSchema: z.object({
       contenu: z.string().describe("Le texte ou tableau (TSV, tabulations) contenant les codes à retraduire"),
       nom_sortie: z.string().optional().describe("Nom de base du fichier de sortie (défaut : « resultat »)"),
+      format: z.enum(["auto", "md", "docx"]).optional()
+        .describe("auto (défaut) : tableau TSV → .xlsx, texte → .md ; docx : document Word mis en forme"),
     }),
   },
-  async ({ contenu, nom_sortie }) => {
+  async ({ contenu, nom_sortie, format = "auto" }) => {
     const book = loadBook();
     if (!book.entries.length) {
       return err("Aucune clé de session — anonymise d'abord un fichier avec anonymiser_fichier.");
@@ -1532,7 +1695,10 @@ tool(
     const base = String(nom_sortie || "resultat").replace(/\.(xlsx|xls|csv|txt|md)$/i, "")
       .replace(/[^\p{L}\p{N} ._-]/gu, "_").slice(0, 80) || "resultat";
     let outPath;
-    if (looksLikeTable(res.text)) {
+    if (format === "docx") {
+      outPath = path.join(OUTDIR, `${base}-decode-${stamp}.docx`);
+      fs.writeFileSync(outPath, buildDocx(res.text, XLSX));
+    } else if (format === "auto" && looksLikeTable(res.text)) {
       outPath = path.join(OUTDIR, `${base}-decode-${stamp}.xlsx`);
       const rows = res.text.replace(/\r/g, "").split("\n").filter((l) => l.length).map((l) => l.split("\t"));
       const wb = XLSX.utils.book_new();
@@ -1556,6 +1722,56 @@ tool(
         "Dis à l'utilisateur d'ouvrir ce fichier sur son ordinateur. Ne le lis pas toi-même.",
       ].filter(Boolean).join("\n")
     );
+  }
+);
+
+/* ---------------------------------------------- décoder un Word (v2.7) --- *
+ * L'IA a retravaillé la copie Word codée, ou produit elle-même un .docx :
+ * ses codes redeviennent les vraies valeurs, mise en forme conservée, sur le
+ * poste. Comme deanonymiser : jamais bloqué par la licence, et rien que des
+ * comptes dans la réponse. */
+
+tool(
+  "decoder_word",
+  {
+    title: "Décoder un document Word (.docx) sur le poste",
+    description:
+      "Remplace les codes (NOM-001…) d'un document Word par les vraies valeurs, mise en forme conservée (corps, " +
+      "en-têtes, pieds de page, notes, commentaires), et écrit le .docx décodé sur le poste de l'utilisateur — il " +
+      "n'apparaît JAMAIS dans la conversation. Pour la copie codée qu'a produite anonymiser_fichier (retravaillée " +
+      "dans Word ou par toi), ou un .docx que tu as créé à partir des codes. Ne l'ouvre pas ensuite.",
+    inputSchema: z.object({
+      nom_fichier: z.string().describe("Repère [F-XXXXX] (lister_fichiers) ou chemin relatif du .docx contenant les codes"),
+      nom_sortie: z.string().optional().describe("Nom de base du fichier décodé (défaut : celui du fichier, codé)"),
+    }),
+  },
+  async ({ nom_fichier, nom_sortie }) => {
+    const book = loadBook();
+    if (!book.entries.length) return err("Aucune clé de session — anonymise d'abord un fichier avec anonymiser_fichier.");
+    let file;
+    try { file = resolveFile(nom_fichier); } catch (e) { return err(e.message); }
+    if (!fs.existsSync(file)) return err(`Fichier introuvable : ${maskName(nom_fichier)}. Utilise lister_fichiers pour voir les repères.`);
+    if (!/\.docx$/i.test(file)) return err("decoder_word attend un document Word (.docx). Pour un texte ou un tableau : deanonymiser.");
+    let res;
+    try { res = decodeDocx(fs.readFileSync(file), codeDecoder(book), XLSX); }
+    catch { return err("Document Word illisible — le fichier est peut-être corrompu ou protégé par mot de passe."); }
+    if (!res.replaced) return err(`Aucun code de la clé trouvé dans ce document (clé : ${book.entries.length} codes).`);
+    ensureOutdir();
+    const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
+    const base = (nom_sortie
+      ? String(nom_sortie).replace(/\.docx$/i, "").replace(/[^\p{L}\p{N} ._-]/gu, "_").slice(0, 80)
+      : codedBase(path.basename(file).replace(/-anonymise(?=\.docx$)/i, ""), book, "document")) || "document";
+    const outPath = path.join(OUTDIR, `${base}-decode-${stamp}.docx`);
+    fs.writeFileSync(outPath, res.buf);
+    lockDown(outPath);
+    const conflicts = (book.conflicts || new Set()).size;
+    return text([
+      `✅ ${res.replaced} code(s) remplacé(s) dans le document Word, mise en forme conservée.`,
+      `Document décodé écrit sur le poste : ${shown(outPath)}`,
+      conflicts ? `⚠️ ${conflicts} code(s) en conflit dans la clé d'équipe restent marqués « [À VÉRIFIER : code] » dans le document.` : "",
+      "IMPORTANT : les valeurs réelles n'apparaissent pas dans cette conversation — c'est voulu. " +
+      "Dis à l'utilisateur d'ouvrir ce fichier dans Word, sur son ordinateur. Ne le lis pas toi-même.",
+    ].filter(Boolean).join("\n"));
   }
 );
 
