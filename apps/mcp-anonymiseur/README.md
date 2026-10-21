@@ -76,16 +76,54 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 
 | Outil | Rôle |
 |---|---|
-| `lister_fichiers` | Liste les fichiers traitables (Excel, CSV, PDF, .md/.txt, scans) — noms propres masqués (•••), repère stable `[F-XXXXX]` |
-| `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) ; modes TABLEAU (colonnes entières), DOCUMENT (facture → codage intra-cellule, dictionnaire marocain) et TEXTE/PDF ; le verrou passe ENSUITE partout (colonnes lisibles et en-têtes compris). `onglet` par numéro. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
+| `lister_fichiers` | Liste les fichiers traitables (Excel, CSV, Word .docx, PDF, .md/.txt, scans ; et les copies Word codées, pour `decoder_word`) — noms propres masqués (•••), repère stable `[F-XXXXX]` |
+| `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) ; modes TABLEAU (colonnes entières), DOCUMENT (facture → codage intra-cellule, dictionnaire marocain), WORD (copie .docx codée, mise en forme conservée) et TEXTE/PDF ; le verrou passe ENSUITE partout (colonnes lisibles et en-têtes compris). `onglet` par numéro. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
 | `anonymiser_dossier` | LOT : tous les fichiers (ou filtrés par `motif`), toutes les feuilles, UNE clé, plan→confirmer, compte rendu en comptes seuls + rapport `rapport-lot-*.md` (noms de fichiers codés) |
 | `lire_scan` | OCR LOCAL d'un scan — le texte reconnu n'entre JAMAIS dans la conversation : il est écrit en `…-ocr-A-RELIRE.md` (nom codé), l'utilisateur le relit, PUIS on anonymise ce fichier |
-| `deanonymiser` | Retraduit texte/TSV → fichier local (.md ou .xlsx, droits 600), jamais dans le chat |
+| `deanonymiser` | Retraduit texte/TSV → fichier local (.md, .xlsx ou, avec `format: "docx"`, un document Word mis en forme ; droits 600), jamais dans le chat |
+| `decoder_word` | Décode un .docx contenant des codes (la copie codée retravaillée, ou un .docx de l'IA) : mise en forme conservée, corps, en-têtes, pieds de page, notes et commentaires ; écrit sur le poste, jamais dans le chat |
 | `etat_cle` | Comptes par type, licence, résumé de l'audit de confinement |
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `rapport_couverture` | Page locale pour le DPO : par poste, fichiers protégés, plans non confirmés, décodages, montants en clair, valeurs retrouvées, portes ouvertes, dernière activité. Que des comptes ; en équipe, chaque poste dépose les siens dans le dossier d'équipe |
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v2.7.0 (Word, 21/10/2026) : le format n° 1 d'un avocat — chantier S1-S3 du
+chemin critique vers 9/10 (`CHEMIN-CRITIQUE-9-10.md`, dépôt Nanomizer).
+1. **Lire un .docx** (`server/word.js`, `anonymiser_fichier` et
+   `anonymiser_dossier`) : une COPIE CODÉE, mise en forme conservée. Le texte
+   de tous les paragraphes — corps, en-têtes, pieds de page, notes, zones de
+   texte — passe d'un seul tenant par le codage du PDF (moteur + verrou), puis
+   est redistribué run par run (alignement par plus longue sous-suite commune
+   de mots : un nom coupé entre un run gras et un run normal est codé d'un
+   bloc et garde la mise en forme du début du mot). Aussi un `.md` à côté.
+2. **Ce qu'un .docx cache, retiré de la copie** : métadonnées (auteur,
+   « modifié par », société, titre, mots-clés), propriétés personnalisées,
+   miniature, commentaires et auteurs, suivi des modifications (supprimé
+   retiré, inséré accepté), champs (`HYPERLINK "mailto:…"`) et liens (le
+   texte affiché reste), images et textes alternatifs, objets incorporés,
+   données liées (customXml), variables du document, chemin du modèle,
+   glossaire, macros. Puis un **filet final fail-closed** : tout le paquet,
+   attributs compris, repasse au détecteur du verrou de sortie
+   (`knownValueMatcher`) — une valeur de la clé retrouvée = aucune copie
+   écrite. `.doc`, `.rtf`, `.odt` : refusés avec le geste (enregistrer en
+   .docx).
+3. **Rendre du Word** : `deanonymiser` avec `format: "docx"` (titres, listes,
+   gras/italique, tableaux du Markdown) ; nouvel outil **`decoder_word`** pour
+   un .docx contenant des codes. Jamais bloqués par la licence.
+4. **Verrou, trouvé par le banc en mode Word** (`node bench/run.mjs --word`) :
+   recoder un texte avec une clé déjà remplie laissait passer un patronyme en
+   minuscules qui est aussi un mot (« mme amandine roux » : au second passage,
+   « amandine » est déjà un code, « roux » ne suit plus un prénom). Faille
+   antérieure à Word — elle touchait aussi un PDF retraité en lot. Désormais
+   un tel mot, collé à un code et connu de l'INSEE comme nom ou prénom, est
+   recodé (`R7`, `test/verrou.test.js`). Banc : 201/201 en mode texte, équipe
+   et Word, lisibilité inchangée (92,9 %).
+Vérifié dans Microsoft Word (macOS) : la copie codée et la copie décodée d'un
+vrai .docx piégé (`test/fixtures/piege-libreoffice.docx`, écrit par
+LibreOffice) s'ouvrent et s'exportent en PDF. Limite assumée : les images
+retirées ne reviennent pas au décodage (l'original les garde) ; les noms de
+styles ne sont pas codés.
 
 v2.6.0 (la preuve pour le client, 21/10/2026).
 1. **Test de réidentification** (`reidentification.js`) : coder les noms ne suffit

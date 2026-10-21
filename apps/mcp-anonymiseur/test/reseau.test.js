@@ -52,6 +52,7 @@ before(async () => {
   writeMinimalPdf(path.join(workdir, "facture.pdf"), ["FACTURE", "Client : SOCIETE ATLAS NEGOCE", "ICE : 003463957000076", "Total HT : 2150"]);
   const jpeg = fs.readFileSync(path.join(here, "fixtures", "scan.jpg"));
   writeScannedPdf(path.join(workdir, "scan.pdf"), jpeg, 1240, 1754);
+  fs.copyFileSync(path.join(here, "fixtures", "piege-libreoffice.docx"), path.join(workdir, "conclusions.docx"));
   client = new Client({ name: "reseau", version: "1.0.0" });
   await client.connect(new StdioClientTransport({
     command: process.execPath, args: [...SANDBOX, serverPath],
@@ -70,6 +71,7 @@ test("tout le parcours fonctionne avec le réseau interdit par Node", { skip, ti
     ["anonymiser_fichier", { nom_fichier: "clients.xlsx", confirmer: true }, /Anonymisation terminée/],
     ["anonymiser_fichier", { nom_fichier: "facture.pdf", confirmer: true }, /ICE-\d{3}/],
     ["lire_scan", { nom_fichier: "scan.pdf" }, /À RELIRE|A-RELIRE/],
+    ["anonymiser_fichier", { nom_fichier: "conclusions.docx", confirmer: true }, /document Word/],
     ["anonymiser_dossier", { confirmer: true }, /Lot|lot/],
     ["verifier_confinement", {}, /AUDIT DE CONFINEMENT/],
     ["journal_ia", {}, /Aucune valeur réelle/],
@@ -86,4 +88,7 @@ test("tout le parcours fonctionne avec le réseau interdit par Node", { skip, ti
   assert.ok(!dash.isError, out(dash));
   const rem = await client.callTool({ name: "remettre_chiffres", arguments: { nom_fichier: `Anonymiseur-Ai4x/${anon}` } });
   assert.ok(!rem.isError, out(rem));
+  const docx = fs.readdirSync(path.join(workdir, "Anonymiseur-Ai4x")).find((n) => /-anonymise\.docx$/.test(n));
+  const dw = await client.callTool({ name: "decoder_word", arguments: { nom_fichier: `Anonymiseur-Ai4x/${docx}` } });
+  assert.ok(!dw.isError, out(dw));
 });

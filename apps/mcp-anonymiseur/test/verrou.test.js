@@ -6,7 +6,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { strictCode, isKnownWord, lexiconSize, codedRatio } from "../server/verrou.js";
-import { newCodebook, codeFor } from "../server/engine.js";
+import { newCodebook, codeFor, anonymizeText } from "../server/engine.js";
 import { guardText, guardResult, MASK } from "../server/sortie.js";
 import { auditConfinement, cloudSync, overlaps } from "../server/confinement.js";
 
@@ -288,6 +288,21 @@ test("R4 — sortie : un mot courant qui est aussi un nom n'est recodé que capi
   codeFor(book, "nom", "Blanc");
   const g = guardText("le délai est petit, la situation est claire, le chèque est en blanc. M. Petit et Claire Blanc.", { book });
   assert.match(g.text, /^le délai est petit, la situation est claire, le chèque est en blanc\. M\. NOM-001 et PRENOM-001 NOM-002\.$/);
+});
+
+test("R7 — recoder le même texte avec la clé déjà remplie code toujours le patronyme en minuscules (idempotence)", () => {
+  // Trouvé par le banc en mode Word (v2.7) : le lot recode un document déjà
+  // traité ; « amandine » y est déjà un code, « roux » ne suit donc plus un
+  // prénom, et c'est un mot courant — il sortait en clair.
+  const t = "reçu mme amandine roux (née perrin). mariée à m. julien roux, ingénieur.";
+  const book = newCodebook();
+  const pass = () => strictCode(anonymizeText(t, book, [], {}).text, { book }).text;
+  const first = pass();
+  const second = pass();
+  assert.doesNotMatch(first, /\broux\b/i);
+  assert.equal(second, first, "le second passage donne exactement le premier");
+  // Le mot courant, seul et sans code à côté, reste lisible.
+  assert.equal(guardText("la robe est roux", { book }).text, "la robe est roux");
 });
 
 test("R6 — le fichier produit ne garde ni formule, ni lien, ni commentaire ; un numéro stocké en nombre est codé", async () => {

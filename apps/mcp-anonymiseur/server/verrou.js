@@ -450,6 +450,12 @@ const MATCHERS = new WeakMap();
    - une valeur faite d'UN mot du dictionnaire (« Blanc », « Claire ») n'est
      remplacée que capitalisée : « le chèque est en blanc » ne doit pas
      devenir « en NOM-003 » — ce serait désigner la personne par le contexte ;
+     SAUF collée à un code quand c'est aussi un nom ou un prénom de l'INSEE
+     (v2.7) : « mme CODE-001 roux » — le prénom a déjà
+     été codé par un passage précédent, « roux » est le nom de famille. Sans
+     cette règle, recoder un texte avec une clé déjà remplie laissait passer
+     un patronyme en minuscules que le premier passage avait codé (trouvé par
+     le banc en mode Word : la copie d'un lot recode le même document) ;
    - un numéro est reconnu quels que soient ses séparateurs.
    L'index est construit une fois par carnet (byKey, qui contient aussi les
    ALIAS : « Transports Moreau & Fils » pour « … SAS »), puis tenu à jour par
@@ -488,7 +494,8 @@ export function knownValueMatcher(book) {
   }
   if (!ix.multi.size && !ix.capOnly.size && !ix.digitMap.size) return null;
   const codeOnly = new RegExp(`^${CODE_SRC}$`, "u");
-  return (text) => {
+  const NEXT_TO = /^[ \u00A0]{1,2}$/;
+  const once = (text) => {
     let replaced = 0;
     let s = String(text);
     if (ix.digitMap.size) {
@@ -518,7 +525,17 @@ export function knownValueMatcher(book) {
         if (codeOnly.test(cand)) continue;
         const k = foldKey(cand);
         let code = ix.multi.get(k);
-        if (!code && n === 1 && /^\p{Lu}/u.test(cand)) code = ix.capOnly.get(k);
+        if (!code && n === 1) {
+          const besideCode =
+            (i > 0 && NEXT_TO.test(s.slice(toks[i - 1].b, toks[i].a)) && codeOnly.test(s.slice(toks[i - 1].a, toks[i - 1].b))) ||
+            (i + 1 < toks.length && NEXT_TO.test(s.slice(toks[i].b, toks[i + 1].a)) && codeOnly.test(s.slice(toks[i + 1].a, toks[i + 1].b)));
+          // Collé à un code : seulement un mot que l'INSEE connaît aussi comme
+          // nom ou prénom (« roux », « blanc ») — pas n'importe quel mot
+          // courant, sinon un texte très codé (anglais) s'effondre en cascade.
+          const forms = besideCode ? [cand.toLowerCase(), fold(cand)] : [];
+          const nameLike = forms.some((f) => names().nomColl.has(f) || names().prenomColl.has(f));
+          if (/^\p{Lu}/u.test(cand) || nameLike) code = ix.capOnly.get(k);
+        }
         if (code) hit = { j, code };
       }
       if (!hit) {
@@ -543,6 +560,14 @@ export function knownValueMatcher(book) {
       i = hit.j;
     }
     return { text: out + s.slice(last), replaced };
+  };
+  // Un second passage voit les codes posés par le premier : « amandine roux »
+  // devient « CODE-001 roux », puis « CODE-001 NOM-001 ».
+  return (text) => {
+    const a = once(text);
+    if (!ix.capOnly.size || !a.replaced) return a;
+    const b = once(a.text);
+    return { text: b.text, replaced: a.replaced + b.replaced };
   };
 }
 

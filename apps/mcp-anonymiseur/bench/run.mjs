@@ -11,6 +11,8 @@
 // terrain y est cherchée.
 //
 //   node bench/run.mjs            → tableau + bench/resultats.json
+//   node bench/run.mjs --equipe   → même banc, clé d'équipe
+//   node bench/run.mjs --word     → les documents texte entrent en Word (.docx)
 //
 // Une valeur est « fuitée » si elle apparaît UNE fois, n'importe où. Les
 // nombres sont comparés chiffres seuls (« 06 48 27 19 53 » = « 0648271953 »).
@@ -25,6 +27,7 @@ import * as XLSX from "xlsx";
 import * as _fs from "node:fs";
 import { writeMinimalPdf } from "../test/util-pdf.mjs";
 import { mint } from "../test/licence-test.mjs";
+import { buildDocx, docxParagraphs } from "../server/word.js";
 import { DOCUMENTS, CATEGORIES } from "./corpus.mjs";
 XLSX.set_fs(_fs);
 
@@ -59,10 +62,14 @@ function xlsxText(p) {
 }
 
 /* ------------------------------------------------------------ terrain */
+// --word : chaque document texte devient un .docx (une ligne = un
+// paragraphe) — même vérité terrain, parcours Word.
+const WORD = process.argv.includes("--word");
 const workdir = fs.mkdtempSync(path.join(os.tmpdir(), "anx-bench-"));
 for (const d of DOCUMENTS) {
   const p = path.join(workdir, d.file);
-  if (d.kind === "md") fs.writeFileSync(p, d.text, "utf8");
+  if (d.kind === "md" && WORD) fs.writeFileSync(p.replace(/\.md$/, ".docx"), buildDocx(d.text, XLSX));
+  else if (d.kind === "md") fs.writeFileSync(p, d.text, "utf8");
   else if (d.kind === "pdf") writeMinimalPdf(p, d.lines);
   else {
     const wb = XLSX.utils.book_new();
@@ -105,9 +112,18 @@ await call("anonymiser_dossier", { confirmer: true });
 await client.close();
 
 const outDir = path.join(workdir, "Anonymiseur-Ai4x");
-const produced = fs.readdirSync(outDir).filter((n) => /-anonymise\.(xlsx|md)$/.test(n) || /^rapport-lot-/.test(n));
+const produced = fs.readdirSync(outDir).filter((n) => /-anonymise\.(xlsx|md|docx)$/.test(n) || /^rapport-lot-/.test(n));
 for (const n of produced) {
   const p = path.join(outDir, n);
+  if (n.endsWith(".docx")) {
+    // Le texte (pour la lisibilité) ET le paquet entier, balises comprises
+    // (pour les fuites : métadonnées, attributs, toutes les parties).
+    outputs.push({ source: `fichier ${n}`, t: n + "\n" + docxParagraphs(fs.readFileSync(p), XLSX).join("\n") });
+    const cfb = XLSX.CFB.read(fs.readFileSync(p), { type: "buffer" });
+    const raw = cfb.FileIndex.filter((e) => e.type === 2 && e.content).map((e) => Buffer.from(e.content).toString("utf8")).join("\n");
+    outputs.push({ source: `paquet ${n}`, t: raw });
+    continue;
+  }
   outputs.push({ source: `fichier ${n}`, t: n + "\n" + (n.endsWith(".xlsx") ? xlsxText(p) : fs.readFileSync(p, "utf8")) });
 }
 
@@ -207,9 +223,9 @@ const resultats = {
   },
   detail_fuites: leaks,
 };
-if (!TEAM_DIR) fs.writeFileSync(path.join(here, "resultats.json"), JSON.stringify(resultats, null, 2) + "\n");
+if (!TEAM_DIR && !WORD) fs.writeFileSync(path.join(here, "resultats.json"), JSON.stringify(resultats, null, 2) + "\n");
 
-console.log(`\nBanc d'essai — connecteur v${manifest.version}${TEAM_DIR ? " (clé d'équipe)" : ""}, ${DOCUMENTS.length} documents, ${outputs.length} sorties lues par l'IA\n`);
+console.log(`\nBanc d'essai — connecteur v${manifest.version}${TEAM_DIR ? " (clé d'équipe)" : ""}${WORD ? " (documents texte en Word)" : ""}, ${DOCUMENTS.length} documents, ${outputs.length} sorties lues par l'IA\n`);
 for (const [k, c] of Object.entries(perCat)) {
   if (c.total) console.log(`  ${CATEGORIES[k].padEnd(50)} ${String(c.total - c.leaked).padStart(3)}/${String(c.total).padEnd(3)} ${pct(c.total - c.leaked, c.total).padStart(5)} %`);
 }
