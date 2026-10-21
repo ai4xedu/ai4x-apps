@@ -47,13 +47,15 @@ import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 import { extractText } from "unpdf";
 import { extractPdfJpegs, ocrImages, reviewHints, isImageFile } from "./ocr.js";
-import { readLicence, licenceStatus, trialStatus, blockedMessage, warningBanner, isUnsubstituted, OFFER } from "./licence.js";
+import { readLicence, licenceStatus, trialStatus, blockedMessage, warningBanner, isUnsubstituted, OFFER, parseKey, publicKeys } from "./licence.js";
+import { sealIdentity, buildSeal, verifySeal, renderSealPage, verifyLink, CLAUSE } from "./sceau.js";
 import {
   XLSX, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
   decodeText, sheetToTsv, looksLikeTable, newCodebook,
   detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName, attachTeam, normFor,
 } from "./engine.js";
 import { strictCode, strictSheet, codedRatio, lexiconSize } from "./verrou.js";
+import { assessReidentification, generalize, describeReidentification } from "./reidentification.js";
 import { guardResult, guardText, MASK } from "./sortie.js";
 import { protectNumbers, describeNumbers, NUMBER_MODES, DEFAULT_NUMBER_MODE } from "./chiffres.js";
 import { mergeNumberMaps, restoreWorkbook } from "./remise.js";
@@ -63,7 +65,7 @@ import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 
-export const VERSION = "2.5.0";
+export const VERSION = "2.6.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -697,15 +699,29 @@ function readWorkbook(file) {
 }
 
 /* Texte libre (PDF natif, scan relu, .md/.txt) : moteur (dictionnaire
-   marocain + noms d'office) PUIS verrou. Renvoie { text, stats }. */
-function codeFreeText(raw, book, extras, excludes) {
+   marocain + noms d'office) PUIS verrou, PUIS (v2.6) le test de
+   réidentification sur ce qui sortira — et, si demandé, la généralisation.
+   Renvoie { text, stats, reid, generalized }. */
+function codeFreeText(raw, book, extras, excludes, { generaliser = false } = {}) {
   const base = anonymizeText(raw, book, extras, { excludes });
   const strict = strictCode(base.text, { book, extra: extras, excludes });
-  return {
-    text: strict.text,
-    stats: { ...mergeStats(base.stats, strict), autoNames: base.stats.autoNames },
-  };
+  const stats = { ...mergeStats(base.stats, strict), autoNames: base.stats.autoNames };
+  let text = strict.text, generalized = null;
+  if (generaliser) {
+    const g = generalize(text, book);
+    text = g.text;
+    generalized = g.changes;
+    if (g.changes.lieu) {
+      stats.byType = { ...stats.byType, "Lieu (ville)": (stats.byType["Lieu (ville)"] || 0) + g.changes.lieu };
+      stats.replaced += g.changes.lieu;
+    }
+  }
+  return { text, stats, reid: assessReidentification(text), generalized };
 }
+
+const generaliserSchema = z.boolean().optional()
+  .describe("Textes et PDF : code aussi les villes (LIEU-…, décodées dans la réponse), ramène une date de naissance à sa " +
+    "décennie et un âge à sa tranche. À proposer quand le test de réidentification du plan est 🟠 ou 🔴.");
 
 function languageWarning(original, coded) {
   const r = codedRatio(original, coded);
@@ -715,8 +731,8 @@ function languageWarning(original, coded) {
     : "";
 }
 
-function freeTextPlan(kind, name, raw, extras, excludes, extra = []) {
-  const probe = codeFreeText(raw, probeBook(), extras, excludes);
+function freeTextPlan(kind, name, raw, extras, excludes, extra = [], { generaliser = false } = {}) {
+  const probe = codeFreeText(raw, probeBook(), extras, excludes, { generaliser });
   const s = probe.stats;
   return textWithLicence([
     `📋 PLAN D'ANONYMISATION — ${kind} (${name}). RIEN n'a encore été écrit.`,
@@ -727,6 +743,7 @@ function freeTextPlan(kind, name, raw, extras, excludes, extra = []) {
     `Dont ${s.autoNames || 0} nom(s)/adresse(s) repérés par le moteur et ${s.names} nom(s) propre(s) + ${s.unknown} mot(s) ` +
       "inconnu(s) codés par le VERROU (tout ce qui n'est pas un mot courant du dictionnaire est codé — leurs valeurs ne sont jamais citées ici).",
     "Les montants, quantités, dates et libellés courants ne sont JAMAIS codés.",
+    describeReidentification(probe.reid, { generalized: probe.generalized }),
     languageWarning(raw, probe.text),
     confinementAlert(),
     "Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.",
@@ -756,7 +773,7 @@ function freeTextDone(kind, name, raw, coded, stats, book, outPath, extraLines =
 }
 
 /* Anonymise un fichier TEXTE (.md/.txt) — typiquement un scan relu. */
-function handlePlainText(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) {
+function handlePlainText(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false, generaliser = false }) {
   let raw;
   try { raw = fs.readFileSync(file, "utf8"); } catch (e) { return err(`${fileLabel(rel)} : ${unexpected(e)}`); }
   if (!raw.trim()) return err(`${fileLabel(rel)} est vide.`);
@@ -766,20 +783,21 @@ function handlePlainText(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = 
   if (!confirmer) {
     return freeTextPlan("fichier texte", fileLabel(rel), raw, extras, valeurs_a_exclure, reviewed
       ? ["Ce fichier vient d'un scan passé à l'OCR. Vérifie avec l'utilisateur qu'il l'a RELU et corrigé avant d'aller plus loin — un identifiant mal reconnu ne serait pas détecté."]
-      : []);
+      : [], { generaliser });
   }
 
   const book = loadBook();
-  const res = codeFreeText(raw, book, extras, valeurs_a_exclure);
+  const res = codeFreeText(raw, book, extras, valeurs_a_exclure, { generaliser });
   if (!res.stats.replaced) return err("Rien à coder dans ce fichier texte.");
   ensureOutdir();
   const outPath = path.join(OUTDIR, `${codedBase(path.basename(file), book, "texte")}-anonymise.md`);
   saveBook(book);
   fs.writeFileSync(outPath, res.text.endsWith("\n") ? res.text : res.text + "\n", "utf8");
-  return freeTextDone("texte", fileLabel(rel), raw, res.text, res.stats, book, outPath, [], valeurs_a_exclure);
+  return freeTextDone("texte", fileLabel(rel), raw, res.text, res.stats, book, outPath,
+    [describeReidentification(res.reid, { generalized: res.generalized })], valeurs_a_exclure);
 }
 
-async function handlePdf(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false }) {
+async function handlePdf(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false, generaliser = false }) {
   let pdf;
   try { pdf = await readPdfPages(file); }
   catch { return err(`PDF illisible (${fileLabel(rel)}) — le fichier est peut-être corrompu ou protégé par mot de passe.`); }
@@ -790,11 +808,11 @@ async function handlePdf(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = 
   if (!confirmer) {
     return freeTextPlan(`PDF natif, ${pdf.totalPages} page(s)`, fileLabel(rel), fullText, extras, valeurs_a_exclure, [
       "Le PDF n'est jamais réécrit : son CONTENU sera anonymisé et livré en texte structuré (.md) — c'est ce fichier-là qu'on donne à l'IA.",
-    ]);
+    ], { generaliser });
   }
 
   const book = loadBook();
-  const res = codeFreeText(fullText, book, extras, valeurs_a_exclure);
+  const res = codeFreeText(fullText, book, extras, valeurs_a_exclure, { generaliser });
   if (!res.stats.replaced) return err("Rien à coder : aucun identifiant, nom propre ni mot inconnu dans ce PDF.");
   ensureOutdir();
   const base = codedBase(path.basename(file), book, "document");
@@ -803,6 +821,7 @@ async function handlePdf(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = 
   fs.writeFileSync(outPath, `# ${base} — contenu anonymisé (extrait du PDF)\n\n${res.text}\n`, "utf8");
   return freeTextDone(`PDF natif, ${pdf.totalPages} page(s)`, fileLabel(rel), fullText, res.text, res.stats, book, outPath, [
     "Le PDF d'origine n'est PAS modifié.",
+    describeReidentification(res.reid, { generalized: res.generalized }),
   ], valeurs_a_exclure);
 }
 
@@ -873,11 +892,12 @@ tool(
       valeurs_a_exclure: z.array(z.string()).optional()
         .describe("Valeurs que l'utilisateur veut EXPLICITEMENT laisser en clair dans le fichier (elles restent masquées dans l'aperçu)"),
       chiffres: chiffresSchema,
+      generaliser: generaliserSchema,
       confirmer: z.boolean().optional()
         .describe("false/absent = renvoyer le PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, confirmer = false }) => {
+  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, generaliser = false, confirmer = false }) => {
     const bloque = requireLicence() || requireTeam();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
@@ -889,10 +909,10 @@ tool(
     const rel = path.relative(WORKDIR, file).split(path.sep).join("/");
     const label = fileLabel(rel);
 
-    if (/\.pdf$/i.test(file)) return handlePdf(file, rel, { valeurs_a_coder, valeurs_a_exclure, confirmer });
+    if (/\.pdf$/i.test(file)) return handlePdf(file, rel, { valeurs_a_coder, valeurs_a_exclure, confirmer, generaliser });
     // C'est ici qu'atterrit un scan relu : lire_scan écrit un « À RELIRE »,
     // l'utilisateur le corrige, et l'anonymisation le traite comme un texte.
-    if (/\.(md|txt)$/i.test(file)) return handlePlainText(file, rel, { valeurs_a_coder, valeurs_a_exclure, confirmer });
+    if (/\.(md|txt)$/i.test(file)) return handlePlainText(file, rel, { valeurs_a_coder, valeurs_a_exclure, confirmer, generaliser });
     if (isImageFile(file)) {
       return err(
         `${label} est une image (un scan). Utilise d'abord l'outil \`lire_scan\` : il fait ` +
@@ -1209,11 +1229,12 @@ tool(
       valeurs_a_exclure: z.array(z.string()).optional()
         .describe("Valeurs à laisser en clair dans tout le lot (sur demande explicite de l'utilisateur)"),
       chiffres: chiffresSchema,
+      generaliser: generaliserSchema,
       confirmer: z.boolean().optional()
         .describe("false/absent = PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, confirmer = false }) => {
+  async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], chiffres = DEFAULT_NUMBER_MODE, generaliser = false, confirmer = false }) => {
     const bloque = requireLicence() || requireTeam();
     if (bloque) return bloque;
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
@@ -1233,6 +1254,7 @@ tool(
       const lines = [`📋 PLAN DE LOT — ${files.length} fichier(s) dans ${shown(WORKDIR)}. RIEN n'a encore été écrit.`];
       let total = 0;
       let unreadable = 0;
+      let reidRisk = 0;
       const planNums = [];
       for (const name of files) {
         const lbl = fileLabel(name);
@@ -1245,9 +1267,11 @@ tool(
               unreadable++;
               continue;
             }
-            const probe = codeFreeText(fullText, pb, extras, valeurs_a_exclure);
+            const probe = codeFreeText(fullText, pb, extras, valeurs_a_exclure, { generaliser });
             total += probe.stats.replaced;
-            lines.push(`— ${lbl} : PDF natif ${pdf.totalPages} page(s), ${probe.stats.replaced} valeur(s) (${fmt(probe.stats.byType)}) → sortie .md`);
+            if (probe.reid.niveau !== "anonyme") reidRisk++;
+            lines.push(`— ${lbl} : PDF natif ${pdf.totalPages} page(s), ${probe.stats.replaced} valeur(s) (${fmt(probe.stats.byType)}) → sortie .md ; ` +
+              `réidentification : ${probe.reid.niveau}`);
           } catch {
             lines.push(`— ${lbl} : PDF ILLISIBLE (sera ignoré)`);
             unreadable++;
@@ -1273,6 +1297,10 @@ tool(
         `TOTAL : ~${total} valeur(s) seraient codées avec UNE SEULE clé (même valeur = même code sur tout le lot).`,
         "Les noms propres, mots inconnus et identifiants sont codés d'office par le verrou (ajuste avec valeurs_a_exclure).",
         describeNumbers(planNums, chiffres) + " (Les nombres écrits dans un PDF ou un texte restent lisibles.)",
+        reidRisk && !generaliser
+          ? `🟠 ${reidRisk} PDF réuni(ssen)t des indices (ville, âge, date de naissance, fonction rare) qui laissent deviner une personne sans son nom : ` +
+            "propose generaliser: true (villes codées, naissance → décennie, âge → tranche)."
+          : "",
         confinementAlert(),
         "Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true."
       );
@@ -1307,13 +1335,13 @@ tool(
             report.push(`- ❌ [${handleOf(name)}] : PDF sans texte (scan — passer par lire_scan), ignoré`);
             continue;
           }
-          const res = codeFreeText(fullText, book, extras, valeurs_a_exclure);
+          const res = codeFreeText(fullText, book, extras, valeurs_a_exclure, { generaliser });
           const base = codedBase(name, book, "document");
           writes.push({ path: path.join(OUTDIR, `${base}-anonymise.md`), md: `# ${base} — contenu anonymisé (extrait du PDF)\n\n${res.text}\n` });
           done++;
           totalReplaced += res.stats.replaced;
           totalNew += book.entries.length - before;
-          report.push(`- ✅ ${base}.pdf → ${base}-anonymise.md (PDF natif, ${pdf.totalPages} page(s)) : ${res.stats.replaced} valeur(s) — ${fmt(res.stats.byType)}`);
+          report.push(`- ✅ ${base}.pdf → ${base}-anonymise.md (PDF natif, ${pdf.totalPages} page(s)) : ${res.stats.replaced} valeur(s) — ${fmt(res.stats.byType)} ; réidentification : ${res.reid.niveau}`);
         } catch {
           failed.push(lbl);
           report.push(`- ❌ [${handleOf(name)}] : PDF illisible, ignoré`);
@@ -1762,6 +1790,26 @@ tool(
   }
 );
 
+/* Les fichiers *-anonymise.* mis à la disposition de l'IA, en texte, pour
+   l'audit (journal_ia, sceau_dossier). `depuis` : ne garder que les récents. */
+function aiFilesForAudit(depuis = "") {
+  const out = [];
+  try {
+    for (const n of fs.readdirSync(OUTDIR).filter((x) => /-anonymise\.(md|xlsx)$/i.test(x)).sort()) {
+      const p = path.join(OUTDIR, n);
+      const mtime = fs.statSync(p).mtime.toISOString();
+      if (depuis && mtime.slice(0, 10) < depuis) continue;
+      let texte;
+      if (/\.xlsx$/i.test(n)) {
+        const wb = XLSX.readFile(p);
+        texte = wb.SheetNames.join("\n") + "\n" + wb.SheetNames.map((sn) => XLSX.utils.sheet_to_csv(wb.Sheets[sn])).join("\n");
+      } else texte = fs.readFileSync(p, "utf8");
+      out.push({ name: n, texte, mtime });
+    }
+  } catch {}
+  return out;
+}
+
 tool(
   "journal_ia",
   {
@@ -1776,19 +1824,7 @@ tool(
   async () => {
     const book = loadBook();
     const journal = readJournal(JOURNAL_DIR);
-    const aiFiles = [];
-    try {
-      for (const n of fs.readdirSync(OUTDIR).filter((x) => /-anonymise\.(md|xlsx)$/i.test(x)).sort()) {
-        const p = path.join(OUTDIR, n);
-        let texte;
-        if (/\.xlsx$/i.test(n)) {
-          const wb = XLSX.readFile(p);
-          texte = wb.SheetNames.join("\n") + "\n" + wb.SheetNames.map((sn) => XLSX.utils.sheet_to_csv(wb.Sheets[sn])).join("\n");
-        } else texte = fs.readFileSync(p, "utf8");
-        aiFiles.push({ name: n, texte, mtime: fs.statSync(p).mtime.toISOString() });
-      }
-    } catch {}
-    const a = auditJournal(journal, aiFiles, book);
+    const a = auditJournal(journal, aiFilesForAudit(), book);
     ensureOutdir();
     fs.writeFileSync(REPORT_PATH, renderReport(a, { version: VERSION, failures: JOURNAL.failures }), { encoding: "utf8", mode: 0o600 });
     const bad = a.leaks.length + a.forms;
@@ -1801,6 +1837,75 @@ tool(
       `Page locale à ouvrir par l'utilisateur (navigateur, hors ligne) : ${shown(REPORT_PATH)}`,
       "Ce journal ne voit pas les textes collés directement dans la conversation.",
     ].filter(Boolean).join("\n"));
+  }
+);
+
+tool(
+  "sceau_dossier",
+  {
+    title: "Sceau pour le client (preuve vérifiable, certifiée par Ai4x)",
+    description:
+      "Délivre un SCEAU que l'avocat joint à sa lettre de mission ou à un envoi : il atteste au CLIENT que les données " +
+      "identifiantes ont été codées avant l'IA sur une période, et le client le vérifie seul (QR code ou " +
+      "ai4x.academy/verifier-sceau, hors ligne). Le journal est d'abord audité : s'il contient une valeur réelle, " +
+      "aucun sceau n'est délivré. Réservé aux abonnés (le cabinet est certifié par Ai4x). Écrit une page locale " +
+      "imprimable (QR, clause pour la lettre de mission) ; renvoie des comptes, la clause et le lien de vérification.",
+    inputSchema: z.object({
+      reference: z.string().max(80).optional()
+        .describe("Référence interne du dossier, affichée sur le sceau (ex. « Dossier 2026-118 ») — PAS le nom du client"),
+      depuis: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
+        .describe("Début de la période attestée, AAAA-MM-JJ (défaut : premier échange du journal)"),
+    }),
+  },
+  async ({ reference = "", depuis = "" }) => {
+    const st = licence();
+    const parsed = parseKey(LICENCE.raw);
+    const id = parsed.ok ? sealIdentity(parsed.payload, publicKeys()) : null;
+    if (!st.valid || st.trial || !id) {
+      return err(st.trial || !parsed.ok
+        ? "Le sceau est réservé aux abonnés : c'est Ai4x qui certifie l'identité du cabinet auprès de ses clients, et un " +
+          `essai n'a pas de cabinet à certifier. Abonnement : ${OFFER.orderUrl}`
+        : !st.valid
+          ? "La licence n'est plus valide : un sceau ne peut pas être délivré au nom d'un abonnement échu."
+          : "Votre clé de licence a été émise avant le sceau (v2.6). Demandez à Ai4x une clé réémise, sans frais : " +
+            `WhatsApp ${OFFER.whatsappDisplay}. Elle remplace l'ancienne, rien d'autre ne change.`);
+    }
+    const book = loadBook();
+    const journal = readJournal(JOURNAL_DIR);
+    const entries = depuis ? journal.entries.filter((e) => String(e.t).slice(0, 10) >= depuis) : journal.entries;
+    // La connexion (le protocole envoyé) n'est pas un échange sur un dossier.
+    const work = entries.filter((e) => !String(e.outil).startsWith("connexion"));
+    if (!work.length) return err("Rien à attester : aucun échange avec l'IA dans le journal sur cette période.");
+    const a = auditJournal({ entries, unreadable: journal.unreadable }, aiFilesForAudit(depuis), book);
+    const bad = a.leaks.length + a.forms;
+    if (bad) {
+      return err(`🚨 Pas de sceau : l'audit retrouve ${bad} élément(s) sensible(s) dans ce que l'IA a reçu sur cette période. ` +
+        "Un sceau ne dit que la vérité. Ouvre journal_ia pour voir lesquels (par code), puis choisis une période qui " +
+        "commence après (paramètre depuis).");
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    const att = {
+      ref: reference.trim(), emis: today, du: String(work[0].t).slice(0, 10), au: String(work[work.length - 1].t).slice(0, 10),
+      echanges: work.length, codes: a.distinctCodes, fichiers: a.files.length, version: VERSION,
+    };
+    const seal = buildSeal(id, att);
+    const check = verifySeal(seal, publicKeys());
+    if (!check.ok) return err(`Le sceau produit ne se vérifie pas (${check.reason}) : rien n'a été écrit. Signale-le à Ai4x.`);
+    ensureOutdir();
+    const out = path.join(OUTDIR, `SCEAU-NANOMIZER-${today}.html`);
+    fs.writeFileSync(out, renderSealPage(seal, id, att), { encoding: "utf8", mode: 0o600 });
+    return text([
+      `✅ Sceau délivré au nom de ${id.certPayload.org} (certifié par Ai4x) — période du ${att.du} au ${att.au}.`,
+      `Atteste : ${att.echanges} échange(s) avec l'IA, ${att.codes} donnée(s) identifiante(s) codée(s), 0 retrouvée en clair` +
+        (att.fichiers ? `, ${att.fichiers} fichier(s) *-anonymise.* contrôlé(s).` : "."),
+      `Page imprimable (QR code, clause, code du sceau) à ouvrir par l'utilisateur : ${shown(out)}`,
+      `Lien de vérification à transmettre au client : ${verifyLink(seal)}`,
+      "",
+      "Clause proposée pour la lettre de mission (à adapter par l'avocat) :",
+      CLAUSE,
+      "",
+      "Limite, à dire au client si on te le demande : le sceau atteste ce qui est passé par Nanomizer, pas un texte collé directement dans une conversation.",
+    ].join("\n"));
   }
 );
 

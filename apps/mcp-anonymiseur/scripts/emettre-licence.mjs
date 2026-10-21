@@ -22,6 +22,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
+import { issueSealIdentity } from "../server/sceau.js";
 
 const PRIVATE_KEY_FILE = process.env.NANOMIZER_PRIVATE_KEY_FILE ||
   path.join(os.homedir(), "Desktop", "nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt");
@@ -80,6 +81,9 @@ const payload = {
 };
 if (lifetime) payload.life = true;
 if (note) payload.note = note;
+// v2.6 — le sceau : un certificat du cabinet signé par Ai4x et sa clé de
+// sceau, pour délivrer à ses clients des sceaux vérifiables (server/sceau.js).
+payload.sceau = issueSealIdentity(privateKey, { org, id: payload.id, iat: payload.iat, exp: payload.exp });
 
 const b64url = (buf) => Buffer.from(buf).toString("base64")
   .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");

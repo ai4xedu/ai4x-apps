@@ -84,7 +84,23 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `etat_cle` | Comptes par type, licence, résumé de l'audit de confinement |
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `rapport_couverture` | Page locale pour le DPO : par poste, fichiers protégés, plans non confirmés, décodages, montants en clair, valeurs retrouvées, portes ouvertes, dernière activité. Que des comptes ; en équipe, chaque poste dépose les siens dans le dossier d'équipe |
+| `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v2.6.0 (la preuve pour le client, 21/10/2026).
+1. **Test de réidentification** (`reidentification.js`) : coder les noms ne suffit
+   pas — « le PDG d'une biotech lyonnaise, né le 12/04/1971 » désigne quelqu'un.
+   Sur le texte CODÉ (ce que l'IA recevra), le test compte les indices restés
+   lisibles (ville, date de naissance, âge, fonction rare, nationalité) passage
+   par passage : 🟢 anonyme, 🟠 devinable, 🔴 identifiable. Il figure dans le plan
+   et le compte rendu des textes et PDF. Option `generaliser` : villes codées
+   (`LIEU-…`, décodées dans la réponse), naissance → décennie, âge → tranche ; les
+   autres dates restent exactes (délais), les villes de juridiction restent
+   lisibles (droit applicable), les fonctions sont signalées, jamais réécrites.
+2. **Sceau** (`sceau.js`, outil `sceau_dossier`) : chaque licence émise porte un
+   certificat du cabinet signé par Ai4x et sa clé de sceau. Signatures séparées par
+   domaine (`NANOC1.`/`NANOS1.`) : un certificat, public, n'est jamais une licence.
+   Les clés émises avant la v2.6 n'ont pas de sceau : réémission gratuite.
 
 v2.5.0 (l'abonnement, 21/10/2026) : prêt pour la vente B2B.
 1. **Abonnement annuel par poste** (`OFFER`, licence.js) : Solo 390 € HT/an,
