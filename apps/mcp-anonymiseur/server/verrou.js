@@ -75,6 +75,7 @@ ad hoc ad litem ad nutum lato sensu stricto sensu infra supra idem ibid op cit s
 covid télétravail visio visioconférence mailing e-commerce ecommerce fintech legaltech open source
 anonymisation anonymiser anonymisé anonymisée anonymiseur anonymiseurs pseudonymisation pseudonymiser
 dé-anonymiser nanomizer ai4x hiddentokens tokens token ocr scan scans mcp
+memo mémo mémos courriel courriels pv cr janv fevr fev avr juil oct nov
 d l s n j m t c qu jusqu lorsqu puisqu quoiqu presqu quelqu aujourd prud n°
 rg rcs siret siren nic naf ape cass civ crim soc bull jcp gaz pal rtd jorf bo ass plén plen ch mixte réun
 req adm const ord déc arr jur rép obs comm concl rapp trib gde inst sect ci-après ci-après dénommé
@@ -145,7 +146,13 @@ const PLURAL_DET = new Set(words("les des aux ces leurs nos vos mes tes ses"));
 
 /* Les mois s'écrivent en minuscules en français (« le 12 avril ») : un
    « Avril » capitalisé est un patronyme, sauf devant une date (« Avril 2024 »). */
-const MONTHS = new Set(words("janvier fevrier mars avril mai juin juillet aout septembre octobre novembre decembre"));
+const MONTHS = new Set(words(`
+janvier fevrier mars avril mai juin juillet aout septembre octobre novembre decembre
+janv fevr fev avr juil sept oct nov dec
+`));
+// Les abréviations (« Févr. », « Avr. ») : vu le 21/10/2026 dans un tableau de
+// ventes mensuelles, codées NOM-002 et NOM-003 — février et avril n'étaient plus
+// distinguables. Elles suivent la même règle que le mois en toutes lettres.
 
 /* Adjectifs qui précèdent un nom commun (« l'autre Partie », « la présente
    Convention ») : même rôle qu'un déterminant. */
@@ -779,7 +786,9 @@ export function strictCode(input, opts = {}) {
     // « Client : Rousseau », « CONTRE : … » → nom après un libellé de personne.
     //   (même une ville ou un mois : « Client : Paris », « Expert : Avril »).
     if (prevWord && PERSON_LABELS.has(px) && /^[  ]*:[  ]*$/.test(sep) && isCap(w) &&
-        !HONORIFIC_WORDS.has(x) && !DETERMINERS.has(x) && !FUNCTION_WORDS.has(x)) { verdict[wi] = nameLike("prenom"); continue; }
+        !HONORIFIC_WORDS.has(x) && !HONORIFIC_ABBR.has(x) && !DETERMINERS.has(x) && !FUNCTION_WORDS.has(x)) { verdict[wi] = nameLike("prenom"); continue; }
+    //   Un titre juste après le libellé (« Contre : M. Garnier ») n'est pas le
+    //   nom : c'est le mot suivant, par la règle du titre de civilité.
 
     if (isCap(w)) {
       // Suite d'un nom d'entreprise : « Société Maghreb Distribution ».
@@ -795,7 +804,9 @@ export function strictCode(input, opts = {}) {
         continue;                                                      // intitulé en majuscules
       }
       if (MONTHS.has(x)) {
-        const nextIsNum = wi + 1 < W.length && tok(wi + 1).k === "num" && SPACE.test(sepBefore(wi + 1));
+        // « Avril 2024 », mais aussi « Avr. 2024 » : le point de l'abréviation
+        // ne sépare pas le mois de son année.
+        const nextIsNum = wi + 1 < W.length && tok(wi + 1).k === "num" && /^\.?[  ]+$/.test(sepBefore(wi + 1));
         if (!nextIsNum && !(initial[wi] && !isWord(wi + 1))) verdict[wi] = "nom";
         continue;
       }
