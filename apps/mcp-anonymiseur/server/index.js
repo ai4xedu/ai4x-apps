@@ -68,8 +68,9 @@ import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from ".
 import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque } from "./politique.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } from "./sentinelle.js";
+import { attestHtml, posteIdentity } from "./attestation.js";
 
-export const VERSION = "2.12.0";
+export const VERSION = "2.13.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -2366,6 +2367,26 @@ function aiFilesForAudit(depuis = "") {
   return out;
 }
 
+/* ------------------------------------------- la preuve signée (v2.13) *
+ * Cf. attestation.js. Les pages de preuve (journal, couverture) portent un
+ * jeton signé : par le cabinet (clé de sceau, certifiée par Ai4x) pour un
+ * abonné, par une clé de poste sinon. Un chiffre retouché à la main
+ * invalide la signature. L'attestation dit la vérité, fuites comprises. */
+function attestIdentity() {
+  const st = licence();
+  const parsed = parseKey(LICENCE.raw);
+  const id = parsed.ok && st.valid && !st.trial ? sealIdentity(parsed.payload, publicKeys()) : null;
+  return id || posteIdentity(OUTDIR);
+}
+
+function signerPreuve(html, a) {
+  const { html: signe, certifie } = attestHtml(attestIdentity(), html, { ...a, emis: new Date().toISOString().slice(0, 10), ver: VERSION });
+  const ligne = certifie
+    ? "🔏 Page signée par le cabinet (identité certifiée par Ai4x) : un chiffre retouché invalide la signature. Vérification hors ligne : appli Nanomizer → « Vérifier une preuve… »."
+    : "🔏 Page signée par ce poste (essai, ou licence sans sceau) : intégrité vérifiable hors ligne, identité du cabinet non certifiée — l'abonnement la certifie.";
+  return { html: signe, ligne };
+}
+
 tool(
   "journal_ia",
   {
@@ -2382,8 +2403,12 @@ tool(
     const journal = readJournal(JOURNAL_DIR);
     const a = auditJournal(journal, aiFilesForAudit(), book);
     ensureOutdir();
-    fs.writeFileSync(REPORT_PATH, renderReport(a, { version: VERSION, failures: JOURNAL.failures }), { encoding: "utf8", mode: 0o600 });
     const bad = a.leaks.length + a.forms;
+    const preuve = signerPreuve(renderReport(a, { version: VERSION, failures: JOURNAL.failures }), {
+      genre: "journal", du: a.first ? String(a.first).slice(0, 10) : null, au: a.last ? String(a.last).slice(0, 10) : null,
+      comptes: { echanges: a.exchanges, fichiers: a.files.length, codes: a.distinctCodes, nombres: a.numbers, fuites: bad },
+    });
+    fs.writeFileSync(REPORT_PATH, preuve.html, { encoding: "utf8", mode: 0o600 });
     return text([
       bad
         ? `🚨 ${bad} élément(s) sensible(s) retrouvé(s) dans ce que l'IA a reçu (détail par CODE dans la page). Préviens l'utilisateur.`
@@ -2391,6 +2416,7 @@ tool(
       `Codes distincts vus : ${a.distinctCodes}. Nombres en clair (montants, dates, quantités) : ${a.numbers}.`,
       JOURNAL.failures ? `⚠️ ${JOURNAL.failures} réponse(s) de cette session n'ont pas pu être notées.` : "",
       `Page locale à ouvrir par l'utilisateur (navigateur, hors ligne) : ${shown(REPORT_PATH)}`,
+      preuve.ligne,
       "Ce journal ne voit pas les textes collés directement dans la conversation.",
     ].filter(Boolean).join("\n"));
   }
@@ -2490,7 +2516,11 @@ tool(
     if (team && !postes.some((p) => p.poste === mine.poste)) postes.push(mine);
     const g = aggregate(postes, { months: mois });
     const st = licence();
-    const html = renderCoverage(g, { version: VERSION, org: st.trial ? "" : st.holder || "", team: !!team });
+    const preuve = signerPreuve(renderCoverage(g, { version: VERSION, org: st.trial ? "" : st.holder || "", team: !!team }), {
+      genre: "couverture", du: g.mois.length ? g.mois[0] : null, au: g.mois.length ? g.mois[g.mois.length - 1] : null,
+      comptes: { postes: g.postes, actifs: g.actifs, fichiers: g.fichiers, plans: g.plans, decodages: g.decodages, fuites: g.fuites, risques: g.risques },
+    });
+    const html = preuve.html;
     ensureOutdir();
     const local = path.join(OUTDIR, COVERAGE_NAME);
     fs.writeFileSync(local, html, { encoding: "utf8", mode: 0o600 });
@@ -2506,6 +2536,7 @@ tool(
       team ? `Équipe : ${g.actifs}/${g.postes} poste(s) actif(s) (fichier protégé depuis moins de 30 jours).` : "Ce poste seul (pas de clé d'équipe configurée).",
       `Plans présentés non confirmés : ${g.plans}. Décodages : ${g.decodages}. Alertes : ${g.alertes.length} (dont ${risques} risque(s)).`,
       `Page à ouvrir par l'utilisateur (navigateur, hors ligne) : ${shown(local)}` + (shared ? ` — copie pour le DPO dans le dossier d'équipe : ${shown(shared)}` : ""),
+      preuve.ligne,
       "Ne lis pas cette page : elle nomme les postes. Ce rapport ne voit pas ce qui est envoyé à l'IA sans passer par Nanomizer.",
     ].filter(Boolean).join("\n"));
   }
