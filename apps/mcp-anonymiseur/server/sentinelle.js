@@ -1,5 +1,5 @@
 // ============================================================================
-// CLIENT DE LA SENTINELLE NANOMIZER (cycle C2, v2.12) — la prise locale.
+// CLIENT DE LA SENTINELLE HIDDEN TOKENS (cycle C2, v2.12) — la prise locale.
 //
 // La sentinelle est le processus résident qui tient les dossiers du cabinet
 // et code chaque fichier dès son dépôt. Quand elle est là, le connecteur
@@ -13,7 +13,7 @@
 //     ← { id, ok: true, resultat } | { id, ok: false, erreur }
 //
 // Le protocole qui fait foi est celui de sentinelle/lib/prise.js (dépôt
-// Nanomizer). Zéro dépendance, zéro réseau : un processus qui n'est pas sur
+// Hidden Tokens). Zéro dépendance, zéro réseau : un processus qui n'est pas sur
 // ce poste, sous ce compte, ne peut ni atteindre la prise ni lire le jeton.
 // Le jeton est relu à CHAQUE appel : une sentinelle réinstallée ou lancée
 // après Claude Desktop est jumelée sans redémarrer Claude. Il n'est jamais
@@ -51,13 +51,19 @@ export class PriseRefus extends Error {}
 export class PriseDelai extends Error {}
 
 /* Le dossier de la sentinelle, comme sentinelle/lib/config.js le calcule :
-   NANOMIZER_SENTINELLE_DIR prime, sinon le dossier de la plateforme. */
-export function dossierSentinelle(env = process.env, platform = process.platform) {
-  if (env.NANOMIZER_SENTINELLE_DIR) return path.resolve(env.NANOMIZER_SENTINELLE_DIR);
-  const home = os.homedir();
-  if (platform === "darwin") return path.join(home, "Library", "Application Support", "Nanomizer");
-  if (platform === "win32") return path.join(env.APPDATA || path.join(home, "AppData", "Roaming"), "Nanomizer");
-  return path.join(env.XDG_CONFIG_HOME || path.join(home, ".config"), "nanomizer");
+   HIDDEN_TOKENS_SENTINELLE_DIR (ou l'ancienne NANOMIZER_SENTINELLE_DIR) prime,
+   sinon « Hidden Tokens » dans le dossier de la plateforme — ou l'ancien
+   « Nanomizer » tant qu'une sentinelle d'avant le renommage l'occupe seule.
+   Le connecteur ne renomme rien : c'est la sentinelle qui migre son dossier. */
+export function dossierSentinelle(env = process.env, platform = process.platform, home = os.homedir()) {
+  const force = env.HIDDEN_TOKENS_SENTINELLE_DIR || env.NANOMIZER_SENTINELLE_DIR;
+  if (force) return path.resolve(force);
+  const base = platform === "darwin" ? path.join(home, "Library", "Application Support")
+    : platform === "win32" ? (env.APPDATA || path.join(home, "AppData", "Roaming"))
+    : (env.XDG_CONFIG_HOME || path.join(home, ".config"));
+  const [neuf, ancien] = platform === "darwin" || platform === "win32" ? ["Hidden Tokens", "Nanomizer"] : ["hidden-tokens", "nanomizer"];
+  if (!fs.existsSync(path.join(base, neuf)) && fs.existsSync(path.join(base, ancien))) return path.join(base, ancien);
+  return path.join(base, neuf);
 }
 
 export function cheminPrise(dir, platform = process.platform) {

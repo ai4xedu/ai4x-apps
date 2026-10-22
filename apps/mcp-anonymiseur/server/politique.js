@@ -119,7 +119,7 @@ const idCle = (spki) => "k_" + crypto.createHash("sha256").update(spki).digest("
 export function lireEnrolement(fichier) {
   let enr;
   try { enr = JSON.parse(fs.readFileSync(fichier, "utf8")); } catch { throw new Error("fichier d'enrôlement introuvable ou illisible"); }
-  if (!enr || enr.format !== FORMAT_ENROLEMENT) throw new Error("ce n'est pas un fichier d'enrôlement Nanomizer");
+  if (!enr || enr.format !== FORMAT_ENROLEMENT) throw new Error("ce n'est pas un fichier d'enrôlement Hidden Tokens");
   for (const k of ["cabinet", "cle", "sel", "poste", "distribution"]) if (!enr[k]) throw new Error(`fichier d'enrôlement incomplet (${k})`);
   if (enr.cle.alg !== "ed25519") throw new Error("algorithme de clé non pris en charge");
   let spki;

@@ -22,7 +22,7 @@
 //   - LE SCEAU NE PARLE QUE DE COMPTES : ni valeur, ni code, ni nom de
 //     fichier. Il cite le cabinet (signé par Ai4x) et une référence choisie
 //     par l'avocat.
-//   - HONNÊTE SUR SA LIMITE : il atteste ce qui est passé par Nanomizer. Un
+//   - HONNÊTE SUR SA LIMITE : il atteste ce qui est passé par Hidden Tokens. Un
 //     texte collé directement dans une conversation n'y figure pas — le
 //     sceau le dit, la page de vérification aussi.
 //
@@ -99,7 +99,7 @@ export function buildSeal(identity, a) {
    pour les tests, et pour que le cabinet contrôle son sceau avant envoi. */
 export function verifySeal(seal, trustedKeys) {
   const p = String(seal || "").trim().split(".");
-  if (p.length !== 3 || p[0] !== SEAL_PREFIX) return { ok: false, reason: "ce n'est pas un sceau Nanomizer" };
+  if (p.length !== 3 || p[0] !== SEAL_PREFIX) return { ok: false, reason: "ce n'est pas un sceau Hidden Tokens" };
   let s;
   try { s = JSON.parse(b64urlDecode(p[1]).toString("utf8")); } catch { return { ok: false, reason: "sceau illisible" }; }
   const c = verifyCertificate(s.c, trustedKeys);
@@ -116,9 +116,9 @@ export function verifySeal(seal, trustedKeys) {
 export const CLAUSE =
   "Le cabinet peut recourir à des outils d'intelligence artificielle pour traiter votre dossier. Avant tout envoi à " +
   "une IA, les données qui vous identifient (noms, coordonnées, numéros, références) sont remplacées, sur le poste du " +
-  "cabinet, par des codes au moyen de Nanomizer ; la clé de correspondance ne quitte jamais le cabinet. Le sceau " +
+  "cabinet, par des codes au moyen de Hidden Tokens ; la clé de correspondance ne quitte jamais le cabinet. Le sceau " +
   "ci-joint, vérifiable par vous-même sur ai4x.academy/verifier-sceau, atteste qu'aucune de ces données n'a été " +
-  "retrouvée dans ce que l'IA a reçu par Nanomizer sur la période indiquée.";
+  "retrouvée dans ce que l'IA a reçu par Hidden Tokens sur la période indiquée.";
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const frDate = (iso) => new Date(iso + "T12:00:00Z")
@@ -139,7 +139,7 @@ export function renderSealPage(seal, identity, a) {
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
-<title>Sceau Nanomizer — ${esc(org)}</title>
+<title>Sceau Hidden Tokens — ${esc(org)}</title>
 <style>
   body { font-family: -apple-system, "Segoe UI", sans-serif; color: #111; background: #f4f4f0; margin: 0; padding: 24px 16px; }
   .sceau { max-width: 720px; margin: 0 auto; background: #fff; border: 2px solid #111; border-radius: 14px; padding: 24px; }
@@ -156,8 +156,8 @@ export function renderSealPage(seal, identity, a) {
   <div class="haut">
     <div class="qr">${qrSvg(link)}</div>
     <div>
-      <h1>Sceau Nanomizer — données protégées avant l'IA</h1>
-      <p class="mut">Délivré par le Nanomizer sous licence de <strong>${esc(org)}</strong>, certifié par Ai4x.
+      <h1>Sceau Hidden Tokens — données protégées avant l'IA</h1>
+      <p class="mut">Délivré par Hidden Tokens sous licence de <strong>${esc(org)}</strong>, certifié par Ai4x.
         Scannez le code ou ouvrez <strong>ai4x.academy/verifier-sceau</strong> pour le vérifier vous-même.</p>
     </div>
   </div>
@@ -170,7 +170,7 @@ export function renderSealPage(seal, identity, a) {
     <dt>Retrouvées en clair</dt><dd>0</dd>
     <dt>Émis le</dt><dd>${frDate(a.emis)}</dd>
   </dl>
-  <p class="mut">Ce sceau atteste ce qui est passé par Nanomizer. Un texte collé directement dans une conversation n'y figure pas.</p>
+  <p class="mut">Ce sceau atteste ce qui est passé par Hidden Tokens. Un texte collé directement dans une conversation n'y figure pas.</p>
   <div class="clause"><strong>Clause pour la lettre de mission</strong><br>${esc(CLAUSE)}</div>
   <p class="noprint mut">Lien de vérification : <a href="${esc(link)}">${esc(VERIFY_URL)}</a></p>
   <code>${esc(seal)}</code>

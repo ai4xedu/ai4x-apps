@@ -1,4 +1,4 @@
-# Nanomizer — fiche sécurité
+# Hidden Tokens — fiche sécurité
 
 *Pour le service informatique, le DPO ou l'associé qui valide l'outil. Version
 du connecteur : 2.3.1. Tout ce qui est écrit ici se vérifie : voir « Comment le
@@ -6,7 +6,7 @@ vérifier vous-même ».*
 
 ## En une phrase
 
-Nanomizer est une extension de Claude Desktop qui s'exécute **sur le poste** :
+Hidden Tokens est une extension de Claude Desktop qui s'exécute **sur le poste** :
 elle remplace noms, identifiants et montants par des codes (`NOM-001`) avant que
 l'IA ne lise un fichier, puis remet les vraies valeurs **sur le poste**, dans
 les fichiers produits. L'IA travaille sur la structure du dossier, jamais sur
@@ -38,7 +38,7 @@ ses valeurs.
 5. **La clé d'équipe** (v2.3, licence Équipe) : mêmes codes sur tous les postes
    du cabinet grâce à un secret partagé sur un serveur interne ; sans ce
    secret, impossible de calculer le code d'un nom deviné. Aucun serveur
-   Nanomizer : le dossier d'équipe est chez vous.
+   Hidden Tokens : le dossier d'équipe est chez vous.
 6. **Le journal « Ce que Claude a vu »** (v2.2) : chaque réponse envoyée à l'IA
    est notée sur le poste ; la page locale la revérifie contre la clé actuelle,
    y compris après coup.
@@ -50,7 +50,7 @@ ses valeurs.
 - **Ce que l'IA a reçu** : demandez à Claude « montre-moi ce que tu as vu ».
   La page locale `CE-QUE-CLAUDE-A-VU.html` liste chaque échange et le
   nombre de valeurs réelles retrouvées (attendu : 0).
-- **Le réseau** : coupez Internet, Nanomizer fonctionne. Avec un pare-feu
+- **Le réseau** : coupez Internet, Hidden Tokens fonctionne. Avec un pare-feu
   applicatif (Little Snitch, LuLu), aucune connexion sortante n'est tentée par
   le connecteur. La suite de tests le prouve à l'exécution : elle fait tourner
   tout le parcours sous le modèle de permissions de Node, réseau interdit
@@ -61,7 +61,7 @@ ses valeurs.
 - **Le code** : JavaScript lisible, sans dépendance réseau ; 125 tests, dont une
   chasse aux fuites qui appelle tous les outils.
 
-## Ce que Nanomizer ne couvre pas
+## Ce que Hidden Tokens ne couvre pas
 
 - Un texte **collé directement** dans la conversation, ou un fichier joint à la
   main : il ne passe par aucun verrou.
@@ -71,5 +71,5 @@ ses valeurs.
   restent lisibles et peuvent permettre une réidentification par recoupement.
   La relecture du plan reste nécessaire.
 - Les **nombres écrits dans un texte ou un PDF** restent lisibles.
-- Nanomizer outille la conformité ; il ne la certifie pas. Il ne remplace ni
+- Hidden Tokens outille la conformité ; il ne la certifie pas. Il ne remplace ni
   votre analyse d'impact, ni l'avis de votre conseil.

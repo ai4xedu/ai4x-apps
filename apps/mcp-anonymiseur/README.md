@@ -1,4 +1,11 @@
-# Nanomizer — Anonymiseur de données Ai4x (connecteur MCP local)
+# Hidden Tokens — Anonymiseur de données Ai4x (connecteur MCP local)
+
+> **Hidden Tokens** est le nom du produit depuis la v2.14 (22/10/2026) ; **Nanomizer**
+> reste le nom du moteur. L'identifiant de l'extension (`anonymiseur-ai4x`) ne change
+> pas : la mise à jour remplace l'ancienne, réglages et licence compris. Le dossier
+> de sortie `Anonymiseur-Ai4x/` est renommé `Hidden-Tokens/` au premier démarrage
+> (cf. `server/dossier-sortie.js`) ; les formats signés internes (`.nanomizer-*`,
+> `nanomizer.politique/1`, préfixes des jetons) ne changent pas.
 
 Extension Claude Desktop (`.mcpb`) : Claude anonymise les fichiers Excel/CSV,
 les PDF, les notes et les scans **sur le poste de l'utilisateur**, travaille sur
@@ -103,7 +110,7 @@ ligne : `node scripts/verifier-preuve.mjs <page.html>`, ou l'appli de bureau
 (« Vérifier une preuve… ») ; la page publique verifier-sceau suivra.
 
 v2.12.0 (un seul écrivain de clé — cycle C2 de la sentinelle, 22/10/2026).
-Quand la sentinelle Nanomizer tourne sur le poste et tient le dossier de
+Quand la sentinelle Hidden Tokens tourne sur le poste et tient le dossier de
 travail, le connecteur devient son client : les outils de la liste blanche de
 la prise (lister_fichiers, anonymiser_fichier, anonymiser_dossier,
 deanonymiser, etat_cle, journal_ia, verifier_confinement, lire_scan,
@@ -186,7 +193,7 @@ Testé en relisant l'image caviardée par OCR : ICE, IF, RC, RIB et noms ne s'y
 lisent plus. Nouvelle dépendance : `pngjs` (MIT, sans dépendances).
 
 v2.7.0 (Word, 21/10/2026) : le format n° 1 d'un avocat — chantier S1-S3 du
-chemin critique vers 9/10 (`CHEMIN-CRITIQUE-9-10.md`, dépôt Nanomizer).
+chemin critique vers 9/10 (`CHEMIN-CRITIQUE-9-10.md`, dépôt Hidden Tokens).
 1. **Lire un .docx** (`server/word.js`, `anonymiser_fichier` et
    `anonymiser_dossier`) : une COPIE CODÉE, mise en forme conservée. Le texte
    de tous les paragraphes — corps, en-têtes, pieds de page, notes, zones de
@@ -270,10 +277,10 @@ v2.4.0 (rapport de couverture et charte IA, 21/10/2026) : de l'outil personnel
 2. **Nom du poste** (réglage facultatif `poste_nom`, variable `ANX_POSTE_NOM`) :
    comment le poste apparaît dans le rapport. Jamais montré à l'IA.
 3. **Modèle de charte IA** (`confiance/charte-ia-modele.md`) : la règle d'or
-   (aucune donnée identifiante vers une IA autrement que par Nanomizer), la
+   (aucune donnée identifiante vers une IA autrement que par Hidden Tokens), la
    configuration des postes, le contrôle mensuel par le rapport de couverture,
    la procédure d'incident (on cite le code, jamais la valeur). Le rapport ne
-   voit pas ce qui contourne Nanomizer : la charte en fait la seule voie
+   voit pas ce qui contourne Hidden Tokens : la charte en fait la seule voie
    autorisée, le rapport vérifie qu'elle est suivie.
 
 v2.3.1 (répétition de démo, 20/10/2026) : trois défauts trouvés en rejouant
@@ -321,7 +328,7 @@ puisse vérifier avant d'acheter.
    cellule → valeur dans `.nanomizer-chiffres-*.json`.
 3. **Remise des chiffres et tableau de bord local** (`remettre_chiffres`,
    `tableau_de_bord`) : l'IA construit sur le gabarit ou décrit un tableau de
-   bord ; Nanomizer rend le résultat réel sur le poste, en éditant le XML du
+   bord ; Hidden Tokens rend le résultat réel sur le poste, en éditant le XML du
    .xlsx (graphiques conservés, caches retirés, une cellule retouchée n'est
    jamais écrasée) ou en dessinant une page HTML autonome. Le protocole interdit
    à l'IA de créer un artefact avec les données de l'utilisateur.
@@ -397,7 +404,7 @@ tableau finissait codée à 100 % (32/33 cellules), et la règle téléphone
 forme marocaine uniquement, et un changement de dossier de travail exige un
 redémarrage de Claude Desktop (l'env d'un process ne change pas en vol).
 
-La clé vit dans `<dossier de travail>/Anonymiseur-Ai4x/` : `cle-de-session.json`
+La clé vit dans `<dossier de travail>/Hidden-Tokens/` : `cle-de-session.json`
 (état) + `cle-correspondance-NE-JAMAIS-PARTAGER.xlsx` (export humain/compatible web).
 
 ## Dev
@@ -405,7 +412,7 @@ La clé vit dans `<dossier de travail>/Anonymiseur-Ai4x/` : `cle-de-session.json
 ```bash
 npm install        # deps (SDK MCP v2, zod, SheetJS 0.20.3 via cdn.sheetjs.com)
 npm test           # node --test : moteur + E2E stdio (vrai protocole MCP)
-npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb
+npx @anthropic-ai/mcpb pack . dist/hidden-tokens.mcpb
 ```
 
 La suite tourne **sans la clé privée** : elle signe ses licences avec une clé

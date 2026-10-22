@@ -173,9 +173,9 @@ test("chaque outil, chaque chemin : aucune valeur réelle ne sort", async () => 
   await call("verifier_confinement");
   // v2.2 : remise des chiffres et tableau de bord — leurs comptes rendus ne
   // citent rien de réel, même quand l'IA leur passe un vrai en-tête.
-  const anonX = fs.readdirSync(path.join(workdir, "Anonymiseur-Ai4x")).find((n) => /-anonymise\.xlsx$/.test(n));
-  await call("remettre_chiffres", { nom_fichier: `Anonymiseur-Ai4x/${anonX}` });
-  await call("tableau_de_bord", { nom_fichier: `Anonymiseur-Ai4x/${anonX}`, graphiques: [
+  const anonX = fs.readdirSync(path.join(workdir, "Hidden-Tokens")).find((n) => /-anonymise\.xlsx$/.test(n));
+  await call("remettre_chiffres", { nom_fichier: `Hidden-Tokens/${anonX}` });
+  await call("tableau_de_bord", { nom_fichier: `Hidden-Tokens/${anonX}`, graphiques: [
     { type: "barres", colonne_x: "Client", colonne_y: "Honoraires" }, { type: "tableau" }, { type: "barres", colonne_x: "Inexistante" }] });
   await call("journal_ia");
   await call("deanonymiser", { contenu: "Relancer NOM-001 et PRENOM-001 au TEL-001.", nom_sortie: "relance" });
@@ -185,7 +185,7 @@ test("chaque outil, chaque chemin : aucune valeur réelle ne sort", async () => 
 });
 
 test("les fichiers produits pour l'IA ne contiennent aucune valeur réelle, ni dans leur nom", () => {
-  const out = path.join(workdir, "Anonymiseur-Ai4x");
+  const out = path.join(workdir, "Hidden-Tokens");
   const produced = fs.readdirSync(out).filter((n) => /-anonymise\.(xlsx|md)$/.test(n) || /^rapport-lot-/.test(n));
   assert.ok(produced.length >= 5, `sorties attendues : ${produced.join(", ")}`);
   for (const n of produced) {
@@ -205,7 +205,7 @@ test("les fichiers produits pour l'IA ne contiennent aucune valeur réelle, ni d
 });
 
 test("la page « Ce que Claude a vu » ne contient aucune valeur réelle", () => {
-  assertNoLeak("CE-QUE-CLAUDE-A-VU.html", fs.readFileSync(path.join(workdir, "Anonymiseur-Ai4x", "CE-QUE-CLAUDE-A-VU.html"), "utf8"));
+  assertNoLeak("CE-QUE-CLAUDE-A-VU.html", fs.readFileSync(path.join(workdir, "Hidden-Tokens", "CE-QUE-CLAUDE-A-VU.html"), "utf8"));
 });
 
 test("…mais le travail reste possible : montants, dates et langage courant lisibles", () => {
@@ -216,7 +216,7 @@ test("…mais le travail reste possible : montants, dates et langage courant lis
   assert.match(all, /45000 euros/);
   // Le décodage, lui, rend bien les vraies valeurs — sur le disque.
   const dec = outputs.find((o) => o.name === "deanonymiser").t;
-  const m = dec.match(/(Anonymiseur-Ai4x\/\S+)/);
+  const m = dec.match(/(Hidden-Tokens\/\S+)/);
   assert.ok(m, dec);
   const decoded = fs.readFileSync(path.join(workdir, m[1]), "utf8");
   // (L'ordre des codes dépend de l'ordre de traitement : on vérifie que les
@@ -226,18 +226,18 @@ test("…mais le travail reste possible : montants, dates et langage courant lis
 });
 
 test("la clé et les résultats décodés ne passent jamais par l'IA, même demandés", async () => {
-  for (const f of ["Anonymiseur-Ai4x/cle-correspondance-NE-JAMAIS-PARTAGER.xlsx", "Anonymiseur-Ai4x/cle-de-session.json"]) {
+  for (const f of ["Hidden-Tokens/cle-correspondance-NE-JAMAIS-PARTAGER.xlsx", "Hidden-Tokens/cle-de-session.json"]) {
     const { res, t } = await call("anonymiser_fichier", { nom_fichier: f });
     assert.ok(res.isError, `${f} aurait dû être refusé`);
     assert.match(t, /Fichier refusé/);
   }
-  const dec = fs.readdirSync(path.join(workdir, "Anonymiseur-Ai4x")).find((n) => /-decode-/.test(n));
-  const { res } = await call("anonymiser_fichier", { nom_fichier: `Anonymiseur-Ai4x/${dec}` });
+  const dec = fs.readdirSync(path.join(workdir, "Hidden-Tokens")).find((n) => /-decode-/.test(n));
+  const { res } = await call("anonymiser_fichier", { nom_fichier: `Hidden-Tokens/${dec}` });
   assert.ok(res.isError, "un résultat décodé ne doit pas repasser par l'IA");
 });
 
 test("la clé est lisible par le seul compte de l'utilisateur", { skip: process.platform === "win32" }, () => {
-  const out = path.join(workdir, "Anonymiseur-Ai4x");
+  const out = path.join(workdir, "Hidden-Tokens");
   for (const n of ["cle-de-session.json", "cle-correspondance-NE-JAMAIS-PARTAGER.xlsx"]) {
     const mode = fs.statSync(path.join(out, n)).mode & 0o777;
     assert.equal(mode & 0o077, 0, `${n} est lisible par d'autres comptes (${mode.toString(8)})`);
@@ -245,7 +245,7 @@ test("la clé est lisible par le seul compte de l'utilisateur", { skip: process.
 });
 
 test("une clé corrompue n'est JAMAIS écrasée par une clé vierge", async () => {
-  const keyPath = path.join(workdir, "Anonymiseur-Ai4x", "cle-de-session.json");
+  const keyPath = path.join(workdir, "Hidden-Tokens", "cle-de-session.json");
   const before = fs.readFileSync(keyPath, "utf8");
   fs.writeFileSync(keyPath, before.slice(0, 40), "utf8");            // clé tronquée
   // Un fichier LISIBLE (le dossier contient aussi un fichier verrouillé).
@@ -256,6 +256,6 @@ test("une clé corrompue n'est JAMAIS écrasée par une clé vierge", async () =
   assert.match(t, /illisible/);
   assert.match(t, /RIEN n'a été écrit/);
   assert.equal(fs.readFileSync(keyPath, "utf8"), before.slice(0, 40), "la clé corrompue a été écrasée");
-  assert.ok(fs.existsSync(path.join(workdir, "Anonymiseur-Ai4x", "cle-de-session.sauvegarde.json")), "pas de sauvegarde");
+  assert.ok(fs.existsSync(path.join(workdir, "Hidden-Tokens", "cle-de-session.sauvegarde.json")), "pas de sauvegarde");
   fs.writeFileSync(keyPath, before, "utf8");
 });

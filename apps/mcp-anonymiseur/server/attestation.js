@@ -86,7 +86,7 @@ export function buildAttestation(identity, a) {
 
 export function verifyAttestation(token, trustedKeys) {
   const p = String(token || "").trim().split(".");
-  if (p.length !== 3 || p[0] !== ATT_PREFIX) return { ok: false, reason: "ce n'est pas une attestation Nanomizer" };
+  if (p.length !== 3 || p[0] !== ATT_PREFIX) return { ok: false, reason: "ce n'est pas une attestation Hidden Tokens" };
   let a;
   try { a = JSON.parse(b64urlDecode(p[1]).toString("utf8")); } catch { return { ok: false, reason: "attestation illisible" }; }
   let publicKey, cabinet = null, certifie = false;
@@ -117,7 +117,7 @@ function piedDePage(identity, a) {
   return `<section class="attestation" style="margin-top:28px;padding:12px 14px;border:1px solid #d9d4c7;border-radius:8px;font-size:13px;color:#555">` +
     `<strong>Page de preuve signée.</strong> Produite le ${esc(a.emis)}${a.du ? `, période du ${esc(a.du)} au ${esc(a.au)}` : ""}, ` +
     `${qui}. Le jeton d'attestation (<code>NANOA1…</code>) est dans l'en-tête HTML de cette page et porte son empreinte : ` +
-    `un chiffre modifié à la main invalide la signature. Vérifier hors ligne : l'appli Nanomizer → « Vérifier une preuve… », ` +
+    `un chiffre modifié à la main invalide la signature. Vérifier hors ligne : l'appli Hidden Tokens → « Vérifier une preuve… », ` +
     `ou <code>node scripts/verifier-preuve.mjs &lt;cette page&gt;</code>.</section>\n`;
 }
 
@@ -142,7 +142,7 @@ export function extractAttestation(html) {
 /* Vérifie une page reçue : jeton présent, signature valide, empreinte exacte. */
 export function verifyAttestedHtml(html, trustedKeys) {
   const token = extractAttestation(html);
-  if (!token) return { ok: false, reason: "cette page ne porte pas d'attestation Nanomizer" };
+  if (!token) return { ok: false, reason: "cette page ne porte pas d'attestation Hidden Tokens" };
   const v = verifyAttestation(token, trustedKeys);
   if (!v.ok) return v;
   if (hashHtml(html) !== v.att.sha) return { ok: false, reason: "page modifiée après signature (empreinte différente)", certifie: v.certifie, cabinet: v.cabinet, att: v.att };
@@ -156,7 +156,7 @@ export function decrireVerification(v) {
   const comptes = Object.entries(a.comptes || {}).map(([k, n]) => `${k} ${n}`).join(", ");
   return [
     `✓ Preuve vérifiée — ${a.genre === "couverture" ? "rapport de couverture" : "journal « Ce que l'IA a vu »"}, produit le ${a.emis}` +
-      (a.du ? ` (période ${a.du} → ${a.au})` : "") + `, Nanomizer ${a.ver}.`,
+      (a.du ? ` (période ${a.du} → ${a.au})` : "") + `, Hidden Tokens ${a.ver}.`,
     v.certifie ? `Signée par ${v.cabinet.org}, identité certifiée par Ai4x.` : "Signée par un poste seul (essai ou licence sans sceau) : intégrité prouvée, identité du cabinet non certifiée.",
     comptes ? `Comptes attestés : ${comptes}.` : "",
   ].filter(Boolean).join("\n");

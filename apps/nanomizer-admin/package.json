@@ -1,9 +1,10 @@
 {
   "name": "nanomizer-politique-admin",
   "version": "0.1.0",
-  "description": "Nanomizer — console admin de la politique d'entreprise (cabinet, enrôlement, politique signée). Hors ligne, sans dépendance.",
+  "description": "Hidden Tokens — console admin de la politique d'entreprise (cabinet, enrôlement, politique signée). Hors ligne, sans dépendance.",
   "type": "module",
   "bin": {
+    "hidden-tokens-admin": "bin/nanomizer-admin.mjs",
     "nanomizer-admin": "bin/nanomizer-admin.mjs"
   },
   "scripts": {

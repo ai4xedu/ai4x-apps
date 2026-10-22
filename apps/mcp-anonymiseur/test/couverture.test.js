@@ -107,7 +107,7 @@ test("deux postes : chacun dépose ses comptes, la page couvre l'équipe, rien d
     const raw = fs.readFileSync(path.join(teamDir, n), "utf8");
     for (const v of ["Benali", "Karim", "Tazi", "12000", "Chraibi", "Dossiers", "NOM-"]) assert.ok(!raw.includes(v), `« ${v} » dans ${n}`);
   }
-  const page = fs.readFileSync(path.join(teamDir, "RAPPORT-COUVERTURE-NANOMIZER.html"), "utf8");
+  const page = fs.readFileSync(path.join(teamDir, "RAPPORT-COUVERTURE-HIDDEN-TOKENS.html"), "utf8");
   assert.match(page, /Me Lahlou/);
   assert.match(page, /Accueil Zerouali/);
   assert.match(page, /Cabinet Test/);
@@ -116,9 +116,9 @@ test("deux postes : chacun dépose ses comptes, la page couvre l'équipe, rien d
 
 test("les comptes et le rapport ne sont jamais servis à l'IA", async () => {
   const work = path.join(root, "poste-A");
-  for (const n of ["stats-poste-aaaaaaaaaaaa.json", "RAPPORT-COUVERTURE-NANOMIZER.html"]) fs.writeFileSync(path.join(work, n), "{}");
+  for (const n of ["stats-poste-aaaaaaaaaaaa.json", "RAPPORT-COUVERTURE-HIDDEN-TOKENS.html"]) fs.writeFileSync(path.join(work, n), "{}");
   const c = await connect(work, "Me Lahlou");
-  for (const n of ["stats-poste-aaaaaaaaaaaa.json", "RAPPORT-COUVERTURE-NANOMIZER.html"]) {
+  for (const n of ["stats-poste-aaaaaaaaaaaa.json", "RAPPORT-COUVERTURE-HIDDEN-TOKENS.html"]) {
     const res = await c.raw("anonymiser_fichier", { nom_fichier: n });
     assert.ok(res.isError, `${n} servi à l'IA`);
   }

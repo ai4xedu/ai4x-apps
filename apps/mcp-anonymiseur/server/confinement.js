@@ -127,7 +127,7 @@ export function auditConfinement(ctx) {
     }
     if (/chrome|browser|navigat|computer|screen|[eé]cran/i.test(`${id} ${name}`)) {
       info(`L'extension « ${name} » permet à l'IA de piloter le navigateur ou l'écran : un navigateur peut ouvrir un ` +
-        `fichier local, une capture montre ce qui est affiché. Nanomizer interdit à l'IA de s'en servir sur vos ` +
+        `fichier local, une capture montre ce qui est affiché. Hidden Tokens interdit à l'IA de s'en servir sur vos ` +
         `dossiers, mais pour une étanchéité totale, désactivez-la pendant vos dossiers sensibles.`);
     }
   }

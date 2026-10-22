@@ -74,7 +74,7 @@ in extenso ipso facto mutatis mutandis prima facie sine qua non statu quo intuit
 ad hoc ad litem ad nutum lato sensu stricto sensu infra supra idem ibid op cit sic nota bene alinéa al.
 covid télétravail visio visioconférence mailing e-commerce ecommerce fintech legaltech open source
 anonymisation anonymiser anonymisé anonymisée anonymiseur anonymiseurs pseudonymisation pseudonymiser
-dé-anonymiser nanomizer ai4x hiddentokens tokens token ocr scan scans mcp
+dé-anonymiser nanomizer ai4x hidden hidden-tokens hiddentokens tokens token appli ocr scan scans mcp
 memo mémo mémos courriel courriels pv cr janv fevr fev avr juil oct nov
 d l s n j m t c qu jusqu lorsqu puisqu quoiqu presqu quelqu aujourd prud n°
 rg rcs siret siren nic naf ape cass civ crim soc bull jcp gaz pal rtd jorf bo ass plén plen ch mixte réun
@@ -132,7 +132,7 @@ allemagne portugal royaume-uni angleterre etats-unis usa algerie tunisie senegal
 egypte emirats arabie qatar chine japon europe afrique amerique asie
 lundi mardi mercredi jeudi vendredi samedi dimanche
 internet web chatgpt excel word google microsoft apple whatsapp linkedin facebook anthropic openai
-nanomizer ai4x iphone android windows macos
+nanomizer hidden ai4x iphone android windows macos
 `);
 
 /* Déterminants : « le Prestataire », « la Société », « les Parties » sont

@@ -24,7 +24,7 @@ const newest = (rx) => fs.readdirSync(outdir).filter((n) => rx.test(n)).sort().p
 
 before(async () => {
   workdir = fs.mkdtempSync(path.join(os.tmpdir(), "anx-remise-"));
-  outdir = path.join(workdir, "Anonymiseur-Ai4x");
+  outdir = path.join(workdir, "Hidden-Tokens");
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
     ["Nom", "Prénom", "Service", "Brut", "Net"],
@@ -99,7 +99,7 @@ test("remettre_chiffres : vraies valeurs et vrais noms dans le classeur de l'IA,
   // SheetJS (ajouté en mémoire à la lecture) ne doit pas être dans le fichier.
   assert.ok(!buf.includes("Sh33tJ5"), "marqueur interne SheetJS écrit dans le fichier");
   // Le fichier réel n'est jamais servi à l'IA.
-  const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: `Anonymiseur-Ai4x/${path.basename(file)}` } });
+  const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: `Hidden-Tokens/${path.basename(file)}` } });
   assert.ok(res.isError);
 });
 
@@ -115,7 +115,7 @@ test("une cellule du gabarit modifiée par l'IA n'est jamais écrasée par une v
 test("tableau_de_bord : dessiné avec les vraies données, sur le poste, sans rien renvoyer", async () => {
   const anon = newest(/-anonymise\.xlsx$/);
   const t = await call("tableau_de_bord", {
-    nom_fichier: `Anonymiseur-Ai4x/${anon}`, titre: "Paie d'octobre",
+    nom_fichier: `Hidden-Tokens/${anon}`, titre: "Paie d'octobre",
     graphiques: [
       { type: "indicateur", titre: "Masse brute", colonne_y: "Brut" },
       { type: "barres", titre: "Brut par salarié", colonne_x: "Nom", colonne_y: "Brut", tri: "desc" },
@@ -132,7 +132,7 @@ test("tableau_de_bord : dessiné avec les vraies données, sur le poste, sans ri
 
 test("tableau_de_bord : une colonne inconnue est signalée avec les en-têtes disponibles", async () => {
   const anon = newest(/-anonymise\.xlsx$/);
-  const t = await call("tableau_de_bord", { nom_fichier: `Anonymiseur-Ai4x/${anon}`, graphiques: [{ type: "barres", colonne_x: "Agence", colonne_y: "Brut" }] });
+  const t = await call("tableau_de_bord", { nom_fichier: `Hidden-Tokens/${anon}`, graphiques: [{ type: "barres", colonne_x: "Agence", colonne_y: "Brut" }] });
   assert.match(t, /colonne « Agence » introuvable/);
   assert.match(t, /« Brut »/);
   assertClean("tableau_de_bord (erreur)", t);

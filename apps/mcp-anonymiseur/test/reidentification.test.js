@@ -109,7 +109,7 @@ test("anonymiser_fichier : le plan d'un texte annonce 🔴, la version général
   const done = out(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "note.md", generaliser: true, confirmer: true } }));
   assert.match(done, /Généralisé : \d+ lieu/);
   assert.match(done, /LIEU-\d{3}/);
-  const md = fs.readdirSync(path.join(workdir, "Anonymiseur-Ai4x")).find((n) => n.endsWith("-anonymise.md"));
-  const written = fs.readFileSync(path.join(workdir, "Anonymiseur-Ai4x", md), "utf8");
+  const md = fs.readdirSync(path.join(workdir, "Hidden-Tokens")).find((n) => n.endsWith("-anonymise.md"));
+  const written = fs.readFileSync(path.join(workdir, "Hidden-Tokens", md), "utf8");
   assert.ok(!written.includes("12/04/1971") && !written.includes("Marrakech"));
 });

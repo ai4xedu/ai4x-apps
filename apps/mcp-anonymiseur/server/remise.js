@@ -1,5 +1,5 @@
 // ============================================================================
-// REMISE DES CHIFFRES — « Claude construit la machine, Nanomizer la nourrit ».
+// REMISE DES CHIFFRES — « Claude construit la machine, Hidden Tokens la nourrit ».
 //
 // L'IA a construit, sur le GABARIT, un classeur : formules, tableaux croisés,
 // graphiques, mise en forme. Ce module y remet, SUR LE POSTE, les vraies
@@ -8,7 +8,7 @@
 //
 //   - cellules de données : la valeur factice est remplacée par la vraie,
 //     SEULEMENT si la cellule contient toujours la valeur factice posée par
-//     Nanomizer (une donnée déplacée ou retapée par l'IA n'est pas écrasée :
+//     Hidden Tokens (une donnée déplacée ou retapée par l'IA n'est pas écrasée :
 //     elle est comptée et signalée) ;
 //   - codes (NOM-001…) des textes : remplacés par les vraies valeurs, dans les
 //     chaînes partagées, les chaînes en ligne et les titres de graphiques ;

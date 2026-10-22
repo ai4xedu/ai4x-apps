@@ -45,7 +45,7 @@ after(async () => {
 });
 
 const call = async (name, args = {}) => out(await client.callTool({ name, arguments: args }));
-const outdir = () => path.join(workdir, "Anonymiseur-Ai4x");
+const outdir = () => path.join(workdir, "Hidden-Tokens");
 
 /* ----------------------------------------------------- unitaires ------ */
 
@@ -75,9 +75,9 @@ test("unitaire : métadonnées, commentaires, révisions, champs, liens, images,
   assert.doesNotMatch(all, /mailto:/i, "cibles de liens et instructions de champ disparaissent");
   assert.doesNotMatch(all, /Signature de|descr=|<w:tag |<w:alias |dataBinding|docVar|attachedTemplate/);
   assert.match(parts["word/document.xml"], /Le demandeur sollicite le renvoi\./, "l'insertion est acceptée");
-  assert.match(parts["word/document.xml"], /\[image retirée par Nanomizer\]/);
+  assert.match(parts["word/document.xml"], /\[image retirée par Hidden Tokens\]/);
   assert.match(parts["word/document.xml"], /PRENOM-001 NOM-002/, "le texte de la zone de texte est codé, pas supprimé");
-  assert.match(parts["docProps/core.xml"], /<dc:creator>Nanomizer<\/dc:creator>/);
+  assert.match(parts["docProps/core.xml"], /<dc:creator>Hidden Tokens<\/dc:creator>/);
   assert.doesNotMatch(parts["docProps/app.xml"], /Company|Manager/);
   assert.doesNotMatch(parts["[Content_Types].xml"], /comments|people|custom\.xml/);
   assert.doesNotMatch(parts["word/_rels/document.xml.rels"], /comments|people|image1|mailto|customXml/);

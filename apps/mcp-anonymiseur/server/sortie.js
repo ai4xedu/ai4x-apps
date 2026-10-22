@@ -36,7 +36,11 @@ export const OWN_LINKS = [
   /(?<![\p{L}\p{N}])(?:TABLEAU|DOCUMENT|TEXTE|GABARIT|INDICE|CLAIR)(?![\p{L}\p{N}])/gu,
   /\bTableau de bord\b/g,
   /\b[Rr]apport de couverture\b/g,
-  /RAPPORT-COUVERTURE-NANOMIZER\.html/g,
+  /RAPPORT-COUVERTURE-(?:NANOMIZER|HIDDEN-TOKENS)\.html/g,
+  // La marque et son dossier de sortie (v2.14) : un document qui cite « Hidden
+  // Tokens » ne doit pas faire coder le nom du produit dans nos propres messages.
+  /\bHidden[ -]Tokens\b/g,
+  /SCEAU-HIDDEN-TOKENS-[\d-]+\.html/g,
   /https:\/\/wa\.me\/212680092567(?:\?text=[^\s)]*)?/g,
   /https:\/\/ai4x\.academy\/[^\s)]*/g,
   /https:\/\/claude\.ai\/download/g,

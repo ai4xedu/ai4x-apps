@@ -121,7 +121,7 @@ test("sceau_dossier : après un travail réel, un sceau vérifiable, sans aucune
   assert.equal(v.ok, true, v.reason);
   assert.equal(v.seal.ref, "Dossier 2026-118");
   assert.ok(v.seal.codes >= 3);
-  const page = fs.readdirSync(path.join(A.workdir, "Anonymiseur-Ai4x")).find((n) => n.startsWith("SCEAU-NANOMIZER-"));
+  const page = fs.readdirSync(path.join(A.workdir, "Hidden-Tokens")).find((n) => n.startsWith("SCEAU-HIDDEN-TOKENS-"));
   assert.ok(page, "page du sceau absente");
 });
 

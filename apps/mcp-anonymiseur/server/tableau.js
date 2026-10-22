@@ -1,5 +1,5 @@
 // ============================================================================
-// TABLEAU DE BORD LOCAL — l'IA décrit, Nanomizer dessine, avec les vraies
+// TABLEAU DE BORD LOCAL — l'IA décrit, Hidden Tokens dessine, avec les vraies
 // données, sur le poste. Aucun artefact, aucun nuage.
 //
 // L'IA n'envoie qu'une DESCRIPTION déclarative (type de graphique, colonnes,
@@ -161,7 +161,7 @@ th, td { text-align:left; padding:.35rem .6rem; border-bottom:1px solid var(--li
 .note { border-left:3px solid #B4232F; padding-left:.8rem; }
 </style></head><body><main>
 <header style="display:flex;flex-direction:column;gap:.35rem"><h1>${esc(titre || "Tableau de bord")}</h1>
-<p class="muted">Dessiné par Nanomizer${version ? ` v${esc(version)}` : ""} sur ce poste, le ${esc(generatedAt.toLocaleString("fr-FR"))}, avec les vraies données (${rows.length} ligne(s)). L'IA a décrit ce tableau de bord sans en voir les valeurs. Ne le transmettez qu'à qui a le droit de les voir.</p></header>
+<p class="muted">Dessiné par Hidden Tokens${version ? ` v${esc(version)}` : ""} sur ce poste, le ${esc(generatedAt.toLocaleString("fr-FR"))}, avec les vraies données (${rows.length} ligne(s)). L'IA a décrit ce tableau de bord sans en voir les valeurs. Ne le transmettez qu'à qui a le droit de les voir.</p></header>
 ${problems.length ? `<p class="note">${problems.map(esc).join(" · ")}</p>` : ""}
 <div class="grid">${blocks}</div>
 </main></body></html>

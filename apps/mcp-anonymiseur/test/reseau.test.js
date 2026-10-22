@@ -83,12 +83,12 @@ test("tout le parcours fonctionne avec le réseau interdit par Node", { skip, ti
     assert.ok(!/ERR_ACCESS_DENIED/.test(t), `${name} a tenté une connexion :\n${t}`);
     assert.match(t, rx, `${name} :\n${t}`);
   }
-  const anon = fs.readdirSync(path.join(workdir, "Anonymiseur-Ai4x")).find((n) => /^clients.*-anonymise\.xlsx$/.test(n));
-  const dash = await client.callTool({ name: "tableau_de_bord", arguments: { nom_fichier: `Anonymiseur-Ai4x/${anon}`, graphiques: [{ type: "barres", colonne_x: "Ville", colonne_y: "Montant" }] } });
+  const anon = fs.readdirSync(path.join(workdir, "Hidden-Tokens")).find((n) => /^clients.*-anonymise\.xlsx$/.test(n));
+  const dash = await client.callTool({ name: "tableau_de_bord", arguments: { nom_fichier: `Hidden-Tokens/${anon}`, graphiques: [{ type: "barres", colonne_x: "Ville", colonne_y: "Montant" }] } });
   assert.ok(!dash.isError, out(dash));
-  const rem = await client.callTool({ name: "remettre_chiffres", arguments: { nom_fichier: `Anonymiseur-Ai4x/${anon}` } });
+  const rem = await client.callTool({ name: "remettre_chiffres", arguments: { nom_fichier: `Hidden-Tokens/${anon}` } });
   assert.ok(!rem.isError, out(rem));
-  const docx = fs.readdirSync(path.join(workdir, "Anonymiseur-Ai4x")).find((n) => /-anonymise\.docx$/.test(n));
-  const dw = await client.callTool({ name: "decoder_word", arguments: { nom_fichier: `Anonymiseur-Ai4x/${docx}` } });
+  const docx = fs.readdirSync(path.join(workdir, "Hidden-Tokens")).find((n) => /-anonymise\.docx$/.test(n));
+  const dw = await client.callTool({ name: "decoder_word", arguments: { nom_fichier: `Hidden-Tokens/${docx}` } });
   assert.ok(!dw.isError, out(dw));
 });

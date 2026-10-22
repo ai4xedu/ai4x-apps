@@ -36,8 +36,8 @@ async function connect(licence) {
 /* Un essai gratuit déjà consommé : ces tests vérifient le comportement SANS
    droit d'usage (l'essai a ses propres tests, plus bas). */
 function expireTrial(dir) {
-  fs.mkdirSync(path.join(dir, "Anonymiseur-Ai4x"), { recursive: true });
-  fs.writeFileSync(path.join(dir, "Anonymiseur-Ai4x", ".nanomizer-essai.json"), JSON.stringify({ debut: "2020-01-01T00:00:00Z" }));
+  fs.mkdirSync(path.join(dir, "Hidden-Tokens"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "Hidden-Tokens", ".nanomizer-essai.json"), JSON.stringify({ debut: "2020-01-01T00:00:00Z" }));
 }
 
 async function freshConnect(licence) {
@@ -99,7 +99,7 @@ test("sans licence : la DÉ-ANONYMISATION et l'état de la clé restent disponib
       arguments: { contenu: "Relancer NOM-001 au TEL-001.", nom_sortie: "relance" },
     });
     assert.ok(!dec.isError, "deanonymiser DOIT fonctionner sans licence — jamais d'otage");
-    const m = resultText(dec).match(/Fichier décodé écrit sur le poste : .*?(Anonymiseur-Ai4x\/\S+)/);
+    const m = resultText(dec).match(/Fichier décodé écrit sur le poste : .*?(Hidden-Tokens\/\S+)/);
     assert.ok(m, "chemin du fichier décodé absent");
     const decoded = fs.readFileSync(path.join(workdir, m[1]), "utf8");
     assert.ok(decoded.includes("El Amrani"), "la vraie valeur doit être restituée");
@@ -162,7 +162,7 @@ test("essai : sans licence, la première anonymisation ouvre 14 jours d'accès c
     assert.match(plan, /PLAN D'ANONYMISATION/);
     assert.match(plan, /🧪 Essai gratuit : 14 jour\(s\) restant\(s\)/);
     assert.match(plan, /sur devis/);
-    assert.ok(fs.existsSync(path.join(dir, "Anonymiseur-Ai4x", ".nanomizer-essai.json")));
+    assert.ok(fs.existsSync(path.join(dir, "Hidden-Tokens", ".nanomizer-essai.json")));
     assert.match(resultText(await client.callTool({ name: "etat_cle", arguments: {} })), /essai gratuit, 14 jour\(s\) restant/);
   } finally { await client.close(); fs.rmSync(dir, { recursive: true, force: true }); }
 });

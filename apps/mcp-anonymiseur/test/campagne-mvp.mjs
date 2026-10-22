@@ -182,7 +182,7 @@ console.log(`Artefact : ${path.basename(bundle)} — version ${manifest.version}
 
 workdir = fs.mkdtempSync(path.join(os.tmpdir(), "anx-campagne-"));
 makeFiles(workdir);
-const outDir = path.join(workdir, "Anonymiseur-Ai4x");
+const outDir = path.join(workdir, "Hidden-Tokens");
 
 client = new Client({ name: "campagne-mvp", version: "1.0.0" });
 await client.connect(new StdioClientTransport({
@@ -256,7 +256,7 @@ check("A4a", "le compte rendu de décodage ne contient aucune valeur réelle",
   !deanonT.includes(SECRETS.nom1) && !deanonT.includes(SECRETS.tel1) && !deanonT.includes(SECRETS.societe1));
 check("A4b", "il ne renvoie qu'un chemin + des compteurs", /Fichier décodé écrit sur le poste/.test(deanonT));
 // v2 : les chemins affichés sont relatifs au dossier de travail (masqué).
-const shownFile = (t) => { const m = t.match(/Fichier décodé écrit sur le poste : .*?(Anonymiseur-Ai4x\/\S+)/); return m ? path.join(workdir, m[1]) : ""; };
+const shownFile = (t) => { const m = t.match(/Fichier décodé écrit sur le poste : .*?(Hidden-Tokens\/\S+)/); return m ? path.join(workdir, m[1]) : ""; };
 const decodedPath = shownFile(deanonT);
 const decodedOnDisk = decodedPath ? fs.readFileSync(decodedPath, "utf8") : "";
 check("A4c", "les vraies valeurs SONT dans le fichier local", decodedOnDisk.includes(SECRETS.nom1) && decodedOnDisk.includes(SECRETS.tel1));
@@ -281,7 +281,7 @@ if (toolNames.includes("lire_scan")) {
     fs.existsSync(relire) && /À RELIRE AVANT USAGE/.test(fs.readFileSync(relire, "utf8")));
   const anoT = record(await client.callTool({
     name: "anonymiser_fichier",
-    arguments: { nom_fichier: "Anonymiseur-Ai4x/scan-fournisseur-ocr-A-RELIRE.md", confirmer: true },
+    arguments: { nom_fichier: "Hidden-Tokens/scan-fournisseur-ocr-A-RELIRE.md", confirmer: true },
   }));
   check("A3p", "le scan relu s'anonymise sans fuite (ICE codés, montants gardés)",
     /ICE-\d{3}/.test(anoT) && anoT.includes("17500")
@@ -308,7 +308,7 @@ if (dossierRef) {
 }
 const confT = record(await client.callTool({ name: "verifier_confinement", arguments: {} }));
 check("D5", "l'audit de confinement tourne et confirme le verrou actif", /Verrou actif/.test(confT));
-const cleT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "Anonymiseur-Ai4x/cle-correspondance-NE-JAMAIS-PARTAGER.xlsx" } }));
+const cleT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "Hidden-Tokens/cle-correspondance-NE-JAMAIS-PARTAGER.xlsx" } }));
 check("D6", "la clé ne peut pas être passée à l'IA, même demandée", /Fichier refusé/.test(cleT));
 
 /* A5 — L'AUDIT : tout ce qui a été dit, passé au crible */
@@ -378,8 +378,8 @@ console.log("\n── Série C — licence (le message doit dire quoi FAIRE)\n")
 // v2.2 : sans licence, un essai gratuit de 14 jours s'ouvre. La série C teste
 // le comportement SANS droit d'usage : essai déjà consommé (C4 teste l'essai).
 const expireTrial = (dir) => {
-  fs.mkdirSync(path.join(dir, "Anonymiseur-Ai4x"), { recursive: true });
-  fs.writeFileSync(path.join(dir, "Anonymiseur-Ai4x", ".nanomizer-essai.json"), JSON.stringify({ debut: "2020-01-01T00:00:00Z" }));
+  fs.mkdirSync(path.join(dir, "Hidden-Tokens"), { recursive: true });
+  fs.writeFileSync(path.join(dir, "Hidden-Tokens", ".nanomizer-essai.json"), JSON.stringify({ debut: "2020-01-01T00:00:00Z" }));
 };
 const wd2 = fs.mkdtempSync(path.join(os.tmpdir(), "anx-nolic-"));
 makeFiles(wd2);

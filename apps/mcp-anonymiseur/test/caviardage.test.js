@@ -85,7 +85,7 @@ after(async () => {
 });
 const call = (args) => client.callTool({ name: "caviarder_image", arguments: { nom_fichier: "facture-sekkat.jpg", ...args } });
 const textOf = (res) => res.content.filter((c) => c.type === "text").map((c) => c.text).join("\n");
-const outDir = () => path.join(workdir, "Anonymiseur-Ai4x");
+const outDir = () => path.join(workdir, "Hidden-Tokens");
 
 test("caviarder_image : plan sans rien écrire, puis image sur le poste, puis seulement l'envoi", async () => {
   const early = await call({ envoyer: true });
