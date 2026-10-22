@@ -89,6 +89,16 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.11.0 (le moteur sans surprises visibles, 22/10/2026).
+Trois sur-codages vus le 21/10 sur un vrai dossier, inoffensifs mais qui
+faisaient douter, corrigés : les mois abrégés d'un tableau (« Févr. », « Avr. »
+codés NOM-002, NOM-003 — février et avril n'étaient plus distinguables) suivent
+la règle du mois en toutes lettres, point d'abréviation compris (« Avr. 2026») ;
+« M. » après un libellé (« Contre : M. Garnier ») reste, le nom est codé ; les
+mots de bureau d'un nom de fichier (memo, courriel, pv) ne sont plus des noms.
+La bannière d'essai gratuit se rappelle une fois par session, pas à chaque
+fichier ; une licence échue ou qui expire se répète toujours.
+
 v2.10.0 (les noms du cabinet — US-5, 21/10/2026).
 Les règles par NOMS de la politique s'appliquent. La politique ne contient que
 des empreintes HMAC ; le poste découpe chaque texte BRUT en n-grammes de 1 à

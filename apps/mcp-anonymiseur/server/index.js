@@ -68,7 +68,7 @@ import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from ".
 import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque } from "./politique.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 
-export const VERSION = "2.10.0";
+export const VERSION = "2.11.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -544,8 +544,17 @@ function text(s) {
 
 /* Réponse d'un outil producteur : y colle l'avertissement d'échéance quand
    la licence expire bientôt (règle : prévenir largement, jamais surprendre). */
+let trialBannerShown = false;
 function textWithLicence(s) {
-  const banner = warningBanner(licence());
+  const status = licence();
+  let banner = warningBanner(status);
+  // L'essai gratuit se rappelle UNE fois par session : relu à chaque fichier,
+  // il noie la réponse utile (vu le 21/10/2026 sur un vrai dossier). Une
+  // licence échue ou qui expire, elle, se répète : là, surprendre coûte cher.
+  if (banner && status.trial) {
+    if (trialBannerShown) banner = "";
+    trialBannerShown = true;
+  }
   return text(banner ? `${banner}\n\n${s}` : s);
 }
 

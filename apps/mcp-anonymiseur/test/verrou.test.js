@@ -343,3 +343,30 @@ test("performance : une clé de 20 000 codes ne ralentit pas le verrou", () => {
   guardText("Nomxyz1abc et Nomxyz2abc", { book: b });
   assert.ok(Date.now() - g0 < 1500);
 });
+
+/* 21/10/2026 — trois sur-codages vus sur un vrai dossier, inoffensifs mais qui
+   font douter : les mois abrégés d'un tableau, « M. » après un libellé, les
+   mots de bureau d'un nom de fichier. */
+test("les mois abrégés d'un tableau restent lisibles, le mois-patronyme reste codé", () => {
+  for (const m of ["Janv.", "Févr.", "Mars", "Avr.", "Mai", "Juin", "Juil.", "Août", "Sept.", "Oct.", "Nov.", "Déc."]) {
+    assert.equal(code(m), m, `cellule « ${m} »`);
+  }
+  assert.equal(code("Relevé de Févr. 2026 et d'Avr. 2026"), "Relevé de Févr. 2026 et d'Avr. 2026");
+  // « Karim Avril » : Avril derrière un prénom est un patronyme, abrégé ou non.
+  assert.doesNotMatch(code("Karim Avril a signé."), /Avril/);
+});
+
+test("« Contre : M. Garnier » — le titre reste, le nom est codé", () => {
+  const out = code("Contre : M. Thibault Garnier-Lessard, domicilié à Lyon");
+  assert.match(out, /^Contre : M\. /);
+  assert.doesNotMatch(out, /Thibault|Garnier|Lessard/);
+  assert.match(code("Client : Mme Rousseau"), /^Client : Mme NOM-\d{3}$/);
+});
+
+test("les mots de bureau d'un nom de fichier ne sont pas des noms", () => {
+  const nom = (s) => strictCode(s, { book: newCodebook(), fileName: true }).text;
+  assert.equal(nom("memo-mediation"), "memo-mediation");
+  assert.equal(nom("courriel-relance"), "courriel-relance");
+  assert.equal(nom("pv-reunion"), "pv-reunion");
+  assert.doesNotMatch(nom("memo-benali"), /benali/);
+});
