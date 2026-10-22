@@ -55,7 +55,7 @@ export const OFFER = {
   orderUrl: "https://ai4x.academy/nanomizer#plans",
   whatsappDisplay: "+212 680 092 567",
   whatsappUrl: "https://wa.me/212680092567?text=" + encodeURIComponent(
-    "Bonjour, je veux l'abonnement annuel Nanomizer (connecteur Claude Desktop). Comment on procède ?"
+    "Bonjour, je veux l'abonnement annuel Hidden Tokens (connecteur Claude Desktop). Comment on procède ?"
   ),
   // Une entreprise achète sur devis : formulaire de la page, puis devis et
   // facture au nom de l'entité.
@@ -202,7 +202,7 @@ export function licenceStatus(raw, now = new Date()) {
 export function readLicence(workdir, env = process.env) {
   const fromEnv = String(env.ANX_LICENCE || "").trim();
   if (fromEnv && !isUnsubstituted(fromEnv)) return { raw: fromEnv, source: "réglages de l'extension" };
-  for (const candidate of ["licence.txt", path.join("Anonymiseur-Ai4x", "licence.txt")]) {
+  for (const candidate of ["licence.txt", path.join("Hidden-Tokens", "licence.txt"), path.join("Anonymiseur-Ai4x", "licence.txt")]) {
     try {
       const p = path.join(workdir, candidate);
       if (fs.existsSync(p)) {
@@ -231,7 +231,7 @@ export function blockedMessage(status) {
     head.push(`🔒 Votre licence a expiré le ${status.expiresAt}.`);
   } else if (!status.reason || status.reason === "absente") {
     head.push("🔒 Aucune clé de licence n'est configurée.");
-    head.push("Si vous en avez une : réglages de Claude Desktop → Extensions → Nanomizer →");
+    head.push("Si vous en avez une : réglages de Claude Desktop → Extensions → Hidden Tokens →");
     head.push("champ « Clé de licence » → collez la clé (elle commence par NANO1.) → REDÉMARREZ Claude Desktop");
     head.push("(la clé est lue au démarrage du connecteur, un changement à chaud n'est pas vu).");
   } else {

@@ -35,9 +35,9 @@ function resultText(res) {
 }
 
 /* Les chemins affichés sont relatifs au dossier de travail (masqué) : on
-   rejoint la partie « Anonymiseur-Ai4x/… » au vrai dossier du test. */
+   rejoint la partie « Hidden-Tokens/… » au vrai dossier du test. */
 function decodedPath(out) {
-  const m = out.match(/Fichier décodé écrit sur le poste : .*?(Anonymiseur-Ai4x\/\S+)/);
+  const m = out.match(/Fichier décodé écrit sur le poste : .*?(Hidden-Tokens\/\S+)/);
   return m ? path.join(workdir, m[1]) : null;
 }
 
@@ -112,7 +112,7 @@ test("tools/list expose les 15 outils", async () => {
 test("le protocole de confidentialité est envoyé à Claude dès la connexion", () => {
   const instr = client.getInstructions() || "";
   assert.match(instr, /PROTOCOLE DE CONFIDENTIALITÉ/);
-  assert.match(instr, /JAMAIS par un autre moyen que les outils Nanomizer/);
+  assert.match(instr, /JAMAIS par un autre moyen que les outils Hidden Tokens/);
   assert.match(instr, /Filesystem/);
 });
 
@@ -135,7 +135,7 @@ test("anonymiser_fichier sans confirmer : un PLAN, rien d'écrit, zéro valeur r
   assert.ok(!out.includes("El Amrani"), "un nom réel a fui dans le plan");
   assert.ok(!out.includes("yassine.elamrani@gmail.com"), "un email réel a fui dans le plan");
   // Rien n'a été écrit.
-  assert.ok(!fs.existsSync(path.join(workdir, "Anonymiseur-Ai4x", "clients-anonymise.xlsx")));
+  assert.ok(!fs.existsSync(path.join(workdir, "Hidden-Tokens", "clients-anonymise.xlsx")));
 });
 
 test("anonymiser_fichier confirmé : codes présents, valeurs réelles absentes, fuite signalée", async () => {
@@ -156,8 +156,8 @@ test("anonymiser_fichier confirmé : codes présents, valeurs réelles absentes,
   // Les consignes anti-reformulation voyagent avec les données.
   assert.match(out, /EXACTEMENT tel quel/);
   // Fichiers écrits sur le poste.
-  assert.ok(fs.existsSync(path.join(workdir, "Anonymiseur-Ai4x", "clients-anonymise.xlsx")));
-  assert.ok(fs.existsSync(path.join(workdir, "Anonymiseur-Ai4x", "cle-correspondance-NE-JAMAIS-PARTAGER.xlsx")));
+  assert.ok(fs.existsSync(path.join(workdir, "Hidden-Tokens", "clients-anonymise.xlsx")));
+  assert.ok(fs.existsSync(path.join(workdir, "Hidden-Tokens", "cle-correspondance-NE-JAMAIS-PARTAGER.xlsx")));
 });
 
 test("clé stable : deuxième passe sans nouveau code", async () => {
@@ -200,7 +200,7 @@ test("mode document : facture → identifiants codés, montants et libellés int
   assert.match(out, /GABARIT/);
   assert.ok(!/\b2150\b/.test(out), "le montant réel a fui");
   const readOut = () => {
-    const decoded = XLSX.readFile(path.join(workdir, "Anonymiseur-Ai4x", "facture-anonymise.xlsx"));
+    const decoded = XLSX.readFile(path.join(workdir, "Hidden-Tokens", "facture-anonymise.xlsx"));
     return XLSX.utils.sheet_to_json(decoded.Sheets[decoded.SheetNames[0]], { header: 1, raw: false, defval: "" }).flat().join(" | ");
   };
   let flat = readOut();
@@ -224,7 +224,7 @@ test("valeurs_a_exclure : le nom reste en clair dans le FICHIER, masqué dans l'
   assert.ok(!out.includes("TARDIGRADE"), "le nom exclu a fui dans la conversation");
   assert.match(out, /MASQUÉ — fuite possible/);
   // Mais le fichier local, lui, le garde en clair (choix de l'utilisateur).
-  const wbOut = XLSX.readFile(path.join(workdir, "Anonymiseur-Ai4x", "facture-anonymise.xlsx"));
+  const wbOut = XLSX.readFile(path.join(workdir, "Hidden-Tokens", "facture-anonymise.xlsx"));
   const flat = XLSX.utils.sheet_to_json(wbOut.Sheets[wbOut.SheetNames[0]], { header: 1, raw: false, defval: "" })
     .flat().join(" | ");
   assert.ok(flat.includes("TARDIGRADE"), "l'exclusion n'a pas été respectée dans le fichier");
@@ -247,7 +247,7 @@ test("PDF natif : plan en comptes, contenu anonymisé en .md, PDF jamais réécr
   assert.match(out, /ICE : ICE-\d{3}/);
   assert.ok(out.includes("20500"), "les montants doivent rester dans l'aperçu");
   // Le contenu anonymisé est sur le poste, complet.
-  const mdPath = path.join(workdir, "Anonymiseur-Ai4x", "facture-anonymise.md");
+  const mdPath = path.join(workdir, "Hidden-Tokens", "facture-anonymise.md");
   assert.ok(fs.existsSync(mdPath), "sortie .md absente");
   const md = fs.readFileSync(mdPath, "utf8");
   assert.match(md, /ICE : ICE-\d{3}/);
@@ -268,7 +268,7 @@ test("lire_scan : OCR local, texte JAMAIS dans le chat, fichier À RELIRE écrit
     assert.ok(!out.includes(secret), `« ${secret} » a fui dans le compte rendu OCR`);
   }
   // Le texte est sur le poste, complet, marqué à relire.
-  const p = path.join(workdir, "Anonymiseur-Ai4x", "scan-ocr-A-RELIRE.md");
+  const p = path.join(workdir, "Hidden-Tokens", "scan-ocr-A-RELIRE.md");
   assert.ok(fs.existsSync(p), "fichier À RELIRE absent");
   const md = fs.readFileSync(p, "utf8");
   assert.match(md, /À RELIRE AVANT USAGE/);
@@ -284,7 +284,7 @@ test("lire_scan refuse un PDF qui a déjà du texte (ne pas dégrader l'exact)",
 test("le scan relu s'anonymise comme un texte, avec la même clé", async () => {
   const res = await client.callTool({
     name: "anonymiser_fichier",
-    arguments: { nom_fichier: "Anonymiseur-Ai4x/scan-ocr-A-RELIRE.md", confirmer: true },
+    arguments: { nom_fichier: "Hidden-Tokens/scan-ocr-A-RELIRE.md", confirmer: true },
   });
   const out = resultText(res);
   assert.match(out, /Anonymisation terminée \(texte\)/);
@@ -292,7 +292,7 @@ test("le scan relu s'anonymise comme un texte, avec la même clé", async () => 
   for (const secret of ["002233445566778", "011780000556677889900112", "GHARB PRIMEURS"]) {
     assert.ok(!out.includes(secret), `« ${secret} » a fui après anonymisation du scan`);
   }
-  const p = path.join(workdir, "Anonymiseur-Ai4x", "scan-anonymise.md");
+  const p = path.join(workdir, "Hidden-Tokens", "scan-anonymise.md");
   assert.ok(fs.existsSync(p), "sortie anonymisée du scan absente");
   const md = fs.readFileSync(p, "utf8");
   assert.ok(!md.includes("002233445566778"));
@@ -317,7 +317,7 @@ test("anonymiser_dossier : plan en comptes seuls, exécution → fichiers + rapp
   assert.ok(!planOut.includes("003463957000076"), "un ICE réel a fui dans le plan de lot");
   assert.ok(!planOut.includes("Sophatel"), "un nom détecté a fui dans le plan de lot");
   // Rien n'a été écrit par le plan.
-  assert.ok(!fs.readdirSync(path.join(workdir, "Anonymiseur-Ai4x")).some((n) => n.startsWith("rapport-lot-")));
+  assert.ok(!fs.readdirSync(path.join(workdir, "Hidden-Tokens")).some((n) => n.startsWith("rapport-lot-")));
 
   // Exécution : tous les fichiers, toutes les feuilles, une seule clé.
   const res = await client.callTool({ name: "anonymiser_dossier", arguments: { confirmer: true } });
@@ -329,7 +329,7 @@ test("anonymiser_dossier : plan en comptes seuls, exécution → fichiers + rapp
   // des EXEMPLES de forme, pas des données).
   assert.ok(!out.includes("TABLEAU CODÉ") && !out.includes("\t"), "le compte rendu de lot contient un aperçu de tableau");
   // Sorties sur disque.
-  const outDir = path.join(workdir, "Anonymiseur-Ai4x");
+  const outDir = path.join(workdir, "Hidden-Tokens");
   assert.ok(fs.existsSync(path.join(outDir, "clients-anonymise.xlsx")));
   assert.ok(fs.existsSync(path.join(outDir, "facture-anonymise.xlsx")));
   const reportName = fs.readdirSync(outDir).find((n) => n.startsWith("rapport-lot-"));

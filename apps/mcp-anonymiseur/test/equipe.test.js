@@ -68,7 +68,7 @@ test("deux postes, même dossier d'équipe : même valeur = même code ; le code
   // B décode un texte où figure le code de Tazi, que seul A a vu.
   const tazi = codesOf(table(ta), "NOM")[1];
   const dec = await b.call("deanonymiser", { contenu: `Relancer ${tazi} et ${benaliA}.`, nom_sortie: "relance" });
-  const m = dec.match(/(Anonymiseur-Ai4x\/\S+)/);
+  const m = dec.match(/(Hidden-Tokens\/\S+)/);
   const decoded = fs.readFileSync(path.join(root, "poste-B", m[1]), "utf8");
   assert.equal(decoded, "Relancer Tazi et Benali.");
   assert.match(await b.call("etat_cle"), /Clé d'équipe ACTIVE : 2 poste\(s\)/);
@@ -80,7 +80,7 @@ test("le secret d'équipe ne sort jamais : ni dans les réponses, ni dans la cl�
   for (const name of ["etat_cle", "verifier_confinement", "journal_ia", "lister_fichiers"]) {
     assert.ok(!(await a.call(name)).includes(secret), `secret dans ${name}`);
   }
-  assert.ok(!fs.readFileSync(path.join(root, "poste-A", "Anonymiseur-Ai4x", "cle-de-session.json"), "utf8").includes(secret));
+  assert.ok(!fs.readFileSync(path.join(root, "poste-A", "Hidden-Tokens", "cle-de-session.json"), "utf8").includes(secret));
   // Sans le secret, impossible de calculer le code d'un nom deviné.
   const guess = teamCode(Buffer.alloc(32, 7), "NOM", "Benali", () => false);
   assert.ok(!fs.readFileSync(path.join(teamDir, fs.readdirSync(teamDir).find((n) => n.startsWith("cle-poste-"))), "utf8").includes(guess));
@@ -133,7 +133,7 @@ test("collision d'équipe : un code qui désigne deux valeurs n'est jamais déco
   const res = await c.call("deanonymiser", { contenu: `Dossier suivi par ${code}.`, nom_sortie: "conflit" });
   assert.match(res, /désignent deux valeurs différentes/);
   assert.ok(!res.includes("Lahlou") && !res.includes("Bennani"), "aucune des deux valeurs ne sort dans le chat");
-  const outDir = path.join(dir, "Anonymiseur-Ai4x");
+  const outDir = path.join(dir, "Hidden-Tokens");
   const f = fs.readdirSync(outDir).find((n) => /^conflit-decode-.*\.md$/.test(n));
   const md = fs.readFileSync(path.join(outDir, f), "utf8");
   assert.ok(md.includes(`[À VÉRIFIER : ${code}]`), "le fichier marque le code au lieu de choisir une valeur");

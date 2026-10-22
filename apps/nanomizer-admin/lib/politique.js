@@ -385,7 +385,7 @@ export function modeleSource() {
     },
     journal: { retention_mois: 12 },
     notice_salaries: {
-      texte: "Nanomizer protège les données de nos clients avant tout envoi à Claude. Les règles appliquées et votre propre journal sont consultables depuis Nanomizer.",
+      texte: "Hidden Tokens protège les données de nos clients avant tout envoi à Claude. Les règles appliquées et votre propre journal sont consultables depuis Hidden Tokens.",
       communiquee_le: "AAAA-MM-JJ",
     },
   };

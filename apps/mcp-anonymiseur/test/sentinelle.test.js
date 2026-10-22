@@ -26,7 +26,7 @@ const serverPath = path.join(here, "..", "server", "index.js");
 const LICENCE = mint({ v: 1, org: "Suite de tests", seats: 99, iat: "2026-01-01", exp: new Date(Date.now() + 400 * 86400000).toISOString().slice(0, 10) });
 
 const resultText = (res) => res.content.map((c) => (c.type === "text" ? c.text : "")).join("\n");
-const KEY = (workdir) => path.join(workdir, "Anonymiseur-Ai4x", "cle-de-session.json");
+const KEY = (workdir) => path.join(workdir, "Hidden-Tokens", "cle-de-session.json");
 
 /* Un dossier de travail avec un vrai classeur à coder. */
 function workdirAvecClients() {
@@ -58,10 +58,11 @@ function temp(prefix) { const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix))
 
 test("découverte du dossier de la sentinelle : la variable d'environnement prime, sinon la plateforme", () => {
   assert.equal(dossierSentinelle({ NANOMIZER_SENTINELLE_DIR: "/tmp/x/../s" }, "darwin"), path.resolve("/tmp/s"));
-  assert.equal(dossierSentinelle({}, "darwin"), path.join(os.homedir(), "Library", "Application Support", "Nanomizer"));
-  assert.equal(dossierSentinelle({}, "linux"), path.join(os.homedir(), ".config", "nanomizer"));
-  assert.equal(dossierSentinelle({ XDG_CONFIG_HOME: "/etc/xdg" }, "linux"), path.join("/etc/xdg", "nanomizer"));
-  assert.equal(dossierSentinelle({ APPDATA: "C:\\Users\\u\\AppData\\Roaming" }, "win32"), path.join("C:\\Users\\u\\AppData\\Roaming", "Nanomizer"));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "ht-home-"));
+  assert.equal(dossierSentinelle({}, "darwin", home), path.join(home, "Library", "Application Support", "Hidden Tokens"));
+  assert.equal(dossierSentinelle({}, "linux", home), path.join(home, ".config", "hidden-tokens"));
+  assert.equal(dossierSentinelle({ XDG_CONFIG_HOME: "/etc/xdg" }, "linux"), path.join("/etc/xdg", "hidden-tokens"));
+  assert.equal(dossierSentinelle({ APPDATA: "C:\\Users\\u\\AppData\\Roaming" }, "win32"), path.join("C:\\Users\\u\\AppData\\Roaming", "Hidden Tokens"));
   assert.equal(cheminPrise("/d", "linux"), path.join("/d", "prise.sock"));
   assert.match(cheminPrise("/d", "win32"), /^\\\\\.\\pipe\\nanomizer-sentinelle-[0-9a-f]{12}$/);
 });
@@ -115,11 +116,11 @@ test("E2E — prise présente et dossier tenu : les outils de la liste sont tran
   await fausse.demarrer();
   const client = await connecter({ workdir, sentinelleDir: dir });
   try {
-    assert.match(client.getInstructions() || "", /clé tenue par la sentinelle Nanomizer \(v0\.1\.0\)/);
+    assert.match(client.getInstructions() || "", /clé tenue par la sentinelle Hidden Tokens \(v0\.1\.0\)/);
 
     const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "note.txt", confirmer: true } });
     const out = resultText(res);
-    assert.match(out, /Clé tenue par la sentinelle Nanomizer v0\.1\.0/);
+    assert.match(out, /Clé tenue par la sentinelle Hidden Tokens v0\.1\.0/);
     assert.match(out, /✓ anonymiser_fichier codé par la sentinelle/);
     assert.ok(!res.isError);
     const transmis = fausse.appels.filter((a) => a.methode === "outil");
@@ -127,14 +128,14 @@ test("E2E — prise présente et dossier tenu : les outils de la liste sont tran
     assert.deepEqual(transmis[0].params, { dossier: workdir, nom: "anonymiser_fichier", args: { nom_fichier: "note.txt", confirmer: true } });
     // Un seul écrivain de clé : rien n'est écrit par ce connecteur.
     assert.ok(!fs.existsSync(KEY(workdir)), "le connecteur a écrit la clé alors que la sentinelle la tient");
-    assert.ok(!fs.existsSync(path.join(workdir, "Anonymiseur-Ai4x", "note-anonymise.md")), "le connecteur a codé localement");
+    assert.ok(!fs.existsSync(path.join(workdir, "Hidden-Tokens", "note-anonymise.md")), "le connecteur a codé localement");
 
     // La bannière de mode ne se répète pas tant que le mode ne change pas…
     const res2 = await client.callTool({ name: "lister_fichiers", arguments: {} });
     assert.ok(!/Clé tenue par la sentinelle/.test(resultText(res2)));
     // …sauf dans etat_cle, qui la montre toujours (transmis lui aussi).
     const etat = resultText(await client.callTool({ name: "etat_cle", arguments: {} }));
-    assert.match(etat, /Clé tenue par la sentinelle Nanomizer/);
+    assert.match(etat, /Clé tenue par la sentinelle Hidden Tokens/);
     assert.match(etat, /✓ etat_cle codé par la sentinelle/);
 
     // reinitialiser_cle reste local : la prise ne le voit jamais.
@@ -143,7 +144,7 @@ test("E2E — prise présente et dossier tenu : les outils de la liste sont tran
     assert.ok(!fausse.appels.some((a) => a.methode === "outil" && a.params.nom === "reinitialiser_cle"));
 
     // Le journal « ce que l'IA a vu » est tenu côté connecteur, même en mode client.
-    const journalDir = path.join(workdir, "Anonymiseur-Ai4x", "journal-ia");
+    const journalDir = path.join(workdir, "Hidden-Tokens", "journal-ia");
     const lignes = fs.readdirSync(journalDir).flatMap((f) => fs.readFileSync(path.join(journalDir, f), "utf8").trim().split("\n")).map((l) => JSON.parse(l));
     assert.ok(lignes.some((l) => l.outil === "anonymiser_fichier" && /codé par la sentinelle/.test(l.texte)));
     assert.ok(lignes.some((l) => /protocole/.test(l.outil) && /tenue par la sentinelle/.test(l.texte)));
@@ -166,13 +167,13 @@ test("E2E — la prise tombe entre deux appels : repli immédiat sur le moteur e
     await fausse.arreter();
     const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx", confirmer: true } });
     const out = resultText(res);
-    assert.match(out, /Sentinelle Nanomizer injoignable, moteur local/);
+    assert.match(out, /Sentinelle Hidden Tokens injoignable, moteur local/);
     assert.match(out, /NOM-001/);
     assert.ok(!out.includes("El Amrani"), "un nom réel a fui");
     assert.ok(fs.existsSync(KEY(workdir)), "le moteur local n'a pas écrit la clé");
-    assert.ok(fs.existsSync(path.join(workdir, "Anonymiseur-Ai4x", "clients-anonymise.xlsx")));
+    assert.ok(fs.existsSync(path.join(workdir, "Hidden-Tokens", "clients-anonymise.xlsx")));
     // Le mode local est annoncé une fois ; etat_cle le redit.
-    assert.match(resultText(await client.callTool({ name: "etat_cle", arguments: {} })), /Moteur local : la clé est tenue par ce connecteur \(sentinelle Nanomizer injoignable\)/);
+    assert.match(resultText(await client.callTool({ name: "etat_cle", arguments: {} })), /Moteur local : la clé est tenue par ce connecteur \(sentinelle Hidden Tokens injoignable\)/);
 
     // Sentinelle relancée (même dossier, nouveau jeton) : jumelée sans redémarrer Claude.
     fausse = fausseSentinelle({ dir, dossiers: [workdir] });
@@ -197,11 +198,11 @@ test("E2E — prise présente mais dossier non tenu, ou ANX_SENTINELLE=non : mot
     if (env.ANX_SENTINELLE) fausse.dossiers.push(workdir);   // tenu, mais forcé en local
     const client = await connecter({ workdir, sentinelleDir: dir, env });
     try {
-      assert.match(client.getInstructions() || "", new RegExp(`moteur local \\(sentinelle Nanomizer ${raison}\\)`));
+      assert.match(client.getInstructions() || "", new RegExp(`moteur local \\(sentinelle Hidden Tokens ${raison}\\)`));
       const avant = fausse.appels.length;
       const out = resultText(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "clients.xlsx", confirmer: true } }));
       assert.match(out, /NOM-001/);
-      assert.match(out, new RegExp(`Moteur local : la clé est tenue par ce connecteur \\(sentinelle Nanomizer ${raison}\\)`));
+      assert.match(out, new RegExp(`Moteur local : la clé est tenue par ce connecteur \\(sentinelle Hidden Tokens ${raison}\\)`));
       assert.ok(fs.existsSync(KEY(workdir)));
       assert.ok(!fausse.appels.slice(avant).some((a) => a.methode === "outil"), "un outil est parti vers la prise");
       if (env.ANX_SENTINELLE) assert.equal(fausse.appels.slice(avant).length, 0, "ANX_SENTINELLE=non a quand même sondé la prise");

@@ -124,7 +124,7 @@ export function clePublique(cabinet) {
 }
 
 export function validerCabinet(c) {
-  if (!c || c.format !== FORMAT_CABINET) throw new CabinetInvalide("ce n'est pas un fichier cabinet Nanomizer");
+  if (!c || c.format !== FORMAT_CABINET) throw new CabinetInvalide("ce n'est pas un fichier cabinet Hidden Tokens");
   for (const k of ["id", "nom", "cle", "coffre"]) {
     if (!c[k]) throw new CabinetInvalide(`fichier cabinet incomplet (${k})`);
   }

@@ -1,6 +1,6 @@
 // ============================================================================
 // RAPPORT DE COUVERTURE (v2.4) — la preuve, pour le DPO ou la direction, que
-// l'équipe passe bien par Nanomizer.
+// l'équipe passe bien par Hidden Tokens.
 //
 // Le journal « Ce que Claude a vu » prouve ce qu'UN poste a envoyé. Une
 // entreprise demande autre chose : « qui s'en sert, combien, et est-ce que
@@ -14,9 +14,9 @@
 //   2. UN FICHIER PAR POSTE, dans le dossier d'équipe déjà partagé (même règle
 //      que equipe.js : chaque poste n'écrit que le sien). Pas de serveur, pas
 //      de télémétrie : le rapport ne sort pas du cabinet.
-//   3. HONNÊTE SUR SA LIMITE. Il compte ce qui passe par Nanomizer. Un fichier
+//   3. HONNÊTE SUR SA LIMITE. Il compte ce qui passe par Hidden Tokens. Un fichier
 //      envoyé directement à Claude n'y figure pas : c'est la charte IA
-//      (confiance/charte-ia-modele.md) qui fait de Nanomizer la seule voie
+//      (confiance/charte-ia-modele.md) qui fait de Hidden Tokens la seule voie
 //      autorisée, et ce rapport qui permet de vérifier qu'elle est suivie.
 // ============================================================================
 import fs from "node:fs";
@@ -25,7 +25,7 @@ import { auditJournal } from "./journal.js";
 import { PREFIX_LABEL } from "./engine.js";
 
 export const STATS_RX = /^stats-poste-([a-f0-9]{12})\.json$/;
-export const COVERAGE_NAME = "RAPPORT-COUVERTURE-NANOMIZER.html";
+export const COVERAGE_NAME = "RAPPORT-COUVERTURE-HIDDEN-TOKENS.html";
 export const INACTIVE_DAYS = 30;
 
 const CODING_TOOLS = new Set(["anonymiser_fichier", "anonymiser_dossier", "lire_scan"]);
@@ -133,7 +133,7 @@ export function aggregate(postes, { now = new Date(), months = 3 } = {}) {
   for (const r of rows) {
     if (r.fuites || r.formes) alertes.push({ niveau: "risque", poste: r.nom, texte: `${r.fuites + r.formes} élément(s) sensible(s) retrouvé(s) dans ce que l'IA a reçu — ouvrir « Ce que Claude a vu » sur ce poste.` });
     if (r.risques) alertes.push({ niveau: "risque", poste: r.nom, texte: `${r.risques} porte(s) ouverte(s) à l'audit de confinement (autre extension, dossier synchronisé…) — lancer « vérifier le confinement » sur ce poste.` });
-    if (r.inactif) alertes.push({ niveau: "attention", poste: r.nom, texte: r.jours === null ? "Aucun fichier protégé à ce jour." : `Aucun fichier protégé depuis ${r.jours} jours : ce poste n'utilise plus l'IA, ou l'utilise sans Nanomizer.` });
+    if (r.inactif) alertes.push({ niveau: "attention", poste: r.nom, texte: r.jours === null ? "Aucun fichier protégé à ce jour." : `Aucun fichier protégé depuis ${r.jours} jours : ce poste n'utilise plus l'IA, ou l'utilise sans Hidden Tokens.` });
     if (r.chiffres.clair) alertes.push({ niveau: "attention", poste: r.nom, texte: `${r.chiffres.clair} fichier(s) envoyé(s) avec les montants EN CLAIR (choix explicite de l'utilisateur).` });
     if (r.ancien) alertes.push({ niveau: "attention", poste: r.nom, texte: `Version ${r.version} : une version plus récente (${latest}) est installée ailleurs dans l'équipe.` });
     if (r.echecs) alertes.push({ niveau: "attention", poste: r.nom, texte: `${r.echecs} réponse(s) non notée(s) au journal (disque plein ou droits).` });
@@ -162,7 +162,7 @@ export function renderCoverage(g, { version, org = "", generatedAt = new Date(),
   const ok = !g.fuites && !g.risques;
   const verdict = !g.fichiers
     ? "Aucun fichier protégé sur la période"
-    : ok ? `${g.fichiers} fichier(s) protégé(s) par Nanomizer, aucune valeur réelle retrouvée dans ce que l'IA a reçu`
+    : ok ? `${g.fichiers} fichier(s) protégé(s) par Hidden Tokens, aucune valeur réelle retrouvée dans ce que l'IA a reçu`
       : `${g.fuites + g.risques} point(s) à traiter — détail ci-dessous`;
   const periode = g.mois.length ? `${monthLabel(g.mois[0])} – ${monthLabel(g.mois[g.mois.length - 1])}` : "";
   const rows = g.rows.map((r) => `<tr${r.inactif ? ' class="off"' : ""}><td>${esc(r.nom)}${r.licence === "essai" ? ' <span class="tag">essai</span>' : ""}</td>` +
@@ -177,7 +177,7 @@ export function renderCoverage(g, { version, org = "", generatedAt = new Date(),
 
   return `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rapport de couverture Nanomizer</title>
+<title>Rapport de couverture Hidden Tokens</title>
 <style>
 :root { --paper:#F5F5F8; --ink:#0B0D12; --muted:#585C6C; --line:#DCDCE6; --surface:#FFFFFF; --key:#6A48F0; --key-soft:#ECE7FF;
   --ok:#1E7A4F; --warn:#8A5A00; --warn-soft:#FFF3D6; --leak:#B4232F; --leak-soft:#FBE9EA;
@@ -207,7 +207,7 @@ ul.alerts li.risque { border-left-color:var(--leak); }
 </style></head><body><main>
 <header style="display:flex;flex-direction:column;gap:.6rem">
   <h1>Rapport de couverture</h1>
-  <p class="muted">${org ? `${esc(org)} · ` : ""}Nanomizer${version ? ` v${esc(version)}` : ""} · ${esc(periode)} · ${team ? `${g.postes} poste(s) de l'équipe` : "ce poste"} · généré le ${day(generatedAt.toISOString())}. Ce rapport ne contient que des comptes : aucune valeur, aucun code, aucun nom de fichier.</p>
+  <p class="muted">${org ? `${esc(org)} · ` : ""}Hidden Tokens${version ? ` v${esc(version)}` : ""} · ${esc(periode)} · ${team ? `${g.postes} poste(s) de l'équipe` : "ce poste"} · généré le ${day(generatedAt.toISOString())}. Ce rapport ne contient que des comptes : aucune valeur, aucun code, aucun nom de fichier.</p>
 </header>
 <section class="verdict ${ok ? "ok" : "ko"}">
   <strong>${esc(verdict)}</strong>
@@ -224,7 +224,7 @@ ul.alerts li.risque { border-left-color:var(--leak); }
 <section><h2>À traiter</h2>${alerts ? `<ul class="alerts">${alerts}</ul>` : '<p class="muted">Rien à signaler.</p>'}</section>
 <section><h2>Par poste</h2><div class="wrap"><table><thead><tr><th>Poste</th><th class="num">Fichiers protégés</th><th class="num">Plans</th><th class="num">Décodages</th><th class="num">Montants protégés</th><th class="num">Valeurs retrouvées</th><th class="num">Portes ouvertes</th><th>Dernier fichier</th><th>Version</th></tr></thead><tbody>${rows || '<tr><td colspan="9" class="muted">Aucun poste n\'a encore déposé ses comptes.</td></tr>'}</tbody></table></div></section>
 <section><h2>Codes attribués, par type</h2>${codeRows ? `<div class="wrap"><table><thead><tr><th>Type</th><th class="num">Codes vus par l'IA</th></tr></thead><tbody>${codeRows}</tbody></table></div>` : '<p class="muted">Aucun code pour l\'instant.</p>'}</section>
-<section><h2>Ce que ce rapport ne voit pas</h2><p class="muted">Il compte ce qui passe par Nanomizer. Un fichier joint ou un texte collé directement dans Claude n'y figure pas : c'est la charte IA de l'entreprise qui fait de Nanomizer la seule voie autorisée pour les données de clients, et ce rapport qui permet de vérifier, chaque mois, qu'elle est suivie. Un poste actif dans l'IA mais absent ici est la première question à poser.</p></section>
+<section><h2>Ce que ce rapport ne voit pas</h2><p class="muted">Il compte ce qui passe par Hidden Tokens. Un fichier joint ou un texte collé directement dans Claude n'y figure pas : c'est la charte IA de l'entreprise qui fait de Hidden Tokens la seule voie autorisée pour les données de clients, et ce rapport qui permet de vérifier, chaque mois, qu'elle est suivie. Un poste actif dans l'IA mais absent ici est la première question à poser.</p></section>
 </main></body></html>
 `;
 }

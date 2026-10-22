@@ -22,7 +22,7 @@ const SECRETS = ["El Amrani", "Yassine", "06 61 23 45 67", "Benkirane"];
 
 let client, workdir;
 const out = (res) => res.content.map((c) => (c.type === "text" ? c.text : "")).join("\n");
-const journalDir = () => path.join(workdir, "Anonymiseur-Ai4x", "journal-ia");
+const journalDir = () => path.join(workdir, "Hidden-Tokens", "journal-ia");
 const journalLines = () => fs.readdirSync(journalDir()).flatMap((f) =>
   fs.readFileSync(path.join(journalDir(), f), "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)));
 
@@ -69,7 +69,7 @@ test("journal_ia : verdict propre, page locale sans aucune valeur réelle", asyn
   const t = out(await client.callTool({ name: "journal_ia", arguments: {} }));
   assert.match(t, /✅ Aucune valeur réelle/);
   assert.match(t, /CE-QUE-CLAUDE-A-VU\.html/);
-  const html = fs.readFileSync(path.join(workdir, "Anonymiseur-Ai4x", "CE-QUE-CLAUDE-A-VU.html"), "utf8");
+  const html = fs.readFileSync(path.join(workdir, "Hidden-Tokens", "CE-QUE-CLAUDE-A-VU.html"), "utf8");
   for (const s of SECRETS) assert.ok(!html.includes(s), `« ${s} » dans la page`);
   assert.match(html, /NOM-001/);
   // v2.2 : les montants sont protégés par défaut — ni dans le journal, ni dans la page.
@@ -83,14 +83,14 @@ test("audit RÉTROACTIF : une valeur sortie avant d'être connue de la clé est 
   const t = out(await client.callTool({ name: "journal_ia", arguments: {} }));
   assert.match(t, /🚨 1 élément/);
   assert.ok(!t.includes("El Amrani"));
-  const html = fs.readFileSync(path.join(workdir, "Anonymiseur-Ai4x", "CE-QUE-CLAUDE-A-VU.html"), "utf8");
+  const html = fs.readFileSync(path.join(workdir, "Hidden-Tokens", "CE-QUE-CLAUDE-A-VU.html"), "utf8");
   assert.ok(!html.includes("El Amrani"), "la page ne doit jamais afficher la valeur fuitée");
   assert.match(html, /<mark class="leak"[^>]*>NOM-\d{3}<\/mark>/);
 });
 
 test("le journal brut n'est jamais servi à l'IA", async () => {
   const f = fs.readdirSync(journalDir())[0];
-  const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: `Anonymiseur-Ai4x/journal-ia/${f}` } });
+  const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: `Hidden-Tokens/journal-ia/${f}` } });
   assert.ok(res.isError, out(res));
 });
 

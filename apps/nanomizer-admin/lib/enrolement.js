@@ -64,7 +64,7 @@ export function ecrireEnrolement(dossier, enr) {
 /* Côté poste : contrôle le fichier reçu et en tire l'état local du poste.
    `version_max` démarre à 0 ; c'est l'anti-retour en arrière d'US-4. */
 export function importerEnrolement(enr, maintenant = new Date()) {
-  if (!enr || enr.format !== FORMAT_ENROLEMENT) throw new EnrolementInvalide("ce n'est pas un fichier d'enrôlement Nanomizer");
+  if (!enr || enr.format !== FORMAT_ENROLEMENT) throw new EnrolementInvalide("ce n'est pas un fichier d'enrôlement Hidden Tokens");
   const manque = ["cabinet", "cle", "sel", "poste", "distribution"].filter((k) => !enr[k]);
   if (manque.length) throw new EnrolementInvalide(`fichier d'enrôlement incomplet (${manque.join(", ")})`);
   if (enr.cle.alg !== "ed25519") throw new EnrolementInvalide("algorithme de clé non pris en charge");

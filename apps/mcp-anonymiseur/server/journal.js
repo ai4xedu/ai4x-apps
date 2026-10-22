@@ -18,7 +18,7 @@
 //      transmise, ou lue par l'IA sans danger. Des demandes de l'IA, elle ne
 //      montre que le NOM des paramètres : ces demandes sont écrites par l'IA
 //      ou l'utilisateur (« filtre lahlou ») et peuvent citer un vrai nom que
-//      Nanomizer n'a jamais envoyé. Le journal brut (.jsonl), lui,
+//      Hidden Tokens n'a jamais envoyé. Le journal brut (.jsonl), lui,
 //      garde la vérité — y compris une éventuelle fuite — et n'est jamais
 //      servi au modèle.
 // ============================================================================
@@ -217,7 +217,7 @@ pre { margin:0; padding:.8rem; border-top:1px solid var(--line); white-space:pre
 </style></head><body><main>
 <header style="display:flex;flex-direction:column;gap:.6rem">
   <h1>Ce que Claude a vu</h1>
-  <p class="muted">Journal local de Nanomizer${version ? ` v${esc(version)}` : ""} · du ${dt(a.first)} au ${dt(a.last)} · page générée le ${dt(generatedAt.toISOString())} sur ce poste. Rien de ce journal n'a été envoyé ailleurs.</p>
+  <p class="muted">Journal local de Hidden Tokens${version ? ` v${esc(version)}` : ""} · du ${dt(a.first)} au ${dt(a.last)} · page générée le ${dt(generatedAt.toISOString())} sur ce poste. Rien de ce journal n'a été envoyé ailleurs.</p>
 </header>
 <section class="verdict ${ok ? "ok" : "ko"}">
   <strong>${esc(verdict)}</strong>

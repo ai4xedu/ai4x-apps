@@ -1,6 +1,6 @@
-# Vendre et livrer Nanomizer — abonnement annuel
+# Vendre et livrer Hidden Tokens — abonnement annuel
 
-**Décision du 21/10/2026** : Nanomizer se vend en **abonnement annuel par
+**Décision du 21/10/2026** : Hidden Tokens se vend en **abonnement annuel par
 poste**, France d'abord ; il remplace la licence à vie du 08/10/2026 pour
 toute NOUVELLE vente. Vendu et facturé HT par **TARDIGRADE SARL** (nom
 commercial Ai4x — décision du 21/10/2026). Identifiants légaux :
@@ -125,7 +125,7 @@ mail, un dépôt git, un drive.
 
 ## 3. Livrer sur WhatsApp
 
-1. Le fichier `dist/anonymiseur-ai4x.mcpb` en pièce jointe (≈ 24 Mo — WhatsApp
+1. Le fichier `dist/hidden-tokens.mcpb` en pièce jointe (≈ 24 Mo — WhatsApp
    l'accepte en « Document »).
 2. Le message imprimé par le script (mode d'emploi + clé).
 
@@ -133,7 +133,7 @@ Pour reconstruire le fichier après une mise à jour du code :
 
 ```bash
 npm test                                   # 127 tests, dont la chasse aux fuites (sans clé privée)
-npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb
+npx @anthropic-ai/mcpb pack . dist/hidden-tokens.mcpb
 node test/campagne-mvp.mjs                 # 44 contrôles sur l'artefact (clé privée requise) — A5 et C3 verts
 ```
 
@@ -148,14 +148,14 @@ node test/campagne-mvp.mjs                 # 44 contrôles sur l'artefact (clé 
 
 ## Ce qu'on promet — et ce qu'on ne promet pas
 
-- ✅ Ce qui passe par Nanomizer arrive chez Claude codé : noms, sociétés,
+- ✅ Ce qui passe par Hidden Tokens arrive chez Claude codé : noms, sociétés,
   adresses, identifiants, cartes bancaires, permis, références, noms de
   fichiers. Vérifié à chaque version par la chasse aux fuites
   (`test/fuite.test.js`) et l'audit A5.
-- ⚠️ Pour les numéros de carte, Nanomizer code ce qu'on lui donne — mais un
+- ⚠️ Pour les numéros de carte, Hidden Tokens code ce qu'on lui donne — mais un
   fichier de cartes complètes sur un portable est lui-même dans le périmètre
   PCI DSS du client. La bonne réponse reste l'export masqué ou tokenisé de
-  SES systèmes ; Nanomizer est imbattable sur le reste (noms, CIN, permis,
+  SES systèmes ; Hidden Tokens est imbattable sur le reste (noms, CIN, permis,
   téléphones, texte libre). Le dire avant que leur RSSI ne le dise.
 - ✅ 100 % hors ligne, licence vérifiée sur le poste, aucune télémétrie. Sans
   licence (abonnement échu compris), le décodage marche toujours.

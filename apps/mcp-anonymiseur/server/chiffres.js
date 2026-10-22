@@ -8,7 +8,7 @@
 //
 //   gabarit (défaut) — chaque nombre devient une valeur FACTICE. L'IA voit la
 //       structure (colonnes, lignes, types) et construit formules, tableaux
-//       croisés et graphiques ; Nanomizer remet ensuite les vraies valeurs, sur
+//       croisés et graphiques ; Hidden Tokens remet ensuite les vraies valeurs, sur
 //       le poste, dans le classeur produit (outil remettre_chiffres).
 //   indice — un seul facteur secret par feuille : totaux, écarts et
 //       proportions restent JUSTES (HT + TVA = TTC tient toujours), les niveaux

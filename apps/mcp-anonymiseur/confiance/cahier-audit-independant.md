@@ -1,4 +1,4 @@
-# Cahier des charges — audit indépendant de Nanomizer
+# Cahier des charges — audit indépendant de Hidden Tokens
 
 *Pour un cabinet d'audit de sécurité. Objectif : qu'un tiers confirme, ou
 infirme, que ce qui atteint l'assistant d'IA ne contient pas les valeurs
@@ -6,7 +6,7 @@ réelles, dans les limites annoncées.*
 
 ## Périmètre
 
-- Connecteur Nanomizer v2.3 (extension `.mcpb` pour Claude Desktop), tel que
+- Connecteur Hidden Tokens v2.3 (extension `.mcpb` pour Claude Desktop), tel que
   livré aux clients : macOS et Windows.
 - Hors périmètre : l'assistant d'IA lui-même, le poste du client, l'appli web.
 

@@ -60,7 +60,7 @@ function installer(nom) {
   publier();
   return { dir, partage, archives, poste, cab, ouvert, fichierEnr, publier };
 }
-const pp = (c, now = T0) => creerPolitiquePoste({ enrolement: c.fichierEnr, etatDir: path.join(c.poste, "Anonymiseur-Ai4x"), now: () => now });
+const pp = (c, now = T0) => creerPolitiquePoste({ enrolement: c.fichierEnr, etatDir: path.join(c.poste, "Hidden-Tokens"), now: () => now });
 
 before(() => { root = fs.mkdtempSync(path.join(os.tmpdir(), "anx-politique-")); });
 after(async () => {
@@ -74,7 +74,7 @@ test("politique signée par la console : acceptée, épinglée, version mémoris
   assert.equal(r.etat, "OK");
   assert.equal(r.version, 1);
   assert.equal(r.bloque, false);
-  const etat = JSON.parse(fs.readFileSync(path.join(c.poste, "Anonymiseur-Ai4x", ETAT_FILE), "utf8"));
+  const etat = JSON.parse(fs.readFileSync(path.join(c.poste, "Hidden-Tokens", ETAT_FILE), "utf8"));
   assert.equal(etat.version_max, 1);
   assert.equal(etat.cle.id, c.cab.cle.id);
 });
@@ -136,7 +136,7 @@ test("dossier partagé injoignable : copie locale vérifiée, NON_SYNCHRONISEE a
   assert.equal(tard.etat, "NON_SYNCHRONISEE");
   assert.equal(tard.bloque, false);
   // Copie locale bricolée → refusée.
-  const f = path.join(c.poste, "Anonymiseur-Ai4x", ETAT_FILE);
+  const f = path.join(c.poste, "Hidden-Tokens", ETAT_FILE);
   const etat = JSON.parse(fs.readFileSync(f, "utf8"));
   const b = Buffer.from(etat.copie.octets, "base64"); b[20] ^= 1; etat.copie.octets = b.toString("base64");
   fs.writeFileSync(f, JSON.stringify(etat));
@@ -192,7 +192,7 @@ test("connecteur enrôlé : interdit RIB bloque l'écriture, le reste passe, la 
   assert.ok(bloque.isError);
   assert.match(out(bloque), /Bloqué par la règle R-010/);
   assert.ok(!out(bloque).includes("FR76"), "la valeur n'est jamais citée");
-  const sortie = path.join(c.poste, "Anonymiseur-Ai4x");
+  const sortie = path.join(c.poste, "Hidden-Tokens");
   assert.ok(!fs.readdirSync(sortie).some((n) => /-anonymise\./.test(n)), "aucune copie écrite pour l'IA");
 
   const ok = await s.call("anonymiser_fichier", { nom_fichier: "relance.md", confirmer: true });
@@ -270,7 +270,7 @@ test("US-5 de bout en bout : un nom listé que les détecteurs laissaient passer
   const ok = await s.call("anonymiser_fichier", { nom_fichier: "note.md", confirmer: true });
   assert.ok(!/lumière|Benjelloun/i.test(ok), ok);
   assert.match(ok, /CLI-\d{3}/);
-  const sortie = path.join(c.poste, "Anonymiseur-Ai4x");
+  const sortie = path.join(c.poste, "Hidden-Tokens");
   const copie = fs.readdirSync(sortie).find((n) => /-anonymise\.md$/.test(n));
   const texte = fs.readFileSync(path.join(sortie, copie), "utf8");
   assert.ok(!/lumi[eè]re|benjelloun/i.test(texte), texte);
@@ -308,7 +308,7 @@ test("US-5 dans un classeur : le nom listé est codé dans n'importe quelle colo
   const s = await connect(c);
   const r = await s.call("anonymiser_fichier", { nom_fichier: "factures.xlsx", confirmer: true });
   assert.ok(!/Lumière|Benjelloun/.test(r), r);
-  const sortie = path.join(c.poste, "Anonymiseur-Ai4x");
+  const sortie = path.join(c.poste, "Hidden-Tokens");
   const f = fs.readdirSync(sortie).find((n) => /-anonymise\.xlsx$/.test(n));
   const csv = Object.values(XLSX.readFile(path.join(sortie, f)).Sheets).map((ws) => XLSX.utils.sheet_to_csv(ws)).join("\n");
   assert.ok(!/lumi[eè]re|benjelloun/i.test(csv), csv);

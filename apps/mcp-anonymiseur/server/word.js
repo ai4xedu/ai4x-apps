@@ -313,7 +313,7 @@ const DROP_ELEMENTS = new Set([
   "w:permStart", "w:permEnd",
 ]);
 const UNWRAP_ELEMENTS = new Set(["w:ins", "w:moveTo", "w:hyperlink", "w:fldSimple", "w:smartTag", "w:customXml"]);
-const IMAGE_NOTE = '<w:t xml:space="preserve">[image retirée par Nanomizer]</w:t>';
+const IMAGE_NOTE = '<w:t xml:space="preserve">[image retirée par Hidden Tokens]</w:t>';
 const PERSONAL_ATTR_RX = /\s(?:w:author|w:initials|w15:userId|w15:providerId|w:date)="[^"]*"/g;
 
 function sanitizeStory(tokens, removed) {
@@ -352,7 +352,7 @@ const CORE_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
   '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" ' +
   'xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" ' +
   'xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' +
-  "<dc:creator>Nanomizer</dc:creator><cp:lastModifiedBy>Nanomizer</cp:lastModifiedBy></cp:coreProperties>";
+  "<dc:creator>Hidden Tokens</dc:creator><cp:lastModifiedBy>Hidden Tokens</cp:lastModifiedBy></cp:coreProperties>";
 
 /* Retire du paquet les parties qui ne portent que des données à risque, et
    les relations / types de contenu qui les désignaient. */
