@@ -89,7 +89,8 @@ before(async () => {
     new StdioClientTransport({
       command: process.execPath,
       args: [serverPath],
-      env: { ...process.env, ANX_WORKDIR: workdir, ANX_LICENCE: testLicence() },
+      // Sans sentinelle sur le poste (prise absente) : le comportement d'avant C2, inchangé.
+      env: { ...process.env, ANX_WORKDIR: workdir, ANX_LICENCE: testLicence(), NANOMIZER_SENTINELLE_DIR: path.join(workdir, ".sentinelle-absente") },
     })
   );
 });

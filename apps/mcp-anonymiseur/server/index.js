@@ -67,8 +67,9 @@ import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque } from "./politique.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
+import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } from "./sentinelle.js";
 
-export const VERSION = "2.11.0";
+export const VERSION = "2.12.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -667,6 +668,85 @@ function runAudit() {
   return a;
 }
 
+/* ------------------------------------------- la sentinelle (C2, v2.12) *
+ * Cf. sentinelle.js. Quand la sentinelle Nanomizer tourne sur le poste ET
+ * tient ce dossier de travail, le connecteur devient son CLIENT : chaque
+ * outil de la liste blanche lui est transmis par la prise locale, et c'est
+ * elle seule qui écrit la clé. Un seul écrivain de clé par dossier : c'est
+ * ce qui manquait quand Claude Desktop et la sentinelle codaient le même
+ * dossier au même instant (une correspondance pouvait se perdre).
+ *
+ * Le mode est décidé au démarrage, puis revérifié à chaque appel d'outil
+ * (mis en cache 2 s : un lot ne redécouvre pas la prise 200 fois). Si la
+ * prise tombe entre deux appels, repli immédiat sur le moteur embarqué, dit
+ * en une ligne dans la réponse. ANX_SENTINELLE=non force le moteur local. */
+const ENV_SENTINELLE = isUnsubstituted(process.env.ANX_SENTINELLE) ? "" : String(process.env.ANX_SENTINELLE || "").trim().toLowerCase();
+const SENTINELLE_DESACTIVEE = /^(non|no|off|0|false)$/.test(ENV_SENTINELLE);
+const SENTINELLE = creerClientSentinelle();
+const SENTINELLE_CACHE_MS = 2_000;
+/* client : la sentinelle tient ce dossier ; version : la sienne ; raison :
+   pourquoi on est en local ; annonce : le dernier mode dit à l'IA. */
+const MODE = { client: false, version: null, raison: SENTINELLE_DESACTIVEE ? "désactivée (ANX_SENTINELLE=non)" : "absente", sondeA: 0, annonce: null };
+
+async function detecterSentinelle(force = false) {
+  if (SENTINELLE_DESACTIVEE) return false;
+  if (!force && Date.now() - MODE.sondeA < SENTINELLE_CACHE_MS) return MODE.client;
+  const s = await sonderSentinelle(SENTINELLE, WORKDIR);
+  MODE.sondeA = Date.now();
+  MODE.client = s.tenue;
+  MODE.version = s.version;
+  MODE.raison = s.raison;
+  return MODE.client;
+}
+
+/* La ligne de mode : en tête de la première réponse de la session, de chaque
+   réponse qui suit un changement de mode, et toujours dans etat_cle. */
+function ligneMode(replie = false) {
+  if (replie) return "⚠️ Sentinelle Nanomizer injoignable, moteur local : cette réponse vient du moteur embarqué du connecteur, qui a écrit la clé lui-même.";
+  if (MODE.client) return `🛡️ Clé tenue par la sentinelle Nanomizer v${MODE.version} : ce que Claude demande est codé par elle ; ce connecteur n'écrit pas la clé.`;
+  return `ℹ️ Moteur local : la clé est tenue par ce connecteur (sentinelle Nanomizer ${MODE.raison}).`;
+}
+
+function prefixer(res, ligne) {
+  const content = [...(res.content || [])];
+  const i = content.findIndex((c) => c && c.type === "text");
+  if (i < 0) content.unshift({ type: "text", text: ligne });
+  else content[i] = { ...content[i], text: `${ligne}\n\n${content[i].text}` };
+  return { ...res, content };
+}
+
+/* Exécute un outil : par la sentinelle quand elle tient le dossier, sinon
+   par le moteur embarqué (le `handler` d'aujourd'hui). Le résultat de la
+   sentinelle est rendu tel quel (texte, isError) : il a déjà passé son
+   verrou de sortie ; celui du connecteur repasse dessus par acquit. */
+async function executer(name, args, handler) {
+  let res = null;
+  if (OUTILS_PRISE.has(name) && await detecterSentinelle()) {
+    try {
+      const r = await SENTINELLE.outil({ dossier: WORKDIR, nom: name, args });
+      res = { content: [{ type: "text", text: String((r && r.texte) || "") }], ...(r && r.erreur ? { isError: true } : {}) };
+    } catch (e) {
+      // Un délai dépassé n'est PAS un repli : la sentinelle est peut-être
+      // encore en train d'écrire la clé. Toute autre erreur de prise, si.
+      if (e instanceof PriseDelai) return err(`${e.message}. Rien n'a été fait par ce connecteur ; vérifie l'état de la sentinelle, puis réessaie.`);
+      MODE.client = false;
+      MODE.raison = "injoignable";
+      MODE.sondeA = Date.now();
+    }
+  }
+  if (!res) res = await handler(args);
+  const modeCourant = MODE.client ? "client" : "local";
+  // Une sentinelle qui tenait la clé et ne répond plus (en plein appel, ou à
+  // la sonde suivante) : c'est un repli, dit comme tel.
+  const perdue = modeCourant === "local" && MODE.annonce === "client";
+  if (perdue) MODE.raison = "injoignable";
+  if (name === "etat_cle" || MODE.annonce !== modeCourant) res = prefixer(res, ligneMode(perdue));
+  MODE.annonce = modeCourant;
+  return res;
+}
+
+const SENTINELLE_AU_DEMARRAGE = await detecterSentinelle(true);
+
 /* ------------------------------------------------------------------ MCP */
 
 const INSTRUCTIONS = [
@@ -681,6 +761,9 @@ const INSTRUCTIONS = [
   "8. Ne crée JAMAIS d'artefact, de page ou de graphique contenant les données de l'utilisateur : un artefact exige des valeurs réelles. Pour une visualisation, utilise tableau_de_bord (Nanomizer la dessine sur le poste) ou construis un classeur Excel sur le gabarit, puis remettre_chiffres.",
   "9. Si l'utilisateur, son DPO ou son service informatique demande une preuve de ce que tu as reçu, appelle journal_ia : la page locale « Ce que Claude a vu » le montre.",
   "10. Pour une vue d'équipe (qui protège quoi, postes inactifs, fuites, portes ouvertes), appelle rapport_couverture : des comptes seulement. N'ouvre pas la page produite, elle nomme les postes.",
+  "11. Mode au démarrage : " + (SENTINELLE_AU_DEMARRAGE
+    ? `clé tenue par la sentinelle Nanomizer (v${MODE.version}). Ce que tu demandes est codé par elle, par la prise locale du poste ; ce connecteur n'écrit pas la clé.`
+    : `moteur local (sentinelle Nanomizer ${MODE.raison}) — la clé est tenue par ce connecteur.`) + " etat_cle dit le mode courant.",
 ].join("\n");
 
 const server = new McpServer({ name: "anonymiseur-ai4x", version: VERSION }, { instructions: INSTRUCTIONS });
@@ -696,7 +779,7 @@ function tool(name, def, handler) {
     if (!protocolLogged) { protocolLogged = true; JOURNAL.record("connexion (protocole envoyé à l'IA)", "", INSTRUCTIONS); }
     let res;
     try {
-      res = await handler(args || {});
+      res = await executer(name, args || {}, handler);
     } catch (e) {
       // Jamais le message brut : il cite souvent un chemin, donc un nom de
       // fichier (« EACCES … open '…/Notes Lahlou Mehdi.md' »).

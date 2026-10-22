@@ -89,6 +89,27 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.12.0 (un seul écrivain de clé — cycle C2 de la sentinelle, 22/10/2026).
+Quand la sentinelle Nanomizer tourne sur le poste et tient le dossier de
+travail, le connecteur devient son client : les outils de la liste blanche de
+la prise (lister_fichiers, anonymiser_fichier, anonymiser_dossier,
+deanonymiser, etat_cle, journal_ia, verifier_confinement, lire_scan,
+tableau_de_bord, remettre_chiffres) lui sont transmis par la prise locale
+(socket Unix ou tube nommé, jeton de jumelage relu à chaque appel, zéro
+réseau) et sa réponse est rendue telle quelle ; le connecteur n'écrit plus la
+clé. Deux codages entremêlés sur la même clé étaient le seul moyen de perdre
+une correspondance : c'est fini par construction. La prise est redécouverte
+au démarrage puis à chaque appel (cache de 2 s) : une sentinelle lancée après
+Claude Desktop est jumelée sans redémarrage ; une sentinelle qui tombe
+entraîne un repli immédiat sur le moteur embarqué, dit en une ligne
+(« sentinelle injoignable, moteur local ») ; un délai dépassé n'est jamais un
+repli (elle écrit peut-être encore la clé). Les autres outils
+(reinitialiser_cle, caviarder_image, decoder_word, sceau_dossier,
+rapport_couverture) restent locaux. Le journal « ce que Claude a vu » reste
+tenu côté connecteur dans les deux modes ; etat_cle et le protocole disent le
+mode courant. Réglage « sentinelle » (ANX_SENTINELLE=non) pour forcer le
+moteur local. Nouveau module `server/sentinelle.js`, sans dépendance.
+
 v2.11.0 (le moteur sans surprises visibles, 22/10/2026).
 Trois sur-codages vus le 21/10 sur un vrai dossier, inoffensifs mais qui
 faisaient douter, corrigés : les mois abrégés d'un tableau (« Févr. », « Avr. »
