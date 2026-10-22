@@ -89,6 +89,19 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.13.0 (la preuve signée, 22/10/2026).
+Les pages de preuve — le journal « Ce que Claude a vu » et le rapport de
+couverture — portent désormais une attestation signée dans leur en-tête
+(`server/attestation.js`, jeton `NANOA1.…`) : qui l'a produite, quand, les
+comptes affichés et l'empreinte SHA-256 du reste de la page. Un chiffre
+retouché à la main invalide la signature. Abonné : signée par la clé de
+sceau du cabinet, certifiée par Ai4x. Essai ou licence sans sceau : signée
+par une clé de poste (créée une fois, droits 600) — intégrité prouvée,
+identité du cabinet non certifiée, et la page le dit. À la différence du
+sceau, l'attestation dit la vérité fuites comprises. Vérification hors
+ligne : `node scripts/verifier-preuve.mjs <page.html>`, ou l'appli de bureau
+(« Vérifier une preuve… ») ; la page publique verifier-sceau suivra.
+
 v2.12.0 (un seul écrivain de clé — cycle C2 de la sentinelle, 22/10/2026).
 Quand la sentinelle Nanomizer tourne sur le poste et tient le dossier de
 travail, le connecteur devient son client : les outils de la liste blanche de
