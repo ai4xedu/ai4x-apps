@@ -86,7 +86,7 @@ export function guardText(input, ctx = {}) {
     s = r.text;
     recoded = r.replaced;
   }
-  // v2.17 — un terme ou un motif que les règles de l'organisation font coder
+  // v2.18 — un terme ou un motif que les règles de l'organisation font coder
   // ne sort pas non plus avant d'avoir été codé une première fois (nom de
   // fichier, message d'erreur) : « ••• », sans alarme, c'est le travail normal.
   if (ctx.regles && typeof ctx.regles.masquer === "function") {

@@ -51,7 +51,7 @@ const CLES_REGLE = {
   toujours_pseudonymiser: new Set(["id", "type", "libelle", "portee", "categorie", "prefixe", "noms"]),
   interdit: new Set(["id", "type", "libelle", "portee", "detecteurs", "noms", "alerte"]),
   detecteurs: new Set(["id", "type", "libelle", "portee", "ajoute"]),
-  // v2.17 — règles de l'organisation (SPEC-REGLES-ORGANISATION.md §2.4).
+  // v2.18 — règles de l'organisation (SPEC-REGLES-ORGANISATION.md §2.4).
   motif: new Set(["id", "type", "libelle", "portee", "prefixe", "motif", "exemple"]),
   laisser_en_clair: new Set(["id", "type", "libelle", "portee", "termes"]),
 };

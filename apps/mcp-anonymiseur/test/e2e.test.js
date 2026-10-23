@@ -100,11 +100,11 @@ after(async () => {
   fs.rmSync(workdir, { recursive: true, force: true });
 });
 
-test("tools/list expose les 15 outils", async () => {
+test("tools/list expose les 16 outils", async () => {
   const { tools } = await client.listTools();
   const names = tools.map((t) => t.name).sort();
   assert.deepEqual(names, [
-    "anonymiser_dossier", "anonymiser_fichier", "caviarder_image", "deanonymiser", "decoder_word", "etat_cle", "journal_ia", "lire_scan",
+    "anonymiser_dossier", "anonymiser_fichier", "caviarder_image", "coder_texte", "deanonymiser", "decoder_word", "etat_cle", "journal_ia", "lire_scan",
     "lister_fichiers", "rapport_couverture", "reinitialiser_cle", "remettre_chiffres", "sceau_dossier", "tableau_de_bord", "verifier_confinement",
   ]);
 });
@@ -395,6 +395,37 @@ test("deanonymiser un tableau TSV produit un xlsx", async () => {
   const wb = XLSX.readFile(p);
   const aoa = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
   assert.equal(aoa[1][0], "El Amrani");
+});
+
+test("coder_texte (verrou universel) : le texte collé ressort codé, rien de réel dans la réponse ni dans le journal", async () => {
+  const clair = "Bonjour, merci de relancer Zouhair Tazi (06 70 11 22 33, zouhair.tazi@example.ma) pour la facture de Sophatel S.A.";
+  const res = await client.callTool({ name: "coder_texte", arguments: { contenu: clair, source: "chatgpt.com" } });
+  assert.ok(!res.isError, resultText(res));
+  const out = resultText(res);
+  assert.match(out, /Texte codé \(chatgpt.com\)/);
+  for (const v of ["Zouhair", "Tazi", "06 70 11 22 33", "zouhair.tazi", "Sophatel"]) assert.ok(!out.includes(v), `valeur réelle dans la réponse : ${v}`);
+  // Le bloc codé est à part, ouvert par la marque : c'est lui que la sentinelle rend au navigateur.
+  const bloc = res.content.find((c) => c.type === "text" && c.text.startsWith("⟦HIDDEN-TOKENS:TEXTE-CODE⟧\n"));
+  assert.ok(bloc, "bloc du texte codé absent");
+  const code = bloc.text.split("\n").slice(1).join("\n");
+  assert.match(code, /Bonjour, merci de relancer/);
+  assert.match(code, /\b[A-Z]{2,10}-\d{3,}\b/);
+  // Aller-retour : deanonymiser retrouve le nom, sur le disque seulement.
+  const dec = await client.callTool({ name: "deanonymiser", arguments: { contenu: code, nom_sortie: "verrou" } });
+  const chemin = decodedPath(resultText(dec));
+  assert.ok(chemin && fs.existsSync(chemin), "fichier décodé absent");
+  assert.match(fs.readFileSync(chemin, "utf8"), /Zouhair Tazi/);
+  // Le journal « ce que l'IA a vu » ne garde jamais le texte en clair reçu.
+  const journalDir = path.join(workdir, "Hidden-Tokens", "journal-ia");
+  const journal = fs.readdirSync(journalDir).filter((n) => n.endsWith(".jsonl")).map((n) => fs.readFileSync(path.join(journalDir, n), "utf8")).join("\n");
+  assert.ok(journal.includes("coder_texte"), "coder_texte absent du journal");
+  assert.ok(!journal.includes("Zouhair"), "le texte en clair a été journalisé");
+  assert.ok(journal.includes("en clair, non journalisés"), "la taille du texte doit être notée à la place");
+  // Un second passage réutilise les mêmes codes : la clé est cumulative.
+  const bis = await client.callTool({ name: "coder_texte", arguments: { contenu: "Zouhair Tazi a rappelé." } });
+  const blocBis = bis.content.find((c) => c.type === "text" && c.text.startsWith("⟦HIDDEN-TOKENS:TEXTE-CODE⟧"));
+  const codeNom = code.match(/\b[A-Z]{2,10}-\d{3,}\b/)[0];
+  assert.ok(blocBis.text.includes(codeNom), "le même nom doit recevoir le même code");
 });
 
 test("etat_cle : comptes sans correspondances", async () => {

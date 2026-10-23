@@ -67,7 +67,7 @@ export const TYPES = [
 
 export const PREFIX_LABEL = Object.fromEntries(TYPES.map((t) => [t.prefix, t.label]));
 
-/* v2.17 — catégories MAISON des règles de l'organisation (regles.js) : les
+/* v2.18 — catégories MAISON des règles de l'organisation (regles.js) : les
    préfixes des règles en vigueur, enregistrés à chaque appel qui code, et les
    préfixes déjà présents dans la clé (une règle supprimée ne rend aucun code
    méconnaissable au verrou de sortie ni au journal). `version` change quand

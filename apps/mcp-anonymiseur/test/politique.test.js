@@ -315,9 +315,9 @@ test("US-5 dans un classeur : le nom listé est codé dans n'importe quelle colo
   assert.match(csv, /CLI-\d{3}/);
 });
 
-/* ------------------------------------------- règles de l'organisation (v2.17) */
+/* ------------------------------------------- règles de l'organisation (v2.18) */
 
-test("v2.17 contrat : la console et le poste rendent le même verdict sur les motifs et les préfixes", async () => {
+test("v2.18 contrat : la console et le poste rendent le même verdict sur les motifs et les préfixes", async () => {
   const console_ = await import("../../nanomizer-admin/lib/regles.js");
   const poste = await import("../server/regles.js");
   assert.equal(console_.PREFIXE_RX.source, poste.PREFIXE_RX.source);
@@ -331,7 +331,7 @@ test("v2.17 contrat : la console et le poste rendent le même verdict sur les mo
   for (const p of poste.prefixesReserves()) assert.ok(prefixesReserves().has(p), `réservé côté poste, libre côté console : ${p}`);
 });
 
-test("v2.17 de bout en bout : catégorie maison, motif et termes en clair de la politique s'appliquent ; une exclusion du dossier qui vise un nom protégé est ignorée (critères 4 et 6)", async () => {
+test("v2.18 de bout en bout : catégorie maison, motif et termes en clair de la politique s'appliquent ; une exclusion du dossier qui vise un nom protégé est ignorée (critères 4 et 6)", async () => {
   const c = installer("regles");
   const src = source();
   src.regles.push(

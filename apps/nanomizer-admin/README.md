@@ -29,7 +29,7 @@ de passe est demandée sans écho, ou lue dans `NANOMIZER_PHRASE`.
 npm test
 ```
 
-## Règles de l'organisation (v2.17, 23/10/2026)
+## Règles de l'organisation (v2.18, 23/10/2026)
 
 Trois règles de plus dans `politique-source.json` (spec :
 `nanomizer/SPEC-REGLES-ORGANISATION.md`) :
@@ -52,7 +52,7 @@ Trois règles de plus dans `politique-source.json` (spec :
 - `laisser_en_clair` : termes en clair (publics par nature) ; refusé s'il
   ressemble à un identifiant (chiffres, arobase) ou s'il est aussi un nom
   protégé. Sur le poste, une règle « coder » l'emporte toujours.
-- Un poste antérieur à la v2.17 refuse une politique qui porte ces types
+- Un poste antérieur à la v2.18 refuse une politique qui porte ces types
   (ALTEREE, fail closed) : mettre les postes à jour avant d'émettre.
 
 ## Pas encore fait (stories suivantes)

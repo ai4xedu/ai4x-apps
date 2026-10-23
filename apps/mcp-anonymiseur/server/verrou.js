@@ -441,7 +441,7 @@ export const PATTERNS = [
 ];
 
 /* Une chaîne `code` = n'importe quel code de la clé (PREFIXE-NNN). Depuis la
-   v2.17 la liste des préfixes bouge (règles de l'organisation) : codeSrc()
+   v2.18 la liste des préfixes bouge (règles de l'organisation) : codeSrc()
    la relit, en cache sur la version du moteur. */
 let codeCache = { version: -1, src: "" };
 export function codeSrc() {

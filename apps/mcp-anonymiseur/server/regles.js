@@ -1,5 +1,5 @@
 // ============================================================================
-// RÈGLES DE L'ORGANISATION (v2.17, 23/10/2026) — ce que l'entreprise décide
+// RÈGLES DE L'ORGANISATION (v2.18, 23/10/2026) — ce que l'entreprise décide
 // elle-même, en plus du moteur. Spec : nanomizer/SPEC-REGLES-ORGANISATION.md.
 //
 // Trois types de règle, à deux niveaux :

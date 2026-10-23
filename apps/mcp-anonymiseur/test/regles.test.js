@@ -1,4 +1,4 @@
-// RÈGLES DE L'ORGANISATION (v2.17) — ce que l'entreprise décide elle-même :
+// RÈGLES DE L'ORGANISATION (v2.18) — ce que l'entreprise décide elle-même :
 // termes à toujours coder, motifs maison, termes à laisser en clair. Critères
 // d'acceptation 1 à 5 et 7 de SPEC-REGLES-ORGANISATION.md (le 6, politique
 // signée, est dans politique.test.js).

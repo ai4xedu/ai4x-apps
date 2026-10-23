@@ -33,6 +33,7 @@ import readline from "node:readline";
 export const OUTILS_PRISE = new Set([
   "lister_fichiers", "anonymiser_fichier", "anonymiser_dossier", "deanonymiser", "etat_cle",
   "journal_ia", "verifier_confinement", "lire_scan", "tableau_de_bord", "remettre_chiffres",
+  "coder_texte",   // v2.17 : le verrou universel — un seul écrivain de clé, donc la sentinelle
 ]);
 
 /* Délais côté client : un lot ou un OCR peuvent être longs. Un délai dépassé

@@ -38,7 +38,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { PREFIX_LABEL } from "./engine.js";
 import { normaliser, creerReconnaisseur, PREFIXE_EMPREINTE, MAX_MOTS, PREFIXE_RX, prefixesReserves, validerRegles } from "./regles.js";
-/* Le contrat des empreintes vit dans regles.js depuis la v2.17 (les règles du
+/* Le contrat des empreintes vit dans regles.js depuis la v2.18 (les règles du
    dossier s'en servent aussi) ; réexporté pour les tests et les anciens imports. */
 export { normaliser, creerReconnaisseur, PREFIXE_EMPREINTE, MAX_MOTS };
 
@@ -52,8 +52,8 @@ export const GRACE_EXPIRATION_H = 72;
 export const SYNCHRO_MAX_H = 24;
 const EXPIRATION_MAX_JOURS = 365;
 const PLANCHER = ["PRENOM", "NOM", "PERSONNE", "EMAIL", "TEL", "ADRESSE"];
-// v2.17 : « motif » et « laisser_en_clair » (SPEC-REGLES-ORGANISATION.md) ;
-// un poste 2.16 refuse une politique qui les porte (fail closed, voulu).
+// v2.18 : « motif » et « laisser_en_clair » (SPEC-REGLES-ORGANISATION.md) ;
+// un poste antérieur à la 2.18 refuse une politique qui les porte (fail closed, voulu).
 const TYPES_REGLE = new Set(["toujours_pseudonymiser", "interdit", "detecteurs", "motif", "laisser_en_clair"]);
 
 /* Catégorie d'une règle « toujours_pseudonymiser » → type du moteur. */
@@ -114,7 +114,7 @@ export function validerPolitique(p, cabinetId) {
     for (const d of [...(r.detecteurs || []), ...(r.ajoute || [])]) if (!(d in PREFIX_LABEL)) e.push(`${ou} : détecteur inconnu « ${d} »`);
     for (const q of r.portee?.equipes || []) if (!equipes.has(q)) e.push(`${ou} : équipe inexistante`);
     for (const h of r.empreintes || []) if (!/^hm1:[0-9a-f]{64}$/.test(String(h))) e.push(`${ou} : empreinte illisible`);
-    // v2.17 — catégorie maison d'une règle par noms : son préfixe doit être
+    // v2.18 — catégorie maison d'une règle par noms : son préfixe doit être
     // libre ; motifs et termes en clair passent la validation des règles.
     if (r.type === "toujours_pseudonymiser" && r.prefixe !== undefined
         && (!PREFIXE_RX.test(String(r.prefixe)) || prefixesReserves().has(String(r.prefixe)))) e.push(`${ou} : préfixe invalide ou réservé`);
@@ -286,7 +286,7 @@ export function creerPolitiquePoste({ enrolement, etatDir, now = () => new Date(
 
   function nbNoms(c) { const rec = reconnaisseur(c); return rec ? rec.parEmpreinte.size : 0; }
 
-  /* v2.17 — les règles de la politique que regles.js applique comme celles du
+  /* v2.18 — les règles de la politique que regles.js applique comme celles du
      dossier (motifs, termes en clair), celles qui visent ce poste ; et les
      catégories maison des règles par noms, à enregistrer dans le moteur. */
   function reglesOrganisation(c) {

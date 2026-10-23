@@ -47,7 +47,7 @@ export const CATEGORIES = {
   PROJET: "PROJ",
 };
 
-// v2.17 (SPEC-REGLES-ORGANISATION.md) : « motif » et « laisser_en_clair ».
+// v2.18 (SPEC-REGLES-ORGANISATION.md) : « motif » et « laisser_en_clair ».
 export const TYPES_REGLE = new Set(["toujours_pseudonymiser", "interdit", "detecteurs", "motif", "laisser_en_clair"]);
 
 /* Préfixes qu'une catégorie MAISON (règle avec `prefixe`) ne peut pas
