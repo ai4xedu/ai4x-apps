@@ -73,7 +73,7 @@ import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } fro
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.15.0";
+export const VERSION = "2.15.1";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,

@@ -69,6 +69,17 @@ test("unitaire : métadonnées, commentaires, révisions, champs, liens, images,
   for (const gone of ["word/comments.xml", "word/people.xml", "docProps/custom.xml", "docProps/thumbnail.jpeg", "customXml/item1.xml", "word/media/image1.png"]) {
     assert.ok(!names.includes(gone), `${gone} doit disparaître`);
   }
+  // Aucune relation ne pointe vers une partie retirée — y compris celles du
+  // paquet lui-même (_rels/.rels : la vignette). Word tolère ce reste,
+  // d'autres lecteurs refusent d'ouvrir le fichier (vu en recette, 23/10/2026).
+  for (const [rels, xml] of Object.entries(parts).filter(([k]) => /_rels\/[^/]*\.rels$/.test(k))) {
+    const dir = rels.replace(/_rels\/[^/]*\.rels$/, "");
+    for (const m of xml.matchAll(/<Relationship\b[^>]*\bTarget="([^"]+)"[^>]*\/>/g)) {
+      if (/TargetMode="External"/.test(m[0])) continue;
+      const t = m[1].startsWith("/") ? m[1].slice(1) : (dir + m[1]).replace(/[^/]+\/\.\.\//g, "");
+      assert.ok(names.includes(t), `${rels} pointe vers ${t}, absent`);
+    }
+  }
   const all = Object.values(parts).join("\n");
   assert.doesNotMatch(all, /Chraibi/, "le texte supprimé (suivi des modifications) disparaît");
   assert.doesNotMatch(all, /Tazi|saratazi/i, "auteurs et chemin du modèle disparaissent");

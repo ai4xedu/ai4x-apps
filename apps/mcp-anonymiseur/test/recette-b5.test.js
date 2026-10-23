@@ -101,3 +101,14 @@ test("un n° de sécurité sociale est codé en entier, jamais en morceaux (rece
   assert.match(full("Tél : 06 61 23 45 67"), /^Tél : TEL-\d{3}$/);
   assert.match(full("Appeler le 0661234567 demain"), /^Appeler le TEL-\d{3} demain$/);
 });
+
+test("en-tête de tableau et nom coupé en fin de ligne (PDF) — v2.15.1", () => {
+  assert.equal(full("Pièce Émetteur Date"), "Pièce Émetteur Date");
+  assert.equal(full("Désignation Quantité Montant Échéance"), "Désignation Quantité Montant Échéance");
+  const out = full("CONTRE : SARL Garage Lefèvre, RCS Grenoble.\nM. Martin a confié son véhicule au Garage\nLefèvre pour une révision.");
+  const soc = codes(out, "SOCIETE");
+  assert.equal(soc.length, 1, out);
+  assert.match(out, new RegExp(`au ${soc[0]} pour une révision`), out);
+  // Un patronyme qui est aussi un mot d'en-tête reste codé derrière un titre.
+  assert.doesNotMatch(full("Le rapport de M. Date est joint."), /M\. Date/);
+});

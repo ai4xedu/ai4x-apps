@@ -847,6 +847,10 @@ export function strictCode(input, opts = {}) {
       if (det) { if (!known) verdict[wi] = nameLike("prenom"); continue; }
       if (firstName) { verdict[wi] = "prenom"; continue; }
       if (!known) { verdict[wi] = "nom"; continue; }
+      // Mot d'en-tête de tableau ou d'intitulé (« Pièce Émetteur Date »,
+      // « Montant Échéance ») : un libellé, pas un nom — v2.15.1, la ligne
+      // d'en-tête d'un tableau extrait d'un PDF codait « Émetteur » et « Date ».
+      if (HEADING_WORDS.has(x) && !N.nomColl.has(x) && !N.prenoms.has(x)) continue;
       // Mot du dictionnaire écrit avec une majuscule : nom ou mot ?
       if (N.nomColl.has(x) && (!initial[wi] || (N.nomHigh.has(x) && !COMMON_START.has(x)))) { verdict[wi] = "nom"; continue; }
       if (initial[wi]) continue;
@@ -941,6 +945,7 @@ export function strictCode(input, opts = {}) {
   //     parties. « Fontaine & Associés » aussi.
   const SPAN_SEP = /^(?:[  ]{1,2}|[  ]?-[  ]?)$/;
   const AMP_SEP = /^[  ]?&[  ]?$|^[  ]et[  ]$/;
+  const WRAP_SEP = /^[  ]{0,2}\r?\n[  ]{0,2}$/;
   const spanOf = new Array(W.length).fill(-1);
   const spans = [];                                // { a, b, value }
   for (let wi = 0; wi < W.length; wi++) {
@@ -967,9 +972,10 @@ export function strictCode(input, opts = {}) {
       const n = key.split(" ").length;
       for (let wi = 0; wi + n <= W.length; wi++) {
         if (spanOf[wi] >= 0 || keyOf(wi, wi + n - 1) !== key) continue;
+        // Une coupure de ligne (PDF, colonne étroite) ne sépare pas un nom.
         let ok = true;
         for (let q = wi; q < wi + n; q++) {
-          if (!isWord(q) || spanOf[q] >= 0 || (q > wi && !SPAN_SEP.test(sepBefore(q)))) { ok = false; break; }
+          if (!isWord(q) || spanOf[q] >= 0 || (q > wi && !SPAN_SEP.test(sepBefore(q)) && !WRAP_SEP.test(sepBefore(q)))) { ok = false; break; }
         }
         if (!ok) continue;
         spans.push({ a: wi, b: wi + n - 1, value });

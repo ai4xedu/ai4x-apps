@@ -96,6 +96,15 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.15.1 (suite de la recette, 23/10/2026). Un mot d'en-tête de tableau écrit
+avec une majuscule (« Pièce Émetteur Date » extrait d'un PDF) reste lisible ;
+« Garage » en fin de ligne et « Lefèvre » au début de la suivante reçoivent le
+code de la société ; la copie Word ne garde plus de relation vers la vignette ou
+les propriétés retirées (`_rels/.rels` n'était pas nettoyé : Word tolérait,
+d'autres lecteurs refusaient d'ouvrir). Limite connue : une société écrite avec
+sa forme juridique dans une cellule Excel (« SARL Garage Lefèvre ») et sans
+elle dans un texte garde deux codes.
+
 v2.15.0 (la recette client, 23/10/2026).
 Des conclusions et une fiche salarié fictives, codées par l'appli comme chez un
 client, ont montré deux fuites et deux défauts de sens ; tous rejoués dans
