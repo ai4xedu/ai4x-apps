@@ -67,14 +67,15 @@ import { renderDashboard, CHART_TYPES, AGGREGATES } from "./tableau.js";
 import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
 import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
-import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque } from "./politique.js";
+import { lireSecretsPoste, ouvrirRegistre, lireEntrees as lireEntreesRegistre, ajouterEntrees as ajouterEntreesRegistre, doublons as doublonsRegistre, RegistreIndisponible } from "./registre.js";
+import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque, lireEnrolement } from "./politique.js";
 import { lireReglesDossier, compilerRegles } from "./regles.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } from "./sentinelle.js";
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.18.0";
+export const VERSION = "2.20.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -100,7 +101,7 @@ const MASKED_CELL = "[MASQUÉ — fuite possible]";
 // stats-poste- et le rapport de couverture : que des comptes, mais avec le nom
 // que chaque poste s'est donné (souvent celui d'une personne).
 // reglages.json (v2.18) : les règles du dossier y portent des termes en clair.
-const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia|cle-poste-|stats-poste-|RAPPORT-COUVERTURE|reglages\.json/i;
+const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia|cle-poste-|stats-poste-|RAPPORT-COUVERTURE|reglages\.json|^registre$|registre\.json$/i;
 
 /* Journal « ce que Claude a vu » (cf. journal.js) : le texte FINAL de chaque
    réponse, après le verrou de sortie. Le .jsonl brut est interdit au modèle
@@ -187,6 +188,26 @@ const TEAM_DIR = ENV_TEAM ? path.resolve(ENV_TEAM) : "";
  * outil qui code, fail closed. Sans enrôlement, rien ne change. */
 const ENV_ENROLEMENT = isUnsubstituted(process.env.ANX_ENROLEMENT) ? "" : String(process.env.ANX_ENROLEMENT || "").trim();
 const POLITIQUE = ENV_ENROLEMENT ? creerPolitiquePoste({ enrolement: path.resolve(ENV_ENROLEMENT), etatDir: OUTDIR }) : null;
+
+/* Le registre de l'organisation (v2.20, SPEC-REGISTRE-ORGANISATION) : posé par
+   la sentinelle, qui tient la clé du poste dans le trousseau et nous passe les
+   secrets descellés par un descripteur hérité. Quand il est là, il REMPLACE la
+   clé d'équipe : même formule de codes, mais des entrées chiffrées, signées,
+   et un séquestre. Sans sentinelle (Claude Desktop seul) : rien ne change. */
+const ENV_REGISTRE = isUnsubstituted(process.env.ANX_REGISTRE_DIR) ? "" : String(process.env.ANX_REGISTRE_DIR || "").trim();
+const REGISTRE_DIR = ENV_REGISTRE ? path.resolve(ENV_REGISTRE) : "";
+const REGISTRE_POSTE = String(process.env.ANX_POSTE_ID || "").trim();
+let REGISTRE_SECRETS = null;
+let REGISTRE_PANNE = "";          // ce qui empêche le registre au démarrage, s'il y a lieu
+let REGISTRE_CLE = null;          // clé publique épinglée à l'enrôlement : le registre doit être signé par elle
+if (REGISTRE_DIR) {
+  try {
+    if (!/^pst_[a-f0-9]{8}$/.test(REGISTRE_POSTE)) throw new RegistreIndisponible("identifiant de poste absent (ANX_POSTE_ID)");
+    REGISTRE_SECRETS = lireSecretsPoste();
+    if (!REGISTRE_SECRETS) throw new RegistreIndisponible("secrets du poste non reçus de la sentinelle");
+    if (ENV_ENROLEMENT) { const enr = lireEnrolement(path.resolve(ENV_ENROLEMENT)); REGISTRE_CLE = { publique: enr.cle.publique, id: enr.cle.id }; }
+  } catch (e) { REGISTRE_PANNE = e.message; }
+}
 let politiqueCourante = null;   // dernier contrôle, pour le journal et les gardes d'écriture
 
 function controlerPolitique() {
@@ -316,6 +337,30 @@ function teamAllowed() {
   return st.valid && (st.trial || (st.seats || 1) >= 2);
 }
 
+/* Le registre, ouvert à chaque appel (le fichier est petit ; un collègue a pu
+   être certifié ou retiré entre deux appels). Lève RegistreIndisponible. */
+let REGISTRE_CACHE = { sig: "", reg: null };
+function currentRegistre() {
+  if (!REGISTRE_DIR) return null;
+  if (REGISTRE_PANNE) throw new RegistreIndisponible(REGISTRE_PANNE);
+  let sig = "";
+  try { const st = fs.statSync(path.join(REGISTRE_DIR, "registre.json")); sig = `${st.size}|${st.mtimeMs}`; } catch {}
+  if (sig && REGISTRE_CACHE.sig === sig) return REGISTRE_CACHE.reg;
+  const reg = ouvrirRegistre({ dir: REGISTRE_DIR, posteId: REGISTRE_POSTE, secrets: REGISTRE_SECRETS, clePublique: REGISTRE_CLE && REGISTRE_CLE.publique, cleId: REGISTRE_CLE && REGISTRE_CLE.id });
+  REGISTRE_CACHE = { sig, reg };
+  return reg;
+}
+
+function requireRegistre() {
+  if (!teamAllowed()) {
+    return err(`Ce poste est rattaché au registre de l'organisation, qui fait partie de l'offre Cabinet (${OFFER.priceTeam}). Demandez un devis : ${OFFER.quoteUrl}`);
+  }
+  try { currentRegistre(); return null; } catch (e) {
+    return err(`Registre de l'organisation injoignable (${e.message}). Par sécurité RIEN n'est codé — des codes créés sans lui ne seraient pas ceux de vos collègues. ` +
+      "Vérifiez que le dossier partagé est monté, puis réessayez. Le décodage reste disponible.");
+  }
+}
+
 function currentTeam() {
   if (!TEAM_DIR || !teamAllowed()) return null;
   return openTeam(TEAM_DIR, posteId());
@@ -323,6 +368,7 @@ function currentTeam() {
 
 /* À l'entrée des outils qui codent. */
 function requireTeam() {
+  if (REGISTRE_DIR) return requireRegistre();
   if (!TEAM_DIR) return null;
   if (!teamAllowed()) {
     return err("Un dossier de clé d'équipe est configuré, mais la clé d'équipe fait partie de l'offre Cabinet " +
@@ -339,9 +385,29 @@ function requireTeam() {
    secret d'équipe (codes déterministes). Silencieux si l'équipe est
    injoignable : requireTeam l'a déjà dit aux outils qui codent. */
 function withTeam(book) {
-  let team;
-  try { team = currentTeam(); } catch { return book; }
-  if (!team) return book;
+  // Registre de l'organisation : mêmes codes déterministes, entrées chiffrées.
+  let source;
+  if (REGISTRE_DIR) {
+    let reg;
+    try { reg = currentRegistre(); } catch { return book; }
+    const lu = lireEntreesRegistre(reg);
+    source = { entries: lu.entries, secret: reg.secrets.kCodes };
+    const codes = new Set(lu.entries.map((e) => e.code));
+    Object.defineProperty(book, "registre", { value: { postes: lu.postes, ignorees: lu.ignorees, codes, generation: reg.generation, sequestre: reg.sequestre, membres: reg.postes }, enumerable: false, configurable: true });
+    // Import tel quel (spec §6) : ce que ce poste a codé avant de rejoindre le
+    // registre y entre sans changer de code, dès la première lecture.
+    const locales = book.entries.filter((e) => e && e.code && !codes.has(e.code));
+    if (locales.length) { try { ajouterEntreesRegistre(reg, locales); for (const e of locales) codes.add(e.code); } catch {} }
+  } else {
+    let team;
+    try { team = currentTeam(); } catch { return book; }
+    if (!team) return book;
+    source = { entries: readTeamEntries(team).entries, secret: team.secret };
+  }
+  return fusionner(book, source);
+}
+
+function fusionner(book, { entries, secret }) {
   /* code -> valeur normalisée. Deux postes qui codent AU MÊME MOMENT deux
      valeurs différentes peuvent tomber sur le même code (8 chiffres : rare,
      pas impossible sur un gros cabinet) avant d'avoir lu le fichier de
@@ -351,7 +417,7 @@ function withTeam(book) {
   const known = new Map(book.entries.map((e) => [e.code, normOf(e)]));
   // Non énumérable : jamais écrit dans la clé (recalculé à chaque lecture).
   Object.defineProperty(book, "conflicts", { value: new Set(), enumerable: false, configurable: true });
-  for (const e of readTeamEntries(team).entries) {
+  for (const e of entries) {
     if (!e || !e.code) continue;
     if (known.has(e.code)) {
       if (known.get(e.code) !== normOf(e)) book.conflicts.add(e.code.toUpperCase());
@@ -359,11 +425,14 @@ function withTeam(book) {
     }
     const prefix = String(e.code).split("-")[0];
     const k = `${prefix}||${normOf(e)}`;
-    if (!book.byKey[k]) book.byKey[k] = e.code;
+    // Un alias (doublon fusionné par l'admin) se décode encore, mais n'est plus
+    // attribué : c'est le code gardé qui répond pour la valeur.
+    if (e.alias_de) book.byKey[k] = e.alias_de;
+    else if (!book.byKey[k]) book.byKey[k] = e.code;
     book.entries.push({ code: e.code, value: e.value, type: e.type });
     known.set(e.code, normOf(e));
   }
-  return attachTeam(book, team.secret);
+  return attachTeam(book, secret);
 }
 
 /* ------------------------------------------------------------ clé (disque) *
@@ -434,7 +503,13 @@ function saveBook(book) {
   fs.writeFileSync(tmp, JSON.stringify(book), { encoding: "utf8", mode: 0o600 });
   fs.renameSync(tmp, KEY_JSON);
   lockDown(KEY_JSON);
-  if (book.team) {
+  if (book.team && REGISTRE_DIR) {
+    // Seules les entrées de CE poste vont dans son fichier (ajout seul) ; celles
+    // lues chez les collègues n'y sont pas recopiées.
+    const dejaVues = (book.registre && book.registre.codes) || new Set();
+    try { ajouterEntreesRegistre(currentRegistre(), book.entries.filter((e) => !dejaVues.has(e.code))); }
+    catch (e) { throw new RegistreIndisponible(`la clé locale est enregistrée, mais pas dans le registre de l'organisation (${e.code || e.message}) : vos collègues ne pourront pas décoder ces codes tant que l'écriture n'aura pas réussi. Réessayez quand le dossier partagé est accessible.`); }
+  } else if (book.team) {
     try { writePosteEntries(currentTeam(), book.entries); }
     catch (e) { throw new TeamUnavailable(`la clé locale est enregistrée, mais pas dans le dossier d'équipe (${e.code || e.message}) : vos collègues ne pourront pas décoder ces codes tant que l'écriture n'aura pas réussi. Réessayez quand le dossier partagé est accessible.`); }
   }
@@ -2441,7 +2516,21 @@ tool(
     // s'applique à lui, ses règles et la notice du cabinet.
     const politiqueLine = [POLITIQUE ? (controlerPolitique(), politiqueAlerte()) : "", reglesAlerte()].filter(Boolean).join("\n");
     let teamLine = "";
-    if (TEAM_DIR) {
+    if (REGISTRE_DIR) {
+      if (!teamAllowed()) teamLine = "Registre de l'organisation : rattaché mais inactif — il fait partie de l'offre Cabinet (2 postes et plus).";
+      else {
+        try {
+          const b = loadBook();
+          const r = b.registre || { postes: 0, ignorees: 0, codes: new Set(), generation: 1, sequestre: false, membres: 0 };
+          const dbl = doublonsRegistre(b.entries, normFor);
+          teamLine = `Registre de l'organisation ACTIF : ${r.membres} poste(s) certifié(s), ${r.postes} ont déjà partagé des codes, ${r.codes.size} code(s) connus, génération ${r.generation} · séquestre : ${r.sequestre ? "oui" : "NON — demandez à l'administrateur de le créer"}. Même valeur = même code sur tous les postes, tous les dossiers.`;
+          const nConflicts = (b.conflicts || new Set()).size;
+          if (nConflicts) teamLine += ` ⚠️ ${nConflicts} code(s) en conflit (deux valeurs pour un même code) : ils ne sont plus décodés, mais marqués « À VÉRIFIER ».`;
+          if (dbl.length) teamLine += ` ⚠️ ${dbl.length} doublon(s) (une même valeur sous deux codes, héritage de postes solo) : ${dbl.slice(0, 5).map((d) => d.join(" = ")).join(" ; ")} — l'administrateur peut les fusionner (registre-fusionner).`;
+          if (r.ignorees) teamLine += ` ${r.ignorees} ligne(s) illisible(s) ignorée(s).`;
+        } catch (e) { teamLine = `🚨 Registre de l'organisation injoignable (${e.message}) — l'anonymisation est suspendue, le décodage continue sur la clé locale.`; }
+      }
+    } else if (TEAM_DIR) {
       if (!teamAllowed()) teamLine = "Clé d'équipe : configurée mais inactive — elle fait partie de l'offre Cabinet (2 postes et plus).";
       else {
         try {
