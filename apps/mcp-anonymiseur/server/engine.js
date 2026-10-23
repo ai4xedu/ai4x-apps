@@ -67,8 +67,39 @@ export const TYPES = [
 
 export const PREFIX_LABEL = Object.fromEntries(TYPES.map((t) => [t.prefix, t.label]));
 
+/* v2.18 — catégories MAISON des règles de l'organisation (regles.js) : les
+   préfixes des règles en vigueur, enregistrés à chaque appel qui code, et les
+   préfixes déjà présents dans la clé (une règle supprimée ne rend aucun code
+   méconnaissable au verrou de sortie ni au journal). `version` change quand
+   la liste change : le verrou met ses expressions en cache dessus. */
+const CUSTOM_TYPES = [];
+const KNOWN_PREFIXES = new Set();
+let prefixVersion = 0;
+const estPrefixeMoteur = (p) => TYPES.some((x) => x.prefix === p);
+export function registerCustomTypes(list) {
+  const avant = JSON.stringify(CUSTOM_TYPES);
+  CUSTOM_TYPES.length = 0;
+  for (const t of list || []) {
+    if (!t || !t.prefix || !t.id || estPrefixeMoteur(t.prefix)) continue;
+    CUSTOM_TYPES.push({ id: t.id, prefix: t.prefix, label: t.label || "Règle de l'organisation" });
+    PREFIX_LABEL[t.prefix] = CUSTOM_TYPES[CUSTOM_TYPES.length - 1].label;
+  }
+  if (JSON.stringify(CUSTOM_TYPES) !== avant) prefixVersion++;
+}
+export function registerKnownPrefixes(prefixes) {
+  for (const p of prefixes || []) {
+    if (!/^[A-Z][A-Z0-9]{1,9}$/.test(String(p)) || KNOWN_PREFIXES.has(p) || estPrefixeMoteur(p)) continue;
+    KNOWN_PREFIXES.add(p);
+    if (!(p in PREFIX_LABEL)) PREFIX_LABEL[p] = "Règle de l'organisation";
+    prefixVersion++;
+  }
+}
+export function codePrefixes() {
+  return { version: prefixVersion, list: [...new Set([...TYPES.map((t) => t.prefix), ...CUSTOM_TYPES.map((t) => t.prefix), ...KNOWN_PREFIXES])] };
+}
+
 export function typeById(id) {
-  return TYPES.find((t) => t.id === id) || TYPES[TYPES.length - 1];
+  return TYPES.find((t) => t.id === id) || CUSTOM_TYPES.find((t) => t.id === id) || TYPES[TYPES.length - 1];
 }
 
 /* Détection par en-tête. L'ordre compte : « prénom » avant « nom »,
@@ -724,7 +755,7 @@ export function anonymizeDocument(ws, book, extra, opts) {
 }
 
 /* Remplace les codes d'une clé dans un texte (insensible à la casse).
-   map : CODE (majuscules) -> valeur réelle. Depuis la v2.18, la table peut
+   map : CODE (majuscules) -> valeur réelle. Depuis la v2.19, la table peut
    aussi porter des PSEUDONYMES (rendu lisible, cf. pseudonymes.js) : des mots
    avec accents, d'où les frontières Unicode plutôt que \b (qui ne connaît
    que l'ASCII : « \bÉric\b » ne trouvait pas « Éric »). Un pseudonyme n'est

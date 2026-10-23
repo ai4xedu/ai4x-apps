@@ -22,7 +22,7 @@
 //      Les fonctions sont signalées, jamais réécrites : « chirurgien » compte
 //      pour une affaire de responsabilité médicale, c'est à l'avocat de juger.
 // ============================================================================
-import { fold, isKnownWord, CITY_WORDS, CODE_SRC } from "./verrou.js";
+import { fold, isKnownWord, CITY_WORDS, codeSrc } from "./verrou.js";
 import { codeFor } from "./engine.js";
 
 export const CATEGORIES = {
@@ -94,7 +94,7 @@ export function findIndicators(input) {
   const out = [];
   const add = (cat, start, end) => out.push({ cat, start, end, value: text.slice(start, end) });
   const codes = [];
-  for (const m of text.matchAll(new RegExp(CODE_SRC, "gu"))) codes.push([m.index, m.index + m[0].length]);
+  for (const m of text.matchAll(new RegExp(codeSrc(), "gu"))) codes.push([m.index, m.index + m[0].length]);
   const inCode = (i) => codes.some(([a, b]) => i >= a && i < b);
 
   // Lieux : une ville avec majuscule ; si c'est aussi un mot (« Rennes »,

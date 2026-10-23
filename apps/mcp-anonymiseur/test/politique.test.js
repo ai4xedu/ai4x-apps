@@ -314,3 +314,55 @@ test("US-5 dans un classeur : le nom listé est codé dans n'importe quelle colo
   assert.ok(!/lumi[eè]re|benjelloun/i.test(csv), csv);
   assert.match(csv, /CLI-\d{3}/);
 });
+
+/* ------------------------------------------- règles de l'organisation (v2.18) */
+
+test("v2.18 contrat : la console et le poste rendent le même verdict sur les motifs et les préfixes", async () => {
+  const console_ = await import("../../nanomizer-admin/lib/regles.js");
+  const poste = await import("../server/regles.js");
+  assert.equal(console_.PREFIXE_RX.source, poste.PREFIXE_RX.source);
+  const motifs = ["AFF[ -]?\\d{2}/\\d{4}", "(ab|cd)+e", "(a+)+", "(\\d{2,})*x", "(a)\\1", "[", "x".repeat(201), ".*", "a*", "", "M\\d{5}", "(?<!\\d)\\d{3}(?!\\d)", "(?:ab)+"];
+  for (const m of motifs) assert.equal(console_.verifierMotif(m).ok, poste.verifierMotif(m).ok, JSON.stringify(m));
+  // Ce que la console accepte comme terme en clair, le poste l'accepte aussi (sa règle est plus stricte).
+  for (const t of ["Cabinet Test", "Maître Durand", "Tour Hassan", "Rue de la Paix 12"]) {
+    if (!console_.ressembleAUnIdentifiant(t)) assert.equal(poste.estIdentifiant(t), false, t);
+  }
+  const { prefixesReserves } = await import("../../nanomizer-admin/lib/catalogue.js");
+  for (const p of poste.prefixesReserves()) assert.ok(prefixesReserves().has(p), `réservé côté poste, libre côté console : ${p}`);
+});
+
+test("v2.18 de bout en bout : catégorie maison, motif et termes en clair de la politique s'appliquent ; une exclusion du dossier qui vise un nom protégé est ignorée (critères 4 et 6)", async () => {
+  const c = installer("regles");
+  const src = source();
+  src.regles.push(
+    { id: "R-040", type: "toujours_pseudonymiser", libelle: "Parties adverses", prefixe: "ADVERSAIRE", noms: ["Groupe Tazi"] },
+    { id: "R-041", type: "motif", libelle: "Numéros d'affaire", prefixe: "AFFAIRE", motif: "AFF[ -]?\\d{2}/\\d{4}", exemple: "AFF 26/0412" },
+    { id: "R-042", type: "laisser_en_clair", libelle: "Le cabinet", termes: ["Cabinet Test"] },
+  );
+  c.publier(src);
+  // Le salarié voudrait garder « Lumière » (nom protégé R-001) et « Cabinet Test » en clair, et coder les codes projet.
+  fs.mkdirSync(path.join(c.poste, "Hidden-Tokens"), { recursive: true });
+  fs.writeFileSync(path.join(c.poste, "Hidden-Tokens", "reglages.json"), JSON.stringify({ chiffres: "auto", regles: [
+    { id: "D-001", type: "laisser_en_clair", libelle: "Mes exclusions", termes: ["Lumière", "Cabinet Test"] },
+    { id: "D-002", type: "toujours_coder", libelle: "Codes projet", prefixe: "PROJETX", termes: ["Horizon Bleu"] },
+  ] }));
+  fs.writeFileSync(path.join(c.poste, "affaire.md"),
+    "Cabinet Test contre le Groupe Tazi, affaire AFF 26/0412 : le dossier Lumière et le projet Horizon Bleu.\n");
+  const s = await connect(c);
+  const etat = await s.call("etat_cle");
+  assert.match(etat, /Politique du cabinet Cabinet Test : v2/);
+  assert.match(etat, /📏 Règles de l'organisation : organisation — 1 motif, 1 terme laissé en clair ; dossier — 1 liste à toujours coder \(1 terme\), 2 termes laissés en clair/);
+  assert.match(etat, /1 exclusion ignorée/);
+
+  const plan = await s.call("anonymiser_fichier", { nom_fichier: "affaire.md" });
+  assert.match(plan, /Parties adverses \(règle de l'organisation\)/);
+  assert.match(plan, /Numéros d'affaire \(règle de l'organisation\)/);
+  assert.match(plan, /Codes projet \(règle du dossier\)/);
+  for (const v of ["Tazi", "0412", "Lumière", "Horizon"]) assert.ok(!plan.includes(v), `${v} dans le plan`);
+
+  const ok = await s.call("anonymiser_fichier", { nom_fichier: "affaire.md", confirmer: true });
+  for (const v of ["Tazi", "0412", "Lumière", "Horizon"]) assert.ok(!ok.includes(v), `${v} dans le compte rendu`);
+  const sortie = path.join(c.poste, "Hidden-Tokens");
+  const copie = fs.readFileSync(path.join(sortie, fs.readdirSync(sortie).find((n) => /-anonymise\.md$/.test(n))), "utf8");
+  assert.match(copie, /^Cabinet Test contre le ADVERSAIRE-001, affaire AFFAIRE-001 : le dossier CLI-\d{3} et le projet PROJETX-001\./m, copie);
+});

@@ -41,7 +41,7 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
-import { TYPES, codeFor, codeDocumentText, newCodebook, normFor, HEADING_WORDS, isCardNumber } from "./engine.js";
+import { TYPES, codeFor, codeDocumentText, newCodebook, normFor, HEADING_WORDS, isCardNumber, codePrefixes, typeById } from "./engine.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const LEXICON_FILE = path.join(here, "..", "lexique", "fr.txt.gz");
@@ -440,13 +440,23 @@ export const PATTERNS = [
       "[\\p{Lu}][\\p{L}\\p{N}'’.\\-]*[ \\u00A0,]+(?:" + LEGAL_FORMS_SRC + ")(?![\\p{L}\\p{N}])", "gu") },
 ];
 
-/* Une chaîne `code` = n'importe quel code de la clé (PREFIXE-NNN). */
-const PREFIXES = TYPES.map((t) => t.prefix);
-export const CODE_SRC = `(?<![\\p{L}\\p{N}])(?:${PREFIXES.join("|")})-\\d{3,}(?![\\p{L}\\p{N}])`;
+/* Une chaîne `code` = n'importe quel code de la clé (PREFIXE-NNN). Depuis la
+   v2.18 la liste des préfixes bouge (règles de l'organisation) : codeSrc()
+   la relit, en cache sur la version du moteur. */
+let codeCache = { version: -1, src: "" };
+export function codeSrc() {
+  const p = codePrefixes();
+  if (p.version !== codeCache.version) {
+    codeCache = { version: p.version, src: `(?<![\\p{L}\\p{N}])(?:${p.list.join("|")})-\\d{3,}(?![\\p{L}\\p{N}])` };
+  }
+  return codeCache.src;
+}
+/* Figé au chargement (préfixes du moteur seuls) : préférer codeSrc(). */
+export const CODE_SRC = codeSrc();
 
 /* Applique fn aux morceaux de texte situés HORS des codes déjà posés. */
 function outsideCodes(text, fn) {
-  const rx = new RegExp(CODE_SRC, "gu");
+  const rx = new RegExp(codeSrc(), "gu");
   let out = "";
   let last = 0;
   let m;
@@ -521,7 +531,7 @@ export function knownValueMatcher(book) {
     ix.seen = book.entries.length;
   }
   if (!ix.multi.size && !ix.capOnly.size && !ix.digitMap.size) return null;
-  const codeOnly = new RegExp(`^${CODE_SRC}$`, "u");
+  const codeOnly = new RegExp(`^${codeSrc()}$`, "u");
   const NEXT_TO = /^[ \u00A0]{1,2}$/;
   const once = (text) => {
     let replaced = 0;
@@ -601,19 +611,27 @@ export function knownValueMatcher(book) {
 
 /* ---------------------------------------------------------- tokenisation - */
 
-const TOKEN_RX = new RegExp(
-  `(?<code>${CODE_SRC})` +
-  "|(?<mixed>[\\p{L}\\p{N}]*(?:\\p{L}\\p{N}|\\p{N}\\p{L})[\\p{L}\\p{N}]*)" +
-  "|(?<word>\\p{L}+(?:-\\p{L}+)*)" +
-  "|(?<num>\\p{N}+)",
-  "gu"
-);
+let tokenCache = { version: -1, rx: null };
+function tokenRx() {
+  const v = codePrefixes().version;
+  if (tokenCache.version !== v) {
+    tokenCache = { version: v, rx: new RegExp(
+      `(?<code>${codeSrc()})` +
+      "|(?<mixed>[\\p{L}\\p{N}]*(?:\\p{L}\\p{N}|\\p{N}\\p{L})[\\p{L}\\p{N}]*)" +
+      "|(?<word>\\p{L}+(?:-\\p{L}+)*)" +
+      "|(?<num>\\p{N}+)",
+      "gu"
+    ) };
+  }
+  return tokenCache.rx;
+}
 
 const UNIT_RX = /^(?:\d+(?:er|ère|ere|re|e|è|ème|eme|nd|nde|h|h\d{1,2}|min|mn|s|kg|g|mg|km|m|cm|mm|m2|m²|m3|l|ml|cl|ko|mo|go|to|kb|mb|gb|tb|ht|ttc|x|j|jrs|mois|an|ans|k|ke|k€|m€|dh|dhs|mad|eur|usd|€|pt|pts|px|dpi|g|v|w|kw|kwh|mw|hz|ghz|mhz)|[a-z]\d|[tqs][1-4]|\d[a-z]|mp[34]|b2[bc]|p2p|h24|covid-?19|iso\d{3,5}|[34]g|5g|v\d{1,2})$/i;
 
 function tokenize(text) {
   const toks = [];
   let last = 0;
+  const TOKEN_RX = tokenRx();
   TOKEN_RX.lastIndex = 0;
   let m;
   while ((m = TOKEN_RX.exec(text))) {
@@ -651,7 +669,7 @@ export function strictCode(input, opts = {}) {
   const N = names();
   const capSafe = (x) => N.capSafe.has(x) || EXTRA_SET.has(x);
 
-  const labelOf = (typeId) => (TYPES.find((t) => t.id === typeId) || TYPES[TYPES.length - 1]).label;
+  const labelOf = (typeId) => typeById(typeId).label;
   const emit = (typeId, value) => {
     stats.replaced++;
     const label = labelOf(typeId);
@@ -690,7 +708,7 @@ export function strictCode(input, opts = {}) {
       const r = codeDocumentText(seg, newCodebook(), []);
       if (!r.replaced) return seg;
       stats.replaced += r.replaced;
-      return r.text.replace(new RegExp(CODE_SRC, "gu"), "•••"); // codes neufs du segment seulement
+      return r.text.replace(new RegExp(codeSrc(), "gu"), "•••"); // codes neufs du segment seulement
     }
     const r = codeDocumentText(seg, book, []);
     stats.replaced += r.replaced;
@@ -755,7 +773,7 @@ export function strictCode(input, opts = {}) {
     const flags = [];
     let pos = 0;
     for (const line of text.split("\n")) {
-      flags.push({ a: pos, b: pos + line.length, lower: /\p{Ll}/u.test(line.replace(new RegExp(CODE_SRC, "gu"), "")) });
+      flags.push({ a: pos, b: pos + line.length, lower: /\p{Ll}/u.test(line.replace(new RegExp(codeSrc(), "gu"), "")) });
       pos += line.length + 1;
     }
     return (at) => (flags.find((l) => at >= l.a && at <= l.b) || { lower: true }).lower;
@@ -1021,7 +1039,7 @@ export function codedRatio(original, coded) {
   const count = (s) => (String(s).match(/\p{L}{2,}/gu) || []).length;
   const n = count(original);
   if (!n) return 0;
-  const codes = (String(coded).match(new RegExp(CODE_SRC, "gu")) || []).length + (String(coded).match(/•••/g) || []).length;
+  const codes = (String(coded).match(new RegExp(codeSrc(), "gu")) || []).length + (String(coded).match(/•••/g) || []).length;
   return Math.min(1, codes / n);
 }
 

@@ -1,4 +1,4 @@
-// PSEUDONYMES (v2.18) — le rendu « lisible » : des pseudonymes plausibles,
+// PSEUDONYMES (v2.19) — le rendu « lisible » : des pseudonymes plausibles,
 // stables, réversibles, jamais ambigus ; et le mode « codes » inchangé.
 import { test } from "node:test";
 import assert from "node:assert/strict";

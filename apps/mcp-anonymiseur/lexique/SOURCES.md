@@ -14,7 +14,7 @@
   Régénération : `node scripts/generer-noms.mjs <dossier des fichiers INSEE>` (mode
   d'emploi en tête du script).
 - `pseudonymes.json` — listes composées à la main pour le rendu lisible
-  (v2.18, `server/pseudonymes.js`) : prénoms par genre et aire culturelle
+  (v2.19, `server/pseudonymes.js`) : prénoms par genre et aire culturelle
   (FR / MA / EN), patronymes par aire, amorces et suites de raisons sociales,
   mots génériques du commerce, villes du Maroc et de France par taille. Des noms
   fréquents, aucune donnée personnelle. Un pseudonyme qui est aussi un mot du
