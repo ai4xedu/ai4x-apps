@@ -37,6 +37,10 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { PREFIX_LABEL } from "./engine.js";
+import { normaliser, creerReconnaisseur, PREFIXE_EMPREINTE, MAX_MOTS, PREFIXE_RX, prefixesReserves, validerRegles } from "./regles.js";
+/* Le contrat des empreintes vit dans regles.js depuis la v2.17 (les règles du
+   dossier s'en servent aussi) ; réexporté pour les tests et les anciens imports. */
+export { normaliser, creerReconnaisseur, PREFIXE_EMPREINTE, MAX_MOTS };
 
 export const FORMAT_ENROLEMENT = "nanomizer.enrolement/1";
 export const FORMAT_POLITIQUE = "nanomizer.politique/1";
@@ -48,61 +52,12 @@ export const GRACE_EXPIRATION_H = 72;
 export const SYNCHRO_MAX_H = 24;
 const EXPIRATION_MAX_JOURS = 365;
 const PLANCHER = ["PRENOM", "NOM", "PERSONNE", "EMAIL", "TEL", "ADRESSE"];
-const TYPES_REGLE = new Set(["toujours_pseudonymiser", "interdit", "detecteurs"]);
+// v2.17 : « motif » et « laisser_en_clair » (SPEC-REGLES-ORGANISATION.md) ;
+// un poste 2.16 refuse une politique qui les porte (fail closed, voulu).
+const TYPES_REGLE = new Set(["toujours_pseudonymiser", "interdit", "detecteurs", "motif", "laisser_en_clair"]);
 
-/* Contrat avec la console (nanomizer-admin/lib/empreinte.js) : préfixe,
-   longueur maximale et normalisation identiques, au caractère près —
-   test/politique.test.js compare les deux sur des formes piégeuses. */
-export const PREFIXE_EMPREINTE = "hm1:";
-export const MAX_MOTS = 6;
-const MIN_CARACTERES = 3;
-export function normaliser(texte) {
-  return String(texte ?? "")
-    .normalize("NFD").replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, " ")
-    .trim();
-}
 /* Catégorie d'une règle « toujours_pseudonymiser » → type du moteur. */
 const TYPE_CATEGORIE = { CLIENT: "cat_client", PARTIE: "cat_partie", PERSONNE: "cat_personne", SOCIETE: "cat_societe", DOSSIER: "cat_dossier", PROJET: "cat_projet" };
-
-/* Trouve, dans un texte, les passages dont l'empreinte est listée. Les mots
-   sont des suites de lettres, chiffres et accents combinants (un texte en
-   NFD — PDF, macOS — ne coupe pas « Lefèvre » en deux) ; à chaque position,
-   le n-gramme le plus LONG gagne (« SARL Benjelloun Frères » avant
-   « Benjelloun »). Renvoie le passage d'ORIGINE, ponctuation comprise. */
-export function creerReconnaisseur(sel, empreintes) {
-  const cibles = new Set(empreintes);
-  const memo = new Map();
-  const hache = (n) => {
-    let h = memo.get(n);
-    if (h === undefined) {
-      h = PREFIXE_EMPREINTE + crypto.createHmac("sha256", sel).update(n, "utf8").digest("hex");
-      if (memo.size < 100000) memo.set(n, h);
-    }
-    return h;
-  };
-  return (texte) => {
-    const s = String(texte ?? "");
-    const mots = [];
-    for (const m of s.matchAll(/[\p{L}\p{N}\p{M}]+/gu)) {
-      const n = normaliser(m[0]);
-      if (n) mots.push({ n, a: m.index, b: m.index + m[0].length });
-    }
-    const trouves = [];
-    for (let i = 0; i < mots.length;) {
-      let pris = 0;
-      for (let k = Math.min(MAX_MOTS, mots.length - i); k >= 1; k--) {
-        const n = k === 1 ? mots[i].n : mots.slice(i, i + k).map((w) => w.n).join(" ");
-        if (n.length < MIN_CARACTERES) continue;
-        const h = hache(n);
-        if (cibles.has(h)) { trouves.push({ value: s.slice(mots[i].a, mots[i + k - 1].b), empreinte: h }); pris = k; break; }
-      }
-      i += pris || 1;
-    }
-    return trouves;
-  };
-}
 
 /* États qui empêchent de coder. EXPIREE ne bloque qu'après la grâce. */
 const BLOQUANTS = new Set(["ABSENTE", "ALTEREE", "RETROGRADEE"]);
@@ -159,6 +114,11 @@ export function validerPolitique(p, cabinetId) {
     for (const d of [...(r.detecteurs || []), ...(r.ajoute || [])]) if (!(d in PREFIX_LABEL)) e.push(`${ou} : détecteur inconnu « ${d} »`);
     for (const q of r.portee?.equipes || []) if (!equipes.has(q)) e.push(`${ou} : équipe inexistante`);
     for (const h of r.empreintes || []) if (!/^hm1:[0-9a-f]{64}$/.test(String(h))) e.push(`${ou} : empreinte illisible`);
+    // v2.17 — catégorie maison d'une règle par noms : son préfixe doit être
+    // libre ; motifs et termes en clair passent la validation des règles.
+    if (r.type === "toujours_pseudonymiser" && r.prefixe !== undefined
+        && (!PREFIXE_RX.test(String(r.prefixe)) || prefixesReserves().has(String(r.prefixe)))) e.push(`${ou} : préfixe invalide ou réservé`);
+    if (r.type === "motif" || r.type === "laisser_en_clair") for (const m of validerRegles([r], { niveau: "organisation", verifierIdentifiants: false }).erreurs) e.push(m);
   }
   return e;
 }
@@ -309,7 +269,7 @@ export function creerPolitiquePoste({ enrolement, etatDir, now = () => new Date(
       for (const m of rec.trouver(t)) {
         const r = rec.parEmpreinte.get(m.empreinte);
         if (r.type === "interdit") { extras.push({ value: m.value, type: "cat_interdit" }); interdits.push(r); }
-        else extras.push({ value: m.value, type: TYPE_CATEGORIE[r.categorie] || "cat_client" });
+        else extras.push({ value: m.value, type: r.prefixe ? "regle_" + r.prefixe : (TYPE_CATEGORIE[r.categorie] || "cat_client") });
       }
     }
     return { extras, interdits };
@@ -326,7 +286,22 @@ export function creerPolitiquePoste({ enrolement, etatDir, now = () => new Date(
 
   function nbNoms(c) { const rec = reconnaisseur(c); return rec ? rec.parEmpreinte.size : 0; }
 
-  return { controler, interditsDetecteurs, analyserNoms, residuNoms, nbNoms, bloquant: (c) => c.bloque || BLOQUANTS.has(c.etat) };
+  /* v2.17 — les règles de la politique que regles.js applique comme celles du
+     dossier (motifs, termes en clair), celles qui visent ce poste ; et les
+     catégories maison des règles par noms, à enregistrer dans le moteur. */
+  function reglesOrganisation(c) {
+    if (!c || !c.politique || c.bloque || !c.politique.perimetre.surfaces.includes(SURFACE)) return { regles: [], erreurs: [] };
+    const brutes = c.politique.regles.filter((r) => (r.type === "motif" || r.type === "laisser_en_clair") && viseUtilisateur(r, c.politique, c.utilisateur));
+    const v = validerRegles(brutes, { niveau: "organisation" });
+    return { regles: v.regles, erreurs: v.erreurs.map((m) => `politique du cabinet, ${m}`) };
+  }
+  function typesOrganisation(c) {
+    if (!c || !c.politique || c.bloque) return [];
+    return c.politique.regles.filter((r) => r.type === "toujours_pseudonymiser" && r.prefixe)
+      .map((r) => ({ id: "regle_" + r.prefixe, prefix: r.prefixe, label: `${r.libelle} (règle de l'organisation)` }));
+  }
+
+  return { controler, interditsDetecteurs, analyserNoms, residuNoms, nbNoms, reglesOrganisation, typesOrganisation, bloquant: (c) => c.bloque || BLOQUANTS.has(c.etat) };
 }
 
 /* Première règle « interdit » dont un détecteur a produit un code dans le
@@ -349,7 +324,8 @@ export function decrirePolitique(c, { nbNoms = 0 } = {}) {
       "prévenez votre admin. Le décodage reste disponible.";
   }
   const p = c.politique;
-  const regles = p.regles.map((r) => `${r.id} ${r.type === "interdit" ? "(interdit)" : r.type === "detecteurs" ? "(détecteurs ajoutés)" : "(toujours pseudonymiser)"} « ${r.libelle} »`).join(" ; ");
+  const TYPE_LIBELLE = { interdit: "interdit", detecteurs: "détecteurs ajoutés", toujours_pseudonymiser: "toujours pseudonymiser", motif: "motif", laisser_en_clair: "laissé en clair" };
+  const regles = p.regles.map((r) => `${r.id} (${TYPE_LIBELLE[r.type] || r.type}) « ${r.libelle} »`).join(" ; ");
   return [
     `Politique du cabinet ${c.cabinet.nom} : v${p.version}, valide jusqu'au ${p.expire_le.slice(0, 10)}${c.source === "copie" ? " (copie locale vérifiée)" : ""}. Règles : ${regles}.`,
     p.perimetre.surfaces.includes(SURFACE) ? "" : "Cette politique ne vise pas Claude Desktop : ses règles ne s'appliquent pas ici (signature et version restent contrôlées).",

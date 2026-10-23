@@ -47,7 +47,16 @@ export const CATEGORIES = {
   PROJET: "PROJ",
 };
 
-export const TYPES_REGLE = new Set(["toujours_pseudonymiser", "interdit", "detecteurs"]);
+// v2.17 (SPEC-REGLES-ORGANISATION.md) : « motif » et « laisser_en_clair ».
+export const TYPES_REGLE = new Set(["toujours_pseudonymiser", "interdit", "detecteurs", "motif", "laisser_en_clair"]);
+
+/* Préfixes qu'une catégorie MAISON (règle avec `prefixe`) ne peut pas
+   prendre : les détecteurs, les catégories du catalogue, et ce que le moteur
+   réserve par ailleurs (mêmes valeurs que regles.js côté poste). */
+export const PREFIXES_RESERVES_FIXES = ["INTERDIT", "LIEU", "CODE", "MASQUE", "F", "X", "HT", "TTC", "ID", "N"];
+export function prefixesReserves() {
+  return new Set([...Object.keys(DETECTEURS), ...Object.values(CATEGORIES), ...PREFIXES_RESERVES_FIXES]);
+}
 export const ALERTES_REGLE = new Set(["responsable", "admin", "aucune"]);
 export const SURFACES = new Set(["claude_code", "claude_web", "claude_desktop"]);
 export const CANAUX = new Set(["email", "webhook"]);

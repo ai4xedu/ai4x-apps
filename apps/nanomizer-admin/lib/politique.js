@@ -21,8 +21,9 @@ import crypto from "node:crypto";
 import { canonique } from "./canonique.js";
 import { normaliser, empreinte, contientEnMots, MAX_MOTS, MIN_CARACTERES } from "./empreinte.js";
 import {
-  DETECTEURS, PLANCHER, CATEGORIES, TYPES_REGLE, ALERTES_REGLE, SURFACES, CANAUX,
+  DETECTEURS, PLANCHER, CATEGORIES, TYPES_REGLE, ALERTES_REGLE, SURFACES, CANAUX, prefixesReserves,
 } from "./catalogue.js";
+import { PREFIXE_RX, LIMITES, verifierMotif, ressembleAUnIdentifiant } from "./regles.js";
 
 export const FORMAT_POLITIQUE = "nanomizer.politique/1";
 export const FICHIER_POLITIQUE = "politique.nanomizer.json";
@@ -47,9 +48,12 @@ const CLES_SOURCE = new Set([
   "alertes", "journal", "notice_salaries",
 ]);
 const CLES_REGLE = {
-  toujours_pseudonymiser: new Set(["id", "type", "libelle", "portee", "categorie", "noms"]),
+  toujours_pseudonymiser: new Set(["id", "type", "libelle", "portee", "categorie", "prefixe", "noms"]),
   interdit: new Set(["id", "type", "libelle", "portee", "detecteurs", "noms", "alerte"]),
   detecteurs: new Set(["id", "type", "libelle", "portee", "ajoute"]),
+  // v2.17 — règles de l'organisation (SPEC-REGLES-ORGANISATION.md §2.4).
+  motif: new Set(["id", "type", "libelle", "portee", "prefixe", "motif", "exemple"]),
+  laisser_en_clair: new Set(["id", "type", "libelle", "portee", "termes"]),
 };
 
 const estChaine = (v) => typeof v === "string" && v.trim() !== "";
@@ -173,10 +177,55 @@ export function compilerPolitique(source, { cabinet, sel, version, maintenant = 
       return [...emp].sort();
     };
 
+    /* Catégorie MAISON : un préfixe libre (AFFAIRE-001…), ni détecteur, ni
+       catégorie du catalogue, ni réservé par le moteur. */
+    const compilerPrefixe = () => {
+      const p = String(r.prefixe ?? "").trim().toUpperCase();
+      if (!PREFIXE_RX.test(p)) { err.push(`${ou}.prefixe : 2 à 10 lettres majuscules ou chiffres, commençant par une lettre (ex. AFFAIRE)`); return undefined; }
+      if (prefixesReserves().has(p)) { err.push(`${ou}.prefixe : « ${p} » est réservé au moteur, choisissez-en un autre`); return undefined; }
+      return p;
+    };
+
     if (r.type === "toujours_pseudonymiser") {
-      if (!(r.categorie in CATEGORIES)) err.push(`${ou}.categorie : « ${r.categorie} » inconnue (${Object.keys(CATEGORIES).join(", ")})`);
-      out.categorie = r.categorie;
+      if (r.prefixe !== undefined && r.categorie !== undefined) err.push(`${ou} : « categorie » (catalogue) ou « prefixe » (catégorie maison), pas les deux`);
+      else if (r.prefixe !== undefined) out.prefixe = compilerPrefixe();
+      else if (!(r.categorie in CATEGORIES)) err.push(`${ou}.categorie : « ${r.categorie} » inconnue (${Object.keys(CATEGORIES).join(", ")}) — ou donnez un « prefixe » maison`);
+      if (r.categorie !== undefined && r.prefixe === undefined) out.categorie = r.categorie;
       out.empreintes = compilerNoms(true);
+    } else if (r.type === "motif") {
+      out.prefixe = compilerPrefixe();
+      const v = verifierMotif(r.motif);
+      if (!v.ok) err.push(`${ou}.motif : refusé — ${v.raison}`);
+      else {
+        const ex = typeof r.exemple === "string" ? r.exemple.trim() : "";
+        if (!ex) err.push(`${ou}.exemple : obligatoire — une valeur FICTIVE que le motif doit reconnaître`);
+        else if (!new RegExp(r.motif, "iu").test(ex)) err.push(`${ou}.exemple : le motif ne le reconnaît pas`);
+        else { out.motif = String(r.motif); out.exemple = ex; }
+      }
+    } else if (r.type === "laisser_en_clair") {
+      // En clair dans la politique : ce sont, par nature, des termes publics
+      // (le nom du cabinet). Jamais un identifiant ; jamais un nom protégé
+      // (vérifié plus bas avec le reste du texte libre).
+      if (!Array.isArray(r.termes) || r.termes.length === 0) err.push(`${ou}.termes : une liste non vide`);
+      else if (r.termes.length > LIMITES.termes) err.push(`${ou}.termes : plus de ${LIMITES.termes} termes`);
+      else {
+        const vus = new Set();
+        const termes = [];
+        r.termes.forEach((t, k) => {
+          const pos = `${ou}, terme n°${k + 1}`;
+          if (typeof t !== "string") { err.push(`${pos} : doit être du texte`); return; }
+          const s = t.trim();
+          const norm = normaliser(s);
+          if (norm.length < LIMITES.termeMin) { err.push(`${pos} : trop court (au moins ${LIMITES.termeMin} lettres ou chiffres)`); return; }
+          if (s.length > LIMITES.termeMax) { err.push(`${pos} : trop long (au plus ${LIMITES.termeMax} caractères)`); return; }
+          if (norm.split(" ").length > LIMITES.mots) { err.push(`${pos} : plus de ${LIMITES.mots} mots, le poste ne pourra pas le reconnaître`); return; }
+          if (ressembleAUnIdentifiant(s)) { err.push(`${pos} : a la forme d'un identifiant (chiffres, arobase) — un identifiant ne se laisse pas en clair`); return; }
+          if (vus.has(norm)) return;
+          vus.add(norm);
+          termes.push(s);
+        });
+        out.termes = termes;
+      }
     } else if (r.type === "interdit") {
       if (r.detecteurs === undefined && r.noms === undefined) err.push(`${ou} : un interdit vise des « detecteurs », des « noms », ou les deux`);
       if (r.detecteurs !== undefined) {
@@ -274,7 +323,7 @@ export function compilerPolitique(source, { cabinet, sel, version, maintenant = 
   const texteLibre = [
     politique.emise_par,
     politique.notice_salaries.texte,
-    ...reglesCompilees.flatMap((r) => [r.libelle, ...(r.portee?.dossiers ?? [])]),
+    ...reglesCompilees.flatMap((r) => [r.libelle, ...(r.portee?.dossiers ?? []), ...(r.termes ?? []), r.exemple ?? ""]),
     ...equipes.flatMap((e) => [e.nom, ...e.membres, ...e.responsables]),
     ...alertes.admin_technique,
     ...alertes.canaux.map((c) => c.url ?? ""),

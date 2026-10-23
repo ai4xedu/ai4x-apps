@@ -96,6 +96,18 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.17.0 (les règles de l'organisation, 23/10/2026). L'entreprise configure ses
+propres règles, à deux niveaux : le **dossier** (`Hidden-Tokens/reglages.json`,
+écrit par l'appli Hidden Tokens, relu à chaque appel) et l'**organisation** (la
+politique signée). Trois types : `toujours_coder` (des termes codés sous un
+préfixe maison, même quand le verrou les laisserait passer — un nom de code fait
+de mots du dictionnaire, « Horizon Bleu »), `motif` (une expression régulière de
+l'entreprise, n° d'affaire ou matricule, codée `AFFAIRE-001`), `laisser_en_clair`
+(le nom du cabinet, ses associés — jamais un identifiant). Priorité :
+organisation > dossier, et coder > laisser en clair. Le plan n'en donne que des
+comptes ; les termes à coder ne sortent pas non plus par le verrou de sortie.
+Spec : `nanomizer/SPEC-REGLES-ORGANISATION.md` ; `server/regles.js`.
+
 v2.16.0 (le choix des nombres, 23/10/2026). Un montant seul n'est pas une
 donnée confidentielle : une facture, des quantités, des taux sont la matière de
 travail de l'IA. Ce qui doit rester caché, c'est la finance d'une personne ou

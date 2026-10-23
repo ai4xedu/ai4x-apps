@@ -24,7 +24,7 @@
 // ============================================================================
 import fs from "node:fs";
 import path from "node:path";
-import { knownValueMatcher, CODE_SRC } from "./verrou.js";
+import { knownValueMatcher, codeSrc } from "./verrou.js";
 import { guardText, MASK, OWN_LINKS } from "./sortie.js";
 import { PREFIX_LABEL } from "./engine.js";
 
@@ -32,7 +32,7 @@ export const JOURNAL_DIRNAME = "journal-ia";
 export const REPORT_NAME = "CE-QUE-CLAUDE-A-VU.html";
 const MAX_RENDERED = 500;   // échanges détaillés dans la page (les plus récents)
 
-const CODE_RX = new RegExp(CODE_SRC, "gu");
+const codeRx = () => new RegExp(codeSrc(), "gu");
 /* Nombres en clair, codes exclus : montants, dates, quantités… Comptés pour
    être honnête — tant que les chiffres ne sont pas protégés, ils sortent. */
 const NUMBER_RX = /(?<![\p{L}\p{N}-])\p{Nd}[\p{Nd}   .,]*\p{Nd}(?![\p{L}\p{N}])/gu;
@@ -82,20 +82,20 @@ export function inspect(texte, book) {
   let s = String(texte);
   for (const rx of OWN_LINKS) s = s.replace(rx, (m) => { own.push(m); return `\u0002${own.length - 1}\u0002`; });
   const shelter = [];
-  s = s.replace(CODE_RX, (m) => { shelter.push(m); return `\u0000${shelter.length - 1}\u0000`; });
+  s = s.replace(codeRx(), (m) => { shelter.push(m); return `\u0000${shelter.length - 1}\u0000`; });
   const leaks = [];
   const known = book ? knownValueMatcher(book) : null;
   if (known) {
     const r = known(s);
     if (r.replaced) {
-      s = r.text.replace(CODE_RX, (code) => { leaks.push(code); return `\u0001${code}\u0001`; });
+      s = r.text.replace(codeRx(), (code) => { leaks.push(code); return `\u0001${code}\u0001`; });
     }
   }
   const g = guardText(s, {});
   s = g.text;
   const numbers = (s.replace(/\u0000\d+\u0000|\u0001[^\u0001]*\u0001|\u0002\d+\u0002/g, " ").match(NUMBER_RX) || [])
     .filter((n) => n.replace(/\D/g, "").length >= 2);
-  const codes = [...String(texte).matchAll(CODE_RX)].map((m) => m[0]);
+  const codes = [...String(texte).matchAll(codeRx())].map((m) => m[0]);
   s = s.replace(/\u0000(\d+)\u0000/g, (_, i) => shelter[Number(i)]).replace(/\u0002(\d+)\u0002/g, (_, i) => own[Number(i)]);
   return { clean: s, leaks, forms: g.masked, numbers: numbers.length, codes };
 }
@@ -155,7 +155,7 @@ const dt = (iso) => {
 function highlight(clean) {
   return esc(clean)
     .replace(/\u0001([^\u0001]*)\u0001/g, '<mark class="leak" title="était en clair">$1</mark>')
-    .replace(new RegExp(CODE_SRC, "gu"), (m) => `<span class="code">${m}</span>`)
+    .replace(new RegExp(codeSrc(), "gu"), (m) => `<span class="code">${m}</span>`)
     .replace(new RegExp(esc(MASK).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), '<mark class="masked" title="retenu par le verrou">[MASQUÉ]</mark>');
 }
 

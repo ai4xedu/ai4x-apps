@@ -53,7 +53,7 @@ import { selectRedactions, burnBoxes } from "./caviardage.js";
 import { readLicence, licenceStatus, trialStatus, blockedMessage, warningBanner, isUnsubstituted, OFFER, parseKey, publicKeys } from "./licence.js";
 import { sealIdentity, buildSeal, verifySeal, renderSealPage, verifyLink, CLAUSE } from "./sceau.js";
 import {
-  XLSX, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan,
+  XLSX, PREFIX_LABEL, typeById, scanSheet, anonymizeSheet, leakScan, registerKnownPrefixes,
   decodeText, sheetToTsv, looksLikeTable, newCodebook,
   detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName, attachTeam, normFor,
 } from "./engine.js";
@@ -68,12 +68,13 @@ import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME
 import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque } from "./politique.js";
+import { lireReglesDossier, compilerRegles } from "./regles.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } from "./sentinelle.js";
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.16.0";
+export const VERSION = "2.17.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -98,7 +99,8 @@ const MASKED_CELL = "[MASQUÉ — fuite possible]";
    archives, sa sauvegarde, et les résultats décodés (vraies valeurs). */
 // stats-poste- et le rapport de couverture : que des comptes, mais avec le nom
 // que chaque poste s'est donné (souvent celui d'une personne).
-const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia|cle-poste-|stats-poste-|RAPPORT-COUVERTURE/i;
+// reglages.json (v2.17) : les règles du dossier y portent des termes en clair.
+const FORBIDDEN_RX = /NE-JAMAIS-PARTAGER|cle-de-session|cle-archivee|\.nanomizer-|-decode-\d{4}|journal-ia|cle-poste-|stats-poste-|RAPPORT-COUVERTURE|reglages\.json/i;
 
 /* Journal « ce que Claude a vu » (cf. journal.js) : le texte FINAL de chaque
    réponse, après le verrou de sortie. Le .jsonl brut est interdit au modèle
@@ -242,12 +244,48 @@ function politiqueAlerte() {
    Les règles « interdit » touchées sont retenues pour gardeInterdit. */
 const interditsVus = new Map();
 function nomsPolitique(textes) {
-  if (!POLITIQUE) return [];
+  // v2.17 : les règles de l'organisation (dossier + politique) passent par le
+  // même chemin que les noms de la politique — des « extras » du moteur.
+  const extras = regles().trouver(textes);
+  if (!POLITIQUE) return extras;
   const c = politiqueCourante || controlerPolitique();
-  if (POLITIQUE.bloquant(c)) return [];   // requirePolitique a déjà refusé
+  if (POLITIQUE.bloquant(c)) return extras;   // requirePolitique a déjà refusé
   const r = POLITIQUE.analyserNoms(c, textes);
   for (const x of r.interdits) interditsVus.set(x.id, x);
-  return r.extras;
+  return [...extras, ...r.extras];
+}
+
+/* ------------------------------------- règles de l'organisation (v2.17) *
+ * Cf. regles.js. Deux niveaux : le DOSSIER (reglages.json, écrit par l'appli
+ * Hidden Tokens) et la POLITIQUE du cabinet (motifs, termes en clair,
+ * catégories maison). Recompilées à chaque appel qui code : un changement
+ * dans l'appli vaut tout de suite. Une erreur ici remonte : rien n'est
+ * écrit (fail closed), jamais un terme n'est cité. */
+let reglesCourantes = null;
+function regles() {
+  const d = lireReglesDossier(OUTDIR);
+  let organisation = [], typesSupplementaires = [], noms = null;
+  const erreurs = [...d.erreurs];
+  if (POLITIQUE) {
+    const c = politiqueCourante || controlerPolitique();
+    if (!POLITIQUE.bloquant(c)) {
+      const o = POLITIQUE.reglesOrganisation(c);
+      organisation = o.regles;
+      erreurs.push(...o.erreurs);
+      typesSupplementaires = POLITIQUE.typesOrganisation(c);
+      noms = (t) => POLITIQUE.analyserNoms(c, [t]).extras;
+    }
+  }
+  reglesCourantes = compilerRegles({ dossier: d.regles, organisation, noms, typesSupplementaires, erreurs });
+  return reglesCourantes;
+}
+/* Les valeurs à laisser en clair : celles de l'appel + celles des règles. */
+function exclusions(valeurs) {
+  return [...new Set([...(valeurs || []), ...regles().exclusions])];
+}
+/* La ligne des plans : des comptes, jamais un terme. */
+function reglesAlerte() {
+  return regles().decrire();
 }
 /* Les textes d'une feuille, cellule par cellule (un n-gramme ne doit pas
    enjamber deux cellules). */
@@ -355,7 +393,11 @@ function loadBook() {
   if (!fs.existsSync(KEY_JSON)) return withTeam(newCodebook());
   let raw;
   try { raw = JSON.parse(fs.readFileSync(KEY_JSON, "utf8")); } catch { raw = null; }
-  if (validBook(raw)) return withTeam(raw);
+  if (validBook(raw)) {
+    // v2.17 : les préfixes maison déjà dans la clé restent des codes connus.
+    registerKnownPrefixes([...Object.keys(raw.counters || {}), ...(raw.entries || []).map((e) => String(e.code).split("-")[0])]);
+    return withTeam(raw);
+  }
   throw new KeyUnreadable(
     `La clé de correspondance (${shown(KEY_JSON)}) est illisible. Par sécurité, RIEN n'a été écrit : repartir d'une clé ` +
     "vierge ferait perdre les correspondances de tous vos fichiers déjà codés. " +
@@ -670,7 +712,7 @@ function confinementAlert() {
     }
   } catch {}
   // Les plans passent tous par ici : la politique du cabinet s'y annonce.
-  return [ligne, politiqueAlerte()].filter(Boolean).join("\n");
+  return [ligne, politiqueAlerte(), reglesAlerte()].filter(Boolean).join("\n");
 }
 
 function runAudit() {
@@ -809,7 +851,7 @@ function tool(name, def, handler) {
         : e instanceof TeamUnavailable ? `Clé d'équipe : ${e.message}`
         : e instanceof PolitiqueBloque ? e.message : unexpected(e));
     }
-    const ctx = { book: bookForGuard(), home: HOME };
+    const ctx = { book: bookForGuard(), home: HOME, regles: reglesCourantes };
     const out = guardResult(res, ctx);
     JOURNAL.record(name, guardText(JSON.stringify(args || {}), ctx).text,
       (out.content || []).map((c) => (c.type === "text" ? c.text : `[${c.type}]`)).join("\n"),
@@ -1220,6 +1262,7 @@ tool(
   async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], chiffres, chiffres_par_colonne = {}, generaliser = false, confirmer = false }) => {
     const bloque = requireLicence() || requireTeam() || requirePolitique();
     if (bloque) return bloque;
+    valeurs_a_exclure = exclusions(valeurs_a_exclure);
     const { mode: modeNombres, source: sourceNombres } = modeChiffres(chiffres);
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
@@ -1572,6 +1615,7 @@ tool(
     const { mode: modeNombres, source: sourceNombres } = modeChiffres(chiffres);
     const bloque = requireLicence() || requireTeam() || requirePolitique();
     if (bloque) return bloque;
+    valeurs_a_exclure = exclusions(valeurs_a_exclure);
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     const files = listBatchFiles(motif);
     if (!files.length) {
@@ -1933,6 +1977,7 @@ tool(
   async ({ nom_fichier, valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false, envoyer = false }) => {
     const bloque = requireLicence() || requireTeam() || requirePolitique();
     if (bloque) return bloque;
+    valeurs_a_exclure = exclusions(valeurs_a_exclure);
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
     try { file = resolveFile(nom_fichier); } catch (e) { return err(e.message); }
@@ -2334,7 +2379,7 @@ tool(
         `Abonnement : ${OFFER.price} — ${OFFER.orderUrl}.`;
     // Transparence (spec, invariant 5) : le salarié voit la politique qui
     // s'applique à lui, ses règles et la notice du cabinet.
-    const politiqueLine = POLITIQUE ? (controlerPolitique(), politiqueAlerte()) : "";
+    const politiqueLine = [POLITIQUE ? (controlerPolitique(), politiqueAlerte()) : "", reglesAlerte()].filter(Boolean).join("\n");
     let teamLine = "";
     if (TEAM_DIR) {
       if (!teamAllowed()) teamLine = "Clé d'équipe : configurée mais inactive — elle fait partie de l'offre Cabinet (2 postes et plus).";

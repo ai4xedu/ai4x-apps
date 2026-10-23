@@ -29,6 +29,32 @@ de passe est demandée sans écho, ou lue dans `NANOMIZER_PHRASE`.
 npm test
 ```
 
+## Règles de l'organisation (v2.17, 23/10/2026)
+
+Trois règles de plus dans `politique-source.json` (spec :
+`nanomizer/SPEC-REGLES-ORGANISATION.md`) :
+
+```json
+{ "id": "R-040", "type": "toujours_pseudonymiser", "libelle": "Parties adverses",
+  "prefixe": "ADVERSAIRE", "noms": ["Groupe Exemple", "Exemple"] }
+{ "id": "R-041", "type": "motif", "libelle": "Numéros d'affaire",
+  "prefixe": "AFFAIRE", "motif": "AFF[ -]?\\d{2}/\\d{4}", "exemple": "AFF 26/0412" }
+{ "id": "R-042", "type": "laisser_en_clair", "libelle": "Le cabinet et ses associés",
+  "termes": ["Cabinet Exemple", "Maître Durand"] }
+```
+
+- `prefixe` (catégorie maison, à la place de `categorie`) : 2 à 10 lettres
+  majuscules ou chiffres, jamais un préfixe du moteur (`NOM`, `REF`, `CLI`…).
+- `motif` : flags `giu` imposés, 200 caractères au plus ; refusés : références
+  arrière, quantificateur imbriqué (`(a+)+`), motif qui accepte le vide ;
+  l'`exemple` est obligatoire et **fictif**. Le motif est en clair dans la
+  politique : s'il est secret, c'est une règle par noms.
+- `laisser_en_clair` : termes en clair (publics par nature) ; refusé s'il
+  ressemble à un identifiant (chiffres, arobase) ou s'il est aussi un nom
+  protégé. Sur le poste, une règle « coder » l'emporte toujours.
+- Un poste antérieur à la v2.17 refuse une politique qui porte ces types
+  (ALTEREE, fail closed) : mettre les postes à jour avant d'émettre.
+
 ## Pas encore fait (stories suivantes)
 
 - ~~**US-4**~~ : livré côté connecteur (v2.9.0, `mcp-anonymiseur/server/politique.js`) —
