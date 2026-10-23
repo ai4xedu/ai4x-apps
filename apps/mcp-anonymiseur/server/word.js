@@ -392,7 +392,7 @@ function pruneRelations(z, gone) {
   }
   const media = new Set();
   for (const p of z.names()) {
-    const m = p.match(/^(.*?)_rels\/([^/]+)\.rels$/);
+    const m = p.match(/^(.*?)_rels\/([^/]*)\.rels$/);   // [^/]* : la racine _rels/.rels aussi
     if (!m) continue;
     const owner = `${m[1]}${m[2]}`;
     const dir = m[1];

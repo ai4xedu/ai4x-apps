@@ -28,7 +28,10 @@ const coded = (txt, book = newCodebook()) => strictCode(txt, { book }).text;
 test("le verrou seul laisse passer les indices : le test les voit", () => {
   const r = assessReidentification(coded(DOSSIER));
   assert.equal(r.niveau, "identifiable");
-  assert.deepEqual(r.indices.naissance, ["12/04/1971"]);
+  // Depuis la v2.15 la date de naissance est codée par le verrou (NAISS-…) :
+  // elle n'est plus un indice ; les autres suffisent à désigner quelqu'un.
+  assert.equal((r.indices.naissance || []).length, 0);
+  assert.match(coded(DOSSIER), /né le NAISS-\d{3}/);
   assert.ok(r.indices.lieu.includes("lyonnaise") && r.indices.lieu.includes("Rennes") && r.indices.lieu.includes("Marrakech"));
   assert.deepEqual(r.indices.age.sort(), ["38 ans", "47 ans"]);
   assert.ok(r.indices.fonction.includes("PDG") && r.indices.fonction.includes("chirurgien"));
@@ -60,10 +63,11 @@ test("les codes déjà posés ne sont jamais des indices", () => {
 test("generaliser : villes codées (décodables), naissance → décennie, âge → tranche, autres dates exactes", () => {
   const book = newCodebook();
   const g = generalize(coded(DOSSIER, book), book);
-  assert.equal(g.changes.naissance, 1);
+  // La date de naissance est déjà codée par le verrou (v2.15) : rien à généraliser.
+  assert.equal(g.changes.naissance, 0);
   assert.equal(g.changes.age, 2);
   assert.ok(g.changes.lieu >= 3);
-  assert.match(g.text, /né dans les années 1970/);
+  assert.match(g.text, /né le NAISS-\d{3}/);
   assert.match(g.text, /âgé de 40 à 49 ans/);
   assert.match(g.text, /entre 30 et 39 ans/);
   assert.match(g.text, /le 3 février 2026/, "une date de procédure reste exacte (délais, prescription)");
