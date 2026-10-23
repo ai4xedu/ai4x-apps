@@ -73,7 +73,7 @@ import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } fro
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.16.0";
+export const VERSION = "2.17.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -793,6 +793,15 @@ const server = new McpServer({ name: "anonymiseur-ai4x", version: VERSION }, { i
 /* LE point d'enregistrement : tout outil passe par le verrou de sortie, y
    compris ses erreurs imprévues (dont le message pourrait citer un chemin). */
 let protocolLogged = false;
+/* Ce que le journal « ce que l'IA a vu » note comme arguments. Pour coder_texte,
+   le texte reçu est EN CLAIR et ne vient pas de l'IA (il vient du navigateur
+   de l'utilisateur, par la sentinelle) : on en note la taille, jamais le
+   contenu. Ce que l'IA a vu, c'est la réponse — elle, est journalisée. */
+function argsJournal(name, args) {
+  if (name !== "coder_texte") return args;
+  const { contenu, ...reste } = args;
+  return { ...reste, contenu: `[${String(contenu || "").length} caractère(s) en clair, non journalisés]` };
+}
 function tool(name, def, handler) {
   server.registerTool(name, def, async (args) => {
     // Le protocole envoyé à la connexion fait partie de ce que l'IA a lu. Noté
@@ -811,7 +820,7 @@ function tool(name, def, handler) {
     }
     const ctx = { book: bookForGuard(), home: HOME };
     const out = guardResult(res, ctx);
-    JOURNAL.record(name, guardText(JSON.stringify(args || {}), ctx).text,
+    JOURNAL.record(name, guardText(JSON.stringify(argsJournal(name, args || {})), ctx).text,
       (out.content || []).map((c) => (c.type === "text" ? c.text : `[${c.type}]`)).join("\n"),
       politiqueCourante ? { politique: { version: politiqueCourante.version ?? null, empreinte: politiqueCourante.empreinte ?? null, etat: politiqueCourante.etat } } : undefined);
     publishStats();
@@ -2024,6 +2033,57 @@ tool(
         "Ne l'envoie à l'IA (envoyer: true) que s'il le confirme explicitement ; sinon, il ajoute ce qui reste " +
         "dans valeurs_a_coder et on recommence. L'image d'origine n'est pas modifiée.",
     ].join("\n"));
+  }
+);
+
+/* --------------------------------------------- texte collé (v2.17) --- *
+ * Le VERROU UNIVERSEL : la sentinelle Hidden Tokens appelle cet outil pour
+ * chaque message que l'utilisateur envoie à une IA depuis son navigateur
+ * (ChatGPT, Claude.ai, Gemini, Copilot). Le texte arrive en clair depuis le
+ * poste, ressort codé avec la clé du dossier, et seule la clé est écrite.
+ * Le texte codé est rendu dans un bloc à part, ouvert par MARQUE_TEXTE_CODE,
+ * pour que la sentinelle le retrouve sans ambiguïté après la bannière de
+ * mode et le verrou de sortie. */
+export const MARQUE_TEXTE_CODE = "⟦HIDDEN-TOKENS:TEXTE-CODE⟧";
+const MAX_TEXTE = 200_000;
+
+tool(
+  "coder_texte",
+  {
+    title: "Coder un texte (avant qu'il parte vers une IA)",
+    description:
+      "Remplace, dans un texte libre, les noms, sociétés, adresses, téléphones, mails, identifiants et mots inconnus " +
+      "par les codes de la clé du dossier (NOM-001…), avec le même moteur et le même verrou qu'un fichier. Rien n'est " +
+      "écrit sur le poste sauf la clé (cumulative). C'est l'entrée du verrou universel : la sentinelle Hidden Tokens " +
+      "l'appelle pour chaque message envoyé à une IA depuis le navigateur. Depuis Claude : si l'utilisateur a collé un " +
+      "texte confidentiel en clair, propose de le coder avec cet outil et ne réutilise QUE le texte codé rendu.",
+    inputSchema: z.object({
+      contenu: z.string().min(1).max(MAX_TEXTE).describe("Le texte en clair à coder (un message, un courrier, des notes)"),
+      source: z.string().max(80).optional().describe("D'où vient le texte (« chatgpt.com », « claude.ai »…) — pour le journal seulement"),
+      generaliser: generaliserSchema,
+    }),
+  },
+  async ({ contenu, source, generaliser = false }) => {
+    const blocked = requireLicence();
+    if (blocked) return blocked;
+    if (!contenu.trim()) return err("Le texte est vide.");
+    const book = loadBook();
+    const res = codeFreeText(contenu, book, [], [], { generaliser });
+    gardeInterdit(res.text);   // politique du cabinet : un nom interdit → PolitiqueBloque, rien ne part
+    if (res.stats.newCodes) saveBook(book);
+    const s = res.stats;
+    const lignes = [
+      `✅ Texte codé${source ? ` (${String(source).replace(/[^\p{L}\p{N}.:/ _-]/gu, "")})` : ""} : ${s.replaced} valeur(s) — ${fmt(s.byType)} ; ${s.newCodes} nouveau(x) code(s). Clé cumulée : ${book.entries.length} codes.`,
+      describeReidentification(res.reid, { generalized: res.generalized }),
+      languageWarning(contenu, res.text),
+      "Le texte codé suit, dans un bloc à part : c'est lui, et lui seul, qui peut partir vers une IA.",
+    ].filter(Boolean);
+    return {
+      content: [
+        { type: "text", text: textWithLicence(lignes.join("\n")).content[0].text },
+        { type: "text", text: `${MARQUE_TEXTE_CODE}\n${res.text}` },
+      ],
+    };
   }
 );
 

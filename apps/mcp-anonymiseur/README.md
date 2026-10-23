@@ -94,7 +94,21 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `rapport_couverture` | Page locale pour le DPO : par poste, fichiers protégés, plans non confirmés, décodages, montants en clair, valeurs retrouvées, portes ouvertes, dernière activité. Que des comptes ; en équipe, chaque poste dépose les siens dans le dossier d'équipe |
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
+| `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est) |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v2.17.0 (le verrou universel, 23/10/2026). Nouvel outil **`coder_texte`** :
+un texte libre (un message de chat, un courrier) entre en clair et ressort
+codé par le moteur, le verrou et la politique du cabinet, la clé est écrite,
+rien d'autre. Le texte codé est rendu dans un bloc à part ouvert par
+`⟦HIDDEN-TOKENS:TEXTE-CODE⟧`, que la sentinelle Hidden Tokens (v0.4) retrouve
+après la bannière de mode et le verrou de sortie, pour le rendre à l'extension
+navigateur (ChatGPT, Claude.ai, Gemini, Copilot). `coder_texte` est dans la
+liste blanche de la prise : un connecteur Claude Desktop en mode client le
+relaie à la sentinelle (un seul écrivain de clé). Le journal « ce que l'IA a
+vu » note la taille du texte reçu, jamais son contenu — ce texte vient du
+navigateur de l'utilisateur, pas de l'IA ; la réponse codée, elle, est
+journalisée.
 
 v2.16.0 (le choix des nombres, 23/10/2026). Un montant seul n'est pas une
 donnée confidentielle : une facture, des quantités, des taux sont la matière de
