@@ -97,6 +97,9 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est) |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.17.1 (23/10/2026). L'icône du connecteur est le H caviardé de Hidden
+Tokens (elle montrait encore le logo Ai4x). Rien d'autre ne change.
+
 v2.17.0 (le verrou universel, 23/10/2026). Nouvel outil **`coder_texte`** :
 un texte libre (un message de chat, un courrier) entre en clair et ressort
 codé par le moteur, le verrou et la politique du cabinet, la clé est écrite,
