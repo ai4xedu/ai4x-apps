@@ -38,6 +38,12 @@ function argsOf(e) { try { return JSON.parse(e.args || "{}") || {}; } catch { re
    « CHIFFRES : » de describeNumbers), pas dans la demande. */
 function numberMode(texte) {
   const s = String(texte);
+  // v2.16 : « CHIFFRES — réglage « auto » (…) : N nombre(s) protégé(s), M en clair. »
+  const m = s.match(/CHIFFRES — réglage « \w+ »[^:\n]*: (\d+) nombre\(s\) protégé\(s\), (\d+) en clair/);
+  if (m) {
+    if (Number(m[1]) === 0) return Number(m[2]) > 0 ? "clair" : null;
+    return /INDICE \(facteur secret\)/.test(s) ? "indice" : "gabarit";
+  }
   if (/CHIFFRES : mode CLAIR/.test(s)) return "clair";
   if (/en mode INDICE/.test(s)) return "indice";
   if (/en mode GABARIT/.test(s)) return "gabarit";

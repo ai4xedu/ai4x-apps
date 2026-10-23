@@ -215,11 +215,14 @@ check("A3f", "le plan DOCUMENT annonce des noms codés d'office sans les citer",
 const docT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.xlsx", confirmer: true } }));
 check("A3g", "identifiants marocains codés (ICE/IF/RC/patente)",
   /ICE-\d{3}/.test(docT) && /IF-\d{3}/.test(docT) && /RC-\d{3}/.test(docT) && /PATENTE-\d{3}/.test(docT));
-check("A3h", "v2.2 : montants protégés par défaut (gabarit), libellés préservés",
-  !docT.includes("20500") && /GABARIT/.test(docT) && docT.includes("Total HT") && docT.includes("TVA"));
+check("A3h", "v2.16 : une facture n'est pas de la finance sensible — en auto, montants et libellés lisibles, le compte rendu le dit",
+  docT.includes("20500") && /réglage « auto »/.test(docT) && /nombres en clair/.test(docT) && docT.includes("Total HT") && docT.includes("TVA"));
+const docGabT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.xlsx", confirmer: true, chiffres: "gabarit" } }));
+check("A3h2", "sur demande (chiffres: gabarit), les montants deviennent factices, les identifiants restent codés",
+  !docGabT.includes("20500") && /réglage « gabarit »/.test(docGabT) && !docGabT.includes(SECRETS.ice1));
 const docClairT = record(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.xlsx", confirmer: true, chiffres: "clair" } }));
-check("A3h2", "sur demande (chiffres: clair), les montants passent, les identifiants restent codés",
-  docClairT.includes("20500") && /mode CLAIR/.test(docClairT) && !docClairT.includes(SECRETS.ice1));
+check("A3h3", "sur demande (chiffres: clair), les montants passent, les identifiants restent codés",
+  docClairT.includes("20500") && /réglage « clair »/.test(docClairT) && !docClairT.includes(SECRETS.ice1));
 
 /* PDF natif (v1.4+) */
 if (toolNames.includes("anonymiser_fichier")) {

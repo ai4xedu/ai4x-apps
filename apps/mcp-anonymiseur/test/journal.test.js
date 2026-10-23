@@ -72,8 +72,9 @@ test("journal_ia : verdict propre, page locale sans aucune valeur réelle", asyn
   const html = fs.readFileSync(path.join(workdir, "Hidden-Tokens", "CE-QUE-CLAUDE-A-VU.html"), "utf8");
   for (const s of SECRETS) assert.ok(!html.includes(s), `« ${s} » dans la page`);
   assert.match(html, /NOM-001/);
-  // v2.2 : les montants sont protégés par défaut — ni dans le journal, ni dans la page.
-  assert.ok(!/12400|12 400/.test(html), "le montant réel ne doit pas apparaître");
+  // v2.16 : « Montant » est un montant ordinaire, en clair en auto — et la page
+  // le montre, c'est son rôle : dire exactement ce que l'IA a reçu.
+  assert.match(html, /12400|12 400/);
 });
 
 test("audit RÉTROACTIF : une valeur sortie avant d'être connue de la clé est retrouvée, montrée par son code", async () => {
