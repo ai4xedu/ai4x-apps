@@ -84,18 +84,53 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | Outil | Rôle |
 |---|---|
 | `lister_fichiers` | Liste les fichiers traitables (Excel, CSV, Word .docx, PDF, .md/.txt, scans ; et les copies Word codées, pour `decoder_word`) — noms propres masqués (•••), repère stable `[F-XXXXX]` |
-| `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) ; modes TABLEAU (colonnes entières), DOCUMENT (facture → codage intra-cellule, dictionnaire marocain), WORD (copie .docx codée, mise en forme conservée) et TEXTE/PDF ; le verrou passe ENSUITE partout (colonnes lisibles et en-têtes compris). `onglet` par numéro. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
-| `anonymiser_dossier` | LOT : tous les fichiers (ou filtrés par `motif`), toutes les feuilles, UNE clé, plan→confirmer, compte rendu en comptes seuls + rapport `rapport-lot-*.md` (noms de fichiers codés) |
+| `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) ; modes TABLEAU (colonnes entières), DOCUMENT (facture → codage intra-cellule, dictionnaire marocain), WORD (copie .docx codée, mise en forme conservée) et TEXTE/PDF ; le verrou passe ENSUITE partout (colonnes lisibles et en-têtes compris). `onglet` par numéro. `rendu: "lisible"` (v2.18) : pseudonymes plausibles à la place des codes de personnes, sociétés, villes et dates de naissance. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
+| `anonymiser_dossier` | LOT : tous les fichiers (ou filtrés par `motif`), toutes les feuilles, UNE clé, plan→confirmer, compte rendu en comptes seuls + rapport `rapport-lot-*.md` (noms de fichiers codés) ; `rendu` comme `anonymiser_fichier` |
 | `lire_scan` | OCR LOCAL d'un scan — le texte reconnu n'entre JAMAIS dans la conversation : il est écrit en `…-ocr-A-RELIRE.md` (nom codé), l'utilisateur le relit, PUIS on anonymise ce fichier |
 | `caviarder_image` | Bandeaux noirs sur une capture ou un scan : OCR local, même moteur et même verrou qu'un texte, mot mal lu et inconnu noirci d'office, bandeaux GRAVÉS dans un nouveau PNG. Trois temps : plan → image écrite sur le poste (l'utilisateur la regarde) → `envoyer: true` seulement après sa validation |
-| `deanonymiser` | Retraduit texte/TSV → fichier local (.md, .xlsx ou, avec `format: "docx"`, un document Word mis en forme ; droits 600), jamais dans le chat |
-| `decoder_word` | Décode un .docx contenant des codes (la copie codée retravaillée, ou un .docx de l'IA) : mise en forme conservée, corps, en-têtes, pieds de page, notes et commentaires ; écrit sur le poste, jamais dans le chat |
-| `etat_cle` | Comptes par type, licence, résumé de l'audit de confinement |
+| `deanonymiser` | Retraduit texte/TSV → fichier local (.md, .xlsx ou, avec `format: "docx"`, un document Word mis en forme ; droits 600), jamais dans le chat. Retraduit les codes ET les pseudonymes du rendu lisible |
+| `decoder_word` | Décode un .docx contenant des codes ou des pseudonymes (la copie codée retravaillée, ou un .docx de l'IA) : mise en forme conservée, corps, en-têtes, pieds de page, notes et commentaires ; écrit sur le poste, jamais dans le chat |
+| `etat_cle` | Comptes par type, licence, rendu du dossier (codes / lisible) et nombre de pseudonymes posés, résumé de l'audit de confinement |
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `rapport_couverture` | Page locale pour le DPO : par poste, fichiers protégés, plans non confirmés, décodages, montants en clair, valeurs retrouvées, portes ouvertes, dernière activité. Que des comptes ; en équipe, chaque poste dépose les siens dans le dossier d'équipe |
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
-| `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est) |
+| `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.18) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v2.18.0 (les pseudonymes sémantiquement cohérents, 23/10/2026). Nouveau
+**rendu « lisible »**, optionnel et réversible (`server/pseudonymes.js`,
+`lexique/pseudonymes.json`). Un code reçoit un PSEUDONYME plausible et stable :
+prénom du même genre et de la même aire culturelle (dictionnaires FR / MA / EN),
+patronyme de la même aire, raison sociale fictive avec la même forme juridique
+(« Atlas Négoce SARL AU » → « Horizon Services SARL AU », le mot générique
+« Garage », « Transports » reste), ville du même pays et de taille comparable,
+date de naissance décalée d'un delta SECRET constant par dossier (30 à 400
+jours : âges et durées restent justes). Les identifiants (EMAIL, TEL, RIB, CIN,
+ICE…), adresses, références et éléments interdits gardent leur code ; les
+montants relèvent toujours du réglage Nombres. Le pseudonyme est écrit dans la
+clé (`cle-de-session.json`, champ `pseudo` de l'entrée ; graine et delta dans
+`pseudonymes`) : même personne = même pseudonyme dans deux fichiers, dans
+`coder_texte`, d'une session à l'autre ; le format `entries[].code/value` ne
+change pas (sentinelle et appli continuent de lire la clé). `deanonymiser`,
+`decoder_word` et `remettre_chiffres` retraduisent pseudonymes et codes ;
+`decodeText` passe aux frontières Unicode (« Éric »). Garde-fous : un
+pseudonyme n'est jamais une valeur réelle de la clé (sous aucune graphie), ni
+un mot du texte rendu, ni un mot du dictionnaire (« Claire », « Pierre »
+exclus), ni un autre pseudonyme ; une valeur réelle entrant plus tard dans la
+clé qui coïncide avec un pseudonyme le fait RENOUVELER, et le compte rendu le
+dit ; un pseudonyme en minuscules au fil d'une phrase n'est pas décodé. Le
+contrôle d'aperçu vérifie la version codée de chaque ligne (un pseudonyme
+n'est pas masqué) ; le verrou de sortie reconnaît toujours les valeurs réelles ;
+le test de réidentification se fait sur le texte codé (une ville fictive n'est
+pas un indice) ; le journal « ce que l'IA a vu » note les pseudonymes (c'est ce
+que l'IA a vu) ; les RÈGLES jointes aux données gagnent un point « 1 bis »
+(recopier les pseudonymes tels quels). Réglage par dossier à côté de
+`chiffres` dans `Hidden-Tokens/reglages.json` (`"rendu": "lisible"`), variable
+`ANX_RENDU`, ou option `rendu` de `anonymiser_fichier`, `anonymiser_dossier`
+et `coder_texte` ; défaut « codes », inchangé. Limites : en clé d'équipe, les
+pseudonymes sont ceux du poste (la graine n'est pas partagée) ; l'extension
+navigateur (sentinelle) ne retraduit encore que les codes ; l'appli n'expose
+pas encore le réglage (second PR, dépôt Nanomizer).
 
 v2.17.0 (le verrou universel, 23/10/2026). Nouvel outil **`coder_texte`** :
 un texte libre (un message de chat, un courrier) entre en clair et ressort
