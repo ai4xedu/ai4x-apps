@@ -195,10 +195,12 @@ test("mode document : facture → identifiants codés, montants et libellés int
   assert.ok(!out.includes("65908714"), "l'IF réel a fui");
   assert.ok(!out.includes("Sophatel"), "le nom de société a fui");
   assert.ok(!out.includes("TARDIGRADE"), "le nom en majuscules a fui");
-  // v2.2 : les libellés restent, les montants sont protégés par défaut (gabarit).
+  // v2.16 : une facture n'est pas de la finance sensible — en auto (défaut),
+  // les libellés ET les montants restent lisibles ; le compte rendu le dit.
   assert.match(out, /Total HT/);
-  assert.match(out, /GABARIT/);
-  assert.ok(!/\b2150\b/.test(out), "le montant réel a fui");
+  assert.match(out, /réglage « auto » \(défaut\)/);
+  assert.match(out, /sans en-têtes : nombres en clair/);
+  assert.match(out, /\b2150\b/);
   const readOut = () => {
     const decoded = XLSX.readFile(path.join(workdir, "Hidden-Tokens", "facture-anonymise.xlsx"));
     return XLSX.utils.sheet_to_json(decoded.Sheets[decoded.SheetNames[0]], { header: 1, raw: false, defval: "" }).flat().join(" | ");
@@ -206,11 +208,15 @@ test("mode document : facture → identifiants codés, montants et libellés int
   let flat = readOut();
   assert.match(flat, /ICE : ICE-\d{3}/);          // libellé conservé, valeur codée
   assert.ok(!/003463957000076/.test(flat));
-  assert.ok(/Total HT/.test(flat) && !/\b2150\b/.test(flat));
-  // Sur demande explicite, les montants passent en clair (comportement v2.1).
+  assert.ok(/Total HT/.test(flat) && /\b2150\b/.test(flat));
+  // Sur demande, tout en gabarit : le montant réel ne sort plus.
+  const gab = resultText(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.xlsx", confirmer: true, chiffres: "gabarit" } }));
+  assert.match(gab, /réglage « gabarit » \(demandé pour cet appel\)/);
+  assert.ok(!/\b2150\b/.test(gab), "le montant réel a fui en gabarit");
+  assert.ok(!/\b2150\b/.test(readOut()));
   const clair = resultText(await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "facture.xlsx", confirmer: true, chiffres: "clair" } }));
   assert.match(clair, /2150/);
-  assert.match(clair, /mode CLAIR/);
+  assert.match(clair, /réglage « clair »/);
   assert.ok(!clair.includes("003463957000076"));
 });
 

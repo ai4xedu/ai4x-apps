@@ -3,7 +3,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { XLSX } from "../server/engine.js";
-import { protectNumbers, describeNumbers } from "../server/chiffres.js";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { protectNumbers, describeNumbers, planNumbers, classifyNumericHeader, readNumberSetting, DEFAULT_NUMBER_MODE } from "../server/chiffres.js";
 
 function payroll() {
   const ws = XLSX.utils.aoa_to_sheet([
@@ -61,9 +64,89 @@ test("clair : rien ne change ; et le plan le dit sans citer de montant", () => {
   const r = protectNumbers(ws, XLSX, { mode: "clair", headerRow: 0 });
   assert.equal(r.cells, 0);
   assert.equal(ws.C2.v, 14500);
-  assert.match(describeNumbers([r], "clair"), /mode CLAIR/);
+  assert.match(describeNumbers([r], "clair"), /réglage « clair ».*0 nombre\(s\) protégé\(s\), 6 en clair/);
   const g = protectNumbers(payroll(), XLSX, { mode: "gabarit", headerRow: 0 });
   const line = describeNumbers([g], "gabarit");
   assert.match(line, /6 nombre\(s\) protégé\(s\)/);
   assert.ok(!/14500|11236/.test(line));
+});
+
+/* ---------------------------------------------------------- v2.16 : auto - */
+
+test("auto est le défaut : paie protégée, taux en clair, dates intactes, le plan dit tout sans valeur", () => {
+  assert.equal(DEFAULT_NUMBER_MODE, "auto");
+  const ws = payroll();
+  const plan = planNumbers(ws, XLSX, { mode: "auto", headerRow: 0, source: "défaut" });
+  assert.deepEqual(plan.colonnes.map((c) => [c.libelle, c.classe, c.mode]),
+    [["Brut", "sensible", "gabarit"], ["Net", "sensible", "gabarit"], ["Taux", "taux", "clair"]]);
+  const r = protectNumbers(ws, XLSX, { headerRow: 0, plan });
+  assert.equal(r.cells, 4);
+  assert.equal(r.clair, 2);
+  assert.notEqual(ws.C2.v, 14500);
+  assert.equal(ws.E2.v, 0.225, "le taux reste en clair");
+  assert.equal(ws.B2.v, 45200, "la date reste");
+  const txt = describeNumbers([r], "auto", "défaut");
+  assert.match(txt, /« Brut » \(montant sensible\) → GABARIT \(factice\), 2 nombre\(s\)/);
+  assert.match(txt, /« Taux » \(taux\) → en clair/);
+  assert.match(txt, /chiffres_par_colonne/);
+  assert.ok(!/14500|11236|0\.225/.test(txt), "aucune valeur dans le plan");
+});
+
+test("classer un en-tête : finance sensible, montant ordinaire, taux, quantité, numéro", () => {
+  const c = (h) => classifyNumericHeader(h).classe;
+  for (const h of ["Salaire brut", "Net à payer", "Chiffre d'affaires", "CA 2025", "Résultat net", "Patrimoine", "Solde", "Honoraires", "Cotisations", "Brut", "Rémunération"]) assert.equal(c(h), "sensible", h);
+  for (const h of ["Montant HT", "Total TTC", "Prix unitaire", "Acompte versé", "Créance", "Impayé", "Indemnité demandée", "Loyer"]) assert.equal(c(h), "montant", h);
+  for (const h of ["Taux", "TVA %", "Coefficient", "Ratio"]) assert.equal(c(h), "taux", h);
+  for (const h of ["Quantité", "Qté", "Nb heures", "Surface m2", "Délai (jours)", "Âge"]) assert.equal(c(h), "quantite", h);
+  for (const h of ["N° facture", "Année", "Exercice", "Code postal", "Matricule", "Mois"]) assert.equal(c(h), "numero", h);
+  assert.equal(c(""), "autre");
+  assert.equal(c("Colonne F"), "autre");
+});
+
+test("un montant ordinaire reste en clair en auto ; l'utilisateur le protège colonne par colonne", () => {
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["Client", "Facture", "Montant HT", "Quantité", "Salaire du gérant"],
+    ["NOM-001", "FA-1", 18500, 3, 4200],
+    ["NOM-002", "FA-2", 7320, 1, 3900],
+  ]);
+  let plan = planNumbers(ws, XLSX, { mode: "auto", headerRow: 0 });
+  assert.deepEqual(plan.colonnes.map((c) => [c.libelle, c.mode]), [["Montant HT", "clair"], ["Quantité", "clair"], ["Salaire du gérant", "gabarit"]]);
+  // Correction par en-tête (insensible à la casse et aux accents) ou par lettre.
+  plan = planNumbers(ws, XLSX, { mode: "auto", headerRow: 0, parColonne: { "montant ht": "indice", D: "gabarit", "Inconnue": "clair" } });
+  assert.deepEqual(plan.colonnes.map((c) => [c.libelle, c.mode, c.corrige]), [["Montant HT", "indice", true], ["Quantité", "gabarit", true], ["Salaire du gérant", "gabarit", false]]);
+  assert.deepEqual(plan.ignores, ["inconnue"]);
+  const r = protectNumbers(ws, XLSX, { headerRow: 0, plan });
+  assert.equal(r.cells, 6);
+  assert.ok(r.factor, "un facteur pour la colonne indice");
+  assert.ok(Math.abs(ws.C2.v / ws.C3.v - 18500 / 7320) < 2e-3, "proportions de la colonne indice justes (arrondi au centime)");
+  assert.match(describeNumbers([r], "auto"), /1 clé\(s\) ne correspond/);
+  // Un mode pour tout le fichier l'emporte sur le classement, pas sur une correction.
+  const tout = planNumbers(ws, XLSX, { mode: "clair", headerRow: 0, parColonne: { E: "gabarit" } });
+  assert.deepEqual(tout.colonnes.map((c) => c.mode), ["clair", "clair", "gabarit"]);
+});
+
+test("mise en page document : en clair, sauf si le texte parle de paie ou de comptes", () => {
+  const facture = XLSX.utils.aoa_to_sheet([["FACTURE n° 12"], ["Désignation", "Montant"], ["Prestation", 1240], ["TVA 20 %", 248], ["TTC", 1488]]);
+  let plan = planNumbers(facture, XLSX, { mode: "auto", headerRow: null });
+  assert.equal(plan.resolu, "clair");
+  const r = protectNumbers(facture, XLSX, { headerRow: null, plan });
+  assert.equal(r.cells, 0); assert.equal(r.clair, 3);
+  assert.match(describeNumbers([r], "auto"), /sans en-têtes : nombres en clair/);
+  const bulletin = XLSX.utils.aoa_to_sheet([["BULLETIN DE PAIE"], ["Salaire de base", 3200], ["Net à payer", 2496]]);
+  plan = planNumbers(bulletin, XLSX, { mode: "auto", headerRow: null });
+  assert.equal(plan.resolu, "gabarit");
+  protectNumbers(bulletin, XLSX, { headerRow: null, plan });
+  assert.notEqual(bulletin.B2.v, 3200);
+});
+
+test("le réglage du dossier : reglages.json de l'appli, puis la variable, puis auto", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ht-chiffres-"));
+  assert.deepEqual(readNumberSetting(dir, {}), { mode: "auto", source: "défaut" });
+  assert.equal(readNumberSetting(dir, { ANX_CHIFFRES: "indice" }).mode, "indice");
+  fs.writeFileSync(path.join(dir, "reglages.json"), JSON.stringify({ chiffres: "clair" }));
+  assert.deepEqual(readNumberSetting(dir, { ANX_CHIFFRES: "indice" }), { mode: "clair", source: "réglage du dossier, posé dans l'appli Hidden Tokens" });
+  fs.writeFileSync(path.join(dir, "reglages.json"), JSON.stringify({ chiffres: "n'importe quoi" }));
+  assert.equal(readNumberSetting(dir, {}).mode, "auto", "une valeur inconnue est ignorée");
+  fs.writeFileSync(path.join(dir, "reglages.json"), "{ pas du json");
+  assert.equal(readNumberSetting(dir, {}).mode, "auto");
 });

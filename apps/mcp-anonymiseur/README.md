@@ -96,6 +96,22 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.16.0 (le choix des nombres, 23/10/2026). Un montant seul n'est pas une
+donnée confidentielle : une facture, des quantités, des taux sont la matière de
+travail de l'IA. Ce qui doit rester caché, c'est la finance d'une personne ou
+d'une organisation. Nouveau mode **auto**, désormais le défaut : chaque colonne
+numérique est classée d'après son en-tête — paie, CA, résultat, patrimoine,
+solde, honoraires… en gabarit ; montants de facture, quantités, taux, numéros et
+années en clair. Le PLAN liste chaque colonne avec son mode et l'utilisateur
+corrige colonne par colonne (`chiffres_par_colonne`, par en-tête ou lettre) ou
+pour tout le fichier (`chiffres`). Une mise en page document (facture, courrier)
+est en clair, sauf si le texte parle de paie ou de comptes. Le **réglage par
+défaut du dossier** se choisit dans l'appli Hidden Tokens (menu du dossier →
+Nombres, ou le tableau de bord) : la sentinelle l'écrit dans
+`Hidden-Tokens/reglages.json`, le connecteur le relit à chaque appel, sans
+redémarrage. Les dates restent toujours lisibles ; `remettre_chiffres` ne
+change pas.
+
 v2.15.1 (suite de la recette, 23/10/2026). Un mot d'en-tête de tableau écrit
 avec une majuscule (« Pièce Émetteur Date » extrait d'un PDF) reste lisible ;
 « Garage » en fin de ligne et « Lefèvre » au début de la suivante reçoivent le
