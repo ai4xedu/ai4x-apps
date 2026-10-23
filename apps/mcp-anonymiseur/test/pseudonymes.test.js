@@ -69,7 +69,8 @@ test("lisible : noms, société et dates deviennent des pseudonymes ; identifian
   assert.match(soc.pseudo, /SARL AU$/);
   assert.ok(!fold(soc.pseudo).includes("atlas"), "« Atlas » est la moitié du nom réel");
   // Le texte reste du français lisible autour.
-  assert.match(r.text, /^Me \p{Lu}\p{L}+ \p{Lu}\p{L}+, né le \d{2}\/\d{2}\/\d{4} à Fès, représente la société /u);
+  // (un patronyme fictif peut faire deux mots : « El Fassi »)
+  assert.match(r.text, /^Me \p{Lu}\p{L}+ \p{Lu}[\p{L} ]+, né le \d{2}\/\d{2}\/\d{4} à Fès, représente la société /u);
 });
 
 test("genre et aire culturelle : un prénom féminin français reste féminin français, un marocain reste marocain", () => {
@@ -171,7 +172,9 @@ test("aucune collision : jamais une valeur réelle de la clé, jamais un mot du 
   for (const p of pseudos) assert.ok(!reels.has(fold(p)), `pseudonyme = valeur réelle : ${p}`);
   // Un pseudonyme ne coïncide pas avec un mot du texte : « partie » et « est » sont dans le texte.
   for (const p of pseudos) assert.ok(!/^(partie|est|m)$/i.test(p));
-  for (const v of [...noms, ...prenoms]) assert.ok(!r.text.includes(v), `valeur réelle visible : ${v}`);
+  // Mot entier : « Emmanuel » contient « Emma » sans être Emma.
+  const motEntier = (v) => new RegExp(`(?<![\\p{L}])${v}(?![\\p{L}])`, "u");
+  for (const v of [...noms, ...prenoms]) assert.ok(!motEntier(v).test(r.text), `valeur réelle visible : ${v}`);
   // Le candidat naturel d'une ville ne peut pas être une ville du texte.
   const book2 = newCodebook();
   codeFor(book2, "lieu", "Fès");
@@ -181,6 +184,26 @@ test("aucune collision : jamais une valeur réelle de la clé, jamais un mot du 
     const t = rendreLisible("Domicilié à LIEU-001, audience à Casablanca puis à Rabat.", b).text;
     assert.ok(!/LIEU-001/.test(t));
     assert.ok(!/Casablanca.*Casablanca|Rabat.*Rabat|Fès/.test(t), `collision ville : ${t}`);
+  }
+});
+
+test("aucun MOT d'un pseudonyme n'est une valeur réelle : le verrou de sortie ne recode rien dedans", async () => {
+  const { guardText } = await import("../server/sortie.js");
+  // Toutes les suites de raisons sociales, et quelques amorces, sont déjà des valeurs réelles de la clé
+  // (un mot inconnu codé un jour dans un scan, par exemple) : le pseudonyme de la société doit les éviter.
+  const lex = JSON.parse(fs.readFileSync(new URL("../lexique/pseudonymes.json", import.meta.url), "utf8"));
+  for (let i = 0; i < 20; i++) {
+    const book = newCodebook();
+    for (const su of lex.societes.suites) codeFor(book, "autre", su);
+    for (const am of lex.societes.amorces.slice(0, 30)) codeFor(book, "autre", am);
+    codeFor(book, "nom", "Garage");
+    codeFor(book, "societe", "Garage Lefèvre");
+    codeFor(book, "societe", "Gharb Primeurs SARL");
+    book.pseudonymes = { graine: `g${i}`, deltaJours: 40 };
+    const r = rendreLisible("SOCIETE-001 et SOCIETE-002", book);
+    const g = guardText(r.text, { book });
+    assert.equal(g.recoded, 0, `recodé dans un pseudonyme : ${r.text} → ${g.text}`);
+    for (const e of book.entries.filter((e) => e.pseudo)) assert.ok(!/Garage/.test(e.pseudo), `« Garage » est une valeur réelle : ${e.pseudo}`);
   }
 });
 
@@ -207,7 +230,7 @@ test("nom complet (colonne « Nom complet ») : prénom + patronyme, ordre et ca
   const r = rendreLisible("PERSONNE-001 et PERSONNE-002", book);
   const [p1, p2] = book.entries.map((e) => e.pseudo);
   assert.match(p1, /^\p{Lu}\p{Ll}+ \p{Lu}[\p{L} ]+$/u, `prénom puis nom : ${p1}`);
-  assert.match(p2, /^\p{Lu}+ \p{Lu}\p{Ll}+$/u, `NOM en majuscules puis prénom : ${p2}`);
+  assert.match(p2, /^[\p{Lu} ]+ \p{Lu}\p{Ll}+$/u, `NOM en majuscules puis prénom : ${p2}`);
   assert.equal(r.text, `${p1} et ${p2}`);
   const map = tableDecodage(book);
   assert.equal(decodeText(r.text, map).text, "Yassine El Amrani et BENKIRANE Salma");

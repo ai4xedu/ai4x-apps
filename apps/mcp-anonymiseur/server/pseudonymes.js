@@ -207,14 +207,24 @@ function registerPseudo(p, ctx) {
 
 /* Un candidat est acceptable s'il n'est ni une valeur réelle, ni un
    pseudonyme (ou un mot d'un pseudonyme de personne) déjà pris, ni présent
-   dans le texte. */
+   dans le texte. AUCUN de ses mots ne doit être une valeur réelle non plus :
+   le verrou de sortie recode toute valeur connue de la clé, même au milieu
+   d'un pseudonyme (« Vega Négoce SARL » serait rendu « Vega NOM-003 SARL »
+   si « Négoce » était un jour entré dans la clé — vu en CI, 23/10/2026). */
 function acceptable(cand, ctx, { tokensUnique = true } = {}) {
   const k = foldPhrase(cand);
   if (!k) return false;
   if (ctx.reels.has(k) || ctx.reels.has(foldKey(cand))) return false;
   if (ctx.used.has(k)) return false;
   if (ctx.textFold.includes(` ${k} `)) return false;
-  if (tokensUnique) for (const t of k.split(" ")) if (ctx.usedTokens.has(t)) return false;
+  const toks = k.split(" ");
+  for (let i = 0; i < toks.length; i++) {
+    if (ctx.reels.has(toks[i])) return false;
+    if (tokensUnique && ctx.usedTokens.has(toks[i])) return false;
+    // Une valeur réelle de plusieurs mots (ou à trait d'union : « Import-Export »
+    // se replie en « import export ») cachée dans le candidat.
+    for (let j = i + 2; j <= Math.min(toks.length, i + 4); j++) if (ctx.reels.has(toks.slice(i, j).join(" "))) return false;
+  }
   return true;
 }
 
@@ -330,7 +340,9 @@ function pseudoSociete(value, graine, code, ctx) {
   // Seul un mot GÉNÉRIQUE du commerce est gardé (« Garage », « Transports »,
   // « Cabinet ») : « Atlas » dans « Atlas Négoce » est la moitié du nom réel.
   const generiques = new Set((L.societes.generiques || []).map(fold));
-  const keep = words.length > 1 && generiques.has(fold(words[0])) ? words[0] : "";
+  // (Un mot générique qui est lui-même une valeur de la clé n'est pas gardé :
+  // le verrou de sortie le recoderait.)
+  const keep = words.length > 1 && generiques.has(fold(words[0])) && !ctx.reels.has(fold(words[0])) ? words[0] : "";
   const amorces = L.societes.amorces, suites = L.societes.suites;
   const render = (am, su) => likeCase(core, [keep, am, su].filter(Boolean).join(" ")) + (forme ? ` ${forme}` : "");
   // D'abord « Garage Atlas » (si mot courant gardé), sinon « Atlas Négoce ».
@@ -338,10 +350,19 @@ function pseudoSociete(value, graine, code, ctx) {
     const one = choose(amorces, graine, code, "societe", ctx, (am) => render(am, ""), { tokensUnique: false });
     if (one) return one;
   }
-  const su = suites[pick(graine, code, "suite", suites.length)];
-  const two = choose(amorces, graine, code, "societe-2", ctx, (am) => render(am, su), { tokensUnique: false });
-  if (two) return two;
-  return choose(suites, graine, code, "societe-3", ctx, (s2) => render(amorces[pick(graine, code, "amorce-3", amorces.length)], s2), { tokensUnique: false });
+  // Une suite qui est elle-même une valeur de la clé est écartée d'emblée.
+  const suitesLibres = suites.filter((su) => acceptable(su, ctx, { tokensUnique: false }));
+  if (suitesLibres.length) {
+    const su = suitesLibres[pick(graine, code, "suite", suitesLibres.length)];
+    const two = choose(amorces, graine, code, "societe-2", ctx, (am) => render(am, su), { tokensUnique: false });
+    if (two) return two;
+    const am = amorces[pick(graine, code, "amorce-3", amorces.length)];
+    const three = choose(suitesLibres, graine, code, "societe-3", ctx, (s2) => render(am, s2), { tokensUnique: false });
+    if (three) return three;
+  }
+  // Plus aucune suite disponible : deux amorces (« Orion Zénith SARL »).
+  const am = amorces[pick(graine, code, "amorce-4", amorces.length)];
+  return choose(amorces, graine, code, "societe-4", ctx, (am2) => (am2 === am ? "" : render(am, am2)), { tokensUnique: false });
 }
 
 /* Ville : même pays, même taille (grande ≥ 150 000 habitants, moyenne,
