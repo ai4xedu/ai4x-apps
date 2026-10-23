@@ -43,6 +43,10 @@ export const TYPES = [
   // chez des gens qui manipulent des cartes toute la journée.
   { id: "carte",    prefix: "CARTE",    label: "Carte bancaire" },
   { id: "permis",   prefix: "PERMIS",   label: "Permis de conduire" },
+  // v2.15 (recette B5, 23/10/2026) : une plaque laissait « -CD » en clair et
+  // une date de naissance passait telle quelle.
+  { id: "immatriculation", prefix: "IMMAT", label: "Immatriculation (véhicule)" },
+  { id: "naissance", prefix: "NAISS",  label: "Date de naissance" },
   { id: "adresse",  prefix: "ADRESSE",  label: "Adresse" },
   { id: "societe",  prefix: "SOCIETE",  label: "Société / employeur" },
   // Identifiants d'entreprise marocains (mode document — dictionnaire local).
@@ -209,6 +213,8 @@ export function normFor(prefix, text) {
   // Identifiants numériques : « 06 61 23 45 67 » et « 0661234567 » sont la
   // même valeur — normaliser les séparateurs pour ne pas doubler les codes.
   if (DIGIT_PREFIXES.has(prefix)) return String(text).replace(/[\s.\-]/g, "");
+  // « AB-123-CD », « AB 123 CD », « ab123cd » : la même plaque.
+  if (prefix === "IMMAT") return String(text).toUpperCase().replace(/[\s\-]/g, "");
   return String(text).replace(/\s+/g, " ");
 }
 
@@ -368,8 +374,15 @@ export function detectLayout(ws) {
    Ordre = priorité. `check` (optionnel) valide la capture avant codage. */
 const DOC_PATTERNS = [
   { type: "email", rx: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g },
+  // v2.15 (recette B6) — n° de sécurité sociale français (NIR), AVANT les
+  // téléphones : « 2 85 07 75 123 456 78 » sortait en « 2 85 TEL-001 78 »
+  // (sexe, année de naissance et clé en clair). Codé en entier, comme une
+  // pièce d'identité — le verrou le classe de même.
+  { type: "cin",
+    rx: /(?<![\d.\-])[12][ .]?\d{2}[ .]?(?:0[1-9]|1[0-2])[ .]?(?:\d{2}|2[AB])[ .]?\d{3}[ .]?\d{3}(?:[ .]?\d{2})?(?![\d])/g },
   { type: "tel",
-    rx: /(?:\+212|00212|0)[ .\-]?[5-7](?:[ .\-]?\d){8}(?!\d)/g,
+    // Jamais au milieu d'une suite de chiffres (« … 85 07 75 123 456 … »).
+    rx: /(?<!\d[ .\-]?)(?:\+212|00212|0)[ .\-]?[5-7](?:[ .\-]?\d){8}(?!\d)/g,
     check: (v) => isMoroccanPhone(v.replace(/[\s.\-]/g, "")) },
   { type: "ice",     rx: /\b(?:ICE|I\.C\.E\.?)[^0-9A-Za-z\n]{0,6}(\d{15})\b/gi },
   { type: "if",      rx: /\b(?:IF|I\.F\.?)[^0-9A-Za-z\n]{0,6}(\d{6,8})\b/g },
@@ -443,6 +456,10 @@ frais irrepetibles depens execution provisoire sursis jonction expertise mesures
 exception exceptions nullite nullites litispendance connexite qualite interet agir liminaires preliminaires
 liste principal subsidiaire subsidiairement titre infiniment tres plus reponse faits droit application
 mise cause garantie appel incident moyens nouveaux conclusions recapitulatives recapitulatif chronologie
+defense defenses intervention volontaire forcee lettre recommandee accuse reception demeure sommation
+attestation employeur honneur certificat proces verbal constat rapport courrier courriel plaidoirie
+plaidoiries notification signification commandement payer injonction opposition saisie avis assignation
+convocation compte rendu releve bulletin salaire fiche salarie personnel declaration
 `.split(/\s+/).filter(Boolean));
 
 function normToken(t) {

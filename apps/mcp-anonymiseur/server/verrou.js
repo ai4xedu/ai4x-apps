@@ -229,6 +229,12 @@ banque agence laboratoire clinique hotel restaurant cooperative mutuelle
 sci sarl sas sasu sa snc eurl gie selarl selas scp sarlau
 `));
 
+/* Formes juridiques écrites en tête (« SARL Garage Lefèvre ») : restent en
+   clair — elles disent à l'IA qu'il s'agit d'une société — et annoncent le nom. */
+const LEGAL_FORM_WORDS = new Set(words("sci sarl sas sasu sa snc eurl gie selarl selas scp sarlau"));
+/* Fin de raison sociale après « & » : « Fontaine & Associés », « Martin & Fils ». */
+const COMPANY_SUFFIX = new Set(words("associes associe associees fils freres soeurs cie compagnie partenaires partners co"));
+
 /* Instruments juridiques : les mots capitalisés qui suivent forment un titre
    (« loi Informatique et Libertés », « loi Travail »), pas un nom. */
 const LAW_WORDS = new Set(words("loi lois code decret directive reglement convention charte traite arrete ordonnance dahir"));
@@ -376,6 +382,14 @@ const ADDRESS_SRC =
 const DATE_RX = /^(?:\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}|\d{4}[/.\-]\d{1,2}[/.\-]\d{1,2}|\d{1,2}[/.\-]\d{4})$/;
 const isDate = (m) => DATE_RX.test(asciiDigits(m).replace(/\s/g, "").replace(/[‐-―−]/g, "-"));
 
+const BIRTH_MONTHS = "janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre";
+const BIRTH_LEAD = "(?<![\\p{L}])(?:n[ée]e?s?|date\\s+de\\s+naissance|naissance)";
+const BIRTH_RXS = [
+  new RegExp(`(${BIRTH_LEAD}[ \\u00A0]*(?::[ \\u00A0]*)?(?:(?:le|du)[ \\u00A0]+)?)` +
+    `((?:1er|\\d{1,2})[ \\u00A0]+(?:${BIRTH_MONTHS})[ \\u00A0]+\\d{4}|\\d{1,2}[/.\\-]\\d{1,2}[/.\\-](?:\\d{4}|\\d{2}))(?![\\p{N}])`, "giu"),
+  new RegExp(`((?<![\\p{L}])n[ée]e?s?[ \\u00A0]+en[ \\u00A0]+)(\\d{4})(?![\\p{N}])`, "giu"),
+];
+
 /* Ordre = priorité. Chaque motif est cherché HORS des codes déjà posés. */
 export const PATTERNS = [
   { type: "lien", rx: /\b(?:https?:\/\/|www\.)[^\s<>"'()]+/gi },
@@ -392,6 +406,13 @@ export const PATTERNS = [
   { type: "carte", rx: new RegExp(`(?<![\\p{Nd}\\p{L}-])${D}(?:${SEPNS}?${D}){12,18}(?![\\p{Nd}\\p{L}])`, "gu"),
     check: (m) => isCardNumber(asciiDigits(m)) },
   { type: "carte", rx: new RegExp(`(?<![\\p{Nd}\\p{L}*])${D}{4,6}(?:${SEPNS}*[*xX•·]){4,12}${SEPNS}*${D}{4}(?![\\p{Nd}\\p{L}])`, "gu") },
+  // v2.15 — plaque française (SIV, depuis 2009) : « AB-123-CD », « AB 123 CD ».
+  // Sans ce motif, « AB-123 » partait en référence et « CD » restait en clair.
+  { type: "immatriculation", rx: /(?<![\p{L}\p{N}-])[A-HJ-NP-TV-Z]{2}[-\u2010\u2011 \u00A0]?\d{3}[-\u2010\u2011 \u00A0]?[A-HJ-NP-TV-Z]{2}(?![\p{L}\p{N}-])/gu,
+    check: (m) => !/(?:HT|TT)$/.test(m) },
+  // Ancien format (FNI) « 1234 AB 38 » : trop proche d'autres suites, seulement
+  // derrière « immatriculé(e) » / « immatriculation ».
+  { type: "immatriculation", rx: /(?<=immatricul\p{L}*\s*(?::\s*)?(?:(?:sous\s+le\s+)?(?:n°|no|num[ée]ro)\s*)?)\d{1,4}[- \u00A0]?[A-Z]{1,3}[- \u00A0]?(?:\d{2}|2A|2B)(?![\p{L}\p{N}])/giu },
   // International, y compris « +33 (0)6 12 34 56 78 ».
   { type: "tel", rx: new RegExp(`(?<![\\p{Nd}+])(?:\\+|00)${D}{1,3}${SEPNS}?(?:\\(0\\)${SEPNS}?)?\\(?${D}{1,4}\\)?(?:${SEPNS}?${D}{2,4}){2,5}(?!${D})`, "gu"),
     // « 00… » sans séparateur de 15 chiffres = un ICE marocain, pas un téléphone.
@@ -697,6 +718,15 @@ export function strictCode(input, opts = {}) {
     }));
   }
 
+  // 2c) Date de naissance (v2.15) : « né le 12 avril 1981 », « née le
+  //     03/07/1985 », « Date de naissance : 1er mars 1979 », « né en 1990 ».
+  //     Codée d'office (NAISS-…, décodée dans la réponse) : c'est le
+  //     quasi-identifiant le plus fort. Le libellé reste lisible ; les
+  //     autres dates (faits, échéances) aussi, l'IA en a besoin.
+  for (const rx of BIRTH_RXS) {
+    text = outsideCodes(text, (seg) => seg.replace(rx, (m, pre, d) => pre + emit("naissance", d)));
+  }
+
   // 3) Ce que la clé connaît déjà garde SON code (même entité = même code,
   //    d'un fichier et d'une colonne à l'autre).
   if (book && !mask) {
@@ -735,7 +765,7 @@ export function strictCode(input, opts = {}) {
   const initial = W.map((_, wi) => {
     if (wi === 0) return true;
     const sep = sepBefore(wi);
-    if (/[\n\t«“"(\[•:;|]/.test(sep) || /^\s*[-*]\s/.test(sep) || /[!?…]/.test(sep)) return true;
+    if (/[\n\t«“"(\[•:;|—–]/.test(sep) || /^\s*[-*]\s/.test(sep) || /[!?…]/.test(sep)) return true;
     if (/\.\s*$/.test(sep)) {
       const prev = tok(wi - 1);
       return !(prev.k === "word" && (ABBREV.has(f[wi - 1]) || prev.s.length === 1));
@@ -786,7 +816,8 @@ export function strictCode(input, opts = {}) {
     // « Client : Rousseau », « CONTRE : … » → nom après un libellé de personne.
     //   (même une ville ou un mois : « Client : Paris », « Expert : Avril »).
     if (prevWord && PERSON_LABELS.has(px) && /^[  ]*:[  ]*$/.test(sep) && isCap(w) &&
-        !HONORIFIC_WORDS.has(x) && !HONORIFIC_ABBR.has(x) && !DETERMINERS.has(x) && !FUNCTION_WORDS.has(x)) { verdict[wi] = nameLike("prenom"); continue; }
+        !HONORIFIC_WORDS.has(x) && !HONORIFIC_ABBR.has(x) && !DETERMINERS.has(x) && !FUNCTION_WORDS.has(x) &&
+        !COMPANY_TRIGGERS.has(x)) { verdict[wi] = nameLike("prenom"); continue; }
     //   Un titre juste après le libellé (« Contre : M. Garnier ») n'est pas le
     //   nom : c'est le mot suivant, par la règle du titre de civilité.
 
@@ -795,7 +826,7 @@ export function strictCode(input, opts = {}) {
       if (prevWord && verdict[wi - 1] === "societe" && SPACE.test(sep) && !capSafe(x)) { verdict[wi] = "societe"; continue; }
       if (w.length === 1 || ROMAN_RX.test(w)) continue;               // initiale isolée ; « II. »
       if (isAllCaps(w)) {
-        if (capSafe(x) || FUNCTION_WORDS.has(x) || HEADING_WORDS.has(x)) continue;
+        if (capSafe(x) || FUNCTION_WORDS.has(x) || HEADING_WORDS.has(x) || LEGAL_FORM_WORDS.has(x)) continue;
         if (!known) { verdict[wi] = nameLike("prenom"); continue; }
         const inText = lineHasLower(t.at);
         if (N.nomColl.has(x) && (inText || N.nomHigh.has(x))) { verdict[wi] = "nom"; continue; }
@@ -904,6 +935,50 @@ export function strictCode(input, opts = {}) {
     }
   }
 
+  // 5b) Une société est UN nom (v2.15) : « Garage Lefèvre » reçoit un seul
+  //     code, et le même là où il revient (« au Garage Lefèvre », sans la
+  //     forme juridique), au lieu d'un code par mot — l'IA y voyait sinon deux
+  //     parties. « Fontaine & Associés » aussi.
+  const SPAN_SEP = /^(?:[  ]{1,2}|[  ]?-[  ]?)$/;
+  const AMP_SEP = /^[  ]?&[  ]?$|^[  ]et[  ]$/;
+  const spanOf = new Array(W.length).fill(-1);
+  const spans = [];                                // { a, b, value }
+  for (let wi = 0; wi < W.length; wi++) {
+    if (verdict[wi] !== "societe") continue;
+    const cur = spans.length ? spans[spans.length - 1] : null;
+    if (cur && cur.b === wi - 1 && SPAN_SEP.test(sepBefore(wi))) { cur.b = wi; spanOf[wi] = spans.length - 1; continue; }
+    spans.push({ a: wi, b: wi });
+    spanOf[wi] = spans.length - 1;
+  }
+  for (const [k, sp] of spans.entries()) {
+    const j = sp.b + 1;
+    if (isWord(j) && spanOf[j] < 0 && isCap(tok(j).s) && AMP_SEP.test(sepBefore(j)) &&
+        (COMPANY_SUFFIX.has(f[j]) || (verdict[j] && verdict[j] !== "reference"))) { sp.b = j; spanOf[j] = k; verdict[j] = "societe"; }
+  }
+  const textOf = (a, b) => toks.slice(W[a], W[b] + 1).map((t) => t.s).join("");
+  const keyOf = (a, b) => f.slice(a, b + 1).join(" ");
+  const canon = new Map();                          // clé repliée → valeur de la 1re occurrence
+  for (const sp of spans) {
+    sp.value = textOf(sp.a, sp.b).trim();
+    if (sp.b > sp.a && !canon.has(keyOf(sp.a, sp.b))) canon.set(keyOf(sp.a, sp.b), sp.value);
+  }
+  if (canon.size) {
+    for (const [key, value] of canon) {
+      const n = key.split(" ").length;
+      for (let wi = 0; wi + n <= W.length; wi++) {
+        if (spanOf[wi] >= 0 || keyOf(wi, wi + n - 1) !== key) continue;
+        let ok = true;
+        for (let q = wi; q < wi + n; q++) {
+          if (!isWord(q) || spanOf[q] >= 0 || (q > wi && !SPAN_SEP.test(sepBefore(q)))) { ok = false; break; }
+        }
+        if (!ok) continue;
+        spans.push({ a: wi, b: wi + n - 1, value });
+        for (let q = wi; q < wi + n; q++) { spanOf[q] = spans.length - 1; verdict[q] = "societe"; }
+      }
+    }
+    for (const sp of spans) if (sp.b > sp.a && canon.has(keyOf(sp.a, sp.b))) sp.value = canon.get(keyOf(sp.a, sp.b));
+  }
+
   // 6) Réécriture.
   for (let wi = 0; wi < W.length; wi++) {
     const v = verdict[wi];
@@ -911,6 +986,13 @@ export function strictCode(input, opts = {}) {
     const t = tok(wi);
     if (v === "autre") stats.unknown++;
     else if (v !== "reference") stats.names++;
+    if (spanOf[wi] >= 0) {
+      const sp = spans[spanOf[wi]];
+      if (wi !== sp.a) continue;
+      t.s = emit("societe", sp.value);
+      for (let j = W[sp.a] + 1; j <= W[sp.b]; j++) toks[j].s = "";
+      continue;
+    }
     t.s = emit(v, t.s);
   }
   text = toks.map((t) => t.s).join("");
