@@ -17,6 +17,8 @@ export const DETECTEURS = {
   RIB: "Compte bancaire (RIB / IBAN)",
   CARTE: "Carte bancaire",
   PERMIS: "Permis de conduire",
+  IMMAT: "Immatriculation (véhicule)",
+  NAISS: "Date de naissance",
   ADRESSE: "Adresse",
   SOCIETE: "Société / employeur",
   ICE: "ICE",
