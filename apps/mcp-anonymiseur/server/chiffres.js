@@ -66,7 +66,7 @@ export const FICHIER_REGLAGES = "reglages.json";
 export function readNumberSetting(outdir, env = process.env) {
   try {
     const r = JSON.parse(fs.readFileSync(path.join(outdir, FICHIER_REGLAGES), "utf8"));
-    if (r && NUMBER_MODES.includes(r.chiffres)) return { mode: r.chiffres, source: "réglage du dossier (appli Hidden Tokens)" };
+    if (r && NUMBER_MODES.includes(r.chiffres)) return { mode: r.chiffres, source: "réglage du dossier, posé dans l'appli Hidden Tokens" };
   } catch {}
   const e = String(env.ANX_CHIFFRES || "").trim();
   if (NUMBER_MODES.includes(e)) return { mode: e, source: "réglage de l'extension" };

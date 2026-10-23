@@ -144,7 +144,7 @@ test("le réglage du dossier : reglages.json de l'appli, puis la variable, puis 
   assert.deepEqual(readNumberSetting(dir, {}), { mode: "auto", source: "défaut" });
   assert.equal(readNumberSetting(dir, { ANX_CHIFFRES: "indice" }).mode, "indice");
   fs.writeFileSync(path.join(dir, "reglages.json"), JSON.stringify({ chiffres: "clair" }));
-  assert.deepEqual(readNumberSetting(dir, { ANX_CHIFFRES: "indice" }), { mode: "clair", source: "réglage du dossier (appli Hidden Tokens)" });
+  assert.deepEqual(readNumberSetting(dir, { ANX_CHIFFRES: "indice" }), { mode: "clair", source: "réglage du dossier, posé dans l'appli Hidden Tokens" });
   fs.writeFileSync(path.join(dir, "reglages.json"), JSON.stringify({ chiffres: "n'importe quoi" }));
   assert.equal(readNumberSetting(dir, {}).mode, "auto", "une valeur inconnue est ignorée");
   fs.writeFileSync(path.join(dir, "reglages.json"), "{ pas du json");
