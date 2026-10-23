@@ -142,3 +142,54 @@ test("une source invalide ne publie rien", () => {
   assert.throws(() => publierPolitique({ source: s, cabinet: c.cabinet, ouvert: c.ouvert, dossierPartage: partage }), PolitiqueInvalide);
   assert.deepEqual(fs.readdirSync(partage), []);
 });
+
+/* ----------------------------------------- règles de l'organisation (v2.17) */
+
+function sourceAvecRegles() {
+  const s = sourceDeTest();
+  s.regles.push(
+    { id: "R-040", type: "toujours_pseudonymiser", libelle: "Parties adverses", prefixe: "adversaire", noms: ["Groupe Tazi", "Tazi"] },
+    { id: "R-041", type: "motif", libelle: "Numéros d'affaire", prefixe: "AFFAIRE", motif: "AFF[ -]?\\d{2}/\\d{4}", exemple: "AFF 26/0412" },
+    { id: "R-042", type: "laisser_en_clair", libelle: "Le cabinet et ses associés", termes: ["Cabinet Test", "Maître Durand", "maître durand"] },
+  );
+  return s;
+}
+
+test("règles de l'organisation : catégorie maison, motif et termes en clair compilent", () => {
+  const c = cabinetDeTest();
+  const { politique, avertissements } = compiler(sourceAvecRegles(), c);
+  assert.deepEqual(avertissements, []);
+  const r40 = politique.regles.find((r) => r.id === "R-040");
+  assert.equal(r40.prefixe, "ADVERSAIRE");
+  assert.equal(r40.categorie, undefined);
+  assert.equal(r40.noms, undefined);
+  assert.equal(r40.empreintes.length, 2);
+  const r41 = politique.regles.find((r) => r.id === "R-041");
+  assert.deepEqual(r41, { id: "R-041", type: "motif", libelle: "Numéros d'affaire", prefixe: "AFFAIRE", motif: "AFF[ -]?\\d{2}/\\d{4}", exemple: "AFF 26/0412" });
+  const r42 = politique.regles.find((r) => r.id === "R-042");
+  assert.deepEqual(r42.termes, ["Cabinet Test", "Maître Durand"], "doublon (casse) retiré");
+  assert.ok(!JSON.stringify(politique).includes("Tazi"), "le nom protégé n'apparaît pas");
+});
+
+test("règles de l'organisation : ce que la console refuse", () => {
+  const cas = [
+    [{ id: "R-050", type: "toujours_pseudonymiser", libelle: "Deux à la fois", categorie: "CLIENT", prefixe: "X1", noms: ["Quelqu'un"] }, /pas les deux/],
+    [{ id: "R-051", type: "toujours_pseudonymiser", libelle: "Réservé", prefixe: "NOM", noms: ["Quelqu'un"] }, /« NOM » est réservé/],
+    [{ id: "R-052", type: "toujours_pseudonymiser", libelle: "Réservé", prefixe: "CLI", noms: ["Quelqu'un"] }, /« CLI » est réservé/],
+    [{ id: "R-053", type: "motif", libelle: "Imbriqué", prefixe: "KO", motif: "(a+)+", exemple: "aaa" }, /quantificateur imbriqué/],
+    [{ id: "R-054", type: "motif", libelle: "Sans exemple", prefixe: "SANS", motif: "X\\d+" }, /exemple : obligatoire/],
+    [{ id: "R-055", type: "motif", libelle: "Exemple raté", prefixe: "RATE", motif: "X\\d+", exemple: "Y12" }, /ne le reconnaît pas/],
+    [{ id: "R-056", type: "motif", libelle: "Champ inconnu", prefixe: "CH", motif: "X\\d+", exemple: "X1", noms: ["a"] }, /champ inconnu « noms »/],
+    [{ id: "R-057", type: "laisser_en_clair", libelle: "Un email", termes: ["contact@cabinet-test.fr"] }, /terme n°1 : a la forme d'un identifiant/],
+    [{ id: "R-058", type: "laisser_en_clair", libelle: "Un numéro", termes: ["CIN A123456"] }, /terme n°1 : a la forme d'un identifiant/],
+    [{ id: "R-059", type: "laisser_en_clair", libelle: "Vide", termes: [] }, /liste non vide/],
+    [{ id: "R-060", type: "laisser_en_clair", libelle: "Trahit un client", termes: ["Benjelloun"] }, /apparaît en clair ailleurs/],
+  ];
+  for (const [regle, attendu] of cas) {
+    const s = sourceDeTest();
+    s.regles.push(regle);
+    const e = erreurs(s).join("\n");
+    assert.match(e, attendu, regle.id);
+    assert.ok(!e.includes("contact@") && !e.includes("Quelqu'un"), `valeur citée pour ${regle.id}`);
+  }
+});

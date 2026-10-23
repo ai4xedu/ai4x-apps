@@ -22,7 +22,7 @@
 //      l'a regardée (outil caviarder_image, en deux temps).
 // ============================================================================
 import { PNG } from "pngjs";
-import { strictCode, isKnownWord, fold, CODE_SRC } from "./verrou.js";
+import { strictCode, isKnownWord, fold, codeSrc } from "./verrou.js";
 import { anonymizeText, PREFIX_LABEL } from "./engine.js";
 
 export const LOW_CONFIDENCE = 60;
@@ -47,7 +47,7 @@ export function selectRedactions(lines, book, { extra = [], excludes = [] } = {}
     const coded = strictCode(base.text, { book, extra, excludes }).text;
     const values = valueOf();
     const hot = new Set();
-    for (const m of coded.matchAll(new RegExp(CODE_SRC, "gu"))) {
+    for (const m of coded.matchAll(new RegExp(codeSrc(), "gu"))) {
       const v = values[m[0]];
       if (v === undefined) continue;
       const label = PREFIX_LABEL[m[0].split("-")[0]] || "Autre donnée sensible";
