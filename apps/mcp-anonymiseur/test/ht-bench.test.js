@@ -61,3 +61,59 @@ test("générateur : même graine, même jeu ; aucun id en double", () => {
   assert.equal(new Set(a.docs.map((d) => d.id)).size, a.docs.length);
   for (const d of a.docs) for (const e of [...d.etendues, ...d.leurres]) assert.equal(d.texte.slice(e.debut, e.fin), e.valeur, d.id);
 });
+
+test("alignement : chiffres arabes orientaux dans l'origine, chiffres latins dans la clé", () => {
+  const o = "الهاتف: ٠٦ ٦١ ٢٣ ٤٥ ٦٧ — CIN BK٤٥٦٧٨٩.";
+  const c = "الهاتف: TEL-001 — CIN CIN-001.";
+  const { segments, imbrique } = aligner(o, c, { "TEL-001": "0661234567", "CIN-001": "BK456789" });
+  assert.equal(imbrique, false);
+  assert.deepEqual(segments.map((s) => o.slice(s.debut, s.fin)), ["٠٦ ٦١ ٢٣ ٤٥ ٦٧", "BK٤٥٦٧٨٩"]);
+});
+
+test("score en arabe : particules (بن، آيت) permises, voyelles (tachkil) sans effet, prénom coupé = partielle", () => {
+  const doc = { ...analyser("السيد [[PERSONNE:مُحَمَّد بن علي]] و[[PERSONNE:حمزة آيت لحسن]]، رقم [[ADRESSE:رقم ١٢، زنقة المتنبي]]."), id: "t" };
+  const seg = (v, p) => { const i = doc.texte.indexOf(v); return { debut: i, fin: i + v.length, code: `${p}-001`, prefixe: p }; };
+  const r = evaluerDocument(doc, [seg("مُحَمَّد", "PRENOM"), seg("علي", "NOM"), seg("حمزة", "PRENOM"), seg("المتنبي", "ADRESSE")]);
+  assert.deepEqual(r.positifs.map((e) => e.statut), ["detecte", "partiel", "detecte"]);
+  assert.deepEqual(r.positifs[1].enClair, ["لحسن"]);
+  const r2 = evaluerDocument(doc, [seg("مُحَ", "CODE"), seg("علي", "NOM")]);
+  assert.equal(r2.positifs[0].statut, "partiel");
+  assert.deepEqual(r2.positifs[0].enClair, ["مَّد"]);
+});
+
+test("score : lisibilité = part du texte hors étiquettes restée en clair", () => {
+  const doc = { ...analyser("Bonjour [[PERSONNE:Ali Tazi]] merci"), id: "t" };
+  const tout = evaluerDocument(doc, [{ debut: 0, fin: doc.texte.length, code: "SOCIETE-001", prefixe: "SOCIETE" }]);
+  assert.equal(tout.positifs[0].statut, "detecte");
+  assert.equal(tout.lisibles, 0);
+  const juste = evaluerDocument(doc, [{ debut: 8, fin: 16, code: "NOM-001", prefixe: "NOM" }]);
+  assert.equal(juste.lisibles, juste.neutres);
+});
+
+test("formats : Word et Excel rendent le texte dérivé, sans jamais couper une valeur", async () => {
+  const XLSX = await import("xlsx");
+  const { docxParagraphs } = await import("../server/word.js");
+  const { versDocx, versXlsx, texteFeuille, decouper } = await import("../bench/ht-bench/lib/formats.mjs");
+  const doc = { id: "t", ...analyser("FICHE — بطاقة\nNom : [[PERSONNE:Ali | Tazi]]\nSalaire | {{MONTANT:1 200 MAD}}\nCIN : [[CIN:BK٤٥٦٧٨٩]] — Tél. : [[TEL:0661234567]]") };
+  // « Ali | Tazi » est une seule valeur : la coupure « | » n'y est pas faite.
+  assert.deepEqual(decouper(doc, [{ rx: / \| /g }], "\n").blocs[1], ["Nom : Ali | Tazi"]);
+  const w = versDocx(doc, XLSX);
+  assert.equal(docxParagraphs(w.buf, XLSX).join("\n"), w.derive.texte);
+  const x = versXlsx(doc, XLSX, "document");
+  const wb = XLSX.read(x.buf, { type: "buffer" });
+  assert.equal(texteFeuille(wb.Sheets[wb.SheetNames[0]], XLSX, x.nl, x.nc), x.derive.texte);
+  // Seul le premier « Libellé : » d'une ligne ouvre une cellule.
+  assert.match(x.derive.texte, /^CIN :\tBK٤٥٦٧٨٩\tTél\. : 0661234567$/m);
+  for (const d of [w.derive, x.derive]) for (const e of [...d.etendues, ...d.leurres]) assert.equal(d.texte.slice(e.debut, e.fin), e.valeur);
+});
+
+test("générateur : langues et formes déclarées, tableaux en cellules", () => {
+  const { docs } = generer();
+  for (const d of docs) {
+    assert.ok(["fr", "ar", "fr-ar", "darija-latin"].includes(d.langue), d.id);
+    assert.ok(["texte", "tableau"].includes(d.forme), d.id);
+  }
+  const t = docs.filter((d) => d.forme === "tableau");
+  assert.ok(t.length > 0 && t.every((d) => d.texte.split("\n").every((l) => l.split("\t").length === d.texte.split("\n")[0].split("\t").length)));
+  assert.ok(docs.some((d) => d.langue === "ar" && /[٠-٩]/.test(d.texte)));
+});

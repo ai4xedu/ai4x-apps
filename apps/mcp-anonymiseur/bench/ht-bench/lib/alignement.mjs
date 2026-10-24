@@ -17,7 +17,10 @@
 
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const ALNUM = /[\p{L}\p{N}]/u;
-const plier = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+/* Casse, accents, voyelles et hamza arabes ignorés ; chiffres arabes
+   orientaux (٠١٢…, ۰۱۲…) lus comme des chiffres latins. */
+const plier = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+  .replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) & 0xf));
 
 /* La plus courte étendue d'origine, à partir de p, qui porte les mêmes
    lettres et chiffres que v (séparateurs et casse ignorés). */

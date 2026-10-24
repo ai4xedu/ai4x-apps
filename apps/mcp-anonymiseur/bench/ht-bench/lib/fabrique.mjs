@@ -5,7 +5,7 @@
 // ============================================================================
 import { P, L } from "./balisage.mjs";
 import * as I from "./identifiants.mjs";
-import { personneMaghreb, personneFr, nomSeul } from "./noms.mjs";
+import { personneMaghreb, personneFr, nomSeul, personneArabe, personneArabizi } from "./noms.mjs";
 
 const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 const ascii = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").replace(/[’']/g, "").toLowerCase();
@@ -17,6 +17,14 @@ const VILLES_MA = [["Casablanca", "20"], ["Rabat", "10"], ["Marrakech", "40"], [
 const RUES_FR = ["rue Paul Bert", "avenue des Tilleuls", "impasse des Lilas", "boulevard Voltaire", "rue de la République", "allée des Peupliers",
   "chemin des Vignes", "place du Marché", "rue Victor Hugo", "quai de la Fosse", "rue des Écoles", "avenue Jean Jaurès"];
 const VILLES_FR = [["Lyon", "6900"], ["Paris", "750"], ["Bordeaux", "3300"], ["Nantes", "4400"], ["Lille", "5900"], ["Marseille", "130"], ["Toulouse", "3100"], ["Strasbourg", "6700"], ["Montpellier", "3400"], ["Rennes", "3500"]];
+// Écriture arabe : voies, quartiers, villes, mois (calendrier marocain).
+const RUES_AR = ["ابن بطوطة", "المتنبي", "واد سبو", "مولاي يوسف", "علال بن عبد الله", "طارق بن زياد", "جبل توبقال", "الزرقطوني", "الحسن الثاني", "محمد الخامس", "أنفا"];
+const QUARTIERS_AR = ["المعاريف", "الرياض", "أكدال", "بوركون", "المحمدي", "سيدي معروف", "جليز", "السويسي", "تالبرجت", "النهضة"];
+const RESIDENCES_AR = ["الأندلس", "النور", "الأمل", "الياسمين", "الحدائق"];
+const LOTISSEMENTS_AR = ["الوفاء", "الصفاء", "رياض السلام", "المسيرة"];
+const DOUARS_AR = ["أولاد أحمد", "تافراوت", "لمحاميد", "أيت عمي"];
+export const VILLES_AR = ["الدار البيضاء", "الرباط", "مراكش", "طنجة", "فاس", "أكادير", "وجدة", "مكناس", "القنيطرة", "تطوان"];
+const MOIS_AR = ["يناير", "فبراير", "مارس", "أبريل", "ماي", "يونيو", "يوليوز", "غشت", "شتنبر", "أكتوبر", "نونبر", "دجنبر"];
 const SOC_RACINES = ["Atlas", "Maghreb", "Vectura", "Sahara", "Anfa", "Oasis", "Argane", "Cèdre", "Horizon", "Medina", "Zénith", "Rif", "Tingis", "Alpha", "Lumière", "Azur"];
 const SOC_METIERS = ["Négoce", "Logistique", "Distribution", "Conseil", "Bâtiment", "Textile", "Agro", "Services", "Immobilier", "Transports", "Industries", "Informatique"];
 
@@ -31,6 +39,8 @@ export function fabrique(h) {
     nom: (p) => P("PERSONNE", nomSeul(p)),
     prenom: (p) => P("PERSONNE", { valeur: p.prenom, variante: p.variante, traits: ["prenom-seul"] }),
     email(p) {
+      // Un nom en lettres arabes a une adresse en lettres latines.
+      if (p.latin) p = p.latin;
       const pr = ascii(p.prenom).replace(/\s+/g, "-"), no = ascii(p.nom).replace(/\s+/g, "");
       const dom = h.choix(["example.com", "example.org", "example.net", "mail.example", "societe.example.ma", "cabinet.example.fr"]);
       return h.choix([
@@ -39,6 +49,55 @@ export function fabrique(h) {
         P("EMAIL", { valeur: `${pr.replace(/-/g, "")}${no}${h.entier(1, 99)}@${dom}`, variante: "prenomnom-chiffres" }),
         P("EMAIL", { valeur: `${no}_${pr}@${dom}`, variante: "nom_prenom" }),
         P("EMAIL", { valeur: `${pr}.${no}@${dom}`.toUpperCase(), variante: "majuscules" }),
+      ]);
+    },
+    /* Écriture arabe et arabizi : les mêmes valeurs, d'autres écritures. */
+    personneAr(opts = {}) {
+      const p = personneArabe(h, opts);
+      return { m: P("PERSONNE", p), p };
+    },
+    personneArabizi(opts = {}) {
+      const p = personneArabizi(h, opts);
+      return { m: P("PERSONNE", p), p };
+    },
+    /* La même personne en lettres latines, dans un document bilingue. */
+    latin: (p) => P("PERSONNE", { valeur: `${p.latin.prenom} ${p.latin.nom}`, variante: "mag-translitteration", traits: ["bilingue"] }),
+    latinNom: (p) => P("PERSONNE", { valeur: p.latin.nom, variante: "mag-translitteration", traits: ["bilingue", "nom-seul"] }),
+    telAr: () => P("TEL", I.telMaArabe(h)),
+    cinAr: () => P("CIN", I.cinArabe(h)),
+    ribAr: () => P("RIB", I.ribMaArabe(h)),
+    cnssAr: () => P("CNSS", I.cnssArabe(h)),
+    /* L'adresse en arabe : comme adresseMa, la voie est étiquetée, la ville
+       qui suit ne l'est pas. Les numéros sont écrits tantôt en chiffres
+       latins, tantôt en chiffres arabes orientaux. */
+    adresseAr() {
+      const n = (a, b) => { const x = String(h.entier(a, b)); return h.pile(0.4) ? I.enChiffresArabes(x) : x; };
+      const ville = h.choix(VILLES_AR);
+      return h.choix([
+        `${P("ADRESSE", { valeur: `رقم ${n(1, 180)}، زنقة ${h.choix(RUES_AR)}، حي ${h.choix(QUARTIERS_AR)}`, variante: "ar-rue" })}، ${ville}`,
+        `${P("ADRESSE", { valeur: `${n(1, 180)} شارع ${h.choix(RUES_AR)}`, variante: "ar-rue" })}، ${ville}`,
+        `${P("ADRESSE", { valeur: `إقامة ${h.choix(RESIDENCES_AR)}، عمارة ${n(1, 30)}، شقة ${n(1, 40)}، حي ${h.choix(QUARTIERS_AR)}`, variante: "ar-residence" })}، ${ville}`,
+        `${P("ADRESSE", { valeur: `تجزئة ${h.choix(LOTISSEMENTS_AR)} رقم ${n(1, 600)}`, variante: "ar-lotissement" })}، ${ville}`,
+        `${P("ADRESSE", { valeur: `دوار ${h.choix(DOUARS_AR)} رقم ${n(1, 300)}`, variante: "ar-douar" })}، ${ville}`,
+      ]);
+    },
+    villeAr: () => L("VILLE", h.choix(VILLES_AR), "ar"),
+    montantAr() {
+      const v = String(h.choix([h.entier(120, 999), h.entier(1000, 99999), h.entier(1000, 99999)]));
+      return h.choix([
+        L("MONTANT", `${I.enChiffresArabes(v)} درهم`, "ar-chiffres-arabes"),
+        L("MONTANT", `${v.replace(/\B(?=(\d{3})+(?!\d))/g, " ")},${h.chiffres(2)} درهم`, "ar"),
+        L("MONTANT", `${v} د.م.`, "ar"),
+      ]);
+    },
+    dateAr() {
+      const j = h.entier(1, 28), m = h.entier(1, 12), a = h.entier(2019, 2026);
+      const jj = String(j).padStart(2, "0"), mm = String(m).padStart(2, "0");
+      return h.choix([
+        L("DATE", `${j} ${MOIS_AR[m - 1]} ${a}`, "ar-lettres"),
+        L("DATE", `${I.enChiffresArabes(String(j))} ${MOIS_AR[m - 1]} ${I.enChiffresArabes(String(a))}`, "ar-lettres-chiffres-arabes"),
+        L("DATE", I.enChiffresArabes(`${jj}/${mm}/${a}`), "ar-chiffres-arabes"),
+        L("DATE", `${jj}/${mm}/${a}`, "jj-mm-aaaa"),
       ]);
     },
     emailGenerique: () => P("EMAIL", { valeur: `${h.choix(["contact", "service.client", "rh", "compta", "secretariat", "sinistres"])}@${h.choix(["example.com", "societe.example.ma", "example.fr"])}`, variante: "generique" }),

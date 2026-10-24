@@ -40,6 +40,28 @@ export async function ouvrirMoteur(packs) {
     const res = await client.callTool({ name, arguments: args });
     return { t: texte(res), erreur: !!res.isError };
   };
+  /* Un fichier déposé dans le dossier de travail, anonymisé (confirmer:
+     true), la sortie relue. La clé est remise à zéro avant. */
+  const fichier = async (nom, contenu, args = {}) => {
+    await appeler("reinitialiser_cle", { confirmer: true });
+    for (const n of fs.readdirSync(outdir)) if (/-anonymise\.(md|docx|xlsx)$/.test(n)) fs.rmSync(path.join(outdir, n));
+    const src = path.join(workdir, nom);
+    fs.writeFileSync(src, contenu);
+    const r = await appeler("anonymiser_fichier", { nom_fichier: nom, confirmer: true, ...args });
+    fs.rmSync(src);
+    // Un .docx donne aussi un *-anonymise.md (le texte extrait) : on lit la
+    // sortie du même format que l'entrée.
+    const ext = path.extname(nom);
+    const produit = fs.readdirSync(outdir).filter((n) => n.endsWith(`-anonymise${ext}`));
+    if (produit.length > 1) throw new Error(`anonymiser_fichier a produit ${produit.length} fichiers`);
+    const fc = path.join(outdir, "cle-de-session.json");
+    const cle = fs.existsSync(fc) ? JSON.parse(fs.readFileSync(fc, "utf8")).entries : [];
+    return {
+      sortie: produit.length ? fs.readFileSync(path.join(outdir, produit[0])) : null,
+      cle: Object.fromEntries(cle.map((e) => [e.code, e.value])),
+      refus: produit.length ? "" : r.t,
+    };
+  };
   return {
     /* Un document → { code, cle, vu } :
        code = le fichier *-anonymise.md écrit par anonymiser_fichier (ce que
@@ -48,29 +70,27 @@ export async function ouvrirMoteur(packs) {
        vu   = la réponse de coder_texte sur le même texte, verrou de sortie
               compris : ce que l'IA lirait. */
     async coder(contenu) {
-      await appeler("reinitialiser_cle", { confirmer: true });
-      for (const n of fs.readdirSync(outdir)) if (/-anonymise\.md$/.test(n)) fs.rmSync(path.join(outdir, n));
-      const src = path.join(workdir, "document.md");
-      fs.writeFileSync(src, contenu, "utf8");
-      const r = await appeler("anonymiser_fichier", { nom_fichier: "document.md", confirmer: true });
-      fs.rmSync(src);
-      const produit = fs.readdirSync(outdir).filter((n) => /-anonymise\.md$/.test(n));
+      const { sortie, cle, refus } = await fichier("document.md", contenu);
       let code;
-      if (produit.length === 1) {
-        code = fs.readFileSync(path.join(outdir, produit[0]), "utf8");
+      if (sortie) {
+        code = sortie.toString("utf8");
         // handlePlainText ajoute un saut de ligne final s'il manque.
         if (!contenu.endsWith("\n") && code.endsWith("\n")) code = code.slice(0, -1);
-      } else if (r.erreur && /Rien à coder/.test(r.t)) {
+      } else if (/Rien à coder/.test(refus)) {
         code = contenu;
       } else {
-        throw new Error(`anonymiser_fichier n'a pas produit de fichier : ${r.t.slice(0, 400)}`);
+        throw new Error(`anonymiser_fichier n'a pas produit de fichier : ${refus.slice(0, 400)}`);
       }
-      const fc = path.join(outdir, "cle-de-session.json");
-      const cle = fs.existsSync(fc) ? JSON.parse(fs.readFileSync(fc, "utf8")).entries : [];
       const v = await appeler("coder_texte", { contenu, source: "ht-bench" });
       const i = v.t.indexOf(MARQUE);
       const vu = i >= 0 ? v.t.slice(i + MARQUE.length + 1) : v.t;
-      return { code, cle: Object.fromEntries(cle.map((e) => [e.code, e.value])), vu };
+      return { code, cle, vu };
+    },
+    /* Un .docx ou un .xlsx → { sortie (Buffer du *-anonymise.*, ou null),
+       cle, refus (le message d'erreur s'il n'y a pas de sortie) }.
+       args : les options d'anonymiser_fichier (mode pour un classeur). */
+    async coderFichier(nom, buf, args = {}) {
+      return fichier(nom, buf, args);
     },
     async fermer() {
       await client.close();

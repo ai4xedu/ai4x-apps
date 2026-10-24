@@ -8,6 +8,7 @@
 // (montants, dates, articles, sigles, mots courants) à laisser lisibles.
 // ============================================================================
 import { L } from "./balisage.mjs";
+import { GABARITS_AR } from "./gabarits-ar.mjs";
 
 const c = (h, ...options) => h.choix(options);
 
@@ -394,3 +395,6 @@ export const PLAN = {
   "expertise-comptable": { packs: ["expertise-comptable"], gabarits: comptable, n: 12 },
   "rh-paie":             { packs: ["rh-paie"],             gabarits: rh,        n: 12 },
 };
+// Les gabarits en arabe, bilingues et en arabizi (gabarits-ar.mjs) rejoignent
+// leur pack. Un gabarit porte sa langue (f.langue) ; sans elle, « fr ».
+for (const [pack, g] of Object.entries(GABARITS_AR)) PLAN[pack].gabarits = { ...PLAN[pack].gabarits, ...g };

@@ -23,8 +23,13 @@ import { POSITIFS, LEURRES } from "./types.mjs";
 import { PARTICULES } from "./noms.mjs";
 
 const ALNUM = /[\p{L}\p{N}]/u;
-const MOT = /[\p{L}\p{N}]+/gu;
-const plier = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+// Un mot : lettres et chiffres, voyelles arabes (tachkil) comprises ; seules
+// les lettres et chiffres comptent comme positions à coder.
+const MOT = /[\p{L}\p{N}][\p{L}\p{N}\p{M}]*/gu;
+/* Casse, accents, voyelles et hamza arabes ignorés ; chiffres arabes
+   orientaux (٠١٢…, ۰۱۲…) lus comme des chiffres latins. */
+const plier = (s) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()
+  .replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (d) => String(d.charCodeAt(0) & 0xf));
 
 /* Le premier type qui déclare un préfixe le « possède » pour la précision. */
 export const TYPE_DU_PREFIXE = {};
@@ -36,7 +41,9 @@ for (const [t, d] of Object.entries(POSITIFS)) for (const p of d.prefixes) TYPE_
    mots de structure. La voie, elle, doit être codée. */
 const STRUCTURE_ADRESSE = new Set(["n", "no", "bis", "ter", "imm", "immeuble", "appt", "apt", "bat", "batiment", "etage", "rue", "avenue", "av",
   "bd", "boulevard", "impasse", "allee", "chemin", "place", "quai", "residence", "lotissement", "lot", "douar", "hay", "quartier",
-  "cedex", "des", "du", "de", "la", "le", "les", "d", "l", "a", "b", "c", "al"]);
+  "cedex", "des", "du", "de", "la", "le", "les", "d", "l", "a", "b", "c", "al",
+  // En lettres arabes (sans hamza, cf. plier) : رقم، زنقة، شارع، حي، إقامة، عمارة، شقة، تجزئة، دوار…
+  "رقم", "زنقة", "شارع", "حي", "اقامة", "عمارة", "شقة", "تجزئة", "دوار", "درب", "طابق", "الطابق"]);
 export function ignorable(type, mot) {
   const x = plier(mot);
   if (type === "PERSONNE") return PARTICULES.has(x);
@@ -49,7 +56,7 @@ function positionsUtiles(texte, e) {
   const s = texte.slice(e.debut, e.fin);
   for (const m of s.matchAll(MOT)) {
     if (ignorable(e.type, m[0])) continue;
-    for (let i = 0; i < m[0].length; i++) out.push(e.debut + m.index + i);
+    for (let i = 0; i < m[0].length; i++) if (ALNUM.test(m[0][i])) out.push(e.debut + m.index + i);
   }
   return out;
 }
@@ -67,6 +74,7 @@ function morceauxEnClair(texte, e, couvert) {
     if (ignorable(e.type, m[0])) continue;
     let run = "";
     for (let i = 0; i < m[0].length; i++) {
+      if (!ALNUM.test(m[0][i])) { if (run) run += m[0][i]; continue; }
       if (!couvert[e.debut + m.index + i]) run += m[0][i];
       else if (run) { out.push(run); run = ""; }
     }
@@ -86,10 +94,11 @@ export function evaluerDocument(doc, segments, vu = null) {
     const prefixes = [...new Set(segments.filter((s) => recouvre(s, e)).map((s) => s.prefixe))];
     const bienEtiquete = prefixes.some((p) => POSITIFS[e.type].prefixes.includes(p));
     const r = { ...e, statut, prefixes, bienEtiquete };
-    if (statut !== "detecte" && vu !== null) {
-      // La fuite atteint-elle l'IA, ou le verrou de sortie la rattrape-t-il ?
+    if (statut !== "detecte") {
       r.enClair = morceauxEnClair(doc.texte, e, couvert);
-      r.vuParIA = r.enClair.some((m) => new RegExp(`(?<![\\p{L}\\p{N}])${escRx(m)}(?![\\p{L}\\p{N}])`, "u").test(vu));
+      // La fuite atteint-elle l'IA, ou le verrou de sortie la rattrape-t-il ?
+      // (chemin .md seulement : vu = la réponse de coder_texte)
+      if (vu !== null) r.vuParIA = r.enClair.some((m) => new RegExp(`(?<![\\p{L}\\p{N}])${escRx(m)}(?![\\p{L}\\p{N}])`, "u").test(vu));
     }
     return r;
   });
@@ -110,10 +119,23 @@ export function evaluerDocument(doc, segments, vu = null) {
       typeAttendu,
     };
   });
-  return { positifs, leurres, passages, masquesSortie: vu === null ? 0 : (vu.match(/•••/g) || []).length };
+  // Lisibilité : parmi les lettres et chiffres hors de toute valeur
+  // étiquetée (le texte du document, leurres compris), la part restée en
+  // clair. Un document arabe codé en un seul bloc a un rappel parfait et une
+  // lisibilité nulle : l'IA ne peut plus rien en faire.
+  const dansPositif = new Uint8Array(doc.texte.length);
+  for (const e of doc.etendues) dansPositif.fill(1, e.debut, e.fin);
+  let neutres = 0, lisibles = 0;
+  for (let i = 0; i < doc.texte.length; i++) {
+    if (dansPositif[i] || !ALNUM.test(doc.texte[i])) continue;
+    neutres++;
+    if (!couvert[i]) lisibles++;
+  }
+  return { positifs, leurres, passages, neutres, lisibles, masquesSortie: vu === null ? 0 : (vu.match(/•••/g) || []).length };
 }
 
 const ratio = (a, b) => (b ? a / b : null);
+const lisibilite = (rs) => ratio(rs.reduce((n, r) => n + r.lisibles, 0), rs.reduce((n, r) => n + r.neutres, 0));
 const f1 = (p, r) => (p === null || r === null || p + r === 0 ? null : (2 * p * r) / (p + r));
 
 function compterPositifs(liste) {
@@ -122,11 +144,14 @@ function compterPositifs(liste) {
   return { n, detectes: det, partiels: partiel, manques: n - det - partiel, rappel: ratio(det, n) };
 }
 
-/* Tout le jeu : les tableaux du rapport. */
-export function agreger(resultats) {
-  const tousPos = resultats.flatMap((r) => r.positifs.map((e) => ({ ...e, doc: r.id, pack: r.pack })));
-  const tousLeurres = resultats.flatMap((r) => r.leurres.map((e) => ({ ...e, doc: r.id, pack: r.pack })));
-  const tousPassages = resultats.flatMap((r) => r.passages.map((s) => ({ ...s, doc: r.id, pack: r.pack })));
+/* Tout le jeu : les tableaux du rapport. Un résultat { refus } (le moteur
+   n'a pas écrit de fichier) est compté à part, hors des taux. */
+export function agreger(tous) {
+  const refuses = tous.filter((r) => r.refus);
+  const resultats = tous.filter((r) => !r.refus);
+  const tousPos = resultats.flatMap((r) => r.positifs.map((e) => ({ ...e, doc: r.id, pack: r.pack, langue: r.langue })));
+  const tousLeurres = resultats.flatMap((r) => r.leurres.map((e) => ({ ...e, doc: r.id, pack: r.pack, langue: r.langue })));
+  const tousPassages = resultats.flatMap((r) => r.passages.map((s) => ({ ...s, doc: r.id, pack: r.pack, langue: r.langue })));
 
   const parType = {};
   for (const t of Object.keys(POSITIFS)) {
@@ -160,11 +185,29 @@ export function agreger(resultats) {
       direct: compterPositifs(dir),
       tous: tous,
       precision, f1: f1(precision, tous.rappel),
+      lisibilite: lisibilite(resultats.filter((r) => r.pack === p)),
       passages: pas.length,
       passages_leurres: pas.filter((s) => s.classe === "leurre").length,
       passages_hors_etiquette: pas.filter((s) => s.classe === "hors-etiquette").length,
       leurres: { n: lr.length, codes: lr.filter((e) => e.code).length, taux_faux_positifs: ratio(lr.filter((e) => e.code).length, lr.length) },
       direct_par_type: directParType,
+    };
+  }
+
+  // Par langue du document : fr, ar (écriture arabe), fr-ar (bilingue),
+  // darija-latin (arabizi).
+  const parLangue = {};
+  for (const l of [...new Set(resultats.map((r) => r.langue))].sort()) {
+    const pos = tousPos.filter((e) => e.langue === l);
+    const pas = tousPassages.filter((s) => s.langue === l);
+    const lr = tousLeurres.filter((e) => e.langue === l);
+    parLangue[l] = {
+      documents: resultats.filter((r) => r.langue === l).length,
+      direct: compterPositifs(pos.filter((e) => POSITIFS[e.type].direct)),
+      tous: compterPositifs(pos),
+      precision: ratio(pas.filter((s) => s.classe === "positif").length, pas.length),
+      lisibilite: lisibilite(resultats.filter((r) => r.langue === l)),
+      leurres: { n: lr.length, codes: lr.filter((e) => e.code).length, taux_faux_positifs: ratio(lr.filter((e) => e.code).length, lr.length) },
     };
   }
 
@@ -194,24 +237,27 @@ export function agreger(resultats) {
       direct: compterPositifs(dir),
       tous: compterPositifs(tousPos),
       precision: ratio(tousPassages.filter((s) => s.classe === "positif").length, tousPassages.length),
+      lisibilite: lisibilite(resultats),
       passages: tousPassages.length,
       leurres: { n: tousLeurres.length, codes: tousLeurres.filter((e) => e.code).length, taux_faux_positifs: ratio(tousLeurres.filter((e) => e.code).length, tousLeurres.length) },
     },
     par_type: parType,
     par_pack: parPack,
+    par_langue: parLangue,
+    refuses: { n: refuses.length, documents: refuses.map((r) => ({ doc: r.id, pack: r.pack, langue: r.langue, motif: r.refus })) },
     par_variante: Object.fromEntries(Object.entries(parVariante).sort().map(([k, l]) => [k, { direct: POSITIFS[l[0].type].direct, ...compterPositifs(l) }])),
     par_trait: Object.fromEntries(Object.entries(parTrait).sort().map(([k, l]) => [k, compterPositifs(l)])),
     par_leurre: parLeurre,
     manques: tousPos.filter((e) => e.statut !== "detecte").map((e) => ({
       doc: e.doc, pack: e.pack, type: e.type, direct: POSITIFS[e.type].direct, variante: e.variante || "", traits: e.traits || [],
-      valeur: e.valeur, statut: e.statut, prefixes: e.prefixes, en_clair: e.enClair || [], vu_par_ia: !!e.vuParIA,
+      valeur: e.valeur, statut: e.statut, prefixes: e.prefixes, en_clair: e.enClair || [], vu_par_ia: e.vuParIA ?? null, langue: e.langue,
     })),
     verrou_de_sortie: {
       manques_directs: dir.filter((e) => e.statut !== "detecte").length,
       manques_directs_vus_par_ia: dir.filter((e) => e.statut !== "detecte" && e.vuParIA).length,
       masquages_par_pack: Object.fromEntries(packs.map((p) => [p, resultats.filter((r) => r.pack === p).reduce((n, r) => n + (r.masquesSortie || 0), 0)])),
     },
-    faux_positifs: tousLeurres.filter((e) => e.code).map((e) => ({ doc: e.doc, pack: e.pack, type: e.type, variante: e.variante || "", valeur: e.valeur, prefixes: e.prefixes })),
+    faux_positifs: tousLeurres.filter((e) => e.code).map((e) => ({ doc: e.doc, pack: e.pack, langue: e.langue, type: e.type, variante: e.variante || "", valeur: e.valeur, prefixes: e.prefixes })),
     hors_etiquette: Object.entries(horsEtiquette).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([k, n]) => ({ passage: k, n })),
   };
 }

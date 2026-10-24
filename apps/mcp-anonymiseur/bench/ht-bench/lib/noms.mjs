@@ -4,13 +4,14 @@
 // sont des patronymes fréquents (Maroc, Maghreb, France), jamais un annuaire,
 // et la combinaison prénom + nom est aléatoire.
 //
-// Le banc mesure les écritures latines du Maghreb, là où les outils
+// Le banc mesure d'abord les écritures latines du Maghreb, là où les outils
 // américains sont faibles : particules (Ben, El, Aït, Ould, Bent), noms et
 // prénoms composés (Fatima-Zahra, Abd El Kader), apostrophes (M'hamed,
 // Aït M’Barek), translittérations multiples (Mohamed / Mohammed / Mhamed).
 // Chaque générateur rend { valeur, variante, traits } : la variante est la
 // forme du nom (mag-ben-espace…), les traits ce qui s'y ajoute (prénom composé,
 // nom en majuscules, minuscules d'une transcription, nom seul).
+// En bas du fichier : les mêmes noms en lettres arabes, et l'arabizi.
 // ============================================================================
 
 export const PRENOMS_MA = [
@@ -83,6 +84,8 @@ export const NOMS_FR_PARTICULES = ["de La Fontaine", "Le Gall", "Le Goff", "d'Au
 export const PARTICULES = new Set([
   "ben", "bent", "bin", "ibn", "el", "al", "ait", "aït", "ould", "ou", "bou", "abou", "abu", "sidi", "moulay", "lalla",
   "de", "du", "des", "la", "le", "d", "l", "da", "dos", "van", "von", "saint", "m", "eddine", "ezzahra",
+  // En lettres arabes, comparées sans hamza ni voyelles (cf. plier dans score.mjs).
+  "بن", "ابن", "بنت", "ايت", "ولد", "ابو", "سيدي", "مولاي", "لالة", "الدين", "الزهراء",
 ]);
 
 const MAJ = (s) => s.toLocaleUpperCase("fr");
@@ -158,4 +161,99 @@ export function personneFr(h, { ordre = "auto" } = {}) {
 /* Le nom seul, pour « M. Tazi », « Maître Lacroix », « Dr El Amrani ». */
 export function nomSeul(personne) {
   return { valeur: personne.nom, variante: personne.variante, traits: ["nom-seul"] };
+}
+
+/* --------------------------------------------------- ÉCRITURE ARABE ---
+   Les mêmes familles de noms en lettres arabes : [translittération, arabe],
+   pour qu'un document bilingue écrive la même personne dans les deux
+   écritures (« Mohamed Alaoui (محمد العلوي) »). L'article est collé au nom
+   (العلوي) ; les particules sont des mots à part : بن، آيت، ولد. */
+export const PRENOMS_AR = [
+  ["Mohamed", "محمد"], ["Ahmed", "أحمد"], ["Youssef", "يوسف"], ["Hamza", "حمزة"], ["Ayoub", "أيوب"], ["Hicham", "هشام"],
+  ["Rachid", "رشيد"], ["Said", "سعيد"], ["Driss", "إدريس"], ["Brahim", "إبراهيم"], ["Lahcen", "لحسن"], ["Mustapha", "مصطفى"],
+  ["Omar", "عمر"], ["Othmane", "عثمان"], ["Khalid", "خالد"], ["Adil", "عادل"], ["Karim", "كريم"], ["Nabil", "نبيل"],
+  ["Jamal", "جمال"], ["Aziz", "عزيز"], ["Hassan", "حسن"], ["Yassine", "ياسين"], ["Mehdi", "مهدي"], ["Amine", "أمين"],
+  ["Zakaria", "زكرياء"], ["Bilal", "بلال"], ["Abdellah", "عبد الله"], ["Abderrahim", "عبد الرحيم"], ["Abdelaziz", "عبد العزيز"],
+  ["Abdelkrim", "عبد الكريم"], ["Noureddine", "نور الدين"], ["Imane", "إيمان"], ["Meryem", "مريم"], ["Salma", "سلمى"],
+  ["Nadia", "نادية"], ["Samira", "سميرة"], ["Rachida", "رشيدة"], ["Zineb", "زينب"], ["Houda", "هدى"], ["Siham", "سهام"],
+  ["Loubna", "لبنى"], ["Ghizlane", "غزلان"], ["Kawtar", "كوثر"], ["Soukaina", "سكينة"], ["Hasna", "حسناء"], ["Malika", "مليكة"],
+  ["Naima", "نعيمة"], ["Latifa", "لطيفة"], ["Hafsa", "حفصة"], ["Wiam", "وئام"], ["Chaimae", "شيماء"], ["Oumaima", "أميمة"],
+  ["Khadija", "خديجة"], ["Asmae", "أسماء"], ["Btissam", "ابتسام"], ["Hanane", "حنان"], ["Ilham", "إلهام"], ["Jamila", "جميلة"],
+  ["Karima", "كريمة"], ["Mounia", "منية"], ["Nawal", "نوال"], ["Sanae", "سناء"], ["Yasmine", "ياسمين"],
+];
+export const PRENOMS_AR_COMPOSES = [
+  ["Fatima-Zahra", "فاطمة الزهراء"], ["Mohamed Amine", "محمد أمين"], ["Abdelkader", "عبد القادر"], ["Abderrahmane", "عبد الرحمان"],
+  ["Sidi Mohamed", "سيدي محمد"], ["Moulay Ahmed", "مولاي أحمد"], ["Lalla Meryem", "لالة مريم"], ["Nour El Houda", "نور الهدى"],
+  ["Salaheddine", "صلاح الدين"], ["Oum Keltoum", "أم كلثوم"], ["Mohamed Ali", "محمد علي"],
+];
+export const NOMS_AR = [
+  ["Alaoui", "العلوي"], ["Benjelloun", "بنجلون"], ["Bennani", "بناني"], ["Tazi", "التازي"], ["Berrada", "برادة"], ["Chraibi", "الشرايبي"],
+  ["Lahlou", "لحلو"], ["Sqalli", "الصقلي"], ["Kettani", "الكتاني"], ["Idrissi", "الإدريسي"], ["Amrani", "العمراني"], ["Ouazzani", "الوزاني"],
+  ["Benkirane", "بنكيران"], ["Bensouda", "بنسودة"], ["Belhaj", "بلحاج"], ["Bouzid", "بوزيد"], ["Boukhari", "البخاري"],
+  ["Benabdallah", "بنعبد الله"], ["Zeroual", "زروال"], ["Mansouri", "المنصوري"], ["Haddad", "حداد"], ["Cherkaoui", "الشرقاوي"],
+  ["Rifi", "الريفي"], ["Daoudi", "الداودي"], ["Naciri", "الناصري"], ["Tahiri", "الطاهري"], ["Filali", "الفيلالي"], ["Ziani", "الزياني"],
+  ["Benmoussa", "بنموسى"], ["Kabbaj", "القباج"], ["Laraki", "العراقي"], ["Guessous", "جسوس"], ["Sebti", "السبتي"], ["Bekkali", "البقالي"],
+  ["Amzil", "أمزيل"], ["Boutaleb", "بوطالب"], ["Lazrak", "لزرق"], ["Saadi", "السعدي"], ["Talbi", "الطالبي"], ["Rahmouni", "الرحموني"],
+  ["Benchekroun", "بنشقرون"], ["Ghazali", "الغزالي"], ["Hilali", "الهلالي"], ["Kadiri", "القادري"], ["Mernissi", "المرنيسي"],
+  ["Nejjar", "النجار"], ["Semlali", "السملالي"], ["Touzani", "التوزاني"], ["Yacoubi", "اليعقوبي"], ["Zemmouri", "الزموري"],
+];
+export const RACINES_BEN_AR = [["Salah", "صالح"], ["Youssef", "يوسف"], ["Abdellah", "عبد الله"], ["Said", "سعيد"], ["Hammou", "حمو"],
+  ["Brahim", "إبراهيم"], ["Moussa", "موسى"], ["Ali", "علي"], ["Driss", "إدريس"], ["Aissa", "عيسى"], ["Omar", "عمر"]];
+export const RACINES_AIT_AR = [["Lahcen", "لحسن"], ["Oumghar", "أومغار"], ["Baha", "باها"], ["Ouahmane", "واحمان"], ["Ali", "علي"],
+  ["Hammou", "حمو"], ["Melloul", "ملول"], ["Ourir", "أورير"], ["Said", "سعيد"], ["Mbarek", "امبارك"], ["Idir", "يدير"]];
+export const RACINES_OULD_AR = [["Ahmed", "أحمد"], ["Cheikh", "الشيخ"], ["Mohamed", "محمد"], ["Abdallah", "عبد الله"], ["Hamoud", "حمود"]];
+export const NOMS_DOUBLES_AR = [["Fassi-Fihri", "الفاسي الفهري"], ["Alaoui Mdaghri", "العلوي المدغري"], ["Idrissi Kaitouni", "الإدريسي القيطوني"],
+  ["Ouazzani-Chahdi", "الوزاني الشهدي"], ["Alami-Merrouni", "العلمي المروني"], ["Sqalli Houssaini", "الصقلي الحسيني"]];
+// Le prénom vocalisé (tachkil), rare dans un dossier mais fréquent dans un acte ou un texte copié.
+const TACHKIL = { "محمد": "مُحَمَّد", "أحمد": "أَحْمَد", "يوسف": "يُوسُف", "خديجة": "خَدِيجَة", "عمر": "عُمَر", "مريم": "مَرْيَم", "حسن": "حَسَن" };
+const sansHamza = (s) => s.replace(/[أإآ]/g, "ا");
+
+/* Un nom complet en lettres arabes. ordre : « prenom-nom » (courrier),
+   « nom-prenom » (pièce administrative : العلوي محمد). */
+export function personneArabe(h, { ordre = "auto" } = {}) {
+  const compose = h.pile(0.2);
+  let [prenomLat, prenom] = h.choix(compose ? PRENOMS_AR_COMPOSES : PRENOMS_AR);
+  const r = h.reel();
+  let nom, nomLat, forme;
+  if (r < 0.45) { [nomLat, nom] = h.choix(NOMS_AR); forme = "simple"; }
+  else if (r < 0.62) { const [l, a] = h.choix(RACINES_BEN_AR); nom = `بن ${a}`; nomLat = `Ben ${l}`; forme = "ben"; }
+  else if (r < 0.77) {
+    const [l, a] = h.choix(RACINES_AIT_AR);
+    const p = h.choix(["آيت", "آيت", "أيت", "ايت"]);
+    nom = `${p} ${a}`; nomLat = `Ait ${l}`; forme = "ait";
+  } else if (r < 0.84) { const [l, a] = h.choix(RACINES_OULD_AR); nom = `ولد ${a}`; nomLat = `Ould ${l}`; forme = "ould"; }
+  else if (r < 0.92) { [nomLat, nom] = h.choix(NOMS_DOUBLES_AR); forme = "double"; }
+  else {
+    // La filiation (nasab) : محمد بن علي العلوي.
+    const [pl, pa] = h.choix(PRENOMS_AR), [nl, na] = h.choix(NOMS_AR);
+    nom = `بن ${pa} ${na}`; nomLat = `Ben ${pl} ${nl}`; forme = "nasab";
+  }
+  const traits = [];
+  if (compose) traits.push("prenom-compose");
+  if (!compose && TACHKIL[prenom] && h.pile(0.25)) { prenom = TACHKIL[prenom]; traits.push("tachkil"); }
+  if (/[أإآ]/.test(prenom + nom) && h.pile(0.25)) { prenom = sansHamza(prenom); nom = sansHamza(nom); traits.push("sans-hamza"); }
+  const o = ordre === "auto" ? h.choix(["prenom-nom", "prenom-nom", "prenom-nom", "nom-prenom"]) : ordre;
+  if (o === "nom-prenom") traits.push("nom-avant");
+  const valeur = o === "nom-prenom" ? `${nom} ${prenom}` : `${prenom} ${nom}`;
+  return { valeur, variante: `ar-${forme}`, traits, nom, prenom, latin: { prenom: prenomLat, nom: nomLat } };
+}
+
+/* ------------------------------------------- ARABIZI (darija en latin) ---
+   Les chiffres pour les lettres qui manquent à l'alphabet latin : 3 = ع,
+   7 = ح, 9 = ق, 5 = خ, 6 = ط, 2 = ء. C'est l'écriture des échanges WhatsApp,
+   des SMS et des transcriptions d'appels. */
+export const PRENOMS_ARABIZI = [
+  "3abdellah", "3abdelkader", "3abdelali", "3adil", "3ziz", "3icha", "3atika", "7mida", "7amid", "7assan", "7amza", "7ayat", "7ouria",
+  "Mo7amed", "M7mmed", "Sa3id", "Kha6ija", "5adija", "5alid", "Ra7ma", "Na3ima", "Mou7sin", "Zou7ir", "Sou3ad", "Fati7a", "Ma7joub",
+  "Sal7a", "Ta9i", "Mou9tadir", "Fa6ima",
+];
+export const NOMS_ARABIZI = ["Ben 3li", "El 7ajji", "Sa3di", "3amrani", "Bel7aj", "Ta7iri", "Ou3ziz", "Bou3zza", "El 9adiri", "Ra7mouni", "Lma3ti", "Ben 7mida", "Mou6i3", "3alami"];
+
+export function personneArabizi(h, { forme = "auto" } = {}) {
+  const prenom = h.choix(PRENOMS_ARABIZI);
+  const nom = h.pile(0.75) ? h.choix(NOMS_ARABIZI) : h.choix(NOMS_MA);
+  const f = forme === "auto" ? h.choix(["prenom-nom", "prenom-nom", "prenom-seul", "minuscules"]) : forme;
+  const valeur = f === "prenom-seul" ? prenom : f === "minuscules" ? `${prenom} ${nom}`.toLowerCase() : `${prenom} ${nom}`;
+  const traits = [f === "prenom-seul" ? "prenom-seul" : f === "minuscules" ? "minuscules" : ""].filter(Boolean);
+  return { valeur, variante: "arabizi", traits, nom, prenom };
 }

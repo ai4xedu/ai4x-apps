@@ -82,4 +82,40 @@ Congés payés : {{MESURE:18 jours}} acquis au {{DATE:31/12/2025}}.`,
     note: "Pied de facture marocain : tous les identifiants d'entreprise collés par des tirets",
     texte: `[[SOCIETE|majuscules:ARGANE NÉGOCE SARL]] — Capital {{MONTANT:100 000,00 DH}} — RC Agadir [[RC|rc-nombre:48213]] — IF [[IF|if-nombre:40192837]] — ICE [[ICE|ice-colle:002184937000052]] — Patente [[PATENTE|patente:48120937]] — {{SIGLE:CNSS}} [[CNSS|cnss-affiliation-7:8421937]]`,
   },
+  // ------------------------------------------------ écriture arabe, arabizi
+  {
+    id: "core/manuel/arabe-proclitiques",
+    pack: "core",
+    langue: "ar",
+    note: "Particules arabes collées au mot (لـ، بـ، و) : le nom ou la ville commence au milieu d'un mot",
+    texte: `سلمت الوثيقة ل[[PERSONNE|ar-simple|proclitique:محمد العلوي]] وأخبرت [[PERSONNE|ar-ben:فاطمة بن صالح]] و[[PERSONNE|ar-simple|proclitique:خديجة التازي]] بالموعد.
+حرر ب{{VILLE|ar:الدار البيضاء}} في {{DATE|ar-lettres:3 مارس 2026}}، والمبلغ {{MONTANT|ar:1 200,00 درهم}}.`,
+  },
+  {
+    id: "core/manuel/chiffres-arabes-en-francais",
+    pack: "core",
+    langue: "fr-ar",
+    note: "Numéros en chiffres arabes orientaux dans une phrase française (copier-coller d'un formulaire arabe)",
+    texte: `Le client [[PERSONNE|mag-translitteration|bilingue:Youssef Bennani]] a laissé son numéro : [[TEL|ma-mobile-national-colle·ar:٠٦٦١٤٨٢٩٣٧]] ; CIN [[CIN|cin-colle·ar:BK٤٥٦٧٨٩]], affiliation [[CNSS|cnss-assure-9·ar:١٥٦٧٣٨١٢٣]].
+Montant réglé : {{MONTANT|ar-chiffres-arabes:١٢٥٠ درهم}} le {{DATE|ar-chiffres-arabes:١٢/٠٣/٢٠٢٥}}.`,
+  },
+  {
+    id: "core/manuel/arabe-marques-bidi",
+    pack: "core",
+    langue: "ar",
+    note: "Marques de direction (U+200F, U+202A…U+202C) autour des numéros d'un texte arabe, comme les pose un traitement de texte ou WhatsApp",
+    texte: `الاسم: [[PERSONNE|ar-ait:حمزة آيت لحسن]]
+الهاتف: \u202A[[TEL|ma-mobile-intl-espaces:+212 6 61 48 29 37]]\u202C
+البطاقة الوطنية: \u200F[[CIN|cin-colle:JC475689]]\u200F
+البريد: \u200E[[EMAIL|prenom.nom:hamza.aitlahcen@example.com]]`,
+  },
+  {
+    id: "telecom-ma/manuel/darija-faux-amis",
+    pack: "telecom-ma",
+    langue: "darija-latin",
+    note: "Mots darija qui sont aussi des prénoms (Karim, Amine, Mabrouk, Sa3id) à côté des vrais prénoms",
+    texte: `Client : salam, ana [[PERSONNE|arabizi:Karim Sa3di]], l facture ghalia bzaf, Allah {{MOT|darija:karim}}.
+Conseiller : {{MOT|darija:amine}}, ghadi n9addha lik. 3id {{MOT|darija:sa3id}} ou {{MOT|darija:mabrouk}} 3lik ramadan.
+Client : chokran, rah [[PERSONNE|arabizi|prenom-seul:Mabrouk]] khouya ghadi y3ayet men [[TEL|ma-mobile-national-colle:0661482937]].`,
+  },
 ];

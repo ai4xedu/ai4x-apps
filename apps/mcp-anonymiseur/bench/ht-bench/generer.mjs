@@ -21,9 +21,10 @@ import { hasard } from "./lib/hasard.mjs";
 import { fabrique } from "./lib/fabrique.mjs";
 import { analyser } from "./lib/balisage.mjs";
 import { PLAN } from "./lib/gabarits.mjs";
+import { TABLEAUX } from "./lib/tableaux.mjs";
 import { CAS_MANUELS } from "./cas/manuels.mjs";
 
-export const VERSION_JEU = "0.1.0";
+export const VERSION_JEU = "0.2.0";
 export const GRAINE = "ht-bench-v0";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -39,14 +40,29 @@ export function generer() {
         const id = `${pack}/${genre}/${String(i).padStart(3, "0")}`;
         const g = fabrique(hasard(`${GRAINE}/${id}`));
         const { texte, etendues, leurres } = analyser(gabarit(g), id);
-        docs.push({ id, pack, packs, genre, source: "gabarit", texte, etendues, leurres });
+        docs.push({ id, pack, packs, genre, langue: gabarit.langue || "fr", forme: "texte", source: "gabarit", texte, etendues, leurres });
+      }
+    }
+  }
+  // Les tableaux : cellules jointes par tabulations, lignes par sauts de
+  // ligne. Notés en .xlsx mode tableau seulement (cf. lib/formats.mjs).
+  for (const [pack, { gabarits, n, langue }] of Object.entries(TABLEAUX)) {
+    for (const [nom, gabarit] of Object.entries(gabarits)) {
+      const genre = `tableau-${nom}`;
+      for (let i = 1; i <= n; i++) {
+        const id = `${pack}/${genre}/${String(i).padStart(3, "0")}`;
+        const g = fabrique(hasard(`${GRAINE}/${id}`));
+        const lignes = gabarit(g);
+        if (lignes.flat().some((x) => /[\t\n]/.test(x))) throw new Error(`${id} : tabulation ou saut de ligne dans une cellule`);
+        const { texte, etendues, leurres } = analyser(lignes.map((l) => l.join("\t")).join("\n"), id);
+        docs.push({ id, pack, packs: PLAN[pack].packs, genre, langue, forme: "tableau", source: "gabarit", texte, etendues, leurres });
       }
     }
   }
   for (const c of CAS_MANUELS) {
     const { texte, etendues, leurres } = analyser(c.texte, c.id);
     const packs = c.pack === "core" ? [] : [c.pack];
-    docs.push({ id: c.id, pack: c.pack, packs, genre: c.genre || "manuel", source: "manuel", note: c.note, texte, etendues, leurres });
+    docs.push({ id: c.id, pack: c.pack, packs, genre: c.genre || "manuel", langue: c.langue || "fr", forme: "texte", source: "manuel", note: c.note, texte, etendues, leurres });
   }
   const ids = new Set();
   for (const d of docs) { if (ids.has(d.id)) throw new Error(`id en double : ${d.id}`); ids.add(d.id); }
@@ -59,6 +75,8 @@ export function generer() {
   }
   const parType = {};
   for (const d of docs) for (const e of d.etendues) parType[e.type] = (parType[e.type] || 0) + 1;
+  const parLangue = {}, parForme = {};
+  for (const d of docs) { parLangue[d.langue] = (parLangue[d.langue] || 0) + 1; parForme[d.forme] = (parForme[d.forme] || 0) + 1; }
   const manifeste = {
     nom: "HT-Bench",
     version: VERSION_JEU,
@@ -70,6 +88,8 @@ export function generer() {
     leurres: compte("leurres"),
     par_pack: parPack,
     par_type: Object.fromEntries(Object.entries(parType).sort()),
+    documents_par_langue: Object.fromEntries(Object.entries(parLangue).sort()),
+    documents_par_forme: parForme,
   };
   return { docs, jsonl, manifeste: JSON.stringify(manifeste, null, 2) + "\n" };
 }

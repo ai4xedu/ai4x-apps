@@ -1,125 +1,549 @@
 {
-  "note": "Rappel sur les identifiants directs, mesuré par HT-Bench. La CI (bench:ht:controle) échoue s'il baisse. Réenregistrer : node bench/ht-bench/evaluer.mjs --enregistrer-reference",
-  "version_jeu": "0.1.0",
-  "jeu_sha256": "406f450d99863315c2d9099580565bea8c72db5fa2522d9e6bd1c1bce3787348",
+  "note": "Rappel sur les identifiants directs, mesuré par HT-Bench, chemin par chemin. La CI (bench:ht:controle) échoue s'il baisse, ou si le moteur refuse plus de documents. Réenregistrer : node bench/ht-bench/evaluer.mjs --enregistrer-reference",
+  "version_jeu": "0.2.0",
+  "jeu_sha256": "393d374e88cb6f2932ae47025429c5de0035aabc85f2f04665ec05a36bd0c45c",
   "version_moteur": "2.22.0",
-  "global": {
-    "n": 1853,
-    "detectes": 1808,
-    "rappel": 0.9757150566648678
-  },
-  "par_pack": {
-    "core": {
-      "n": 336,
-      "detectes": 328,
-      "rappel": 0.9761904761904762
+  "chemins": {
+    "md": {
+      "global": {
+        "n": 2658,
+        "detectes": 2612,
+        "rappel": 0.9826937547027841
+      },
+      "refuses": 0,
+      "par_pack": {
+        "banque-assurance": {
+          "n": 342,
+          "detectes": 336,
+          "rappel": 0.9824561403508771
+        },
+        "core": {
+          "n": 737,
+          "detectes": 728,
+          "rappel": 0.9877883310719131
+        },
+        "expertise-comptable": {
+          "n": 287,
+          "detectes": 282,
+          "rappel": 0.9825783972125436
+        },
+        "juridique-fr": {
+          "n": 276,
+          "detectes": 269,
+          "rappel": 0.9746376811594203
+        },
+        "rh-paie": {
+          "n": 300,
+          "detectes": 284,
+          "rappel": 0.9466666666666667
+        },
+        "sante": {
+          "n": 291,
+          "detectes": 288,
+          "rappel": 0.9896907216494846
+        },
+        "telecom-ma": {
+          "n": 425,
+          "detectes": 425,
+          "rappel": 1
+        }
+      },
+      "par_langue": {
+        "ar": {
+          "n": 323,
+          "detectes": 323,
+          "rappel": 1
+        },
+        "darija-latin": {
+          "n": 240,
+          "detectes": 240,
+          "rappel": 1
+        },
+        "fr": {
+          "n": 1853,
+          "detectes": 1808,
+          "rappel": 0.9757150566648678
+        },
+        "fr-ar": {
+          "n": 242,
+          "detectes": 241,
+          "rappel": 0.9958677685950413
+        }
+      },
+      "par_type": {
+        "PERSONNE": {
+          "n": 1155,
+          "detectes": 1142,
+          "rappel": 0.9887445887445887
+        },
+        "CIN": {
+          "n": 223,
+          "detectes": 223,
+          "rappel": 1
+        },
+        "NIR": {
+          "n": 46,
+          "detectes": 29,
+          "rappel": 0.6304347826086957
+        },
+        "CNSS": {
+          "n": 87,
+          "detectes": 75,
+          "rappel": 0.8620689655172413
+        },
+        "ICE": {
+          "n": 98,
+          "detectes": 98,
+          "rappel": 1
+        },
+        "IF": {
+          "n": 45,
+          "detectes": 45,
+          "rappel": 1
+        },
+        "RC": {
+          "n": 45,
+          "detectes": 45,
+          "rappel": 1
+        },
+        "SIREN": {
+          "n": 24,
+          "detectes": 24,
+          "rappel": 1
+        },
+        "SIRET": {
+          "n": 28,
+          "detectes": 28,
+          "rappel": 1
+        },
+        "TEL": {
+          "n": 507,
+          "detectes": 507,
+          "rappel": 1
+        },
+        "EMAIL": {
+          "n": 224,
+          "detectes": 224,
+          "rappel": 1
+        },
+        "IBAN": {
+          "n": 41,
+          "detectes": 40,
+          "rappel": 0.975609756097561
+        },
+        "RIB": {
+          "n": 66,
+          "detectes": 63,
+          "rappel": 0.9545454545454546
+        },
+        "IMEI": {
+          "n": 50,
+          "detectes": 50,
+          "rappel": 1
+        },
+        "IMSI": {
+          "n": 19,
+          "detectes": 19,
+          "rappel": 1
+        }
+      }
     },
-    "telecom-ma": {
-      "n": 249,
-      "detectes": 249,
-      "rappel": 1
+    "docx": {
+      "global": {
+        "n": 2646,
+        "detectes": 2600,
+        "rappel": 0.982615268329554
+      },
+      "refuses": 1,
+      "par_pack": {
+        "banque-assurance": {
+          "n": 342,
+          "detectes": 336,
+          "rappel": 0.9824561403508771
+        },
+        "core": {
+          "n": 725,
+          "detectes": 716,
+          "rappel": 0.9875862068965517
+        },
+        "expertise-comptable": {
+          "n": 287,
+          "detectes": 282,
+          "rappel": 0.9825783972125436
+        },
+        "juridique-fr": {
+          "n": 276,
+          "detectes": 269,
+          "rappel": 0.9746376811594203
+        },
+        "rh-paie": {
+          "n": 300,
+          "detectes": 284,
+          "rappel": 0.9466666666666667
+        },
+        "sante": {
+          "n": 291,
+          "detectes": 288,
+          "rappel": 0.9896907216494846
+        },
+        "telecom-ma": {
+          "n": 425,
+          "detectes": 425,
+          "rappel": 1
+        }
+      },
+      "par_langue": {
+        "ar": {
+          "n": 323,
+          "detectes": 323,
+          "rappel": 1
+        },
+        "darija-latin": {
+          "n": 228,
+          "detectes": 228,
+          "rappel": 1
+        },
+        "fr": {
+          "n": 1853,
+          "detectes": 1808,
+          "rappel": 0.9757150566648678
+        },
+        "fr-ar": {
+          "n": 242,
+          "detectes": 241,
+          "rappel": 0.9958677685950413
+        }
+      },
+      "par_type": {
+        "PERSONNE": {
+          "n": 1145,
+          "detectes": 1132,
+          "rappel": 0.988646288209607
+        },
+        "CIN": {
+          "n": 222,
+          "detectes": 222,
+          "rappel": 1
+        },
+        "NIR": {
+          "n": 46,
+          "detectes": 29,
+          "rappel": 0.6304347826086957
+        },
+        "CNSS": {
+          "n": 87,
+          "detectes": 75,
+          "rappel": 0.8620689655172413
+        },
+        "ICE": {
+          "n": 98,
+          "detectes": 98,
+          "rappel": 1
+        },
+        "IF": {
+          "n": 45,
+          "detectes": 45,
+          "rappel": 1
+        },
+        "RC": {
+          "n": 45,
+          "detectes": 45,
+          "rappel": 1
+        },
+        "SIREN": {
+          "n": 24,
+          "detectes": 24,
+          "rappel": 1
+        },
+        "SIRET": {
+          "n": 28,
+          "detectes": 28,
+          "rappel": 1
+        },
+        "TEL": {
+          "n": 506,
+          "detectes": 506,
+          "rappel": 1
+        },
+        "EMAIL": {
+          "n": 224,
+          "detectes": 224,
+          "rappel": 1
+        },
+        "IBAN": {
+          "n": 41,
+          "detectes": 40,
+          "rappel": 0.975609756097561
+        },
+        "RIB": {
+          "n": 66,
+          "detectes": 63,
+          "rappel": 0.9545454545454546
+        },
+        "IMEI": {
+          "n": 50,
+          "detectes": 50,
+          "rappel": 1
+        },
+        "IMSI": {
+          "n": 19,
+          "detectes": 19,
+          "rappel": 1
+        }
+      }
     },
-    "juridique-fr": {
-      "n": 276,
-      "detectes": 269,
-      "rappel": 0.9746376811594203
+    "xlsx-document": {
+      "global": {
+        "n": 2658,
+        "detectes": 2607,
+        "rappel": 0.9808126410835214
+      },
+      "refuses": 0,
+      "par_pack": {
+        "banque-assurance": {
+          "n": 342,
+          "detectes": 331,
+          "rappel": 0.9678362573099415
+        },
+        "core": {
+          "n": 737,
+          "detectes": 727,
+          "rappel": 0.9864314789687924
+        },
+        "expertise-comptable": {
+          "n": 287,
+          "detectes": 282,
+          "rappel": 0.9825783972125436
+        },
+        "juridique-fr": {
+          "n": 276,
+          "detectes": 270,
+          "rappel": 0.9782608695652174
+        },
+        "rh-paie": {
+          "n": 300,
+          "detectes": 284,
+          "rappel": 0.9466666666666667
+        },
+        "sante": {
+          "n": 291,
+          "detectes": 288,
+          "rappel": 0.9896907216494846
+        },
+        "telecom-ma": {
+          "n": 425,
+          "detectes": 425,
+          "rappel": 1
+        }
+      },
+      "par_langue": {
+        "ar": {
+          "n": 323,
+          "detectes": 318,
+          "rappel": 0.9845201238390093
+        },
+        "darija-latin": {
+          "n": 240,
+          "detectes": 240,
+          "rappel": 1
+        },
+        "fr": {
+          "n": 1853,
+          "detectes": 1808,
+          "rappel": 0.9757150566648678
+        },
+        "fr-ar": {
+          "n": 242,
+          "detectes": 241,
+          "rappel": 0.9958677685950413
+        }
+      },
+      "par_type": {
+        "PERSONNE": {
+          "n": 1155,
+          "detectes": 1142,
+          "rappel": 0.9887445887445887
+        },
+        "CIN": {
+          "n": 223,
+          "detectes": 223,
+          "rappel": 1
+        },
+        "NIR": {
+          "n": 46,
+          "detectes": 29,
+          "rappel": 0.6304347826086957
+        },
+        "CNSS": {
+          "n": 87,
+          "detectes": 75,
+          "rappel": 0.8620689655172413
+        },
+        "ICE": {
+          "n": 98,
+          "detectes": 98,
+          "rappel": 1
+        },
+        "IF": {
+          "n": 45,
+          "detectes": 45,
+          "rappel": 1
+        },
+        "RC": {
+          "n": 45,
+          "detectes": 45,
+          "rappel": 1
+        },
+        "SIREN": {
+          "n": 24,
+          "detectes": 24,
+          "rappel": 1
+        },
+        "SIRET": {
+          "n": 28,
+          "detectes": 28,
+          "rappel": 1
+        },
+        "TEL": {
+          "n": 507,
+          "detectes": 507,
+          "rappel": 1
+        },
+        "EMAIL": {
+          "n": 224,
+          "detectes": 224,
+          "rappel": 1
+        },
+        "IBAN": {
+          "n": 41,
+          "detectes": 40,
+          "rappel": 0.975609756097561
+        },
+        "RIB": {
+          "n": 66,
+          "detectes": 58,
+          "rappel": 0.8787878787878788
+        },
+        "IMEI": {
+          "n": 50,
+          "detectes": 50,
+          "rappel": 1
+        },
+        "IMSI": {
+          "n": 19,
+          "detectes": 19,
+          "rappel": 1
+        }
+      }
     },
-    "banque-assurance": {
-      "n": 270,
-      "detectes": 264,
-      "rappel": 0.9777777777777777
-    },
-    "sante": {
-      "n": 207,
-      "detectes": 204,
-      "rappel": 0.9855072463768116
-    },
-    "expertise-comptable": {
-      "n": 287,
-      "detectes": 282,
-      "rappel": 0.9825783972125436
-    },
-    "rh-paie": {
-      "n": 228,
-      "detectes": 212,
-      "rappel": 0.9298245614035088
-    }
-  },
-  "par_type": {
-    "PERSONNE": {
-      "n": 733,
-      "detectes": 721,
-      "rappel": 0.9836289222373806
-    },
-    "CIN": {
-      "n": 139,
-      "detectes": 139,
-      "rappel": 1
-    },
-    "NIR": {
-      "n": 46,
-      "detectes": 29,
-      "rappel": 0.6304347826086957
-    },
-    "CNSS": {
-      "n": 74,
-      "detectes": 62,
-      "rappel": 0.8378378378378378
-    },
-    "ICE": {
-      "n": 74,
-      "detectes": 74,
-      "rappel": 1
-    },
-    "IF": {
-      "n": 45,
-      "detectes": 45,
-      "rappel": 1
-    },
-    "RC": {
-      "n": 45,
-      "detectes": 45,
-      "rappel": 1
-    },
-    "SIREN": {
-      "n": 24,
-      "detectes": 24,
-      "rappel": 1
-    },
-    "SIRET": {
-      "n": 28,
-      "detectes": 28,
-      "rappel": 1
-    },
-    "TEL": {
-      "n": 340,
-      "detectes": 340,
-      "rappel": 1
-    },
-    "EMAIL": {
-      "n": 165,
-      "detectes": 165,
-      "rappel": 1
-    },
-    "IBAN": {
-      "n": 41,
-      "detectes": 40,
-      "rappel": 0.975609756097561
-    },
-    "RIB": {
-      "n": 54,
-      "detectes": 51,
-      "rappel": 0.9444444444444444
-    },
-    "IMEI": {
-      "n": 26,
-      "detectes": 26,
-      "rappel": 1
-    },
-    "IMSI": {
-      "n": 19,
-      "detectes": 19,
-      "rappel": 1
+    "xlsx-tableau": {
+      "global": {
+        "n": 807,
+        "detectes": 805,
+        "rappel": 0.9975216852540273
+      },
+      "refuses": 0,
+      "par_pack": {
+        "banque-assurance": {
+          "n": 24,
+          "detectes": 22,
+          "rappel": 0.9166666666666666
+        },
+        "core": {
+          "n": 153,
+          "detectes": 153,
+          "rappel": 1
+        },
+        "expertise-comptable": {
+          "n": 186,
+          "detectes": 186,
+          "rappel": 1
+        },
+        "juridique-fr": {
+          "n": 109,
+          "detectes": 109,
+          "rappel": 1
+        },
+        "rh-paie": {
+          "n": 124,
+          "detectes": 124,
+          "rappel": 1
+        },
+        "sante": {
+          "n": 99,
+          "detectes": 99,
+          "rappel": 1
+        },
+        "telecom-ma": {
+          "n": 112,
+          "detectes": 112,
+          "rappel": 1
+        }
+      },
+      "par_langue": {
+        "fr": {
+          "n": 654,
+          "detectes": 652,
+          "rappel": 0.9969418960244648
+        },
+        "fr-ar": {
+          "n": 153,
+          "detectes": 153,
+          "rappel": 1
+        }
+      },
+      "par_type": {
+        "PERSONNE": {
+          "n": 356,
+          "detectes": 354,
+          "rappel": 0.9943820224719101
+        },
+        "CIN": {
+          "n": 65,
+          "detectes": 65,
+          "rappel": 1
+        },
+        "CNSS": {
+          "n": 31,
+          "detectes": 31,
+          "rappel": 1
+        },
+        "ICE": {
+          "n": 31,
+          "detectes": 31,
+          "rappel": 1
+        },
+        "IF": {
+          "n": 31,
+          "detectes": 31,
+          "rappel": 1
+        },
+        "RC": {
+          "n": 31,
+          "detectes": 31,
+          "rappel": 1
+        },
+        "TEL": {
+          "n": 163,
+          "detectes": 163,
+          "rappel": 1
+        },
+        "EMAIL": {
+          "n": 51,
+          "detectes": 51,
+          "rappel": 1
+        },
+        "RIB": {
+          "n": 36,
+          "detectes": 36,
+          "rappel": 1
+        },
+        "IMEI": {
+          "n": 12,
+          "detectes": 12,
+          "rappel": 1
+        }
+      }
     }
   }
 }

@@ -206,3 +206,34 @@ export function imei(h) {
 }
 export const imsi = (h) => ({ valeur: "604" + h.choix(["00", "01", "02", "05", "10"]) + h.chiffres(10), variante: "imsi-colle" });
 export const iccid = (h) => ({ valeur: luhnComplete("89212" + h.choix(["00", "01", "05"]) + h.chiffres(11)), variante: "iccid-colle" });
+
+/* Chiffres arabes orientaux (٠١٢٣٤٥٦٧٨٩) : un numéro saisi sur un clavier
+   arabe, ou relu par OCR dans un document arabe. Même numéro, même clé de
+   contrôle ; seule l'écriture des chiffres change (variante « ·ar »). */
+const ORIENTAUX = "٠١٢٣٤٥٦٧٨٩";
+export const enChiffresArabes = (s) => s.replace(/[0-9]/g, (d) => ORIENTAUX[d]);
+
+export function telMaArabe(h) {
+  const n = h.choix(["6", "6", "7", "5"]) + h.chiffres(8);
+  const p = (s) => s.replace(/(\d{2})(?=\d)/g, "$1 ");
+  const fixe = n[0] === "5" ? "fixe" : "mobile";
+  const x = h.choix([
+    { valeur: "0" + n, variante: `ma-${fixe}-national-colle` },
+    { valeur: p("0" + n), variante: `ma-${fixe}-national-espaces` },
+    { valeur: `+212 ${n[0]} ${p(n.slice(1))}`, variante: `ma-${fixe}-intl-espaces` },
+    { valeur: `00212${n}`, variante: `ma-${fixe}-00212-colle` },
+  ]);
+  return { valeur: enChiffresArabes(x.valeur), variante: `${x.variante}·ar` };
+}
+export function cinArabe(h) {
+  const x = cin(h);
+  return { valeur: enChiffresArabes(x.valeur), variante: `${x.variante}·ar` };
+}
+export function ribMaArabe(h) {
+  const x = ribMa(h);
+  return { valeur: enChiffresArabes(x.valeur), variante: `${x.variante}·ar` };
+}
+export function cnssArabe(h) {
+  const x = cnss(h);
+  return { valeur: enChiffresArabes(x.valeur), variante: `${x.variante}·ar` };
+}
