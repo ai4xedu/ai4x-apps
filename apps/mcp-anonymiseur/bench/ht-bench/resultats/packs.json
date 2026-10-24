@@ -1,0 +1,4113 @@
+{
+ "split": "dev",
+ "version_moteur": "2.23.2",
+ "jeu_sha256": "63117fe4d240262b3d4c503d4373d6f64e0a26480f8e1281aefb8b01bb216668",
+ "configs": {
+  "aucun": {
+   "global": {
+    "direct": {
+     "n": 1853,
+     "detectes": 1806,
+     "partiels": 34,
+     "manques": 13,
+     "rappel": 0.974635725849973
+    },
+    "tous": {
+     "n": 2473,
+     "detectes": 2347,
+     "partiels": 47,
+     "manques": 79,
+     "rappel": 0.9490497371613424
+    },
+    "precision": 0.8389740877842411,
+    "passages": 3782,
+    "leurres": {
+     "n": 1955,
+     "codes": 209,
+     "taux_faux_positifs": 0.10690537084398977
+    }
+   },
+   "par_pack": {
+    "core": {
+     "documents": 46,
+     "direct": {
+      "n": 336,
+      "detectes": 328,
+      "partiels": 8,
+      "manques": 0,
+      "rappel": 0.9761904761904762
+     },
+     "tous": {
+      "n": 393,
+      "detectes": 379,
+      "partiels": 8,
+      "manques": 6,
+      "rappel": 0.9643765903307888
+     },
+     "precision": 0.9327102803738317,
+     "f1": 0.9482791471950901,
+     "passages": 535,
+     "passages_leurres": 2,
+     "passages_hors_etiquette": 34,
+     "leurres": {
+      "n": 146,
+      "codes": 2,
+      "taux_faux_positifs": 0.0136986301369863
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 19,
+       "detectes": 19,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 1,
+       "detectes": 1,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 57,
+       "detectes": 57,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 10,
+       "detectes": 4,
+       "partiels": 6,
+       "manques": 0,
+       "rappel": 0.4
+      },
+      "PERSONNE": {
+       "n": 145,
+       "detectes": 143,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.9862068965517241
+      },
+      "TEL": {
+       "n": 104,
+       "detectes": 104,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "telecom-ma": {
+     "documents": 37,
+     "direct": {
+      "n": 249,
+      "detectes": 249,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
+     },
+     "tous": {
+      "n": 278,
+      "detectes": 278,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
+     },
+     "precision": 0.7829099307159353,
+     "f1": 0.8782383419689119,
+     "passages": 433,
+     "passages_leurres": 37,
+     "passages_hors_etiquette": 57,
+     "leurres": {
+      "n": 158,
+      "codes": 37,
+      "taux_faux_positifs": 0.23417721518987342
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 36,
+       "detectes": 36,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "ICE": {
+       "n": 5,
+       "detectes": 5,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IMEI": {
+       "n": 26,
+       "detectes": 26,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IMSI": {
+       "n": 19,
+       "detectes": 19,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 72,
+       "detectes": 72,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 67,
+       "detectes": 67,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "juridique-fr": {
+     "documents": 37,
+     "direct": {
+      "n": 276,
+      "detectes": 269,
+      "partiels": 6,
+      "manques": 1,
+      "rappel": 0.9746376811594203
+     },
+     "tous": {
+      "n": 420,
+      "detectes": 387,
+      "partiels": 6,
+      "manques": 27,
+      "rappel": 0.9214285714285714
+     },
+     "precision": 0.8910569105691057,
+     "f1": 0.9059882733651599,
+     "passages": 615,
+     "passages_leurres": 15,
+     "passages_hors_etiquette": 52,
+     "leurres": {
+      "n": 308,
+      "codes": 15,
+      "taux_faux_positifs": 0.048701298701298704
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 7,
+       "partiels": 5,
+       "manques": 0,
+       "rappel": 0.5833333333333334
+      },
+      "PERSONNE": {
+       "n": 144,
+       "detectes": 142,
+       "partiels": 1,
+       "manques": 1,
+       "rappel": 0.9861111111111112
+      },
+      "SIREN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "SIRET": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 48,
+       "detectes": 48,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "banque-assurance": {
+     "documents": 37,
+     "direct": {
+      "n": 270,
+      "detectes": 262,
+      "partiels": 8,
+      "manques": 0,
+      "rappel": 0.9703703703703703
+     },
+     "tous": {
+      "n": 342,
+      "detectes": 323,
+      "partiels": 19,
+      "manques": 0,
+      "rappel": 0.9444444444444444
+     },
+     "precision": 0.8034055727554179,
+     "f1": 0.8682345994882896,
+     "passages": 646,
+     "passages_leurres": 1,
+     "passages_hors_etiquette": 126,
+     "leurres": {
+      "n": 277,
+      "codes": 1,
+      "taux_faux_positifs": 0.0036101083032490976
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 25,
+       "detectes": 23,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.92
+      },
+      "PERSONNE": {
+       "n": 139,
+       "detectes": 135,
+       "partiels": 4,
+       "manques": 0,
+       "rappel": 0.9712230215827338
+      },
+      "RIB": {
+       "n": 34,
+       "detectes": 32,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.9411764705882353
+      },
+      "TEL": {
+       "n": 36,
+       "detectes": 36,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "sante": {
+     "documents": 37,
+     "direct": {
+      "n": 207,
+      "detectes": 204,
+      "partiels": 3,
+      "manques": 0,
+      "rappel": 0.9855072463768116
+     },
+     "tous": {
+      "n": 327,
+      "detectes": 305,
+      "partiels": 3,
+      "manques": 19,
+      "rappel": 0.9327217125382263
+     },
+     "precision": 0.7339130434782609,
+     "f1": 0.8214596849082073,
+     "passages": 575,
+     "passages_leurres": 61,
+     "passages_hors_etiquette": 92,
+     "leurres": {
+      "n": 244,
+      "codes": 61,
+      "taux_faux_positifs": 0.25
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 9,
+       "partiels": 3,
+       "manques": 0,
+       "rappel": 0.75
+      },
+      "PERSONNE": {
+       "n": 98,
+       "detectes": 98,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 49,
+       "detectes": 49,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "expertise-comptable": {
+     "documents": 37,
+     "direct": {
+      "n": 287,
+      "detectes": 282,
+      "partiels": 5,
+      "manques": 0,
+      "rappel": 0.9825783972125436
+     },
+     "tous": {
+      "n": 401,
+      "detectes": 394,
+      "partiels": 7,
+      "manques": 0,
+      "rappel": 0.9825436408977556
+     },
+     "precision": 0.8851590106007067,
+     "f1": 0.9313124402873285,
+     "passages": 566,
+     "passages_leurres": 5,
+     "passages_hors_etiquette": 60,
+     "leurres": {
+      "n": 439,
+      "codes": 5,
+      "taux_faux_positifs": 0.011389521640091117
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 13,
+       "detectes": 13,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 4,
+       "detectes": 4,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "ICE": {
+       "n": 45,
+       "detectes": 45,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IF": {
+       "n": 33,
+       "detectes": 33,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 87,
+       "detectes": 83,
+       "partiels": 4,
+       "manques": 0,
+       "rappel": 0.9540229885057471
+      },
+      "RC": {
+       "n": 33,
+       "detectes": 33,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RIB": {
+       "n": 8,
+       "detectes": 7,
+       "partiels": 1,
+       "manques": 0,
+       "rappel": 0.875
+      },
+      "SIRET": {
+       "n": 4,
+       "detectes": 4,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "rh-paie": {
+     "documents": 37,
+     "direct": {
+      "n": 228,
+      "detectes": 212,
+      "partiels": 4,
+      "manques": 12,
+      "rappel": 0.9298245614035088
+     },
+     "tous": {
+      "n": 312,
+      "detectes": 281,
+      "partiels": 4,
+      "manques": 27,
+      "rappel": 0.9006410256410257
+     },
+     "precision": 0.837378640776699,
+     "f1": 0.867858485667735,
+     "passages": 412,
+     "passages_leurres": 50,
+     "passages_hors_etiquette": 17,
+     "leurres": {
+      "n": 383,
+      "codes": 88,
+      "taux_faux_positifs": 0.2297650130548303
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 36,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 12,
+       "rappel": 0.6666666666666666
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 12,
+       "detectes": 11,
+       "partiels": 1,
+       "manques": 0,
+       "rappel": 0.9166666666666666
+      },
+      "ICE": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IF": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 9,
+       "partiels": 3,
+       "manques": 0,
+       "rappel": 0.75
+      },
+      "PERSONNE": {
+       "n": 48,
+       "detectes": 48,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RC": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RIB": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "SIRET": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    }
+   },
+   "par_type": {
+    "PERSONNE": {
+     "libelle": "Nom de personne",
+     "direct": true,
+     "n": 733,
+     "detectes": 721,
+     "partiels": 11,
+     "manques": 1,
+     "rappel": 0.9836289222373806,
+     "passages": 1794,
+     "passages_justes": 1366,
+     "precision": 0.7614269788182831,
+     "f1": 0.8583812106929202,
+     "bien_etiquetes": 709
+    },
+    "CIN": {
+     "libelle": "CIN marocaine",
+     "direct": true,
+     "n": 139,
+     "detectes": 139,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 164,
+     "passages_justes": 101,
+     "precision": 0.6158536585365854,
+     "f1": 0.7622641509433963,
+     "bien_etiquetes": 101
+    },
+    "NIR": {
+     "libelle": "NIR (sécurité sociale, France)",
+     "direct": true,
+     "n": 46,
+     "detectes": 29,
+     "partiels": 17,
+     "manques": 0,
+     "rappel": 0.6304347826086957,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 29
+    },
+    "CNSS": {
+     "libelle": "N° CNSS",
+     "direct": true,
+     "n": 74,
+     "detectes": 62,
+     "partiels": 0,
+     "manques": 12,
+     "rappel": 0.8378378378378378,
+     "passages": 26,
+     "passages_justes": 26,
+     "precision": 1,
+     "f1": 0.911764705882353,
+     "bien_etiquetes": 26
+    },
+    "ICE": {
+     "libelle": "ICE",
+     "direct": true,
+     "n": 74,
+     "detectes": 74,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 119,
+     "passages_justes": 74,
+     "precision": 0.6218487394957983,
+     "f1": 0.766839378238342,
+     "bien_etiquetes": 74
+    },
+    "IF": {
+     "libelle": "Identifiant fiscal (IF)",
+     "direct": true,
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 27,
+     "passages_justes": 27,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 27
+    },
+    "RC": {
+     "libelle": "Registre de commerce (RC)",
+     "direct": true,
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 45,
+     "passages_justes": 45,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 45
+    },
+    "SIREN": {
+     "libelle": "SIREN",
+     "direct": true,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 279,
+     "passages_justes": 24,
+     "precision": 0.08602150537634409,
+     "f1": 0.15841584158415845,
+     "bien_etiquetes": 24
+    },
+    "SIRET": {
+     "libelle": "SIRET",
+     "direct": true,
+     "n": 28,
+     "detectes": 28,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "TEL": {
+     "libelle": "Téléphone",
+     "direct": true,
+     "n": 340,
+     "detectes": 340,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 317,
+     "passages_justes": 317,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 317
+    },
+    "EMAIL": {
+     "libelle": "E-mail",
+     "direct": true,
+     "n": 165,
+     "detectes": 165,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 165,
+     "passages_justes": 165,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 165
+    },
+    "IBAN": {
+     "libelle": "IBAN",
+     "direct": true,
+     "n": 41,
+     "detectes": 38,
+     "partiels": 3,
+     "manques": 0,
+     "rappel": 0.926829268292683,
+     "passages": 91,
+     "passages_justes": 38,
+     "precision": 0.4175824175824176,
+     "f1": 0.5757575757575758,
+     "bien_etiquetes": 38
+    },
+    "RIB": {
+     "libelle": "RIB",
+     "direct": true,
+     "n": 54,
+     "detectes": 51,
+     "partiels": 3,
+     "manques": 0,
+     "rappel": 0.9444444444444444,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 51
+    },
+    "IMEI": {
+     "libelle": "IMEI",
+     "direct": true,
+     "n": 26,
+     "detectes": 26,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "IMSI": {
+     "libelle": "IMSI",
+     "direct": true,
+     "n": 19,
+     "detectes": 19,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "BIC": {
+     "libelle": "BIC / SWIFT",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "ICCID": {
+     "libelle": "ICCID (carte SIM)",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "ADRESSE": {
+     "libelle": "Adresse postale",
+     "direct": false,
+     "n": 161,
+     "detectes": 154,
+     "partiels": 0,
+     "manques": 7,
+     "rappel": 0.9565217391304348,
+     "passages": 163,
+     "passages_justes": 162,
+     "precision": 0.9938650306748467,
+     "f1": 0.9748358862144421,
+     "bien_etiquetes": 143
+    },
+    "SOCIETE": {
+     "libelle": "Société",
+     "direct": false,
+     "n": 156,
+     "detectes": 156,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 288,
+     "passages_justes": 156,
+     "precision": 0.5416666666666666,
+     "f1": 0.7027027027027027,
+     "bien_etiquetes": 156
+    },
+    "NAISSANCE": {
+     "libelle": "Date de naissance",
+     "direct": false,
+     "n": 74,
+     "detectes": 56,
+     "partiels": 0,
+     "manques": 18,
+     "rappel": 0.7567567567567568,
+     "passages": 56,
+     "passages_justes": 56,
+     "precision": 1,
+     "f1": 0.8615384615384616,
+     "bien_etiquetes": 56
+    },
+    "PATENTE": {
+     "libelle": "N° de patente",
+     "direct": false,
+     "n": 9,
+     "detectes": 9,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 9,
+     "passages_justes": 9,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 9
+    },
+    "TVA": {
+     "libelle": "N° de TVA intracommunautaire",
+     "direct": false,
+     "n": 4,
+     "detectes": 2,
+     "partiels": 2,
+     "manques": 0,
+     "rappel": 0.5,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 2
+    },
+    "MATRICULE": {
+     "libelle": "Matricule salarié",
+     "direct": false,
+     "n": 24,
+     "detectes": 11,
+     "partiels": 0,
+     "manques": 13,
+     "rappel": 0.4583333333333333,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "PATIENT": {
+     "libelle": "N° de dossier patient / IPP",
+     "direct": false,
+     "n": 24,
+     "detectes": 20,
+     "partiels": 0,
+     "manques": 4,
+     "rappel": 0.8333333333333334,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "PRATICIEN": {
+     "libelle": "Identifiant praticien (INPE, RPPS)",
+     "direct": false,
+     "n": 36,
+     "detectes": 36,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "POLICE": {
+     "libelle": "N° de police d'assurance",
+     "direct": false,
+     "n": 12,
+     "detectes": 1,
+     "partiels": 11,
+     "manques": 0,
+     "rappel": 0.08333333333333333,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "SINISTRE": {
+     "libelle": "N° de sinistre",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "FACTURE": {
+     "libelle": "N° de facture / pièce",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 12
+    },
+    "RG": {
+     "libelle": "N° RG / parquet",
+     "direct": false,
+     "n": 48,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 24,
+     "rappel": 0.5,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 24
+    }
+   },
+   "imbriques": {}
+  },
+  "propre": {
+   "global": {
+    "direct": {
+     "n": 1853,
+     "detectes": 1808,
+     "partiels": 32,
+     "manques": 13,
+     "rappel": 0.9757150566648678
+    },
+    "tous": {
+     "n": 2473,
+     "detectes": 2403,
+     "partiels": 32,
+     "manques": 38,
+     "rappel": 0.9716942984229681
+    },
+    "precision": 0.8547054118901626,
+    "passages": 3751,
+    "leurres": {
+     "n": 1955,
+     "codes": 170,
+     "taux_faux_positifs": 0.08695652173913043
+    }
+   },
+   "par_pack": {
+    "core": {
+     "documents": 46,
+     "direct": {
+      "n": 336,
+      "detectes": 328,
+      "partiels": 8,
+      "manques": 0,
+      "rappel": 0.9761904761904762
+     },
+     "tous": {
+      "n": 393,
+      "detectes": 379,
+      "partiels": 8,
+      "manques": 6,
+      "rappel": 0.9643765903307888
+     },
+     "precision": 0.9327102803738317,
+     "f1": 0.9482791471950901,
+     "passages": 535,
+     "passages_leurres": 2,
+     "passages_hors_etiquette": 34,
+     "leurres": {
+      "n": 146,
+      "codes": 2,
+      "taux_faux_positifs": 0.0136986301369863
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 19,
+       "detectes": 19,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 1,
+       "detectes": 1,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 57,
+       "detectes": 57,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 10,
+       "detectes": 4,
+       "partiels": 6,
+       "manques": 0,
+       "rappel": 0.4
+      },
+      "PERSONNE": {
+       "n": 145,
+       "detectes": 143,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.9862068965517241
+      },
+      "TEL": {
+       "n": 104,
+       "detectes": 104,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "telecom-ma": {
+     "documents": 37,
+     "direct": {
+      "n": 249,
+      "detectes": 249,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
+     },
+     "tous": {
+      "n": 278,
+      "detectes": 278,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
+     },
+     "precision": 0.8188405797101449,
+     "f1": 0.900398406374502,
+     "passages": 414,
+     "passages_leurres": 18,
+     "passages_hors_etiquette": 57,
+     "leurres": {
+      "n": 158,
+      "codes": 18,
+      "taux_faux_positifs": 0.11392405063291139
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 36,
+       "detectes": 36,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "ICE": {
+       "n": 5,
+       "detectes": 5,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IMEI": {
+       "n": 26,
+       "detectes": 26,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IMSI": {
+       "n": 19,
+       "detectes": 19,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 72,
+       "detectes": 72,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 67,
+       "detectes": 67,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "juridique-fr": {
+     "documents": 37,
+     "direct": {
+      "n": 276,
+      "detectes": 269,
+      "partiels": 6,
+      "manques": 1,
+      "rappel": 0.9746376811594203
+     },
+     "tous": {
+      "n": 420,
+      "detectes": 411,
+      "partiels": 6,
+      "manques": 3,
+      "rappel": 0.9785714285714285
+     },
+     "precision": 0.8666666666666667,
+     "f1": 0.9192258064516129,
+     "passages": 660,
+     "passages_leurres": 36,
+     "passages_hors_etiquette": 52,
+     "leurres": {
+      "n": 308,
+      "codes": 36,
+      "taux_faux_positifs": 0.11688311688311688
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 7,
+       "partiels": 5,
+       "manques": 0,
+       "rappel": 0.5833333333333334
+      },
+      "PERSONNE": {
+       "n": 144,
+       "detectes": 142,
+       "partiels": 1,
+       "manques": 1,
+       "rappel": 0.9861111111111112
+      },
+      "SIREN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "SIRET": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 48,
+       "detectes": 48,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "banque-assurance": {
+     "documents": 37,
+     "direct": {
+      "n": 270,
+      "detectes": 264,
+      "partiels": 6,
+      "manques": 0,
+      "rappel": 0.9777777777777777
+     },
+     "tous": {
+      "n": 342,
+      "detectes": 336,
+      "partiels": 6,
+      "manques": 0,
+      "rappel": 0.9824561403508771
+     },
+     "precision": 0.7863777089783281,
+     "f1": 0.8735491002886446,
+     "passages": 646,
+     "passages_leurres": 1,
+     "passages_hors_etiquette": 137,
+     "leurres": {
+      "n": 277,
+      "codes": 1,
+      "taux_faux_positifs": 0.0036101083032490976
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 25,
+       "detectes": 25,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 139,
+       "detectes": 135,
+       "partiels": 4,
+       "manques": 0,
+       "rappel": 0.9712230215827338
+      },
+      "RIB": {
+       "n": 34,
+       "detectes": 32,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.9411764705882353
+      },
+      "TEL": {
+       "n": 36,
+       "detectes": 36,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "sante": {
+     "documents": 37,
+     "direct": {
+      "n": 207,
+      "detectes": 204,
+      "partiels": 3,
+      "manques": 0,
+      "rappel": 0.9855072463768116
+     },
+     "tous": {
+      "n": 327,
+      "detectes": 309,
+      "partiels": 3,
+      "manques": 15,
+      "rappel": 0.944954128440367
+     },
+     "precision": 0.8101503759398496,
+     "f1": 0.8723753377548514,
+     "passages": 532,
+     "passages_leurres": 32,
+     "passages_hors_etiquette": 69,
+     "leurres": {
+      "n": 244,
+      "codes": 32,
+      "taux_faux_positifs": 0.13114754098360656
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 9,
+       "partiels": 3,
+       "manques": 0,
+       "rappel": 0.75
+      },
+      "PERSONNE": {
+       "n": 98,
+       "detectes": 98,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 49,
+       "detectes": 49,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "expertise-comptable": {
+     "documents": 37,
+     "direct": {
+      "n": 287,
+      "detectes": 282,
+      "partiels": 5,
+      "manques": 0,
+      "rappel": 0.9825783972125436
+     },
+     "tous": {
+      "n": 401,
+      "detectes": 396,
+      "partiels": 5,
+      "manques": 0,
+      "rappel": 0.9875311720698254
+     },
+     "precision": 0.8863232682060391,
+     "f1": 0.9341940729989812,
+     "passages": 563,
+     "passages_leurres": 5,
+     "passages_hors_etiquette": 59,
+     "leurres": {
+      "n": 439,
+      "codes": 5,
+      "taux_faux_positifs": 0.011389521640091117
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 13,
+       "detectes": 13,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 4,
+       "detectes": 4,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "ICE": {
+       "n": 45,
+       "detectes": 45,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IF": {
+       "n": 33,
+       "detectes": 33,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 87,
+       "detectes": 83,
+       "partiels": 4,
+       "manques": 0,
+       "rappel": 0.9540229885057471
+      },
+      "RC": {
+       "n": 33,
+       "detectes": 33,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RIB": {
+       "n": 8,
+       "detectes": 7,
+       "partiels": 1,
+       "manques": 0,
+       "rappel": 0.875
+      },
+      "SIRET": {
+       "n": 4,
+       "detectes": 4,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "rh-paie": {
+     "documents": 37,
+     "direct": {
+      "n": 228,
+      "detectes": 212,
+      "partiels": 4,
+      "manques": 12,
+      "rappel": 0.9298245614035088
+     },
+     "tous": {
+      "n": 312,
+      "detectes": 294,
+      "partiels": 4,
+      "manques": 14,
+      "rappel": 0.9423076923076923
+     },
+     "precision": 0.8927680798004988,
+     "f1": 0.9168692016202797,
+     "passages": 401,
+     "passages_leurres": 38,
+     "passages_hors_etiquette": 5,
+     "leurres": {
+      "n": 383,
+      "codes": 76,
+      "taux_faux_positifs": 0.19843342036553524
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 36,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 12,
+       "rappel": 0.6666666666666666
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 12,
+       "detectes": 11,
+       "partiels": 1,
+       "manques": 0,
+       "rappel": 0.9166666666666666
+      },
+      "ICE": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IF": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 9,
+       "partiels": 3,
+       "manques": 0,
+       "rappel": 0.75
+      },
+      "PERSONNE": {
+       "n": 48,
+       "detectes": 48,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RC": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RIB": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "SIRET": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    }
+   },
+   "par_type": {
+    "PERSONNE": {
+     "libelle": "Nom de personne",
+     "direct": true,
+     "n": 733,
+     "detectes": 721,
+     "partiels": 11,
+     "manques": 1,
+     "rappel": 0.9836289222373806,
+     "passages": 1669,
+     "passages_justes": 1332,
+     "precision": 0.7980826842420611,
+     "f1": 0.8811944735640832,
+     "bien_etiquetes": 709
+    },
+    "CIN": {
+     "libelle": "CIN marocaine",
+     "direct": true,
+     "n": 139,
+     "detectes": 139,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 159,
+     "passages_justes": 101,
+     "precision": 0.6352201257861635,
+     "f1": 0.7769230769230768,
+     "bien_etiquetes": 101
+    },
+    "NIR": {
+     "libelle": "NIR (sécurité sociale, France)",
+     "direct": true,
+     "n": 46,
+     "detectes": 29,
+     "partiels": 17,
+     "manques": 0,
+     "rappel": 0.6304347826086957,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 29
+    },
+    "CNSS": {
+     "libelle": "N° CNSS",
+     "direct": true,
+     "n": 74,
+     "detectes": 62,
+     "partiels": 0,
+     "manques": 12,
+     "rappel": 0.8378378378378378,
+     "passages": 50,
+     "passages_justes": 50,
+     "precision": 1,
+     "f1": 0.911764705882353,
+     "bien_etiquetes": 50
+    },
+    "ICE": {
+     "libelle": "ICE",
+     "direct": true,
+     "n": 74,
+     "detectes": 74,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 75,
+     "passages_justes": 74,
+     "precision": 0.9866666666666667,
+     "f1": 0.9932885906040269,
+     "bien_etiquetes": 74
+    },
+    "IF": {
+     "libelle": "Identifiant fiscal (IF)",
+     "direct": true,
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 27,
+     "passages_justes": 27,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 27
+    },
+    "RC": {
+     "libelle": "Registre de commerce (RC)",
+     "direct": true,
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 45,
+     "passages_justes": 45,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 45
+    },
+    "SIREN": {
+     "libelle": "SIREN",
+     "direct": true,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 144,
+     "passages_justes": 24,
+     "precision": 0.16666666666666666,
+     "f1": 0.2857142857142857,
+     "bien_etiquetes": 24
+    },
+    "SIRET": {
+     "libelle": "SIRET",
+     "direct": true,
+     "n": 28,
+     "detectes": 28,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 12
+    },
+    "TEL": {
+     "libelle": "Téléphone",
+     "direct": true,
+     "n": 340,
+     "detectes": 340,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 317,
+     "passages_justes": 317,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 317
+    },
+    "EMAIL": {
+     "libelle": "E-mail",
+     "direct": true,
+     "n": 165,
+     "detectes": 165,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 165,
+     "passages_justes": 165,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 165
+    },
+    "IBAN": {
+     "libelle": "IBAN",
+     "direct": true,
+     "n": 41,
+     "detectes": 40,
+     "partiels": 1,
+     "manques": 0,
+     "rappel": 0.975609756097561,
+     "passages": 91,
+     "passages_justes": 40,
+     "precision": 0.43956043956043955,
+     "f1": 0.6060606060606061,
+     "bien_etiquetes": 40
+    },
+    "RIB": {
+     "libelle": "RIB",
+     "direct": true,
+     "n": 54,
+     "detectes": 51,
+     "partiels": 3,
+     "manques": 0,
+     "rappel": 0.9444444444444444,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 51
+    },
+    "IMEI": {
+     "libelle": "IMEI",
+     "direct": true,
+     "n": 26,
+     "detectes": 26,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 25,
+     "passages_justes": 25,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 25
+    },
+    "IMSI": {
+     "libelle": "IMSI",
+     "direct": true,
+     "n": 19,
+     "detectes": 19,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 19,
+     "passages_justes": 19,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 19
+    },
+    "BIC": {
+     "libelle": "BIC / SWIFT",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "ICCID": {
+     "libelle": "ICCID (carte SIM)",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 12,
+     "passages_justes": 12,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 12
+    },
+    "ADRESSE": {
+     "libelle": "Adresse postale",
+     "direct": false,
+     "n": 161,
+     "detectes": 154,
+     "partiels": 0,
+     "manques": 7,
+     "rappel": 0.9565217391304348,
+     "passages": 160,
+     "passages_justes": 159,
+     "precision": 0.99375,
+     "f1": 0.9747805489758952,
+     "bien_etiquetes": 140
+    },
+    "SOCIETE": {
+     "libelle": "Société",
+     "direct": false,
+     "n": 156,
+     "detectes": 156,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 276,
+     "passages_justes": 144,
+     "precision": 0.5217391304347826,
+     "f1": 0.6857142857142856,
+     "bien_etiquetes": 144
+    },
+    "NAISSANCE": {
+     "libelle": "Date de naissance",
+     "direct": false,
+     "n": 74,
+     "detectes": 56,
+     "partiels": 0,
+     "manques": 18,
+     "rappel": 0.7567567567567568,
+     "passages": 56,
+     "passages_justes": 56,
+     "precision": 1,
+     "f1": 0.8615384615384616,
+     "bien_etiquetes": 56
+    },
+    "PATENTE": {
+     "libelle": "N° de patente",
+     "direct": false,
+     "n": 9,
+     "detectes": 9,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 9,
+     "passages_justes": 9,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 9
+    },
+    "TVA": {
+     "libelle": "N° de TVA intracommunautaire",
+     "direct": false,
+     "n": 4,
+     "detectes": 4,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 4,
+     "passages_justes": 4,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 4
+    },
+    "MATRICULE": {
+     "libelle": "Matricule salarié",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 24,
+     "passages_justes": 24,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 24
+    },
+    "PATIENT": {
+     "libelle": "N° de dossier patient / IPP",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 33,
+     "passages_justes": 24,
+     "precision": 0.7272727272727273,
+     "f1": 0.8421052631578948,
+     "bien_etiquetes": 24
+    },
+    "PRATICIEN": {
+     "libelle": "Identifiant praticien (INPE, RPPS)",
+     "direct": false,
+     "n": 36,
+     "detectes": 36,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 36,
+     "passages_justes": 36,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 36
+    },
+    "POLICE": {
+     "libelle": "N° de police d'assurance",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "SINISTRE": {
+     "libelle": "N° de sinistre",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 23,
+     "passages_justes": 12,
+     "precision": 0.5217391304347826,
+     "f1": 0.6857142857142856,
+     "bien_etiquetes": 12
+    },
+    "FACTURE": {
+     "libelle": "N° de facture / pièce",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 4,
+     "passages_justes": 0,
+     "precision": 0,
+     "f1": 0,
+     "bien_etiquetes": 0
+    },
+    "RG": {
+     "libelle": "N° RG / parquet",
+     "direct": false,
+     "n": 48,
+     "detectes": 48,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 36,
+     "passages_justes": 36,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 36
+    }
+   },
+   "imbriques": {
+    "banque-assurance": 11,
+    "sante": 9,
+    "expertise-comptable": 22
+   }
+  },
+  "tous": {
+   "global": {
+    "direct": {
+     "n": 1853,
+     "detectes": 1809,
+     "partiels": 31,
+     "manques": 13,
+     "rappel": 0.9762547220723151
+    },
+    "tous": {
+     "n": 2473,
+     "detectes": 2404,
+     "partiels": 31,
+     "manques": 38,
+     "rappel": 0.9720986655883542
+    },
+    "precision": 0.8392249279916209,
+    "passages": 3819,
+    "leurres": {
+     "n": 1955,
+     "codes": 170,
+     "taux_faux_positifs": 0.08695652173913043
+    }
+   },
+   "par_pack": {
+    "core": {
+     "documents": 46,
+     "direct": {
+      "n": 336,
+      "detectes": 328,
+      "partiels": 8,
+      "manques": 0,
+      "rappel": 0.9761904761904762
+     },
+     "tous": {
+      "n": 393,
+      "detectes": 379,
+      "partiels": 8,
+      "manques": 6,
+      "rappel": 0.9643765903307888
+     },
+     "precision": 0.8879003558718861,
+     "f1": 0.9245597096100022,
+     "passages": 562,
+     "passages_leurres": 2,
+     "passages_hors_etiquette": 61,
+     "leurres": {
+      "n": 146,
+      "codes": 2,
+      "taux_faux_positifs": 0.0136986301369863
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 19,
+       "detectes": 19,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 1,
+       "detectes": 1,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 57,
+       "detectes": 57,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 10,
+       "detectes": 4,
+       "partiels": 6,
+       "manques": 0,
+       "rappel": 0.4
+      },
+      "PERSONNE": {
+       "n": 145,
+       "detectes": 143,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.9862068965517241
+      },
+      "TEL": {
+       "n": 104,
+       "detectes": 104,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "telecom-ma": {
+     "documents": 37,
+     "direct": {
+      "n": 249,
+      "detectes": 249,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
+     },
+     "tous": {
+      "n": 278,
+      "detectes": 278,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
+     },
+     "precision": 0.7865429234338747,
+     "f1": 0.8805194805194806,
+     "passages": 431,
+     "passages_leurres": 18,
+     "passages_hors_etiquette": 74,
+     "leurres": {
+      "n": 158,
+      "codes": 18,
+      "taux_faux_positifs": 0.11392405063291139
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 36,
+       "detectes": 36,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "ICE": {
+       "n": 5,
+       "detectes": 5,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IMEI": {
+       "n": 26,
+       "detectes": 26,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IMSI": {
+       "n": 19,
+       "detectes": 19,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 72,
+       "detectes": 72,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 67,
+       "detectes": 67,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "juridique-fr": {
+     "documents": 37,
+     "direct": {
+      "n": 276,
+      "detectes": 269,
+      "partiels": 6,
+      "manques": 1,
+      "rappel": 0.9746376811594203
+     },
+     "tous": {
+      "n": 420,
+      "detectes": 411,
+      "partiels": 6,
+      "manques": 3,
+      "rappel": 0.9785714285714285
+     },
+     "precision": 0.8676691729323308,
+     "f1": 0.9197893940716176,
+     "passages": 665,
+     "passages_leurres": 36,
+     "passages_hors_etiquette": 52,
+     "leurres": {
+      "n": 308,
+      "codes": 36,
+      "taux_faux_positifs": 0.11688311688311688
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 7,
+       "partiels": 5,
+       "manques": 0,
+       "rappel": 0.5833333333333334
+      },
+      "PERSONNE": {
+       "n": 144,
+       "detectes": 142,
+       "partiels": 1,
+       "manques": 1,
+       "rappel": 0.9861111111111112
+      },
+      "SIREN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "SIRET": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 48,
+       "detectes": 48,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "banque-assurance": {
+     "documents": 37,
+     "direct": {
+      "n": 270,
+      "detectes": 264,
+      "partiels": 6,
+      "manques": 0,
+      "rappel": 0.9777777777777777
+     },
+     "tous": {
+      "n": 342,
+      "detectes": 336,
+      "partiels": 6,
+      "manques": 0,
+      "rappel": 0.9824561403508771
+     },
+     "precision": 0.7863777089783281,
+     "f1": 0.8735491002886446,
+     "passages": 646,
+     "passages_leurres": 1,
+     "passages_hors_etiquette": 137,
+     "leurres": {
+      "n": 277,
+      "codes": 1,
+      "taux_faux_positifs": 0.0036101083032490976
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 25,
+       "detectes": 25,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 139,
+       "detectes": 135,
+       "partiels": 4,
+       "manques": 0,
+       "rappel": 0.9712230215827338
+      },
+      "RIB": {
+       "n": 34,
+       "detectes": 32,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.9411764705882353
+      },
+      "TEL": {
+       "n": 36,
+       "detectes": 36,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "sante": {
+     "documents": 37,
+     "direct": {
+      "n": 207,
+      "detectes": 204,
+      "partiels": 3,
+      "manques": 0,
+      "rappel": 0.9855072463768116
+     },
+     "tous": {
+      "n": 327,
+      "detectes": 309,
+      "partiels": 3,
+      "manques": 15,
+      "rappel": 0.944954128440367
+     },
+     "precision": 0.8101503759398496,
+     "f1": 0.8723753377548514,
+     "passages": 532,
+     "passages_leurres": 32,
+     "passages_hors_etiquette": 69,
+     "leurres": {
+      "n": 244,
+      "codes": 32,
+      "taux_faux_positifs": 0.13114754098360656
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 9,
+       "partiels": 3,
+       "manques": 0,
+       "rappel": 0.75
+      },
+      "PERSONNE": {
+       "n": 98,
+       "detectes": 98,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 49,
+       "detectes": 49,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "expertise-comptable": {
+     "documents": 37,
+     "direct": {
+      "n": 287,
+      "detectes": 282,
+      "partiels": 5,
+      "manques": 0,
+      "rappel": 0.9825783972125436
+     },
+     "tous": {
+      "n": 401,
+      "detectes": 396,
+      "partiels": 5,
+      "manques": 0,
+      "rappel": 0.9875311720698254
+     },
+     "precision": 0.8861209964412812,
+     "f1": 0.9340817051509769,
+     "passages": 562,
+     "passages_leurres": 5,
+     "passages_hors_etiquette": 59,
+     "leurres": {
+      "n": 439,
+      "codes": 5,
+      "taux_faux_positifs": 0.011389521640091117
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 13,
+       "detectes": 13,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 4,
+       "detectes": 4,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "ICE": {
+       "n": 45,
+       "detectes": 45,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IF": {
+       "n": 33,
+       "detectes": 33,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 87,
+       "detectes": 83,
+       "partiels": 4,
+       "manques": 0,
+       "rappel": 0.9540229885057471
+      },
+      "RC": {
+       "n": 33,
+       "detectes": 33,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RIB": {
+       "n": 8,
+       "detectes": 7,
+       "partiels": 1,
+       "manques": 0,
+       "rappel": 0.875
+      },
+      "SIRET": {
+       "n": 4,
+       "detectes": 4,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "rh-paie": {
+     "documents": 37,
+     "direct": {
+      "n": 228,
+      "detectes": 213,
+      "partiels": 3,
+      "manques": 12,
+      "rappel": 0.9342105263157895
+     },
+     "tous": {
+      "n": 312,
+      "detectes": 295,
+      "partiels": 3,
+      "manques": 14,
+      "rappel": 0.9455128205128205
+     },
+     "precision": 0.838479809976247,
+     "f1": 0.8887855213352053,
+     "passages": 421,
+     "passages_leurres": 38,
+     "passages_hors_etiquette": 30,
+     "leurres": {
+      "n": 383,
+      "codes": 76,
+      "taux_faux_positifs": 0.19843342036553524
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 36,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 12,
+       "rappel": 0.6666666666666666
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "ICE": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IF": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 9,
+       "partiels": 3,
+       "manques": 0,
+       "rappel": 0.75
+      },
+      "PERSONNE": {
+       "n": 48,
+       "detectes": 48,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RC": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RIB": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "SIRET": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    }
+   },
+   "par_type": {
+    "PERSONNE": {
+     "libelle": "Nom de personne",
+     "direct": true,
+     "n": 733,
+     "detectes": 721,
+     "partiels": 11,
+     "manques": 1,
+     "rappel": 0.9836289222373806,
+     "passages": 1657,
+     "passages_justes": 1316,
+     "precision": 0.7942063971031985,
+     "f1": 0.8788264851284544,
+     "bien_etiquetes": 709
+    },
+    "CIN": {
+     "libelle": "CIN marocaine",
+     "direct": true,
+     "n": 139,
+     "detectes": 139,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 157,
+     "passages_justes": 101,
+     "precision": 0.643312101910828,
+     "f1": 0.7829457364341085,
+     "bien_etiquetes": 101
+    },
+    "NIR": {
+     "libelle": "NIR (sécurité sociale, France)",
+     "direct": true,
+     "n": 46,
+     "detectes": 29,
+     "partiels": 17,
+     "manques": 0,
+     "rappel": 0.6304347826086957,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 27
+    },
+    "CNSS": {
+     "libelle": "N° CNSS",
+     "direct": true,
+     "n": 74,
+     "detectes": 62,
+     "partiels": 0,
+     "manques": 12,
+     "rappel": 0.8378378378378378,
+     "passages": 71,
+     "passages_justes": 40,
+     "precision": 0.5633802816901409,
+     "f1": 0.67372996468351,
+     "bien_etiquetes": 40
+    },
+    "ICE": {
+     "libelle": "ICE",
+     "direct": true,
+     "n": 74,
+     "detectes": 74,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 68,
+     "passages_justes": 67,
+     "precision": 0.9852941176470589,
+     "f1": 0.9925925925925926,
+     "bien_etiquetes": 67
+    },
+    "IF": {
+     "libelle": "Identifiant fiscal (IF)",
+     "direct": true,
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 27,
+     "passages_justes": 27,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 27
+    },
+    "RC": {
+     "libelle": "Registre de commerce (RC)",
+     "direct": true,
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 45,
+     "passages_justes": 45,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 45
+    },
+    "SIREN": {
+     "libelle": "SIREN",
+     "direct": true,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 154,
+     "passages_justes": 24,
+     "precision": 0.15584415584415584,
+     "f1": 0.2696629213483146,
+     "bien_etiquetes": 24
+    },
+    "SIRET": {
+     "libelle": "SIRET",
+     "direct": true,
+     "n": 28,
+     "detectes": 28,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 28
+    },
+    "TEL": {
+     "libelle": "Téléphone",
+     "direct": true,
+     "n": 340,
+     "detectes": 340,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 317,
+     "passages_justes": 317,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 317
+    },
+    "EMAIL": {
+     "libelle": "E-mail",
+     "direct": true,
+     "n": 165,
+     "detectes": 165,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 165,
+     "passages_justes": 165,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 165
+    },
+    "IBAN": {
+     "libelle": "IBAN",
+     "direct": true,
+     "n": 41,
+     "detectes": 41,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 92,
+     "passages_justes": 41,
+     "precision": 0.44565217391304346,
+     "f1": 0.6165413533834586,
+     "bien_etiquetes": 41
+    },
+    "RIB": {
+     "libelle": "RIB",
+     "direct": true,
+     "n": 54,
+     "detectes": 51,
+     "partiels": 3,
+     "manques": 0,
+     "rappel": 0.9444444444444444,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 51
+    },
+    "IMEI": {
+     "libelle": "IMEI",
+     "direct": true,
+     "n": 26,
+     "detectes": 26,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 34,
+     "passages_justes": 25,
+     "precision": 0.7352941176470589,
+     "f1": 0.8474576271186441,
+     "bien_etiquetes": 25
+    },
+    "IMSI": {
+     "libelle": "IMSI",
+     "direct": true,
+     "n": 19,
+     "detectes": 19,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 19,
+     "passages_justes": 19,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 19
+    },
+    "BIC": {
+     "libelle": "BIC / SWIFT",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "ICCID": {
+     "libelle": "ICCID (carte SIM)",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 12,
+     "passages_justes": 12,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 12
+    },
+    "ADRESSE": {
+     "libelle": "Adresse postale",
+     "direct": false,
+     "n": 161,
+     "detectes": 154,
+     "partiels": 0,
+     "manques": 7,
+     "rappel": 0.9565217391304348,
+     "passages": 157,
+     "passages_justes": 156,
+     "precision": 0.9936305732484076,
+     "f1": 0.9747230900312411,
+     "bien_etiquetes": 137
+    },
+    "SOCIETE": {
+     "libelle": "Société",
+     "direct": false,
+     "n": 156,
+     "detectes": 156,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 262,
+     "passages_justes": 130,
+     "precision": 0.4961832061068702,
+     "f1": 0.6632653061224489,
+     "bien_etiquetes": 130
+    },
+    "NAISSANCE": {
+     "libelle": "Date de naissance",
+     "direct": false,
+     "n": 74,
+     "detectes": 56,
+     "partiels": 0,
+     "manques": 18,
+     "rappel": 0.7567567567567568,
+     "passages": 56,
+     "passages_justes": 56,
+     "precision": 1,
+     "f1": 0.8615384615384616,
+     "bien_etiquetes": 56
+    },
+    "PATENTE": {
+     "libelle": "N° de patente",
+     "direct": false,
+     "n": 9,
+     "detectes": 9,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 9,
+     "passages_justes": 9,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 9
+    },
+    "TVA": {
+     "libelle": "N° de TVA intracommunautaire",
+     "direct": false,
+     "n": 4,
+     "detectes": 4,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 4,
+     "passages_justes": 4,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 4
+    },
+    "MATRICULE": {
+     "libelle": "Matricule salarié",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 24,
+     "passages_justes": 24,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 24
+    },
+    "PATIENT": {
+     "libelle": "N° de dossier patient / IPP",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 64,
+     "passages_justes": 24,
+     "precision": 0.375,
+     "f1": 0.5454545454545454,
+     "bien_etiquetes": 24
+    },
+    "PRATICIEN": {
+     "libelle": "Identifiant praticien (INPE, RPPS)",
+     "direct": false,
+     "n": 36,
+     "detectes": 36,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 36,
+     "passages_justes": 36,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 36
+    },
+    "POLICE": {
+     "libelle": "N° de police d'assurance",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "SINISTRE": {
+     "libelle": "N° de sinistre",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 23,
+     "passages_justes": 12,
+     "precision": 0.5217391304347826,
+     "f1": 0.6857142857142856,
+     "bien_etiquetes": 12
+    },
+    "FACTURE": {
+     "libelle": "N° de facture / pièce",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 8,
+     "passages_justes": 0,
+     "precision": 0,
+     "f1": 0,
+     "bien_etiquetes": 0
+    },
+    "RG": {
+     "libelle": "N° RG / parquet",
+     "direct": false,
+     "n": 48,
+     "detectes": 48,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 36,
+     "passages_justes": 36,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 36
+    }
+   },
+   "imbriques": {
+    "telecom-ma": 12,
+    "juridique-fr": 3,
+    "banque-assurance": 11,
+    "sante": 9,
+    "expertise-comptable": 23
+   }
+  },
+  "candidat": {
+   "global": {
+    "direct": {
+     "n": 1853,
+     "detectes": 1806,
+     "partiels": 34,
+     "manques": 13,
+     "rappel": 0.974635725849973
+    },
+    "tous": {
+     "n": 2473,
+     "detectes": 2384,
+     "partiels": 47,
+     "manques": 42,
+     "rappel": 0.9640113222806308
+    },
+    "precision": 0.8447368421052631,
+    "passages": 3800,
+    "leurres": {
+     "n": 1955,
+     "codes": 199,
+     "taux_faux_positifs": 0.10179028132992328
+    }
+   },
+   "par_pack": {
+    "core": {
+     "documents": 46,
+     "direct": {
+      "n": 336,
+      "detectes": 328,
+      "partiels": 8,
+      "manques": 0,
+      "rappel": 0.9761904761904762
+     },
+     "tous": {
+      "n": 393,
+      "detectes": 379,
+      "partiels": 8,
+      "manques": 6,
+      "rappel": 0.9643765903307888
+     },
+     "precision": 0.9275092936802974,
+     "f1": 0.9455837243662017,
+     "passages": 538,
+     "passages_leurres": 2,
+     "passages_hors_etiquette": 37,
+     "leurres": {
+      "n": 146,
+      "codes": 2,
+      "taux_faux_positifs": 0.0136986301369863
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 19,
+       "detectes": 19,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 1,
+       "detectes": 1,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 57,
+       "detectes": 57,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 10,
+       "detectes": 4,
+       "partiels": 6,
+       "manques": 0,
+       "rappel": 0.4
+      },
+      "PERSONNE": {
+       "n": 145,
+       "detectes": 143,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.9862068965517241
+      },
+      "TEL": {
+       "n": 104,
+       "detectes": 104,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "telecom-ma": {
+     "documents": 37,
+     "direct": {
+      "n": 249,
+      "detectes": 249,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
+     },
+     "tous": {
+      "n": 278,
+      "detectes": 278,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
+     },
+     "precision": 0.8188405797101449,
+     "f1": 0.900398406374502,
+     "passages": 414,
+     "passages_leurres": 18,
+     "passages_hors_etiquette": 57,
+     "leurres": {
+      "n": 158,
+      "codes": 18,
+      "taux_faux_positifs": 0.11392405063291139
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 36,
+       "detectes": 36,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "ICE": {
+       "n": 5,
+       "detectes": 5,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IMEI": {
+       "n": 26,
+       "detectes": 26,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IMSI": {
+       "n": 19,
+       "detectes": 19,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 72,
+       "detectes": 72,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 67,
+       "detectes": 67,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "juridique-fr": {
+     "documents": 37,
+     "direct": {
+      "n": 276,
+      "detectes": 269,
+      "partiels": 6,
+      "manques": 1,
+      "rappel": 0.9746376811594203
+     },
+     "tous": {
+      "n": 420,
+      "detectes": 411,
+      "partiels": 6,
+      "manques": 3,
+      "rappel": 0.9785714285714285
+     },
+     "precision": 0.8666666666666667,
+     "f1": 0.9192258064516129,
+     "passages": 660,
+     "passages_leurres": 36,
+     "passages_hors_etiquette": 52,
+     "leurres": {
+      "n": 308,
+      "codes": 36,
+      "taux_faux_positifs": 0.11688311688311688
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 7,
+       "partiels": 5,
+       "manques": 0,
+       "rappel": 0.5833333333333334
+      },
+      "PERSONNE": {
+       "n": 144,
+       "detectes": 142,
+       "partiels": 1,
+       "manques": 1,
+       "rappel": 0.9861111111111112
+      },
+      "SIREN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "SIRET": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 48,
+       "detectes": 48,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "banque-assurance": {
+     "documents": 37,
+     "direct": {
+      "n": 270,
+      "detectes": 262,
+      "partiels": 8,
+      "manques": 0,
+      "rappel": 0.9703703703703703
+     },
+     "tous": {
+      "n": 342,
+      "detectes": 323,
+      "partiels": 19,
+      "manques": 0,
+      "rappel": 0.9444444444444444
+     },
+     "precision": 0.8034055727554179,
+     "f1": 0.8682345994882896,
+     "passages": 646,
+     "passages_leurres": 1,
+     "passages_hors_etiquette": 126,
+     "leurres": {
+      "n": 277,
+      "codes": 1,
+      "taux_faux_positifs": 0.0036101083032490976
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 25,
+       "detectes": 23,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.92
+      },
+      "PERSONNE": {
+       "n": 139,
+       "detectes": 135,
+       "partiels": 4,
+       "manques": 0,
+       "rappel": 0.9712230215827338
+      },
+      "RIB": {
+       "n": 34,
+       "detectes": 32,
+       "partiels": 2,
+       "manques": 0,
+       "rappel": 0.9411764705882353
+      },
+      "TEL": {
+       "n": 36,
+       "detectes": 36,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "sante": {
+     "documents": 37,
+     "direct": {
+      "n": 207,
+      "detectes": 204,
+      "partiels": 3,
+      "manques": 0,
+      "rappel": 0.9855072463768116
+     },
+     "tous": {
+      "n": 327,
+      "detectes": 305,
+      "partiels": 3,
+      "manques": 19,
+      "rappel": 0.9327217125382263
+     },
+     "precision": 0.7339130434782609,
+     "f1": 0.8214596849082073,
+     "passages": 575,
+     "passages_leurres": 61,
+     "passages_hors_etiquette": 92,
+     "leurres": {
+      "n": 244,
+      "codes": 61,
+      "taux_faux_positifs": 0.25
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 9,
+       "partiels": 3,
+       "manques": 0,
+       "rappel": 0.75
+      },
+      "PERSONNE": {
+       "n": 98,
+       "detectes": 98,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 49,
+       "detectes": 49,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "expertise-comptable": {
+     "documents": 37,
+     "direct": {
+      "n": 287,
+      "detectes": 282,
+      "partiels": 5,
+      "manques": 0,
+      "rappel": 0.9825783972125436
+     },
+     "tous": {
+      "n": 401,
+      "detectes": 394,
+      "partiels": 7,
+      "manques": 0,
+      "rappel": 0.9825436408977556
+     },
+     "precision": 0.8851590106007067,
+     "f1": 0.9313124402873285,
+     "passages": 566,
+     "passages_leurres": 5,
+     "passages_hors_etiquette": 60,
+     "leurres": {
+      "n": 439,
+      "codes": 5,
+      "taux_faux_positifs": 0.011389521640091117
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 13,
+       "detectes": 13,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "EMAIL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 4,
+       "detectes": 4,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "ICE": {
+       "n": 45,
+       "detectes": 45,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IF": {
+       "n": 33,
+       "detectes": 33,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "PERSONNE": {
+       "n": 87,
+       "detectes": 83,
+       "partiels": 4,
+       "manques": 0,
+       "rappel": 0.9540229885057471
+      },
+      "RC": {
+       "n": 33,
+       "detectes": 33,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RIB": {
+       "n": 8,
+       "detectes": 7,
+       "partiels": 1,
+       "manques": 0,
+       "rappel": 0.875
+      },
+      "SIRET": {
+       "n": 4,
+       "detectes": 4,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    },
+    "rh-paie": {
+     "documents": 37,
+     "direct": {
+      "n": 228,
+      "detectes": 212,
+      "partiels": 4,
+      "manques": 12,
+      "rappel": 0.9298245614035088
+     },
+     "tous": {
+      "n": 312,
+      "detectes": 294,
+      "partiels": 4,
+      "manques": 14,
+      "rappel": 0.9423076923076923
+     },
+     "precision": 0.8927680798004988,
+     "f1": 0.9168692016202797,
+     "passages": 401,
+     "passages_leurres": 38,
+     "passages_hors_etiquette": 5,
+     "leurres": {
+      "n": 383,
+      "codes": 76,
+      "taux_faux_positifs": 0.19843342036553524
+     },
+     "direct_par_type": {
+      "CIN": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "CNSS": {
+       "n": 36,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 12,
+       "rappel": 0.6666666666666666
+      },
+      "EMAIL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IBAN": {
+       "n": 12,
+       "detectes": 11,
+       "partiels": 1,
+       "manques": 0,
+       "rappel": 0.9166666666666666
+      },
+      "ICE": {
+       "n": 24,
+       "detectes": 24,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "IF": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "NIR": {
+       "n": 12,
+       "detectes": 9,
+       "partiels": 3,
+       "manques": 0,
+       "rappel": 0.75
+      },
+      "PERSONNE": {
+       "n": 48,
+       "detectes": 48,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RC": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "RIB": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "SIRET": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      },
+      "TEL": {
+       "n": 12,
+       "detectes": 12,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
+      }
+     }
+    }
+   },
+   "par_type": {
+    "PERSONNE": {
+     "libelle": "Nom de personne",
+     "direct": true,
+     "n": 733,
+     "detectes": 721,
+     "partiels": 11,
+     "manques": 1,
+     "rappel": 0.9836289222373806,
+     "passages": 1758,
+     "passages_justes": 1366,
+     "precision": 0.7770193401592719,
+     "f1": 0.8682014601577224,
+     "bien_etiquetes": 709
+    },
+    "CIN": {
+     "libelle": "CIN marocaine",
+     "direct": true,
+     "n": 139,
+     "detectes": 139,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 157,
+     "passages_justes": 101,
+     "precision": 0.643312101910828,
+     "f1": 0.7829457364341085,
+     "bien_etiquetes": 101
+    },
+    "NIR": {
+     "libelle": "NIR (sécurité sociale, France)",
+     "direct": true,
+     "n": 46,
+     "detectes": 29,
+     "partiels": 17,
+     "manques": 0,
+     "rappel": 0.6304347826086957,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 27
+    },
+    "CNSS": {
+     "libelle": "N° CNSS",
+     "direct": true,
+     "n": 74,
+     "detectes": 62,
+     "partiels": 0,
+     "manques": 12,
+     "rappel": 0.8378378378378378,
+     "passages": 26,
+     "passages_justes": 26,
+     "precision": 1,
+     "f1": 0.911764705882353,
+     "bien_etiquetes": 26
+    },
+    "ICE": {
+     "libelle": "ICE",
+     "direct": true,
+     "n": 74,
+     "detectes": 74,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 68,
+     "passages_justes": 67,
+     "precision": 0.9852941176470589,
+     "f1": 0.9925925925925926,
+     "bien_etiquetes": 67
+    },
+    "IF": {
+     "libelle": "Identifiant fiscal (IF)",
+     "direct": true,
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 27,
+     "passages_justes": 27,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 27
+    },
+    "RC": {
+     "libelle": "Registre de commerce (RC)",
+     "direct": true,
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 45,
+     "passages_justes": 45,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 45
+    },
+    "SIREN": {
+     "libelle": "SIREN",
+     "direct": true,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 276,
+     "passages_justes": 24,
+     "precision": 0.08695652173913043,
+     "f1": 0.16,
+     "bien_etiquetes": 24
+    },
+    "SIRET": {
+     "libelle": "SIRET",
+     "direct": true,
+     "n": 28,
+     "detectes": 28,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 28
+    },
+    "TEL": {
+     "libelle": "Téléphone",
+     "direct": true,
+     "n": 340,
+     "detectes": 340,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 317,
+     "passages_justes": 317,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 317
+    },
+    "EMAIL": {
+     "libelle": "E-mail",
+     "direct": true,
+     "n": 165,
+     "detectes": 165,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 165,
+     "passages_justes": 165,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 165
+    },
+    "IBAN": {
+     "libelle": "IBAN",
+     "direct": true,
+     "n": 41,
+     "detectes": 38,
+     "partiels": 3,
+     "manques": 0,
+     "rappel": 0.926829268292683,
+     "passages": 91,
+     "passages_justes": 38,
+     "precision": 0.4175824175824176,
+     "f1": 0.5757575757575758,
+     "bien_etiquetes": 38
+    },
+    "RIB": {
+     "libelle": "RIB",
+     "direct": true,
+     "n": 54,
+     "detectes": 51,
+     "partiels": 3,
+     "manques": 0,
+     "rappel": 0.9444444444444444,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 51
+    },
+    "IMEI": {
+     "libelle": "IMEI",
+     "direct": true,
+     "n": 26,
+     "detectes": 26,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 35,
+     "passages_justes": 25,
+     "precision": 0.7142857142857143,
+     "f1": 0.8333333333333333,
+     "bien_etiquetes": 25
+    },
+    "IMSI": {
+     "libelle": "IMSI",
+     "direct": true,
+     "n": 19,
+     "detectes": 19,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 19,
+     "passages_justes": 19,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 19
+    },
+    "BIC": {
+     "libelle": "BIC / SWIFT",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "ICCID": {
+     "libelle": "ICCID (carte SIM)",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 12,
+     "passages_justes": 12,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 12
+    },
+    "ADRESSE": {
+     "libelle": "Adresse postale",
+     "direct": false,
+     "n": 161,
+     "detectes": 154,
+     "partiels": 0,
+     "manques": 7,
+     "rappel": 0.9565217391304348,
+     "passages": 163,
+     "passages_justes": 162,
+     "precision": 0.9938650306748467,
+     "f1": 0.9748358862144421,
+     "bien_etiquetes": 143
+    },
+    "SOCIETE": {
+     "libelle": "Société",
+     "direct": false,
+     "n": 156,
+     "detectes": 156,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 288,
+     "passages_justes": 156,
+     "precision": 0.5416666666666666,
+     "f1": 0.7027027027027027,
+     "bien_etiquetes": 156
+    },
+    "NAISSANCE": {
+     "libelle": "Date de naissance",
+     "direct": false,
+     "n": 74,
+     "detectes": 56,
+     "partiels": 0,
+     "manques": 18,
+     "rappel": 0.7567567567567568,
+     "passages": 56,
+     "passages_justes": 56,
+     "precision": 1,
+     "f1": 0.8615384615384616,
+     "bien_etiquetes": 56
+    },
+    "PATENTE": {
+     "libelle": "N° de patente",
+     "direct": false,
+     "n": 9,
+     "detectes": 9,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 9,
+     "passages_justes": 9,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 9
+    },
+    "TVA": {
+     "libelle": "N° de TVA intracommunautaire",
+     "direct": false,
+     "n": 4,
+     "detectes": 2,
+     "partiels": 2,
+     "manques": 0,
+     "rappel": 0.5,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 2
+    },
+    "MATRICULE": {
+     "libelle": "Matricule salarié",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 24,
+     "passages_justes": 24,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 24
+    },
+    "PATIENT": {
+     "libelle": "N° de dossier patient / IPP",
+     "direct": false,
+     "n": 24,
+     "detectes": 20,
+     "partiels": 0,
+     "manques": 4,
+     "rappel": 0.8333333333333334,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "PRATICIEN": {
+     "libelle": "Identifiant praticien (INPE, RPPS)",
+     "direct": false,
+     "n": 36,
+     "detectes": 36,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "POLICE": {
+     "libelle": "N° de police d'assurance",
+     "direct": false,
+     "n": 12,
+     "detectes": 1,
+     "partiels": 11,
+     "manques": 0,
+     "rappel": 0.08333333333333333,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "SINISTRE": {
+     "libelle": "N° de sinistre",
+     "direct": false,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 0
+    },
+    "FACTURE": {
+     "libelle": "N° de facture / pièce",
+     "direct": false,
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 0,
+     "passages_justes": 0,
+     "precision": null,
+     "f1": null,
+     "bien_etiquetes": 12
+    },
+    "RG": {
+     "libelle": "N° RG / parquet",
+     "direct": false,
+     "n": 48,
+     "detectes": 48,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 36,
+     "passages_justes": 36,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 36
+    }
+   },
+   "imbriques": {}
+  }
+ }
+}
