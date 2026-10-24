@@ -129,6 +129,31 @@ test("réversibilité complète : decodeText retraduit pseudonymes et codes, y c
   assert.equal(codesDepuisPseudos(book)(r.text), coder(newCodebook(), TEXTE));
 });
 
+test("une date décalée réécrite par l'IA dans un autre format se décode quand même (essai A/B du 24/10)", () => {
+  const book = newCodebook();
+  book.pseudonymes = { graine: "dates", deltaJours: 67 };
+  const r = rendreLisible(coder(book, "Mme Odile Vasseur, née le 3 juillet 1975, et M. Hamid Chraïbi, né le 12/04/1981."), book);
+  const [lettres, chiffres] = book.entries.filter((e) => /^NAISS-/.test(e.code)).map((e) => e.pseudo);
+  assert.match(lettres, /^\d{1,2} \p{L}+ 1975$/u);
+  assert.match(chiffres, /^\d{2}\/\d{2}\/1981$/);
+  const map = tableDecodage(book);
+  // L'IA réécrit : la date en lettres en chiffres, la date en chiffres en lettres et en ISO.
+  const [jl, ml] = [Number(lettres.split(" ")[0]), ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"].indexOf(lettres.split(" ")[1]) + 1];
+  const [jc, mc] = chiffres.split("/").map(Number);
+  const mois = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  const p2 = (n) => String(n).padStart(2, "0");
+  const reponse = `Gérante née le ${p2(jl)}/${p2(ml)}/1975 ; client né le ${jc} ${mois[mc - 1]} 1981 (soit 1981-${p2(mc)}-${p2(jc)}).`;
+  assert.equal(decodeText(reponse, map).text, "Gérante née le 3 juillet 1975 ; client né le 12/04/1981 (soit 12/04/1981).");
+  assert.ok(r.text.includes(lettres));
+});
+
+test("une année de naissance seule garde son code (un nombre nu serait retraduit partout)", () => {
+  const book = newCodebook();
+  const r = rendreLisible(coder(book, "M. Hamid Chraïbi, né en 1981, a signé."), book);
+  assert.match(r.text, /né en NAISS-\d{3}/);
+  assert.ok(!book.entries.find((e) => /^NAISS-/.test(e.code)).pseudo);
+});
+
 test("un pseudonyme en minuscules au fil d'une phrase n'est pas décodé (ce n'est pas la personne)", () => {
   const book = newCodebook();
   codeFor(book, "societe", "Atlas Négoce SARL");
