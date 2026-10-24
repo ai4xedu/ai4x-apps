@@ -464,6 +464,9 @@ export function pseudonymFor(book, entry, ctx) {
   else if (kind === "societe") pseudo = pseudoSociete(value, graine, entry.code, ctx);
   else if (kind === "lieu") pseudo = pseudoLieu(value, graine, entry.code, ctx);
   else if (kind === "naissance") {
+    // Une année seule (« né en 1990 ») reste un code : « 1991 » nu serait
+    // retraduit partout dans la réponse de l'IA (« la loi de 1991 »).
+    if (/^\s*\d{4}\s*$/.test(value)) return null;
     // Une date décalée qui tomberait sur une date réelle de la clé : un jour
     // de plus, et encore un, jusqu'à être unique (rarissime).
     for (let extra = 0; extra < 7 && !pseudo; extra++) {
@@ -550,11 +553,35 @@ const escRx = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
    (deanonymiser, decoder_word, remettre_chiffres). Y figurent aussi la raison
    sociale sans sa forme juridique et le patronyme fictif seul d'un nom
    complet (→ le patronyme réel). */
+/* Les écritures d'une même date que l'IA emploie en réécrivant : « 8 septembre
+   1974 » revient en « 08/09/1974 », « 8/9/1974 », « 1974-09-08 »… Vu à l'essai
+   A/B du 24/10/2026 : une date décalée réécrite dans un autre format n'était
+   pas retraduite et restait, fausse, dans le document décodé. Renvoie []
+   pour ce qui n'est pas une date complète. */
+export function ecrituresDate(s) {
+  const t = String(s).trim();
+  let j, mo, a, m;
+  if ((m = t.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/))) [j, mo, a] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  else if ((m = t.match(/^(1er|\d{1,2})\s+(\p{L}+)\s+(\d{4})$/u))) {
+    const i = MOIS_FOLD.indexOf(fold(m[2]));
+    if (i < 0) return [];
+    [j, mo, a] = [m[1] === "1er" ? 1 : Number(m[1]), i + 1, Number(m[3])];
+  } else return [];
+  const p2 = (n) => String(n).padStart(2, "0");
+  const mois = MOIS[mo - 1];
+  const jour = j === 1 ? ["1er", "1"] : [String(j)];
+  return [...new Set([
+    `${p2(j)}/${p2(mo)}/${a}`, `${j}/${mo}/${a}`, `${p2(j)}.${p2(mo)}.${a}`, `${p2(j)}-${p2(mo)}-${a}`, `${a}-${p2(mo)}-${p2(j)}`,
+    ...jour.map((d) => `${d} ${mois} ${a}`), `${p2(j)} ${mois} ${a}`,
+  ])];
+}
+
 export function pseudoMap(book) {
   const map = {};
   for (const e of book.entries || []) {
     if (!e.pseudo) continue;
     map[e.pseudo.toUpperCase()] = e.value;
+    if (/^NAISS-/.test(e.code)) for (const v of ecrituresDate(e.pseudo)) if (!(v.toUpperCase() in map)) map[v.toUpperCase()] = e.value;
     const m = e.pseudo.match(LEGAL_TAIL_RX);
     if (m) { const core = e.pseudo.slice(0, m.index).trim(); if (core.length >= 3) map[core.toUpperCase()] = e.value; }
     for (const [a, v] of Object.entries(e.pseudoAlias || {})) map[a.toUpperCase()] = v;

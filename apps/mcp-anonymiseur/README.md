@@ -97,6 +97,15 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.23.3 (essai A/B du 24/10/2026). Mesuré en faisant travailler Claude sur la
+même note en codes et en lisible : en lisible, l'IA réécrit parfois une date de
+naissance décalée dans un autre format (« 8 septembre 1974 » → « 08/09/1974 ») ;
+la date n'était alors pas retraduite et restait, fausse, dans le document
+décodé. `pseudoMap` retraduit désormais toutes les écritures courantes d'une date
+décalée (jj/mm/aaaa, j/m/aaaa, jj.mm.aaaa, aaaa-mm-jj, « 1er »/« j mois aaaa »).
+Une année de naissance seule (« né en 1990 ») garde son code : un nombre nu serait
+retraduit partout dans la réponse.
+
 v2.23.2 (recette du 24/10/2026). `etat_cle` dit le rendu du dossier aussi sur
 une clé vide : c'est sur un dossier neuf qu'on vérifie le réglage.
 
