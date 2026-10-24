@@ -59,6 +59,17 @@ test("indice : un seul facteur, donc totaux et proportions restent justes", () =
   assert.ok(r.factor >= (100 / mean) * 0.8 && r.factor <= (100 / mean) * 1.2);
 });
 
+test("indice : le brouillage reste dans ±20 %, bornes comprises (pas d'erreur d'arrondi à 1,2)", () => {
+  const mean = (18400 + 2600 + 21000 + 4200 + 25200) / 5;
+  for (const k of [0, 200, 400]) {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["", "Montant HT"], ["Ligne 1", 18400], ["Ligne 2", 2600], ["Total HT", 21000], ["TVA", 4200], ["TTC", 25200],
+    ]);
+    const r = protectNumbers(ws, XLSX, { mode: "indice", headerRow: null, rand: (a, b) => (b === 401 ? k : a) });
+    assert.ok(r.factor >= (100 / mean) * 0.8 && r.factor <= (100 / mean) * 1.2, `tirage ${k} : facteur hors bornes`);
+  }
+});
+
 test("clair : rien ne change ; et le plan le dit sans citer de montant", () => {
   const ws = payroll();
   const r = protectNumbers(ws, XLSX, { mode: "clair", headerRow: 0 });
