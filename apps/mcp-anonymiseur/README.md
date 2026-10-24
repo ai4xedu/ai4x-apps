@@ -97,6 +97,24 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.24.0 (toutes les dates, en option, 24/10/2026). En rendu lisible, un nouveau
+réglage `dates` : « naissance » (défaut, inchangé : seules les dates de naissance
+sont décalées, un âge à une autre date peut varier d'un an) ou « toutes » : toutes
+les dates complètes du dossier (15/01/2026, 2026-01-15, « 15 janvier 2026 »…) sont
+décalées du même nombre de jours, secret ; âges et délais calculés par l'IA sont
+exacts, et `deanonymiser` / `decoder_word` ramènent TOUTES les dates de la réponse,
+y compris celles que l'IA a calculées et les jours-mois sans année de ses
+explications (`retourDates`, `pseudonymes.js`). Le mode est FIGÉ dans la clé au
+premier rendu lisible du dossier (un dossier qui mélangerait les deux décoderait
+de vraies dates à tort) ; `etat_cle` le dit. Un texte venu du navigateur
+(`coder_texte` avec une source) n'est jamais décalé : l'extension ne saurait pas
+ramener une date calculée. Limites : une année seule ne se ramène pas (la règle
+« 1 bis » demande des dates complètes) ; les jours de la semaine ne correspondent
+plus ; les cellules de date des tableurs ne sont pas décalées. Réglage :
+`reglages.json` (`dates`), `ANX_DATES`, option `dates` de `anonymiser_fichier`,
+`anonymiser_dossier`, `coder_texte`. Mesuré par l'essai A/B
+(`recette-auto/ab.mjs --comparer=naissance,toutes`, dépôt Nanomizer).
+
 v2.23.3 (essai A/B du 24/10/2026). Mesuré en faisant travailler Claude sur la
 même note en codes et en lisible : en lisible, l'IA réécrit parfois une date de
 naissance décalée dans un autre format (« 8 septembre 1974 » → « 08/09/1974 ») ;
