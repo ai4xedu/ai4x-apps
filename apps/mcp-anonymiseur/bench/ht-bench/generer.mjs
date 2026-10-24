@@ -28,7 +28,7 @@ import { analyser } from "./lib/balisage.mjs";
 import { PLAN } from "./lib/gabarits.mjs";
 import { CAS_MANUELS } from "./cas/manuels.mjs";
 
-export const VERSION_JEU = "0.1.0";
+export const VERSION_JEU = "0.2.0";
 export const SPLITS = {
   dev: { graine: "ht-bench-v0", manuels: true, dossier: "" },
   test: { graine: "ht-bench-v0-test", manuels: false, dossier: "test" },

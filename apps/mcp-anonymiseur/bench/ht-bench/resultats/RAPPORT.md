@@ -1,12 +1,12 @@
-# HT-Bench 0.1.0 — rapport de détection
+# HT-Bench 0.2.0 — rapport de détection
 
-Moteur Hidden Tokens **v2.23.2** · jeu `63117fe4d240262b…` (synthétique, graine fixe) · 268 documents · 2473 valeurs à coder · 1955 leurres.
+Moteur Hidden Tokens **v2.23.2** · jeu `a21f6f11d5f7a115…` (synthétique, graine fixe) · 376 documents · 3463 valeurs à coder · 3064 leurres.
 
 Chemin mesuré : anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte. Une valeur compte comme détectée si toutes ses lettres et chiffres sont sous un code (les particules d'un nom — Ben, El, Aït, de… — peuvent rester en clair). Une valeur codée en partie est une fuite : elle compte comme manquée. Définitions complètes : `bench/ht-bench/README.md`.
 
-**Identifiants directs (noms, pièces et identifiants, téléphones, e-mails, IBAN/RIB, IMEI/IMSI) : 97.6 %** (1808/1853) — cible ≥ 99 % par pack.
+**Identifiants directs (noms, pièces et identifiants, téléphones, e-mails, IBAN/RIB, IMEI/IMSI) : 98.1 %** (2516/2565) — cible ≥ 99 % par pack.
 
-Verrou de sortie : sur 45 identifiant(s) direct(s) manqué(s) ou partiel(s) par le moteur, 42 resteraient lisibles dans la réponse de coder_texte (le reste est rattrapé par le dernier filet, « [MASQUÉ] » / « ••• » — mais le fichier écrit sur le poste, lui, les contient).
+Verrou de sortie : sur 49 identifiant(s) direct(s) manqué(s) ou partiel(s) par le moteur, 47 resteraient lisibles dans la réponse de coder_texte (le reste est rattrapé par le dernier filet, « [MASQUÉ] » / « ••• » — mais le fichier écrit sur le poste, lui, les contient).
 
 ## Par pack
 
@@ -15,14 +15,14 @@ Verrou de sortie : sur 45 identifiant(s) direct(s) manqué(s) ou partiel(s) par 
 | core | 46 | 97.6 % (328/336) | ❌ | 96.4 % | 93.3 % | 94.8 % | 2/146 (1.4 %) | 0 |
 | telecom-ma | 37 | 100.0 % (249/249) | ✅ | 100.0 % | 81.9 % | 90.0 % | 18/158 (11.4 %) | 0 |
 | juridique-fr | 37 | 97.5 % (269/276) | ❌ | 97.9 % | 86.7 % | 91.9 % | 36/308 (11.7 %) | 0 |
-| banque-assurance | 37 | 97.8 % (264/270) | ❌ | 98.2 % | 78.6 % | 87.4 % | 1/277 (0.4 %) | 12 |
+| banque-assurance | 97 | 98.8 % (646/654) | ❌ | 99.1 % | 82.8 % | 90.2 % | 25/673 (3.7 %) | 0 |
 | sante | 37 | 98.6 % (204/207) | ❌ | 94.5 % | 81.0 % | 87.2 % | 32/244 (13.1 %) | 58 |
-| expertise-comptable | 37 | 98.3 % (282/287) | ❌ | 98.8 % | 88.6 % | 93.4 % | 5/439 (1.1 %) | 13 |
+| expertise-comptable | 85 | 98.9 % (608/615) | ❌ | 97.9 % | 95.6 % | 96.7 % | 1/1152 (0.1 %) | 0 |
 | rh-paie | 37 | 93.0 % (212/228) | ❌ | 94.2 % | 89.3 % | 91.7 % | 76/383 (19.8 %) | 24 |
 
 Précision du pack = passages codés qui recouvrent une valeur étiquetée / tous les passages codés : le verrou code tout mot inconnu du lexique, un mot courant codé à tort la fait baisser (cf. « Codé hors étiquette »). « ••• » en sortie : passages masqués par le verrou de sortie dans la réponse de coder_texte (souvent un code déjà posé que le motif d'un pack reconnaît à nouveau : l'IA ne peut plus le citer).
 
-**Sortie corrompue : 42 document(s)** dont le texte codé n'est plus « l'origine + des codes » (codes imbriqués comme `NOM-001-002`, morceau de mot recodé) — banque-assurance : 11, sante : 9, expertise-comptable : 22. La valeur est protégée, mais le décodage ne rend pas le texte d'origine. Ces documents sont notés par plus longue sous-suite commune (cf. README).
+**Sortie corrompue : 9 document(s)** dont le texte codé n'est plus « l'origine + des codes » (codes imbriqués comme `NOM-001-002`, morceau de mot recodé) — sante : 9. La valeur est protégée, mais le décodage ne rend pas le texte d'origine. Ces documents sont notés par plus longue sous-suite commune (cf. README).
 
 ## Les cinq plus gros écarts (identifiants directs)
 
@@ -30,57 +30,63 @@ Précision du pack = passages codés qui recouvrent une valeur étiquetée / tou
 |---:|---|---:|---:|
 | 1 | NIR · nir-cle-tiret | 17/17 (dont 17 partielles) | 0.0 % |
 | 2 | CNSS · cnss-affiliation-7 | 12/25 (dont 0 partielles) | 52.0 % |
-| 3 | PERSONNE · fr-particule | 3/35 (dont 2 partielles) | 91.4 % |
-| 4 | PERSONNE · mag-ould | 3/36 (dont 3 partielles) | 91.7 % |
-| 5 | RIB · rib-ma-par-4 | 2/10 (dont 2 partielles) | 80.0 % |
+| 3 | PERSONNE · mag-ould | 4/48 (dont 4 partielles) | 91.7 % |
+| 4 | PERSONNE · fr-particule | 3/39 (dont 2 partielles) | 92.3 % |
+| 5 | PERSONNE · mag-ait-espace | 2/33 (dont 2 partielles) | 93.9 % |
 
 ## Par type d'entité
 
 | Type | Direct | Valeurs | Rappel | Partielles | Précision | F1 | Bon préfixe |
 |---|:-:|---:|---:|---:|---:|---:|---:|
-| PERSONNE — Nom de personne | oui | 733 | 98.4 % | 11 | 79.8 % (1332/1669) | 88.1 % | 709/721 |
-| CIN — CIN marocaine | oui | 139 | 100.0 % | 0 | 63.5 % (101/159) | 77.7 % | 101/139 |
+| PERSONNE — Nom de personne | oui | 975 | 98.3 % | 16 | 80.5 % (1839/2285) | 88.5 % | 944/958 |
+| CIN — CIN marocaine | oui | 187 | 100.0 % | 0 | 68.0 % (136/200) | 81.0 % | 136/187 |
 | NIR — NIR (sécurité sociale, France) | oui | 46 | 63.0 % | 17 | — (0/0) | — | 29/29 |
 | CNSS — N° CNSS | oui | 74 | 83.8 % | 0 | 100.0 % (50/50) | 91.2 % | 50/62 |
-| ICE — ICE | oui | 74 | 100.0 % | 0 | 98.7 % (74/75) | 99.3 % | 74/74 |
-| IF — Identifiant fiscal (IF) | oui | 45 | 100.0 % | 0 | 100.0 % (27/27) | 100.0 % | 27/45 |
-| RC — Registre de commerce (RC) | oui | 45 | 100.0 % | 0 | 100.0 % (45/45) | 100.0 % | 45/45 |
-| SIREN — SIREN | oui | 24 | 100.0 % | 0 | 16.7 % (24/144) | 28.6 % | 24/24 |
+| ICE — ICE | oui | 164 | 100.0 % | 0 | 99.4 % (164/165) | 99.7 % | 164/164 |
+| IF — Identifiant fiscal (IF) | oui | 64 | 100.0 % | 0 | 100.0 % (36/36) | 100.0 % | 36/64 |
+| RC — Registre de commerce (RC) | oui | 57 | 100.0 % | 0 | 100.0 % (57/57) | 100.0 % | 57/57 |
+| SIREN — SIREN | oui | 24 | 100.0 % | 0 | 11.5 % (24/208) | 20.7 % | 24/24 |
 | SIRET — SIRET | oui | 28 | 100.0 % | 0 | — (0/0) | — | 12/28 |
-| TEL — Téléphone | oui | 340 | 100.0 % | 0 | 100.0 % (317/317) | 100.0 % | 317/340 |
-| EMAIL — E-mail | oui | 165 | 100.0 % | 0 | 100.0 % (165/165) | 100.0 % | 165/165 |
-| IBAN — IBAN | oui | 41 | 97.6 % | 1 | 44.0 % (40/91) | 60.6 % | 40/40 |
-| RIB — RIB | oui | 54 | 94.4 % | 3 | — (0/0) | — | 51/51 |
+| TEL — Téléphone | oui | 473 | 100.0 % | 0 | 100.0 % (439/439) | 100.0 % | 439/473 |
+| EMAIL — E-mail | oui | 201 | 100.0 % | 0 | 100.0 % (201/201) | 100.0 % | 201/201 |
+| IBAN — IBAN | oui | 53 | 98.1 % | 1 | 31.7 % (52/164) | 47.9 % | 52/52 |
+| RIB — RIB | oui | 114 | 98.2 % | 2 | — (0/0) | — | 112/112 |
 | IMEI — IMEI | oui | 26 | 100.0 % | 0 | 100.0 % (25/25) | 100.0 % | 25/26 |
 | IMSI — IMSI | oui | 19 | 100.0 % | 0 | 100.0 % (19/19) | 100.0 % | 19/19 |
+| CARTE — Numéro de carte bancaire | oui | 24 | 100.0 % | 0 | 53.3 % (24/45) | 69.6 % | 24/24 |
+| CVV — Cryptogramme (CVV / CVC) | oui | 12 | 100.0 % | 0 | 100.0 % (12/12) | 100.0 % | 12/12 |
+| PASSEPORT — Passeport, titre de séjour, permis | oui | 24 | 100.0 % | 0 | 100.0 % (12/12) | 100.0 % | 24/24 |
 | BIC — BIC / SWIFT |  | 24 | 100.0 % | 0 | — (0/0) | — | 0/24 |
 | ICCID — ICCID (carte SIM) |  | 12 | 100.0 % | 0 | 100.0 % (12/12) | 100.0 % | 12/12 |
-| ADRESSE — Adresse postale |  | 161 | 95.7 % | 0 | 99.4 % (159/160) | 97.5 % | 140/154 |
-| SOCIETE — Société |  | 156 | 100.0 % | 0 | 52.2 % (144/276) | 68.6 % | 144/156 |
-| NAISSANCE — Date de naissance |  | 74 | 75.7 % | 0 | 100.0 % (56/56) | 86.2 % | 56/56 |
+| ADRESSE — Adresse postale |  | 185 | 96.2 % | 0 | 99.5 % (183/184) | 97.8 % | 159/178 |
+| SOCIETE — Société |  | 279 | 100.0 % | 0 | 64.4 % (279/433) | 78.4 % | 279/279 |
+| NAISSANCE — Date de naissance |  | 86 | 79.1 % | 0 | 100.0 % (68/68) | 88.3 % | 68/68 |
 | PATENTE — N° de patente |  | 9 | 100.0 % | 0 | 100.0 % (9/9) | 100.0 % | 9/9 |
 | TVA — N° de TVA intracommunautaire |  | 4 | 100.0 % | 0 | 100.0 % (4/4) | 100.0 % | 4/4 |
 | MATRICULE — Matricule salarié |  | 24 | 100.0 % | 0 | 100.0 % (24/24) | 100.0 % | 24/24 |
 | PATIENT — N° de dossier patient / IPP |  | 24 | 100.0 % | 0 | 72.7 % (24/33) | 84.2 % | 24/24 |
 | PRATICIEN — Identifiant praticien (INPE, RPPS) |  | 36 | 100.0 % | 0 | 100.0 % (36/36) | 100.0 % | 36/36 |
-| POLICE — N° de police d'assurance |  | 12 | 100.0 % | 0 | — (0/0) | — | 0/12 |
-| SINISTRE — N° de sinistre |  | 12 | 100.0 % | 0 | 52.2 % (12/23) | 68.6 % | 12/12 |
-| FACTURE — N° de facture / pièce |  | 24 | 100.0 % | 0 | 0.0 % (0/4) | 0.0 % | 0/24 |
+| POLICE — N° de police d'assurance |  | 12 | 100.0 % | 0 | 100.0 % (11/11) | 100.0 % | 11/12 |
+| SINISTRE — N° de sinistre |  | 12 | 100.0 % | 0 | 100.0 % (12/12) | 100.0 % | 12/12 |
+| FACTURE — N° de facture / pièce |  | 48 | 100.0 % | 0 | 100.0 % (24/24) | 100.0 % | 24/48 |
 | RG — N° RG / parquet |  | 48 | 100.0 % | 0 | 100.0 % (36/36) | 100.0 % | 36/48 |
+| IMMAT — Immatriculation (véhicule) |  | 24 | 100.0 % | 0 | 100.0 % (24/24) | 100.0 % | 24/24 |
+| EFFET — N° de chèque ou de LCN |  | 47 | 76.6 % | 0 | 100.0 % (36/36) | 86.7 % | 36/36 |
+| CONTRAT — N° de contrat ou de dossier de crédit |  | 24 | 100.0 % | 0 | — (0/0) | — | 24/24 |
 
 Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bien une valeur de ce type. « Bon préfixe » : parmi les valeurs détectées, celles codées sous un préfixe attendu (une valeur codée REF au lieu de SIRET est protégée, mais mal nommée).
 
 ## Rappel direct, pack × type
 
-| Pack | CIN | CNSS | EMAIL | IBAN | ICE | IF | IMEI | IMSI | NIR | PERSONNE | RC | RIB | SIREN | SIRET | TEL |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| core | 100.0 % (19) | 100.0 % (1) | 100.0 % (57) |  |  |  |  |  | 40.0 % (10) | 98.6 % (145) |  |  |  |  | 100.0 % (104) |
-| telecom-ma | 100.0 % (36) |  | 100.0 % (24) |  | 100.0 % (5) |  | 100.0 % (26) | 100.0 % (19) |  | 100.0 % (72) |  |  |  |  | 100.0 % (67) |
-| juridique-fr | 100.0 % (12) |  | 100.0 % (24) |  |  |  |  |  | 58.3 % (12) | 98.6 % (144) |  |  | 100.0 % (24) | 100.0 % (12) | 100.0 % (48) |
-| banque-assurance | 100.0 % (24) |  | 100.0 % (12) | 100.0 % (25) |  |  |  |  |  | 97.1 % (139) |  | 94.1 % (34) |  |  | 100.0 % (36) |
-| sante | 100.0 % (12) | 100.0 % (24) | 100.0 % (12) |  |  |  |  |  | 75.0 % (12) | 100.0 % (98) |  |  |  |  | 100.0 % (49) |
-| expertise-comptable | 100.0 % (12) | 100.0 % (13) | 100.0 % (24) | 100.0 % (4) | 100.0 % (45) | 100.0 % (33) |  |  |  | 95.4 % (87) | 100.0 % (33) | 87.5 % (8) |  | 100.0 % (4) | 100.0 % (24) |
-| rh-paie | 100.0 % (24) | 66.7 % (36) | 100.0 % (12) | 91.7 % (12) | 100.0 % (24) | 100.0 % (12) |  |  | 75.0 % (12) | 100.0 % (48) | 100.0 % (12) | 100.0 % (12) |  | 100.0 % (12) | 100.0 % (12) |
+| Pack | CARTE | CIN | CNSS | CVV | EMAIL | IBAN | ICE | IF | IMEI | IMSI | NIR | PASSEPORT | PERSONNE | RC | RIB | SIREN | SIRET | TEL |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| core |  | 100.0 % (19) | 100.0 % (1) |  | 100.0 % (57) |  |  |  |  |  | 40.0 % (10) |  | 98.6 % (145) |  |  |  |  | 100.0 % (104) |
+| telecom-ma |  | 100.0 % (36) |  |  | 100.0 % (24) |  | 100.0 % (5) |  | 100.0 % (26) | 100.0 % (19) |  |  | 100.0 % (72) |  |  |  |  | 100.0 % (67) |
+| juridique-fr |  | 100.0 % (12) |  |  | 100.0 % (24) |  |  |  |  |  | 58.3 % (12) |  | 98.6 % (144) |  |  | 100.0 % (24) | 100.0 % (12) | 100.0 % (48) |
+| banque-assurance | 100.0 % (24) | 100.0 % (72) |  | 100.0 % (12) | 100.0 % (24) | 100.0 % (37) | 100.0 % (17) | 100.0 % (7) |  |  |  | 100.0 % (24) | 96.9 % (259) |  | 100.0 % (82) |  |  | 100.0 % (96) |
+| sante |  | 100.0 % (12) | 100.0 % (24) |  | 100.0 % (12) |  |  |  |  |  | 75.0 % (12) |  | 100.0 % (98) |  |  |  |  | 100.0 % (49) |
+| expertise-comptable |  | 100.0 % (12) | 100.0 % (13) |  | 100.0 % (48) | 100.0 % (4) | 100.0 % (118) | 100.0 % (45) |  |  |  |  | 97.6 % (209) | 100.0 % (45) | 90.0 % (20) |  | 100.0 % (4) | 100.0 % (97) |
+| rh-paie |  | 100.0 % (24) | 66.7 % (36) |  | 100.0 % (12) | 91.7 % (12) | 100.0 % (24) | 100.0 % (12) |  |  | 75.0 % (12) |  | 100.0 % (48) | 100.0 % (12) | 100.0 % (12) |  | 100.0 % (12) | 100.0 % (12) |
 
 ## Par écriture
 
@@ -89,80 +95,96 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | ADRESSE · fr-batiment |  | 22 | 86.4 % | 0 |
 | ADRESSE · fr-bis |  | 24 | 95.8 % | 0 |
 | ADRESSE · fr-rue |  | 28 | 89.3 % | 0 |
-| ADRESSE · ma-douar-hay |  | 23 | 100.0 % | 0 |
-| ADRESSE · ma-lotissement |  | 21 | 100.0 % | 0 |
-| ADRESSE · ma-residence |  | 21 | 100.0 % | 0 |
-| ADRESSE · ma-rue |  | 22 | 100.0 % | 0 |
+| ADRESSE · ma-douar-hay |  | 30 | 100.0 % | 0 |
+| ADRESSE · ma-lotissement |  | 27 | 100.0 % | 0 |
+| ADRESSE · ma-residence |  | 24 | 100.0 % | 0 |
+| ADRESSE · ma-rue |  | 30 | 100.0 % | 0 |
 | BIC · bic-11 |  | 11 | 100.0 % | 0 |
 | BIC · bic-8 |  | 13 | 100.0 % | 0 |
-| CIN · cin-colle | oui | 63 | 100.0 % | 0 |
-| CIN · cin-espace | oui | 38 | 100.0 % | 0 |
-| CIN · cin-tiret | oui | 38 | 100.0 % | 0 |
+| CARTE · carte-collee | oui | 6 | 100.0 % | 0 |
+| CARTE · carte-groupes | oui | 6 | 100.0 % | 0 |
+| CARTE · carte-masquee | oui | 2 | 100.0 % | 0 |
+| CARTE · carte-tirets | oui | 10 | 100.0 % | 0 |
+| CIN · cin-colle | oui | 84 | 100.0 % | 0 |
+| CIN · cin-espace | oui | 52 | 100.0 % | 0 |
+| CIN · cin-tiret | oui | 51 | 100.0 % | 0 |
 | CNSS · cnss-affiliation-7 | oui | 25 | 52.0 % | 0 |
 | CNSS · cnss-assure-9 | oui | 49 | 100.0 % | 0 |
+| CONTRAT · credit-numerique |  | 13 | 100.0 % | 0 |
+| CONTRAT · credit-prefixe |  | 11 | 100.0 % | 0 |
+| CVV · cvv-3 | oui | 12 | 100.0 % | 0 |
+| EFFET · cheque-7 |  | 35 | 68.6 % | 0 |
+| EFFET · lcn-7 |  | 12 | 100.0 % | 0 |
 | EMAIL · generique | oui | 12 | 100.0 % | 0 |
-| EMAIL · initiale.nom | oui | 33 | 100.0 % | 0 |
-| EMAIL · majuscules | oui | 31 | 100.0 % | 0 |
-| EMAIL · nom_prenom | oui | 28 | 100.0 % | 0 |
-| EMAIL · prenom.nom | oui | 36 | 100.0 % | 0 |
-| EMAIL · prenomnom-chiffres | oui | 25 | 100.0 % | 0 |
+| EMAIL · initiale.nom | oui | 38 | 100.0 % | 0 |
+| EMAIL · majuscules | oui | 38 | 100.0 % | 0 |
+| EMAIL · nom_prenom | oui | 36 | 100.0 % | 0 |
+| EMAIL · prenom.nom | oui | 45 | 100.0 % | 0 |
+| EMAIL · prenomnom-chiffres | oui | 32 | 100.0 % | 0 |
+| FACTURE · declaration |  | 12 | 100.0 % | 0 |
 | FACTURE · lot |  | 12 | 100.0 % | 0 |
-| FACTURE · — |  | 12 | 100.0 % | 0 |
+| FACTURE · — |  | 24 | 100.0 % | 0 |
 | IBAN · iban-fr-colle | oui | 16 | 100.0 % | 0 |
 | IBAN · iban-fr-par-4 | oui | 12 | 91.7 % | 1 |
-| IBAN · iban-ma-colle | oui | 7 | 100.0 % | 0 |
-| IBAN · iban-ma-par-4 | oui | 6 | 100.0 % | 0 |
+| IBAN · iban-ma-colle | oui | 13 | 100.0 % | 0 |
+| IBAN · iban-ma-par-4 | oui | 12 | 100.0 % | 0 |
 | ICCID · iccid-colle |  | 12 | 100.0 % | 0 |
-| ICE · ice-colle | oui | 51 | 100.0 % | 0 |
-| ICE · ice-par-3 | oui | 23 | 100.0 % | 0 |
-| IF · if-nombre | oui | 45 | 100.0 % | 0 |
+| ICE · ice-colle | oui | 112 | 100.0 % | 0 |
+| ICE · ice-par-3 | oui | 52 | 100.0 % | 0 |
+| IF · if-nombre | oui | 64 | 100.0 % | 0 |
 | IMEI · imei-colle | oui | 7 | 100.0 % | 0 |
 | IMEI · imei-groupes | oui | 7 | 100.0 % | 0 |
 | IMEI · imei-tirets | oui | 12 | 100.0 % | 0 |
+| IMMAT · plaque-ma-barres |  | 12 | 100.0 % | 0 |
+| IMMAT · plaque-ma-slash |  | 5 | 100.0 % | 0 |
+| IMMAT · plaque-ma-tirets |  | 7 | 100.0 % | 0 |
 | IMSI · imsi-colle | oui | 19 | 100.0 % | 0 |
 | MATRICULE · — |  | 24 | 100.0 % | 0 |
-| NAISSANCE · jj-mm-aaaa |  | 37 | 75.7 % | 0 |
-| NAISSANCE · lettres |  | 37 | 75.7 % | 0 |
+| NAISSANCE · jj-mm-aaaa |  | 43 | 79.1 % | 0 |
+| NAISSANCE · lettres |  | 43 | 79.1 % | 0 |
 | NIR · nir-cle-tiret | oui | 17 | 0.0 % | 17 |
 | NIR · nir-colle | oui | 10 | 100.0 % | 0 |
 | NIR · nir-groupes | oui | 19 | 100.0 % | 0 |
+| PASSEPORT · passeport-ma | oui | 6 | 100.0 % | 0 |
+| PASSEPORT · permis | oui | 12 | 100.0 % | 0 |
+| PASSEPORT · titre-sejour | oui | 6 | 100.0 % | 0 |
 | PATENTE · patente |  | 9 | 100.0 % | 0 |
 | PATIENT · — |  | 24 | 100.0 % | 0 |
-| PERSONNE · fr-nom-mot-courant | oui | 34 | 100.0 % | 0 |
-| PERSONNE · fr-particule | oui | 35 | 91.4 % | 2 |
-| PERSONNE · fr-simple | oui | 175 | 100.0 % | 0 |
-| PERSONNE · mag-ait-apostrophe | oui | 9 | 100.0 % | 0 |
-| PERSONNE · mag-ait-espace | oui | 23 | 91.3 % | 2 |
-| PERSONNE · mag-ait-tiret | oui | 21 | 100.0 % | 0 |
-| PERSONNE · mag-ait-trema | oui | 21 | 100.0 % | 0 |
-| PERSONNE · mag-al-espace | oui | 21 | 100.0 % | 0 |
-| PERSONNE · mag-ben-colle | oui | 35 | 100.0 % | 0 |
-| PERSONNE · mag-ben-espace | oui | 39 | 97.4 % | 1 |
-| PERSONNE · mag-ben-tiret | oui | 22 | 100.0 % | 0 |
-| PERSONNE · mag-double | oui | 60 | 98.3 % | 1 |
-| PERSONNE · mag-el-colle | oui | 14 | 100.0 % | 0 |
-| PERSONNE · mag-el-espace | oui | 33 | 97.0 % | 1 |
-| PERSONNE · mag-el-tiret | oui | 16 | 100.0 % | 0 |
-| PERSONNE · mag-ould | oui | 36 | 91.7 % | 3 |
-| PERSONNE · mag-simple | oui | 139 | 99.3 % | 1 |
+| PERSONNE · fr-nom-mot-courant | oui | 38 | 100.0 % | 0 |
+| PERSONNE · fr-particule | oui | 39 | 92.3 % | 2 |
+| PERSONNE · fr-simple | oui | 189 | 100.0 % | 0 |
+| PERSONNE · mag-ait-apostrophe | oui | 18 | 100.0 % | 0 |
+| PERSONNE · mag-ait-espace | oui | 33 | 93.9 % | 2 |
+| PERSONNE · mag-ait-tiret | oui | 34 | 94.1 % | 2 |
+| PERSONNE · mag-ait-trema | oui | 23 | 100.0 % | 0 |
+| PERSONNE · mag-al-espace | oui | 32 | 100.0 % | 0 |
+| PERSONNE · mag-ben-colle | oui | 42 | 97.6 % | 1 |
+| PERSONNE · mag-ben-espace | oui | 53 | 98.1 % | 1 |
+| PERSONNE · mag-ben-tiret | oui | 34 | 100.0 % | 0 |
+| PERSONNE · mag-double | oui | 87 | 98.9 % | 1 |
+| PERSONNE · mag-el-colle | oui | 20 | 100.0 % | 0 |
+| PERSONNE · mag-el-espace | oui | 38 | 94.7 % | 2 |
+| PERSONNE · mag-el-tiret | oui | 26 | 100.0 % | 0 |
+| PERSONNE · mag-ould | oui | 48 | 91.7 % | 4 |
+| PERSONNE · mag-simple | oui | 221 | 99.5 % | 1 |
 | POLICE · — |  | 12 | 100.0 % | 0 |
 | PRATICIEN · — |  | 36 | 100.0 % | 0 |
-| RC · rc-nombre | oui | 45 | 100.0 % | 0 |
+| RC · rc-nombre | oui | 57 | 100.0 % | 0 |
 | RG · parquet |  | 12 | 100.0 % | 0 |
 | RG · pourvoi |  | 12 | 100.0 % | 0 |
 | RG · rg |  | 24 | 100.0 % | 0 |
-| RIB · rib-ma-colle | oui | 10 | 100.0 % | 0 |
-| RIB · rib-ma-groupes | oui | 16 | 93.8 % | 1 |
-| RIB · rib-ma-par-4 | oui | 10 | 80.0 % | 2 |
-| RIB · rib-ma-tirets | oui | 18 | 100.0 % | 0 |
+| RIB · rib-ma-colle | oui | 30 | 100.0 % | 0 |
+| RIB · rib-ma-groupes | oui | 30 | 96.7 % | 1 |
+| RIB · rib-ma-par-4 | oui | 25 | 96.0 % | 1 |
+| RIB · rib-ma-tirets | oui | 29 | 100.0 % | 0 |
 | SINISTRE · — |  | 12 | 100.0 % | 0 |
 | SIREN · siren-colle | oui | 12 | 100.0 % | 0 |
 | SIREN · siren-groupes | oui | 12 | 100.0 % | 0 |
 | SIRET · siret-colle | oui | 16 | 100.0 % | 0 |
 | SIRET · siret-groupes | oui | 12 | 100.0 % | 0 |
-| SOCIETE · casse-titre |  | 47 | 100.0 % | 0 |
-| SOCIETE · majuscules |  | 51 | 100.0 % | 0 |
-| SOCIETE · societe-forme |  | 58 | 100.0 % | 0 |
+| SOCIETE · casse-titre |  | 88 | 100.0 % | 0 |
+| SOCIETE · majuscules |  | 91 | 100.0 % | 0 |
+| SOCIETE · societe-forme |  | 100 | 100.0 % | 0 |
 | TEL · fr-fixe-0033 | oui | 5 | 100.0 % | 0 |
 | TEL · fr-fixe-intl-colle | oui | 10 | 100.0 % | 0 |
 | TEL · fr-fixe-intl-espaces | oui | 8 | 100.0 % | 0 |
@@ -180,32 +202,32 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | TEL · fr-mobile-national-espaces | oui | 4 | 100.0 % | 0 |
 | TEL · fr-mobile-national-points | oui | 6 | 100.0 % | 0 |
 | TEL · fr-mobile-national-tirets | oui | 5 | 100.0 % | 0 |
-| TEL · ma-fixe-00212 | oui | 4 | 100.0 % | 0 |
-| TEL · ma-fixe-intl-3-6 | oui | 5 | 100.0 % | 0 |
-| TEL · ma-fixe-intl-colle | oui | 7 | 100.0 % | 0 |
-| TEL · ma-fixe-intl-espaces | oui | 6 | 100.0 % | 0 |
-| TEL · ma-fixe-intl-tirets | oui | 4 | 100.0 % | 0 |
-| TEL · ma-fixe-intl-zero-parenthese | oui | 1 | 100.0 % | 0 |
-| TEL · ma-fixe-msisdn-sans-plus | oui | 4 | 100.0 % | 0 |
-| TEL · ma-fixe-national-4-2-2-2 | oui | 6 | 100.0 % | 0 |
-| TEL · ma-fixe-national-colle | oui | 8 | 100.0 % | 0 |
-| TEL · ma-fixe-national-espaces | oui | 5 | 100.0 % | 0 |
-| TEL · ma-fixe-national-points | oui | 8 | 100.0 % | 0 |
-| TEL · ma-fixe-national-tirets | oui | 4 | 100.0 % | 0 |
-| TEL · ma-mobile-00212 | oui | 16 | 100.0 % | 0 |
+| TEL · ma-fixe-00212 | oui | 8 | 100.0 % | 0 |
+| TEL · ma-fixe-intl-3-6 | oui | 8 | 100.0 % | 0 |
+| TEL · ma-fixe-intl-colle | oui | 11 | 100.0 % | 0 |
+| TEL · ma-fixe-intl-espaces | oui | 7 | 100.0 % | 0 |
+| TEL · ma-fixe-intl-tirets | oui | 7 | 100.0 % | 0 |
+| TEL · ma-fixe-intl-zero-parenthese | oui | 3 | 100.0 % | 0 |
+| TEL · ma-fixe-msisdn-sans-plus | oui | 5 | 100.0 % | 0 |
+| TEL · ma-fixe-national-4-2-2-2 | oui | 11 | 100.0 % | 0 |
+| TEL · ma-fixe-national-colle | oui | 11 | 100.0 % | 0 |
+| TEL · ma-fixe-national-espaces | oui | 9 | 100.0 % | 0 |
+| TEL · ma-fixe-national-points | oui | 13 | 100.0 % | 0 |
+| TEL · ma-fixe-national-tirets | oui | 8 | 100.0 % | 0 |
+| TEL · ma-mobile-00212 | oui | 25 | 100.0 % | 0 |
 | TEL · ma-mobile-espaces-irreguliers | oui | 1 | 100.0 % | 0 |
-| TEL · ma-mobile-intl-3-6 | oui | 20 | 100.0 % | 0 |
-| TEL · ma-mobile-intl-colle | oui | 10 | 100.0 % | 0 |
-| TEL · ma-mobile-intl-espaces | oui | 17 | 100.0 % | 0 |
-| TEL · ma-mobile-intl-tirets | oui | 10 | 100.0 % | 0 |
-| TEL · ma-mobile-intl-zero-parenthese | oui | 14 | 100.0 % | 0 |
+| TEL · ma-mobile-intl-3-6 | oui | 30 | 100.0 % | 0 |
+| TEL · ma-mobile-intl-colle | oui | 17 | 100.0 % | 0 |
+| TEL · ma-mobile-intl-espaces | oui | 24 | 100.0 % | 0 |
+| TEL · ma-mobile-intl-tirets | oui | 16 | 100.0 % | 0 |
+| TEL · ma-mobile-intl-zero-parenthese | oui | 21 | 100.0 % | 0 |
 | TEL · ma-mobile-intl-zero-parenthese-colle | oui | 1 | 100.0 % | 0 |
-| TEL · ma-mobile-msisdn-sans-plus | oui | 16 | 100.0 % | 0 |
-| TEL · ma-mobile-national-4-2-2-2 | oui | 15 | 100.0 % | 0 |
-| TEL · ma-mobile-national-colle | oui | 14 | 100.0 % | 0 |
-| TEL · ma-mobile-national-espaces | oui | 15 | 100.0 % | 0 |
-| TEL · ma-mobile-national-points | oui | 12 | 100.0 % | 0 |
-| TEL · ma-mobile-national-tirets | oui | 14 | 100.0 % | 0 |
+| TEL · ma-mobile-msisdn-sans-plus | oui | 26 | 100.0 % | 0 |
+| TEL · ma-mobile-national-4-2-2-2 | oui | 24 | 100.0 % | 0 |
+| TEL · ma-mobile-national-colle | oui | 20 | 100.0 % | 0 |
+| TEL · ma-mobile-national-espaces | oui | 26 | 100.0 % | 0 |
+| TEL · ma-mobile-national-points | oui | 18 | 100.0 % | 0 |
+| TEL · ma-mobile-national-tirets | oui | 20 | 100.0 % | 0 |
 | TEL · ma-mobile-slash | oui | 1 | 100.0 % | 0 |
 | TVA · tva-fr-colle |  | 2 | 100.0 % | 0 |
 | TVA · tva-fr-groupes |  | 2 | 100.0 % | 0 |
@@ -215,28 +237,28 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | Type · trait | Valeurs | Rappel | Partielles |
 |---|---:|---:|---:|
 | PERSONNE · minuscules | 10 | 100.0 % | 0 |
-| PERSONNE · nom-majuscules | 81 | 98.8 % | 1 |
-| PERSONNE · nom-majuscules-avant | 132 | 100.0 % | 0 |
+| PERSONNE · nom-majuscules | 123 | 99.2 % | 1 |
+| PERSONNE · nom-majuscules-avant | 177 | 100.0 % | 0 |
 | PERSONNE · nom-seul | 74 | 98.6 % | 0 |
-| PERSONNE · prenom-apostrophe | 46 | 91.3 % | 4 |
-| PERSONNE · prenom-compose | 84 | 100.0 % | 0 |
-| PERSONNE · prenom-seul | 41 | 97.6 % | 1 |
+| PERSONNE · prenom-apostrophe | 59 | 88.1 % | 7 |
+| PERSONNE · prenom-compose | 125 | 100.0 % | 0 |
+| PERSONNE · prenom-seul | 65 | 98.5 % | 1 |
 
 ## Leurres (doivent rester lisibles)
 
 | Leurre | Nombre | Codés à tort | Taux |
 |---|---:|---:|---:|
-| MONTANT — Montant | 516 | 38 | 7.4 % |
-| DATE — Date (hors naissance) | 567 | 0 | 0.0 % |
+| MONTANT — Montant | 1012 | 38 | 3.8 % |
+| DATE — Date (hors naissance) | 785 | 10 | 1.3 % |
 | ARTICLE — Article ou texte de loi | 88 | 35 | 39.8 % |
-| SIGLE — Sigle ou terme du lexique | 235 | 53 | 22.6 % |
-| MOT — Mot courant qui ressemble à un nom | 122 | 11 | 9.0 % |
-| VILLE — Ville | 156 | 0 | 0.0 % |
+| SIGLE — Sigle ou terme du lexique | 462 | 61 | 13.2 % |
+| MOT — Mot courant qui ressemble à un nom | 134 | 13 | 9.7 % |
+| VILLE — Ville | 204 | 0 | 0.0 % |
 | PRODUIT — Offre, opérateur, médicament | 102 | 32 | 31.4 % |
-| COMPTE — N° de compte comptable | 79 | 0 | 0.0 % |
-| MESURE — Durée, quantité, dosage | 90 | 1 | 1.1 % |
+| COMPTE — N° de compte comptable | 103 | 0 | 0.0 % |
+| MESURE — Durée, quantité, dosage | 174 | 1 | 0.6 % |
 
-## Valeurs manquées ou partielles (70)
+## Valeurs manquées ou partielles (85)
 
 | Document | Type | Écriture | Valeur (synthétique) | Statut | Resté en clair | Vu par l'IA | Préfixes posés |
 |---|---|---|---|---|---|:-:|---|
@@ -270,21 +292,25 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | sante/lettreLiaison/005 | NIR | nir-cle-tiret | `2 14 12 99 789 906 - 93` | partiel | 93 | oui | CIN |
 | sante/lettreLiaison/006 | NIR | nir-cle-tiret | `2 42 07 94 077 945 - 18` | partiel | 18 | oui | CIN |
 | sante/lettreLiaison/009 | NIR | nir-cle-tiret | `2 62 09 94 388 520 - 59` | partiel | 59 | oui | CIN |
+| banque-assurance/effets/009 | PERSONNE | mag-ait-tiret · prenom-apostrophe | `R'kia Ait-Mbarek` | partiel | R | oui | CODE, NOM |
+| banque-assurance/effets/009 | PERSONNE | mag-ait-tiret · prenom-apostrophe | `R'kia Ait-Mbarek` | partiel | R | oui | CODE, NOM |
+| banque-assurance/kyc/008 | PERSONNE | mag-el-espace | `Cheikh El Alaoui` | partiel | Cheikh | oui | NOM |
 | banque-assurance/releve/003 | PERSONNE | mag-ben-espace · prenom-apostrophe | `Ma'ati Ben Chekroun` | partiel | Ma | oui | CODE, NOM |
 | banque-assurance/releve/006 | PERSONNE | mag-ould | `Nesrine Ould Bah` | partiel | Bah | oui | PRENOM |
 | banque-assurance/releve/011 | PERSONNE | mag-double · prenom-apostrophe, nom-majuscules | `Ma'ati IDRISSI KAITOUNI` | partiel | Ma | oui | CODE, NOM |
 | banque-assurance/sinistre/001 | PERSONNE | mag-simple | `Cheikh Saidi` | partiel | Cheikh | oui | NOM |
+| banque-assurance/sinistreAuto/004 | PERSONNE | mag-ben-colle · prenom-apostrophe | `R'kia Bensaid` | partiel | R | oui | CODE, NOM |
 | core/mailTransfert/013 | PERSONNE | mag-ait-espace · prenom-seul | `R'kia` | partiel | R | oui | CODE |
 | core/mailTransfert/013 | PERSONNE | mag-ait-espace · prenom-apostrophe | `R'kia Ait Taleb` | partiel | R | oui | CODE, NOM |
-| expertise-comptable/grandLivre/001 | PERSONNE | mag-ould | `Rachida Ould Bah` | partiel | Bah | oui | NOM-002 |
+| expertise-comptable/grandLivre/001 | PERSONNE | mag-ould | `Rachida Ould Bah` | partiel | Bah | oui | PRENOM |
 | expertise-comptable/grandLivre/002 | PERSONNE | mag-el-espace · prenom-apostrophe | `Ma'ati El Moussaoui` | partiel | Ma | oui | CODE, NOM |
 | expertise-comptable/grandLivre/007 | PERSONNE | mag-ould | `Mehdi Ould Bah` | partiel | Bah | oui | PRENOM |
 | expertise-comptable/grandLivre/009 | PERSONNE | fr-particule | `Sophie Le Roux` | partiel | Roux | oui | PRENOM |
+| expertise-comptable/reporting/001 | PERSONNE | mag-ould | `Abdelaziz Ould Cheikh` | partiel | Cheikh | oui | PRENOM |
 | juridique-fr/conclusions/005 | PERSONNE | fr-particule | `Inès de La Fontaine` | partiel | Fontaine | oui | PRENOM |
 | juridique-fr/conclusions/005 | PERSONNE | fr-particule · nom-seul | `de La Fontaine` | manque | Fontaine | oui |  |
-| banque-assurance/virement/003 | RIB | rib-ma-par-4 | `3509 6618 2146 6793 3256 3429` | partiel | 3256 3429 | non | CARTE |
-| banque-assurance/virement/012 | RIB | rib-ma-groupes | `007 224 4161941191840505 25` | partiel | 007 25 | oui | CARTE |
 | expertise-comptable/facture/010 | RIB | rib-ma-par-4 | `0117 2663 0845 1886 7116 7673` | partiel | 7116 7673 | non | CARTE |
+| expertise-comptable/rapprochement/001 | RIB | rib-ma-groupes | `013 134 9616370589708679 28` | partiel | 013 28 | oui | CARTE |
 | juridique-fr/conclusions/008 | ADRESSE (indirect) | fr-rue | `41 rue de la République` | manque | République | oui |  |
 | juridique-fr/conclusions/011 | ADRESSE (indirect) | fr-batiment | `Bâtiment C, 27 quai de la Fosse` | manque | Fosse | oui | NOM, PRENOM |
 | rh-paie/bulletinFr/005 | ADRESSE (indirect) | fr-rue | `49 quai de la Fosse` | manque | Fosse | oui |  |
@@ -292,6 +318,17 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | sante/lettreLiaison/001 | ADRESSE (indirect) | fr-bis | `31 bis rue de la République` | manque | République | oui |  |
 | sante/lettreLiaison/003 | ADRESSE (indirect) | fr-rue | `71 quai de la Fosse` | manque | Fosse | oui |  |
 | sante/lettreLiaison/007 | ADRESSE (indirect) | fr-batiment | `Bâtiment C, 5 rue de la République` | manque | République | oui | NOM, PRENOM |
+| expertise-comptable/rapprochement/001 | EFFET (indirect) | cheque-7 | `4237529` | manque | 4237529 | oui |  |
+| expertise-comptable/rapprochement/002 | EFFET (indirect) | cheque-7 | `4457560` | manque | 4457560 | oui |  |
+| expertise-comptable/rapprochement/002 | EFFET (indirect) | cheque-7 | `5347766` | manque | 5347766 | oui |  |
+| expertise-comptable/rapprochement/003 | EFFET (indirect) | cheque-7 | `0537828` | manque | 0537828 | oui |  |
+| expertise-comptable/rapprochement/003 | EFFET (indirect) | cheque-7 | `3159073` | manque | 3159073 | oui |  |
+| expertise-comptable/rapprochement/005 | EFFET (indirect) | cheque-7 | `0744611` | manque | 0744611 | oui |  |
+| expertise-comptable/rapprochement/009 | EFFET (indirect) | cheque-7 | `2449558` | manque | 2449558 | oui |  |
+| expertise-comptable/rapprochement/010 | EFFET (indirect) | cheque-7 | `7339130` | manque | 7339130 | oui |  |
+| expertise-comptable/rapprochement/010 | EFFET (indirect) | cheque-7 | `8691572` | manque | 8691572 | oui |  |
+| expertise-comptable/rapprochement/011 | EFFET (indirect) | cheque-7 | `7691163` | manque | 7691163 | oui |  |
+| expertise-comptable/rapprochement/012 | EFFET (indirect) | cheque-7 | `5563453` | manque | 5563453 | oui |  |
 | core/fiche/003 | NAISSANCE (indirect) | jj-mm-aaaa | `12/05/2003` | manque | 12 05 2003 | oui |  |
 | core/fiche/004 | NAISSANCE (indirect) | jj-mm-aaaa | `22/08/1962` | manque | 22 08 1962 | oui |  |
 | core/fiche/009 | NAISSANCE (indirect) | lettres | `16 juin 1988` | manque | 16 juin 1988 | oui |  |
@@ -311,7 +348,7 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | sante/compteRendu/011 | NAISSANCE (indirect) | lettres | `12 avril 1996` | manque | 12 avril 1996 | oui |  |
 | sante/compteRendu/012 | NAISSANCE (indirect) | jj-mm-aaaa | `25/10/2000` | manque | 25 10 2000 | oui |  |
 
-## Leurres codés à tort (170)
+## Leurres codés à tort (190)
 
 | Document | Leurre | Valeur | Préfixes |
 |---|---|---|---|
@@ -370,6 +407,30 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | juridique-fr/noteDossier/007 | ARTICLE · jurisprudence | `Soc., 27 septembre 2023, n° 21-24.782` | POURVOI |
 | juridique-fr/noteDossier/012 | ARTICLE · code-fr | `article R. 4624-31` | REF |
 | banque-assurance/virement/010 | MOT | `Noël` | PRENOM |
+| banque-assurance/kyc/001 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/002 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/003 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/004 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/005 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/006 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/007 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/008 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/009 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/010 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/011 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/kyc/012 | SIGLE | `KYC` | SOCIETE |
+| banque-assurance/carte/001 | DATE · jj-mm-aaaa | `22/03/2023` | SOCIETE |
+| banque-assurance/carte/002 | DATE · iso | `2025-04-07` | SOCIETE |
+| banque-assurance/carte/003 | DATE · iso | `2021-11-16` | SOCIETE |
+| banque-assurance/carte/004 | DATE · iso | `2023-07-02` | SOCIETE |
+| banque-assurance/carte/005 | DATE · iso | `2026-03-07` | SOCIETE |
+| banque-assurance/carte/006 | DATE · jj-mm-aaaa | `15/06/2024` | SOCIETE |
+| banque-assurance/carte/007 | DATE · points | `28.04.2025` | SOCIETE |
+| banque-assurance/carte/008 | DATE · jj-mm-aaaa | `05/07/2019` | SOCIETE |
+| banque-assurance/carte/011 | DATE · iso | `2026-06-17` | SOCIETE |
+| banque-assurance/carte/012 | DATE · points | `15.01.2020` | SOCIETE |
+| banque-assurance/effets/002 | MOT | `Noël` | PRENOM |
+| banque-assurance/effets/007 | MOT | `Noël` | PRENOM |
 | sante/compteRendu/001 | PRODUIT | `ECG` | NOM |
 | sante/compteRendu/002 | PRODUIT | `HbA1c` | REF |
 | sante/compteRendu/002 | PRODUIT | `Doliprane 1000 mg` | NOM |
@@ -400,10 +461,6 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | sante/ordonnance/009 | PRODUIT | `insuline glargine` | CODE |
 | sante/ordonnance/010 | PRODUIT | `Doliprane 1000 mg` | NOM |
 | sante/ordonnance/012 | PRODUIT | `insuline glargine` | CODE |
-| expertise-comptable/grandLivre/002 | SIGLE | `PCGE` | NOM |
-| expertise-comptable/grandLivre/003 | SIGLE | `PCGE` | NOM |
-| expertise-comptable/grandLivre/006 | SIGLE | `PCGE` | NOM |
-| expertise-comptable/grandLivre/010 | SIGLE | `PCGE` | NOM |
 | expertise-comptable/lettreMission/010 | MOT | `Noël` | PRENOM |
 | rh-paie/bulletinMa/001 | SIGLE | `AMO` | SOCIETE |
 | rh-paie/bulletinMa/001 | MONTANT · milliers | `47 076 MAD` | SOCIETE |
@@ -486,13 +543,13 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | sante/manuel/transmission-orale | PRODUIT | `insuline glargine` | CODE |
 | sante/manuel/transmission-orale | MESURE | `12 UI` | NOM |
 
-## Codé hors étiquette (413 passages, 51 distincts — 40 plus fréquents)
+## Codé hors étiquette (488 passages, 54 distincts — 40 plus fréquents)
 
 Ni une valeur étiquetée, ni un leurre : surtout des mots du gabarit que le verrou ne connaît pas. Sur-coder est sûr, mais rend le texte moins utile à l'IA.
 
 | Passage | Fois |
 |---|---:|
-| CODE « joignable » | 36 |
+| CODE « joignable » | 48 |
 | NOM « PRLV » | 18 |
 | NOM « TR » | 14 |
 | SOCIETE « FICHE CONTACT » | 14 |
@@ -501,34 +558,34 @@ Ni une valeur étiquetée, ni un leurre : surtout des mots du gabarit que le ver
 | CODE « confraternellement » | 12 |
 | CODE « requérante » | 12 |
 | CODE « télédéclarations » | 12 |
+| NOM « AMIABLE » | 12 |
 | NOM « Bien » | 12 |
+| NOM « Co-emprunteur » | 12 |
+| NOM « CRÉDIT » | 12 |
 | NOM « DEVANT » | 12 |
+| NOM « DOSSIER » | 12 |
 | NOM « EMIS » | 12 |
 | NOM « EXTRAIT » | 12 |
 | NOM « INTERNE » | 12 |
 | NOM « LIAISON » | 12 |
+| NOM « RAS » | 12 |
 | NOM « SAV » | 12 |
+| NOM « Télédéclaration » | 12 |
 | NOM « TICKET » | 12 |
 | NOM « VIREMENT » | 12 |
-| NOM-001 « FACTURE » | 12 |
 | SOCIETE « DÉCLARATION DE SINISTRE » | 12 |
 | SOCIETE « DEMANDE DE PORTABILITÉ DU NUMÉRO » | 12 |
 | SOCIETE « LETTRE DE MISSION » | 12 |
 | NOM « CHQ » | 11 |
 | NOM « REMIS » | 11 |
 | NOM « Reprise » | 11 |
-| SINISTRE « Police » | 11 |
+| NOM « IMMOBILIER » | 7 |
 | NOM « Inchallah » | 6 |
 | SOCIETE « ORDRE DE VIREMENT PERMANENT » | 6 |
 | CODE « choukran » | 5 |
+| NOM « CONSOMMATION » | 5 |
 | NOM « Enfant » | 5 |
 | NOM « Salam » | 5 |
 | NOM « Syntec » | 5 |
+| PRENOM « À » | 5 |
 | CODE « glycémique » | 4 |
-| SOCIETE « ORDRE DE VIREMENT OCCASIONNEL » | 4 |
-| SOCIETE « PLAISE AU CONSEIL » | 4 |
-| NOM « GSM » | 3 |
-| NOM « Mb » | 3 |
-| NOM « Hamdoullah » | 2 |
-| NOM-002-002 « Facture » | 2 |
-| NOM-003 « Facture » | 2 |

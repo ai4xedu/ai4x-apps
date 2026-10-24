@@ -64,6 +64,13 @@ export function fabrique(h) {
     imei: () => P("IMEI", I.imei(h)),
     imsi: () => P("IMSI", I.imsi(h)),
     iccid: () => P("ICCID", I.iccid(h)),
+    carte: () => P("CARTE", I.carte(h)),
+    cvv: () => P("CVV", I.cvv(h)),
+    passeport: () => P("PASSEPORT", I.passeport(h)),
+    immatMa: () => P("IMMAT", I.immatMa(h)),
+    cheque: () => P("EFFET", I.cheque(h)),
+    lcn: () => P("EFFET", I.lcn(h)),
+    dossierCredit: () => P("CONTRAT", I.dossierCredit(h)),
     /* L'adresse étiquetée, c'est la voie (numéro, rue, résidence, quartier).
        Le code postal et la ville qui la suivent ne sont pas étiquetés : le
        moteur peut les coder avec l'adresse, ou les laisser lisibles (une

@@ -1,13 +1,13 @@
 {
   "nom": "HT-Bench",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "split": "dev",
   "graine": "ht-bench-v0",
   "synthetique": true,
-  "sha256": "63117fe4d240262b3d4c503d4373d6f64e0a26480f8e1281aefb8b01bb216668",
-  "documents": 268,
-  "positifs": 2473,
-  "leurres": 1955,
+  "sha256": "a21f6f11d5f7a115b22d1558bf70dbb260be72c59df5424d6ca7dd40e2267714",
+  "documents": 376,
+  "positifs": 3463,
+  "leurres": 3064,
   "par_pack": {
     "core": {
       "documents": 46,
@@ -25,9 +25,9 @@
       "leurres": 308
     },
     "banque-assurance": {
-      "documents": 37,
-      "positifs": 342,
-      "leurres": 277
+      "documents": 97,
+      "positifs": 875,
+      "leurres": 673
     },
     "sante": {
       "documents": 37,
@@ -35,9 +35,9 @@
       "leurres": 244
     },
     "expertise-comptable": {
-      "documents": 37,
-      "positifs": 401,
-      "leurres": 439
+      "documents": 85,
+      "positifs": 858,
+      "leurres": 1152
     },
     "rh-paie": {
       "documents": 37,
@@ -46,34 +46,40 @@
     }
   },
   "par_type": {
-    "ADRESSE": 161,
+    "ADRESSE": 185,
     "BIC": 24,
-    "CIN": 139,
+    "CARTE": 24,
+    "CIN": 187,
     "CNSS": 74,
-    "EMAIL": 165,
-    "FACTURE": 24,
-    "IBAN": 41,
+    "CONTRAT": 24,
+    "CVV": 12,
+    "EFFET": 47,
+    "EMAIL": 201,
+    "FACTURE": 48,
+    "IBAN": 53,
     "ICCID": 12,
-    "ICE": 74,
-    "IF": 45,
+    "ICE": 164,
+    "IF": 64,
     "IMEI": 26,
+    "IMMAT": 24,
     "IMSI": 19,
     "MATRICULE": 24,
-    "NAISSANCE": 74,
+    "NAISSANCE": 86,
     "NIR": 46,
+    "PASSEPORT": 24,
     "PATENTE": 9,
     "PATIENT": 24,
-    "PERSONNE": 733,
+    "PERSONNE": 975,
     "POLICE": 12,
     "PRATICIEN": 36,
-    "RC": 45,
+    "RC": 57,
     "RG": 48,
-    "RIB": 54,
+    "RIB": 114,
     "SINISTRE": 12,
     "SIREN": 24,
     "SIRET": 28,
-    "SOCIETE": 156,
-    "TEL": 340,
+    "SOCIETE": 279,
+    "TEL": 473,
     "TVA": 4
   }
 }

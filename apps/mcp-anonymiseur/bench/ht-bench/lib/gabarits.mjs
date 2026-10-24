@@ -251,6 +251,60 @@ Indemnité à verser sur le RIB ${g.ribMa()}. Garantie ${g.sigle(["RC", "AMO", "
   },
 };
 
+/* Finance marocaine (v0.2) : KYC, monétique, effets, crédit, auto. */
+const SIGLES_FIN = ["Bank Al-Maghrib", "BAM", "AMMC", "ACAPS", "UTRF", "LCN", "KYC", "PPE", "TEG", "TAEG", "SWIFT", "CMI"];
+Object.assign(banque, {
+  kyc(g) {
+    const h = g.h, cl = g.personne("ma"), be = g.personne("mix"), soc = h.pile(0.5);
+    return `FICHE ${g.sigle(["KYC"])} — OUVERTURE DE COMPTE
+Client : ${cl.m}, né${h.pile(0.5) ? "e" : ""} le ${g.naissance()} à ${g.ville("ma")}
+CIN : ${g.cin()} — ${c(h, "Passeport", "Titre de séjour")} : ${g.passeport()}
+Adresse : ${g.adresseMa()}
+Téléphone : ${g.tel("ma")} — E-mail : ${g.email(cl.p)}
+Profession : ${c(h, "ingénieur", "commerçant", "médecin", "enseignante")} — Revenus mensuels : ${g.montant("MAD")}
+${soc ? `Employeur : ${g.societe("ma")} (ICE ${g.ice()})` : `Activité : auto-entrepreneur, IF ${g.if()}`}
+Personne politiquement exposée (${g.sigle(["PPE"])}) : non. Bénéficiaire effectif : ${be.m}.
+Compte ouvert le ${g.date()} : ${g.ribMa()} — agence de ${g.ville("ma")}.
+Contrôle ${g.sigle(["UTRF"])} / ${g.sigle(["Bank Al-Maghrib", "BAM"])} : RAS.`;
+  },
+  carte(g) {
+    const h = g.h, cl = g.personne("ma");
+    return `OPPOSITION SUR CARTE BANCAIRE — ${g.date()}
+Titulaire : ${cl.m}, CIN ${g.cin()}
+Carte n° ${g.carte()}, expire ${L("DATE", `${String(h.entier(1, 12)).padStart(2, "0")}/${h.entier(27, 31)}`, "expiration")}, CVV ${g.cvv()}
+Motif : ${c(h, "perte", "vol", "utilisation frauduleuse")} signalé${h.pile(0.5) ? "e" : ""} au ${g.tel("ma")}.
+Opérations contestées : ${g.montant("MAD")} le ${g.date()} et ${g.montant("MAD")} le ${g.date()} (réseau ${g.sigle(["CMI"])}).
+Nouvelle carte : ${g.carte()}. Remboursement sur ${g.ibanMa()}.`;
+  },
+  effets(g) {
+    const h = g.h, tireur = g.societe("ma"), tire = g.personne("ma");
+    return `BORDEREAU DE REMISE — ${g.date()}
+Remettant : ${tireur} — ICE ${g.ice()} — compte ${g.ribMa()}
+Chèque n° ${g.cheque()} de ${tire.m}, montant ${g.montant("MAD")}
+${g.sigle(["LCN"])} n° ${g.lcn()} échéance ${g.date()}, tiré ${g.personne("mix").m}, montant ${g.montant("MAD")}
+Chèque n° ${g.cheque()} revenu impayé (provision insuffisante) : avis au tireur ${tire.m}, ${g.tel("ma")}.
+${phraseMot(g)}`;
+  },
+  credit(g) {
+    const h = g.h, emp = g.personne("ma"), co = g.personne("ma");
+    return `DOSSIER DE CRÉDIT ${c(h, "IMMOBILIER", "À LA CONSOMMATION")} n° ${g.dossierCredit()}
+Emprunteur : ${emp.m}, CIN ${g.cin()}, ${g.tel("ma")}
+Co-emprunteur : ${co.m}, CIN ${g.cin()}
+Employeur : ${g.societe("ma")} — salaire net ${g.montant("MAD")} — ancienneté ${g.mesure(["4 ans", "11 ans", "18 mois"])}
+Montant : ${g.montant("MAD")} sur ${g.mesure(["240 mois", "84 mois", "300 mois"])} — ${g.sigle(["TEG", "TAEG"])} ${g.mesure(["4,25 %", "6,90 %", "5,10 %"])}
+Bien : ${g.adresseMa()} — garantie ${c(h, "hypothèque de premier rang", "caution solidaire", "nantissement")}
+Prélèvement mensuel sur ${g.ribMa()} à compter du ${g.date()}.`;
+  },
+  sinistreAuto(g) {
+    const h = g.h, ass = g.personne("ma"), adv = g.personne("ma");
+    return `CONSTAT AMIABLE — ${g.date()} à ${g.ville("ma")}
+Véhicule A : immatriculé ${g.immatMa()}, conducteur ${ass.m}, permis [[PASSEPORT|permis:${h.entier(1, 99)}/${h.chiffres(6)}]], contrat n° ${g.dossierCredit()}
+Véhicule B : immatriculé ${g.immatMa()}, conducteur ${adv.m}, joignable au ${g.tel("ma")}
+Dommages estimés : ${g.montant("MAD")} ; franchise ${g.montant("MAD")}. Garantie ${g.sigle(["ACAPS"])} : barème de responsabilité.
+Indemnité à verser sur ${g.ribMa()}.`;
+  },
+});
+
 /* --------------------------------------------------------------- SANTÉ */
 const DCI = ["paracétamol 1 g", "amoxicilline 1 g", "metformine 850 mg", "ibuprofène 400 mg", "oméprazole 20 mg", "Doliprane 1000 mg", "insuline glargine"];
 const EXAMENS = ["IRM", "ECG", "HbA1c", "NFS", "scanner thoracique", "échographie abdominale"];
@@ -335,6 +389,62 @@ Mission : tenue, déclarations ${g.sigle(["TVA", "IS", "IR"])} et liasse ${g.sig
 Les télédéclarations SIMPL sont faites au nom de l'entreprise (IF ${g.if()}). ${phraseMot(g)}`;
   },
 };
+
+/* Directeurs financiers et experts-comptables (v0.2) : ce que la DAF
+   envoie vraiment — rapprochement, TVA, reporting, balance âgée. Beaucoup
+   d'indicateurs et de sigles qui DOIVENT rester lisibles. */
+const SIGLES_DAF = ["EBITDA", "EBE", "BFR", "DSO", "DPO", "CAPEX", "OPEX", "KPI", "PCGE", "CGNC", "IFRS", "CAC", "DGI", "SIMPL", "TVA", "IS"];
+Object.assign(comptable, {
+  rapprochement(g) {
+    const h = g.h, soc = g.societe("ma");
+    const lignes = Array.from({ length: h.entier(3, 5) }, () => c(h,
+      `Chèque n° ${g.cheque()} émis à ${g.personne("ma").m}, non débité | ${g.montant("MAD")}`,
+      `Virement reçu de ${g.societe("ma")} non comptabilisé | ${g.montant("MAD")}`,
+      `Frais bancaires du ${g.date()} | ${g.montant("MAD")}`,
+      `Prélèvement ${g.sigle(["CNSS", "DGI"])} du ${g.date()} | ${g.montant("MAD")}`));
+    return `RAPPROCHEMENT BANCAIRE au ${g.date()} — ${soc}
+Compte ${g.compte()} — RIB ${g.ribMa()}
+Solde relevé : ${g.montant("MAD")} | Solde comptable : ${g.montant("MAD")}
+Écarts :
+${lignes.join("\n")}
+Préparé par ${g.personne("mix").m} (${g.email(g.personne("mix").p)}), validé par le ${g.sigle(["CAC"])}.`;
+  },
+  declarationTva(g) {
+    const h = g.h, soc = g.societe("ma"), dir = g.personne("ma");
+    return `DÉCLARATION DE ${g.sigle(["TVA"])} — ${c(h, "régime mensuel", "régime trimestriel")}, période ${L("DATE", `${c(h, "janvier", "mars", "juin", "septembre")} ${h.entier(2024, 2026)}`, "periode")}
+Contribuable : ${soc} — IF ${g.if()} — ICE ${g.ice()} — RC ${g.ville("ma")} ${g.rc()}
+Télédéclaration ${g.sigle(["SIMPL"])} n° [[FACTURE|declaration:${h.choix(["TVA", "DGI"])}-${h.entier(2024, 2026)}-${h.chiffres(6)}]]
+Chiffre d'affaires taxable à ${g.mesure(["20 %", "14 %", "10 %", "7 %"])} : ${g.montant("MAD")}
+TVA collectée : ${g.montant("MAD")} — TVA déductible : ${g.montant("MAD")} — Crédit de TVA reporté : ${g.montant("MAD")}
+Pièce justificative : facture n° [[FACTURE:F-${h.entier(2024, 2026)}-${h.chiffres(4)}]] du ${g.date()}.
+Pièce jointe : état des déductions. Le signataire, ${dir.m}, déclare avoir vérifié l'exactitude des montants.`;
+  },
+  reporting(g) {
+    const h = g.h, daf = g.personne("mix"), dg = g.personne("ma"), banq = g.personne("mix"), cl1 = g.societe("ma"), cl2 = g.societe(h.pile(0.5) ? "fr" : "ma");
+    return `De : ${daf.m} <${g.email(daf.p)}>
+À : ${dg.m}
+Objet : reporting ${g.sigle(["KPI"])} de ${L("DATE", c(h, "septembre", "octobre", "novembre"), "mois")}
+
+Bonjour ${g.prenom(dg.p)},
+Chiffre d'affaires du mois : ${g.montant("MAD")} (budget ${g.montant("MAD")}). ${g.sigle(["EBITDA", "EBE"])} : ${g.montant("MAD")}, marge de ${g.mesure(["14,2 %", "9,8 %", "21,5 %"])}.
+${g.sigle(["BFR"])} à ${g.mesure(["47 jours", "62 jours", "38 jours"])} de CA ; ${g.sigle(["DSO"])} remonte à ${g.mesure(["71 jours", "58 jours"])} à cause de ${cl1} (${g.montant("MAD")} échus) et de ${cl2}.
+Trésorerie fin de mois : ${g.montant("MAD")} ; ligne de crédit à renouveler avec ${banq.m} (${g.tel("ma")}) avant le ${g.date()}.
+${g.sigle(["CAPEX"])} engagés : ${g.montant("MAD")}. Clôture prévue le ${g.date()} avec le ${g.sigle(["CAC"])}.
+Bien à toi,
+${g.prenom(daf.p)}`;
+  },
+  balanceAgee(g) {
+    const h = g.h;
+    const lignes = Array.from({ length: h.entier(4, 6) }, () => {
+      const t = h.pile(0.6) ? g.societe("ma") : g.personne("ma").m;
+      return `${t} | ICE ${g.ice()} | ${g.montant("MAD")} | ${g.montant("MAD")} | ${g.montant("MAD")} | relance au ${g.tel("ma")}`;
+    });
+    return `BALANCE ÂGÉE CLIENTS au ${g.date()} — compte ${g.compte()}
+Tiers | Identifiant | 0-30 j | 31-90 j | > 90 j | Action
+${lignes.join("\n")}
+Provision pour créances douteuses proposée : ${g.montant("MAD")} (${g.sigle(["PCGE", "IFRS"])}).`;
+  },
+});
 
 /* --------------------------------------------------------------- RH-PAIE */
 const rh = {
