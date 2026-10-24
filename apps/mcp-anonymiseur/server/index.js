@@ -70,7 +70,8 @@ import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 import { lireSecretsPoste, ouvrirRegistre, lireEntrees as lireEntreesRegistre, ajouterEntrees as ajouterEntreesRegistre, doublons as doublonsRegistre, RegistreIndisponible } from "./registre.js";
 import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque, lireEnrolement } from "./politique.js";
-import { lireReglesDossier, compilerRegles } from "./regles.js";
+import { lireReglesDossier, compilerRegles, normaliser } from "./regles.js";
+import { packsParDefaut } from "./packs.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } from "./sentinelle.js";
 import { attestHtml, posteIdentity } from "./attestation.js";
@@ -301,7 +302,7 @@ function nomsPolitique(textes) {
 let reglesCourantes = null;
 function regles() {
   const d = lireReglesDossier(OUTDIR);
-  let organisation = [], typesSupplementaires = [], noms = null;
+  let organisation = [], typesSupplementaires = [], noms = null, politiqueDeclare = false;
   const entetes = [...(d.entetes || [])];
   const erreurs = [...d.erreurs];
   if (POLITIQUE) {
@@ -313,9 +314,15 @@ function regles() {
       erreurs.push(...o.erreurs);
       typesSupplementaires = POLITIQUE.typesOrganisation(c);
       noms = (t) => POLITIQUE.analyserNoms(c, [t]).extras;
+      politiqueDeclare = POLITIQUE.declarePacks(c);
     }
   }
-  reglesCourantes = compilerRegles({ dossier: d.regles, organisation, entetes, noms, typesSupplementaires, erreurs });
+  // v2.25 : ni le dossier ni la politique n'ont choisi → les packs par défaut,
+  // au niveau du dossier (une règle de l'organisation l'emporte toujours).
+  const defaut = packsParDefaut({ dossierDeclare: d.packsDeclares, politiqueDeclare });
+  entetes.push(...defaut.entetes);
+  erreurs.push(...defaut.erreurs);
+  reglesCourantes = compilerRegles({ dossier: [...d.regles, ...defaut.regles], organisation, entetes, noms, typesSupplementaires, erreurs, parDefaut: defaut.ids });
   return reglesCourantes;
 }
 /* Mode tableau : un en-tête reconnu par un pack (« MSISDN », « IMSI »…) force
@@ -780,11 +787,16 @@ function previewUnsafe(s, opts = {}) {
   if (!t.trim()) return false;
   if (classifyLoose(t).length > 0) return true;
   if (opts.document && isSuspectName(t)) return true;
+  // Le vocabulaire des packs n'est pas une valeur exclue : il reste lisible.
+  const vocabulaire = reglesCourantes ? reglesCourantes.vocabulaire : null;
   if ((opts.excludes || []).some((v) => {
     const e = String(v).trim();
+    if (vocabulaire && vocabulaire.has(normaliser(e))) return false;
     return e.length >= 2 && new RegExp(`(?<![\\p{L}\\p{N}])${e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}])`, "iu").test(t);
   })) return true;
-  return strictCode(t, { mask: true }).replaced > 0;
+  // Un sigle de pack (« LCN », « EBITDA ») est hors lexique : sans lui, le
+  // verrou le prendrait pour un nom et masquerait la ligne entière.
+  return strictCode(t, { mask: true, excludes: reglesCourantes ? reglesCourantes.termesVocabulaire : [] }).replaced > 0;
 }
 
 function maskPreviewLines(codedText, opts = {}) {

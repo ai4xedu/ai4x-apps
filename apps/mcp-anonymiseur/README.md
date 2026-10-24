@@ -655,4 +655,24 @@ inconnu bloque l'anonymisation. Six packs : `telecom-ma`, `juridique-fr`,
 `banque-assurance`, `sante`, `expertise-comptable`, `rh-paie`. Spec :
 `SPEC-PACKS-METIER.md` (dépôt nanomizer). Tests : `test/packs.test.js`.
 
+**Packs par défaut (v2.25).** Un dossier qui n'a pas choisi ses packs reçoit
+d'office `telecom-ma`, `juridique-fr`, `rh-paie`, `banque-assurance` et
+`expertise-comptable` (`PACKS_PAR_DEFAUT`, `server/packs.js`). Un dossier
+« n'a pas choisi » quand il n'a pas de `reglages.json`, ou un `reglages.json`
+sans clé `packs`. Le plan les signale par « (par défaut) ».
+- **Choisir l'emporte.** `"packs": [...]` dans `reglages.json` remplace les
+  packs par défaut, et `"packs": []` les retire tous. Une politique signée qui
+  déclare `packs` les remplace aussi, pour les postes qu'elle vise.
+- **Pourquoi ces cinq.** Ils sont choisis par la mesure (HT-Bench,
+  `npm run bench:ht:packs`) : activés pour tous les documents, ils font monter
+  le rappel des identifiants directs, ne corrompent aucune sortie et ne
+  codent aucun leurre chez les autres métiers. `sante` reste à activer, parce
+  que ses motifs corrompent encore des sorties.
+- **Lisibilité.** Le vocabulaire d'un pack (« Cour de cassation »,
+  « EBITDA », « LCN ») reste lisible dans l'aperçu montré à l'IA. Les termes
+  qu'un dossier ou une organisation laisse en clair restent masqués, parce
+  qu'ils peuvent être des noms.
+
+Tests : `test/packs-defaut.test.js`.
+
 

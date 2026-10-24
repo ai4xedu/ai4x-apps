@@ -156,7 +156,9 @@ test("verrou de sortie : un terme à toujours coder glissé dans une réponse so
 
 test("lireReglesDossier : fichier absent, fichier valide, fichier illisible, relecture quand il change", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ht-regles-"));
-  assert.deepEqual(lireReglesDossier(dir), { regles: [], erreurs: [] });
+  // v2.25 : packsDeclares dit si le dossier a choisi ses packs (sinon, les
+  // packs par défaut s'appliquent — cf. test/packs-defaut.test.js).
+  assert.deepEqual(lireReglesDossier(dir), { regles: [], erreurs: [], packsDeclares: false });
   const f = path.join(dir, "reglages.json");
   fs.writeFileSync(f, JSON.stringify({ chiffres: "auto", regles: reglesDossier() }));
   assert.equal(lireReglesDossier(dir).regles.length, 3);
@@ -165,9 +167,10 @@ test("lireReglesDossier : fichier absent, fichier valide, fichier illisible, rel
   const r = lireReglesDossier(dir);
   assert.equal(r.regles.length, 0);
   assert.match(r.erreurs[0], /reglages\.json illisible/);
+  assert.equal(r.packsDeclares, true, "illisible : rien d'office, l'erreur bloque déjà");
   fs.writeFileSync(f, JSON.stringify({ chiffres: "clair" }));
   fs.utimesSync(f, new Date(Date.now() + 10000), new Date(Date.now() + 10000));
-  assert.deepEqual(lireReglesDossier(dir), { regles: [], erreurs: [] });
+  assert.deepEqual(lireReglesDossier(dir), { regles: [], erreurs: [], packsDeclares: false });
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
