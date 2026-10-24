@@ -68,6 +68,7 @@ test("dossier de la sentinelle : Hidden Tokens, l'ancien tant qu'il est seul", (
   assert.equal(dossierSentinelle({}, "darwin", home), path.join(support, "Nanomizer"));
   fs.mkdirSync(path.join(support, "Hidden Tokens"));
   assert.equal(dossierSentinelle({}, "darwin", home), path.join(support, "Hidden Tokens"));
-  assert.equal(dossierSentinelle({ NANOMIZER_SENTINELLE_DIR: "/x/ancien" }, "darwin", home), "/x/ancien");
-  assert.equal(dossierSentinelle({ HIDDEN_TOKENS_SENTINELLE_DIR: "/x/neuf", NANOMIZER_SENTINELLE_DIR: "/x/ancien" }, "darwin", home), "/x/neuf");
+  // path.resolve : « D:\\x\\ancien » sous Windows, le même chemin ailleurs.
+  assert.equal(dossierSentinelle({ NANOMIZER_SENTINELLE_DIR: "/x/ancien" }, "darwin", home), path.resolve("/x/ancien"));
+  assert.equal(dossierSentinelle({ HIDDEN_TOKENS_SENTINELLE_DIR: "/x/neuf", NANOMIZER_SENTINELLE_DIR: "/x/ancien" }, "darwin", home), path.resolve("/x/neuf"));
 });
