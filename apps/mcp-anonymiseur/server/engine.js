@@ -122,7 +122,9 @@ export function detectByHeader(h) {
   if (/\brib\b|iban|compte|bancaire|bank/.test(s)) return "rib";
   if (/adresse|address|domicile/.test(s)) return "adresse";
   if (/soci[eé]t|entreprise|raison\s*sociale|company|employeur|fournisseur|prestataire|[eé]metteur|enseigne/.test(s)) return "societe";
-  if (/naissance|birth|\bdob\b/.test(s)) return "autre";
+  // v2.23.1 — une colonne « Date de naissance » est une date de naissance
+  // (NAISS-…, décalée en rendu lisible), plus un « CODE-… » générique.
+  if (/naissance|birth|\bdob\b/.test(s)) return "naissance";
   if (/\bice\b/.test(s)) return "ice";
   if (/identifiant\s*fiscal|^\s*i\.?f\.?\s*$/.test(s)) return "if";
   if (/registre\s*de\s*commerce|^\s*r\.?c\.?\s*$/.test(s)) return "rc";
@@ -271,6 +273,18 @@ export function codeFor(book, typeId, text) {
     isNew = true;
   }
   return { code, isNew };
+}
+
+/* Le code d'un ALIAS (le nom nu d'une société) : celui de la valeur complète,
+   créé au besoin ; l'alias est inscrit dans byKey, si bien qu'un prochain
+   texte qui ne cite que le nom nu retrouve le même code (verrou.js indexe
+   byKey). Aucune entrée nouvelle : la clé garde une ligne par société. */
+function aliasFor(book, e) {
+  const t = typeById(e.type || "societe");
+  const full = codeFor(book, e.type || "societe", String(e.aliasOf).trim());
+  const ak = t.prefix + "||" + normFor(t.prefix, String(e.value).trim());
+  if (!book.byKey[ak]) book.byKey[ak] = full.code;
+  return full;
 }
 
 export function pad(num) {
@@ -501,6 +515,63 @@ function normToken(t) {
 const LEGAL_SUFFIX_RX =
   /\b((?:[A-ZÀ-Ý][\p{L}\d'’.\-]*(?:\s+(?:&|et|and)\s+|\s+)){0,5}[A-ZÀ-Ý][\p{L}\d&'’.\-]*)[\s,]+(S\.?A\.?R\.?L\.?(?:\s*A\.?U\.?)?|SARLAU|S\.?A\.?S\b\.?|S\.?N\.?C\b\.?|GIE\b|SCI\b|S\.?A\b\.?)/gu;
 
+/* v2.23.1 — ce que la capture de la forme juridique ramène n'est pas toujours
+   la société seule. Vu sur une note de dossier : « signé entre M. Chraïbi et
+   Gharb Primeurs SARL. » donnait UNE société « M. Chraïbi et Gharb Primeurs
+   SARL. » (la personne disparaissait dans le code, le point de la phrase
+   avec), et la même société recevait trois codes au fil du texte. Deux
+   règles :
+   - une capture qui commence par un titre de civilité (« M. », « Mme »,
+     « Maître »…) désigne une personne : seul ce qui suit le dernier « et » /
+     « & » est la société ; sans connecteur, ce n'est pas une société ;
+   - le point final est celui de la phrase (« SARL. »), pas de la raison
+     sociale : « Gharb Primeurs SARL. » et « Gharb Primeurs SARL » sont une
+     seule valeur. */
+const CIVILITY_START_RX = /^(?:M\.|MM\.|Mme|Mmes|Mlle|Me|Mr|Mrs|Ms|Dr|Pr|Monsieur|Madame|Mademoiselle|Ma[iî]tre)(?=[\s.]|$)/u;
+const LEGAL_CONNECTOR_RX = /\s+(?:&|et|and)\s+/gu;
+export function cleanLegalCapture(raw) {
+  let v = String(raw).trim();
+  if (CIVILITY_START_RX.test(v)) {
+    const cuts = [...v.matchAll(LEGAL_CONNECTOR_RX)];
+    if (!cuts.length) return null;
+    const last = cuts[cuts.length - 1];
+    v = v.slice(last.index + last[0].length).trim();
+  }
+  // « SARL. », « S.A. » : le dernier point part (« S.A » reste une forme reconnue).
+  if (v.endsWith(".")) v = v.slice(0, -1);
+  return v.length >= 2 ? v : null;
+}
+
+/* Le nom d'une société SANS sa forme juridique (« Gharb Primeurs » pour
+   « Gharb Primeurs SARL ») : cité ailleurs dans le texte, il reçoit le MÊME
+   code (un alias), au lieu de deux codes de personne. Deux mots au moins :
+   un mot seul (« Atlas ») est trop souvent autre chose. */
+const LEGAL_TAIL_ONLY_RX = /[\s,]+(?:S\.?A\.?R\.?L\.?(?:\s*A\.?U\.?)?|SARLAU|S\.?A\.?S\.?|S\.?N\.?C\.?|GIE|SCI|S\.?A\.?)$/u;
+export function legalCore(value) {
+  const core = String(value).replace(LEGAL_TAIL_ONLY_RX, "").trim();
+  return core !== String(value).trim() && core.split(/\s+/).length >= 2 ? core : null;
+}
+
+/* Ajoute, pour chaque société à forme juridique, son nom nu comme valeur à
+   coder sous le même code (champ aliasOf, résolu par codeDocumentText). */
+function withLegalAliases(cands) {
+  // « Voir Gharb Primeurs SARL » (un mot de début de phrase collé) quand
+  // « Gharb Primeurs SARL » est aussi trouvée : c'est elle, une seule société.
+  const socs = cands.filter((c) => c.type === "societe").map((c) => c.value);
+  cands = cands.filter((c) => c.type !== "societe" ||
+    !socs.some((o) => o !== c.value && o.length < c.value.length && c.value.endsWith(" " + o)));
+  const out = [...cands];
+  const seen = new Set(cands.map((c) => c.value.toLowerCase()));
+  for (const c of cands) {
+    if (c.type !== "societe") continue;
+    const core = legalCore(c.value);
+    if (!core || seen.has(core.toLowerCase())) continue;
+    seen.add(core.toLowerCase());
+    out.push({ value: core, type: "societe", aliasOf: c.value });
+  }
+  return out;
+}
+
 const ADDRESS_RX =
   /\b(rue|avenue|av\.|bd\b|boulevard|r[eé]sidence|r[eé]s\.|lotissement|lot\.|quartier|angle|[eé]tage|imm\.|immeuble|appt|apt\b|km\s?\d)/i;
 
@@ -564,7 +635,7 @@ export function nameCandidates(ws) {
       if (!text) continue;
       LEGAL_SUFFIX_RX.lastIndex = 0;
       let m;
-      while ((m = LEGAL_SUFFIX_RX.exec(text))) add(m[0], "societe");
+      while ((m = LEGAL_SUFFIX_RX.exec(text))) { const v = cleanLegalCapture(m[0]); if (v) add(v, "societe"); }
       if (ADDRESS_RX.test(text) && !matchesDocPattern(text)) add(text, "adresse");
       if (allCapsName(text) && !matchesDocPattern(text)) add(text, "societe");
     }
@@ -610,7 +681,7 @@ export function nameCandidatesFromText(fullText) {
     if (!line) continue;
     LEGAL_SUFFIX_RX.lastIndex = 0;
     let m;
-    while ((m = LEGAL_SUFFIX_RX.exec(line))) add(m[0], "societe");
+    while ((m = LEGAL_SUFFIX_RX.exec(line))) { const v = cleanLegalCapture(m[0]); if (v) add(v, "societe"); }
     // Ligne d'adresse d'une facture : codée en entier. Une PHRASE qui contient
     // une adresse (« Le témoin habite 12 rue des Lilas. ») ne l'est pas : le
     // verrou y code l'adresse seule, le reste de la phrase reste lisible.
@@ -640,7 +711,7 @@ export function anonymizeText(fullText, book, extra, opts) {
   book = book || newCodebook();
   const excludes = new Set(((opts && opts.excludes) || []).map((v) => String(v).trim().toLowerCase()));
   const auto = nameCandidatesFromText(fullText).filter((c) => !excludes.has(c.value.toLowerCase()));
-  const allExtra = [...(extra || []), ...auto];
+  const allExtra = [...(extra || []), ...withLegalAliases(auto).filter((c) => !excludes.has(c.value.toLowerCase()))];
   const res = codeDocumentText(fullText, book, allExtra);
   return {
     text: res.text, book,
@@ -687,7 +758,7 @@ export function codeDocumentText(input, book, extra) {
     const esc = String(e.value).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const rx = new RegExp(esc, "gi");
     text = text.replace(rx, () => {
-      const { code, isNew } = codeFor(book, e.type || "autre", String(e.value).trim());
+      const { code, isNew } = e.aliasOf ? aliasFor(book, e) : codeFor(book, e.type || "autre", String(e.value).trim());
       bump(e.type || "autre", isNew);
       return code;
     });
@@ -723,7 +794,7 @@ export function anonymizeDocument(ws, book, extra, opts) {
   book = book || newCodebook();
   const excludes = new Set(((opts && opts.excludes) || []).map((v) => String(v).trim().toLowerCase()));
   const auto = nameCandidates(ws).filter((c) => !excludes.has(c.value.toLowerCase()));
-  const allExtra = [...(extra || []), ...auto];
+  const allExtra = [...(extra || []), ...withLegalAliases(auto).filter((c) => !excludes.has(c.value.toLowerCase()))];
   const out = {};
   for (const k of Object.keys(ws)) out[k] = ws[k];
   let replaced = 0;
