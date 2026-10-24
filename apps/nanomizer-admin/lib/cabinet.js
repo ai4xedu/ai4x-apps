@@ -30,7 +30,7 @@ export class PhraseIncorrecte extends Error {
 }
 export class CabinetInvalide extends Error {}
 
-function deriver(phrase, sel, cout) {
+export function deriver(phrase, sel, cout) {
   return crypto.scryptSync(String(phrase).normalize("NFC"), sel, 32, {
     N: cout.N, r: cout.r, p: cout.p, maxmem: 256 * 1024 * 1024,
   });
@@ -49,7 +49,7 @@ export function verifierPhrase(phrase) {
 /* Chiffre {cle_privee, sel} ; le contexte (cabinet + clé) est authentifié
    comme donnée associée : un coffre recopié dans un autre cabinet ne s'ouvre
    pas. */
-function sceller(secret, phrase, contexte, cout) {
+export function sceller(secret, phrase, contexte, cout = COUT_DEFAUT) {
   const selKdf = crypto.randomBytes(16);
   const iv = crypto.randomBytes(12);
   const cle = deriver(phrase, selKdf, cout);
@@ -66,7 +66,7 @@ function sceller(secret, phrase, contexte, cout) {
   };
 }
 
-function desceller(coffre, phrase, contexte) {
+export function desceller(coffre, phrase, contexte) {
   const cle = deriver(phrase, Buffer.from(coffre.sel_kdf, "base64"), coffre);
   const d = crypto.createDecipheriv("aes-256-gcm", cle, Buffer.from(coffre.iv, "base64"));
   d.setAAD(Buffer.from(contexte, "utf8"));

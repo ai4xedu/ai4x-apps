@@ -479,6 +479,16 @@ redémarrage de Claude Desktop (l'env d'un process ne change pas en vol).
 La clé vit dans `<dossier de travail>/Hidden-Tokens/` : `cle-de-session.json`
 (état) + `cle-correspondance-NE-JAMAIS-PARTAGER.xlsx` (export humain/compatible web).
 
+## Le registre de l'organisation (v2.20)
+
+`server/registre.js` + `server/enveloppe.js` : une clé de codes pour toute
+l'organisation, entrées chiffrées sur le dossier partagé, registre signé par
+la console admin (`apps/nanomizer-admin/lib/registre.js`, `sequestre.js`,
+`feuille.js`). Le connecteur ne l'utilise que lancé par la sentinelle
+(`ANX_REGISTRE_DIR`, `ANX_POSTE_ID`, secrets par `ANX_POSTE_SECRETS_FD`) ; il
+remplace alors la clé d'équipe. Spec : `SPEC-REGISTRE-ORGANISATION.md` du dépôt
+nanomizer. Tests : `test/registre.test.js`, `test/registre-e2e.test.js`.
+
 ## Dev
 
 ```bash
