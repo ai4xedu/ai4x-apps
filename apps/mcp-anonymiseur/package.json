@@ -9,6 +9,9 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "bench": "node bench/run.mjs",
+    "bench:ht": "node bench/ht-bench/evaluer.mjs",
+    "bench:ht:controle": "node bench/ht-bench/generer.mjs --verifier && node bench/ht-bench/evaluer.mjs --controle",
+    "bench:ht:generer": "node bench/ht-bench/generer.mjs",
     "build:web": "node scripts/build-web-verrou.mjs"
   },
   "keywords": [],

@@ -49,3 +49,28 @@ jobs:
       - run: node --test test/reseau.test.js
         env:
           NANOMIZER_PREUVE_RESEAU: "1"
+
+  # HT-Bench : le jeu synthétique est-il bien celui de la graine, et le rappel
+  # des identifiants directs (noms, pièces, téléphones, e-mails, IBAN/RIB…)
+  # reste-t-il au moins à la référence (bench/ht-bench/reference.json), pack
+  # par pack et type par type ? Un seul OS : le banc mesure le moteur, pas la
+  # plateforme. Le rapport complet est joint à l'exécution.
+  ht-bench:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mcp-anonymiseur
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/mcp-anonymiseur/package-lock.json
+      - run: npm ci
+      - run: npm run bench:ht:controle
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ht-bench-rapport
+          path: apps/mcp-anonymiseur/bench/ht-bench/resultats/
