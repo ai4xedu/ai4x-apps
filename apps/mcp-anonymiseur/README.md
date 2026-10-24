@@ -97,6 +97,27 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.23.1 (une société, un code, 24/10/2026). Vu en passant une note de dossier
+au rendu lisible : « signé entre M. Chraïbi et Gharb Primeurs SARL. » donnait
+UNE société « M. Chraïbi et Gharb Primeurs SARL. » — la personne disparaissait
+dans le code, le point de la phrase avec — et la même société recevait trois
+codes au fil du texte (trois sociétés fictives en rendu lisible). Désormais
+(`cleanLegalCapture`, `server/engine.js`) : une capture qui commence par un
+titre de civilité ne garde que ce qui suit le dernier « et » / « & » ; le point
+final de « SARL. » est celui de la phrase ; une capture qui finit par une société
+déjà trouvée (« Voir Gharb Primeurs SARL ») est cette société ; le nom nu
+(« Gharb Primeurs », deux mots au moins) est un alias du même code, y compris
+avant la première mention complète. La colonne « Date de naissance » d'un
+tableur est codée `NAISS-…` (décalée en rendu lisible), plus `CODE-…`. Le
+texte du rendu lisible est rectifié : seules les dates de NAISSANCE sont
+décalées, les autres restent exactes, donc un âge calculé à une date du dossier
+peut différer d'un an (la v2.23.0 disait « les âges restent justes ») ; la
+règle « 1 bis » demande à l'IA de le signaler sur un seuil d'âge. Le
+brouillage du mode « indice » est calculé en millièmes entiers (il sortait d'un
+cheveu de ±20 % une fois sur 401). Le banc d'essai retrouve le dossier
+`Hidden-Tokens/` (il cherchait encore `Anonymiseur-Ai4x/`) : scores identiques
+avant et après.
+
 v2.23.0 (les pseudonymes sémantiquement cohérents, 24/10/2026). Nouveau
 **rendu « lisible »**, optionnel et réversible (`server/pseudonymes.js`,
 `lexique/pseudonymes.json`). Un code reçoit un PSEUDONYME plausible et stable :
@@ -105,7 +126,9 @@ patronyme de la même aire, raison sociale fictive avec la même forme juridique
 (« Atlas Négoce SARL AU » → « Horizon Services SARL AU », le mot générique
 « Garage », « Transports » reste), ville du même pays et de taille comparable,
 date de naissance décalée d'un delta SECRET constant par dossier (30 à 400
-jours : âges et durées restent justes). Les identifiants (EMAIL, TEL, RIB, CIN,
+jours : l'écart entre deux dates de naissance reste juste ; les autres dates
+restent exactes, donc un âge calculé à l'une d'elles peut différer d'un an —
+la règle « 1 bis » le dit à l'IA). Les identifiants (EMAIL, TEL, RIB, CIN,
 ICE…), adresses, références et éléments interdits gardent leur code ; les
 montants relèvent toujours du réglage Nombres. Le pseudonyme est écrit dans la
 clé (`cle-de-session.json`, champ `pseudo` de l'entrée ; graine et delta dans
@@ -648,7 +671,7 @@ format reconnaissable hors du titre ou de la réquisition (un « lot n° » de
 lotissement est trop ambigu, et `LOT` est déjà pris par le pack santé).
 
 Le banc (`npm run bench`) mesure désormais les montants en gabarit
-(`ANX_CHIFFRES=auto` pour mesurer le défaut) et lit le dossier `Hidden-Tokens/`
-(il cherchait encore `Anonymiseur-Ai4x/` depuis la v2.14 et s'arrêtait).
+(`ANX_CHIFFRES=auto` pour mesurer le défaut « auto » de la v2.16, qui laissait
+11 montants de tableur en clair : 190/201).
 
 

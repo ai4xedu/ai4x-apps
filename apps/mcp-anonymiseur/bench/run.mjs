@@ -29,7 +29,6 @@ import { writeMinimalPdf } from "../test/util-pdf.mjs";
 import { mint } from "../test/licence-test.mjs";
 import { buildDocx, docxParagraphs } from "../server/word.js";
 import { DOCUMENTS, CATEGORIES } from "./corpus.mjs";
-import { OUTDIR_NAME } from "../server/dossier-sortie.js";
 XLSX.set_fs(_fs);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -115,7 +114,7 @@ await call("anonymiser_dossier");
 await call("anonymiser_dossier", { confirmer: true });
 await client.close();
 
-const outDir = path.join(workdir, OUTDIR_NAME);
+const outDir = path.join(workdir, "Hidden-Tokens");   // Anonymiseur-Ai4x avant la v2.14
 const produced = fs.readdirSync(outDir).filter((n) => /-anonymise\.(xlsx|md|docx)$/.test(n) || /^rapport-lot-/.test(n));
 for (const n of produced) {
   const p = path.join(outDir, n);
