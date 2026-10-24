@@ -13,3 +13,9 @@
     c'est aussi un mot (Jacques, Marine, Aurore…).
   Régénération : `node scripts/generer-noms.mjs <dossier des fichiers INSEE>` (mode
   d'emploi en tête du script).
+- `pseudonymes.json` — listes composées à la main pour le rendu lisible
+  (v2.23, `server/pseudonymes.js`) : prénoms par genre et aire culturelle
+  (FR / MA / EN), patronymes par aire, amorces et suites de raisons sociales,
+  mots génériques du commerce, villes du Maroc et de France par taille. Des noms
+  fréquents, aucune donnée personnelle. Un pseudonyme qui est aussi un mot du
+  dictionnaire est écarté au chargement (il reste utile à l'inférence du genre).

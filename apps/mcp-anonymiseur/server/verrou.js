@@ -270,7 +270,7 @@ lemaitre page cordier tessier tellier pelletier potier sabatier tissier texier r
 comte leduc duc marquis prince bertin hubert jacob
 `);
 
-const LEGAL_FORMS_SRC =
+export const LEGAL_FORMS_SRC =
   "S\\.?A\\.?R\\.?L\\.?(?:\\s*A\\.?U\\.?)?|SARLAU|SASU|S\\.A\\.S\\.?|SAS|SNC|GIE|SCI|SCP|SELARL|SELAS|EURL|" +
   "S\\.A\\.|SA|Inc\\.?|Ltd\\.?|LLC|GmbH|SpA|BV|NV|AG|PLC";
 
