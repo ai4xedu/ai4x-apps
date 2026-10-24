@@ -18,6 +18,9 @@ const TEXTE =
   "(née le 3 juillet 1975). Joindre karim.benali@gmail.com ou le 06 61 23 45 67. Audience au TJ de Casablanca.";
 const REELS = ["Karim", "Benali", "Atlas Négoce", "Claire", "Rousseau", "12/04/1981", "3 juillet 1975", "karim.benali@gmail.com", "06 61 23 45 67"];
 
+/* Une valeur réelle, en mot entier (« Karimi », patronyme fictif, n'est pas « Karim »). */
+const motEntier = (v) => new RegExp(`(?<![\\p{L}\\p{N}])${v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}])`, "u");
+
 /* Carte CODE/PSEUDO (majuscules) → valeur, comme decodeMap() dans index.js. */
 function tableDecodage(book) {
   const map = {};
@@ -61,7 +64,8 @@ test("lisible : noms, société et dates deviennent des pseudonymes ; identifian
   assert.equal(r.restes, 2, "EMAIL-001 et TEL-001 restent des codes");
   assert.match(r.text, /EMAIL-001/);
   assert.match(r.text, /TEL-001/);
-  for (const v of REELS) assert.ok(!r.text.includes(v), `valeur réelle visible : ${v}`);
+  // Mot entier : « Karimi » (patronyme fictif) n'est pas « Karim ».
+  for (const v of REELS) assert.ok(!motEntier(v).test(r.text), `valeur réelle visible : ${v}`);
   // Plus aucun code de personne, de société ni de naissance.
   for (const c of r.text.match(CODE_RX) || []) assert.ok(/^(EMAIL|TEL)-/.test(c), `code resté : ${c}`);
   // La société garde sa forme juridique, pas son nom.
