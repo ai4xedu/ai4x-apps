@@ -6,7 +6,7 @@ const md = (s) => String(s).replace(/\|/g, "\\|").replace(/\n/g, " ");
 
 export function rapportMarkdown(r) {
   const L = [];
-  L.push(`# HT-Bench ${r.version_jeu} — rapport de détection`, "");
+  L.push(`# HT-Bench ${r.version_jeu}${r.split && r.split !== "dev" ? ` (jeu ${r.split})` : ""} — rapport de détection`, "");
   L.push(`Moteur Hidden Tokens **v${r.version_moteur}** · jeu \`${r.jeu_sha256.slice(0, 16)}…\` (synthétique, graine fixe) · ${r.documents} documents · ${r.global.tous.n} valeurs à coder · ${r.global.leurres.n} leurres.`, "");
   L.push(`Chemin mesuré : ${r.chemin}. Une valeur compte comme détectée si toutes ses lettres et chiffres sont sous un code (les particules d'un nom — Ben, El, Aït, de… — peuvent rester en clair). Une valeur codée en partie est une fuite : elle compte comme manquée. Définitions complètes : \`bench/ht-bench/README.md\`.`, "");
   L.push(`**Identifiants directs (noms, pièces et identifiants, téléphones, e-mails, IBAN/RIB, IMEI/IMSI) : ${pct(r.global.direct.rappel)}** (${r.global.direct.detectes}/${r.global.direct.n}) — cible ≥ 99 % par pack.`, "");

@@ -12,7 +12,10 @@
     "bench:ht": "node bench/ht-bench/evaluer.mjs",
     "bench:ht:controle": "node bench/ht-bench/generer.mjs --verifier && node bench/ht-bench/evaluer.mjs --controle",
     "bench:ht:generer": "node bench/ht-bench/generer.mjs",
-    "build:web": "node scripts/build-web-verrou.mjs"
+    "bench:ht:test": "node bench/ht-bench/evaluer.mjs --split test",
+    "bench:ht:comparer": "node bench/ht-bench/comparer.mjs",
+    "build:web": "node scripts/build-web-verrou.mjs",
+    "bench:ht:packs": "node bench/ht-bench/packs.mjs"
   },
   "keywords": [],
   "author": "",

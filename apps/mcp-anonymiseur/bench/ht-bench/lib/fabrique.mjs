@@ -30,9 +30,11 @@ export function fabrique(h) {
     },
     nom: (p) => P("PERSONNE", nomSeul(p)),
     prenom: (p) => P("PERSONNE", { valeur: p.prenom, variante: p.variante, traits: ["prenom-seul"] }),
+    // Domaines réservés (RFC 2606) sous un vrai suffixe public : un outil qui
+    // vérifie le TLD (Presidio, via tldextract) ne doit pas être puni par le jeu.
     email(p) {
       const pr = ascii(p.prenom).replace(/\s+/g, "-"), no = ascii(p.nom).replace(/\s+/g, "");
-      const dom = h.choix(["example.com", "example.org", "example.net", "mail.example", "societe.example.ma", "cabinet.example.fr"]);
+      const dom = h.choix(["example.com", "example.org", "example.net", "mail.example.com", "societe.example.ma", "cabinet.example.fr"]);
       return h.choix([
         P("EMAIL", { valeur: `${pr}.${no}@${dom}`, variante: "prenom.nom" }),
         P("EMAIL", { valeur: `${pr[0]}.${no}@${dom}`, variante: "initiale.nom" }),

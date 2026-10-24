@@ -61,3 +61,15 @@ test("générateur : même graine, même jeu ; aucun id en double", () => {
   assert.equal(new Set(a.docs.map((d) => d.id)).size, a.docs.length);
   for (const d of a.docs) for (const e of [...d.etendues, ...d.leurres]) assert.equal(d.texte.slice(e.debut, e.fin), e.valeur, d.id);
 });
+
+test("jeu de test : une autre graine, d'autres valeurs, aucun cas manuel", () => {
+  const dev = generer("dev"), t = generer("test");
+  assert.notEqual(dev.jsonl, t.jsonl);
+  assert.equal(JSON.parse(t.manifeste).split, "test");
+  assert.ok(t.docs.every((d) => d.source === "gabarit"));
+  // Les identifiants tirés au hasard ne se recoupent (presque) pas d'un jeu à l'autre.
+  const ids = (j) => new Set(j.docs.flatMap((d) => d.etendues.filter((e) => /^(TEL|IBAN|RIB|CIN|NIR|ICE|IMEI)$/.test(e.type)).map((e) => e.valeur)));
+  const a = ids(dev), b = ids(t);
+  const communs = [...b].filter((v) => a.has(v)).length;
+  assert.ok(communs / b.size < 0.01, `${communs} identifiants communs à dev et test`);
+});
