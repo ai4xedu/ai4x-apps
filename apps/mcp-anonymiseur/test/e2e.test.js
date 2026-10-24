@@ -428,6 +428,66 @@ test("coder_texte (verrou universel) : le texte collé ressort codé, rien de r�
   assert.ok(blocBis.text.includes(codeNom), "le même nom doit recevoir le même code");
 });
 
+test("rendu lisible (v2.23) : pseudonymes dans la réponse et le fichier, zéro valeur réelle, aller-retour exact", async () => {
+  const clair = "Me Hamid Chraïbi, né le 12/04/1981 à Fès, assiste Mme Odile Vasseur (née le 3 juillet 1975) contre Gharb Primeurs SARL. " +
+    "Joindre hamid.chraibi@example.ma. Audience au TJ de Casablanca.";
+  fs.writeFileSync(path.join(workdir, "note-lisible.md"), clair + "\n", "utf8");
+  const plan = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "note-lisible.md", rendu: "lisible" } });
+  assert.match(resultText(plan), /RENDU « lisible » \(demandé pour cet appel\)/);
+  const res = await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "note-lisible.md", rendu: "lisible", confirmer: true } });
+  assert.ok(!res.isError, resultText(res));
+  const out = resultText(res);
+  for (const v of ["Hamid", "Chraïbi", "Odile", "Vasseur", "Gharb", "12/04/1981", "3 juillet 1975", "hamid.chraibi"]) {
+    assert.ok(!out.includes(v), `valeur réelle dans la réponse : ${v}`);
+  }
+  assert.match(out, /code\(s\) rendu\(s\) par un pseudonyme/);
+  assert.match(out, /1 bis\. RENDU LISIBLE/);
+  // L'aperçu montre des pseudonymes (pas de code de personne), et le contrôle d'aperçu ne les masque pas.
+  const apercu = out.slice(out.indexOf("CONTENU CODÉ"));
+  assert.ok(!/PRENOM-\d|NOM-\d|NAISS-\d|SOCIETE-\d/.test(apercu), `codes de personne dans l'aperçu : ${apercu}`);
+  assert.match(apercu, /EMAIL-\d{3}/, "l'email reste un code");
+  assert.ok(!apercu.includes("[MASQUÉ — fuite possible]"), "un pseudonyme ne doit pas être masqué par le contrôle d'aperçu");
+  assert.match(apercu, /Me \p{Lu}[\p{L}-]+ \p{Lu}[\p{L} ]+, né le \d{2}\/\d{2}\/\d{4} à Fès/u);
+  // Le fichier écrit porte les mêmes pseudonymes ; la clé les garde (champ pseudo).
+  const md = fs.readFileSync(path.join(workdir, "Hidden-Tokens", "note-lisible-anonymise.md"), "utf8");
+  assert.ok(!md.includes("Chraïbi") && !/PRENOM-\d/.test(md));
+  const cle = JSON.parse(fs.readFileSync(path.join(workdir, "Hidden-Tokens", "cle-de-session.json"), "utf8"));
+  const hamid = cle.entries.find((e) => e.value === "Hamid");
+  assert.ok(hamid && hamid.pseudo && hamid.code === hamid.code.toUpperCase(), "le pseudonyme est écrit dans la clé, le format code/value ne change pas");
+  assert.ok(cle.pseudonymes && cle.pseudonymes.graine && Number.isInteger(cle.pseudonymes.deltaJours));
+  // Aller-retour : la réponse de l'IA, écrite avec les pseudonymes, redevient le texte réel sur le disque.
+  const dec = await client.callTool({ name: "deanonymiser", arguments: { contenu: md.trim(), nom_sortie: "lisible" } });
+  const chemin = decodedPath(resultText(dec));
+  assert.ok(chemin && fs.existsSync(chemin), "fichier décodé absent");
+  assert.equal(fs.readFileSync(chemin, "utf8"), clair);
+  // Stabilité : coder_texte en rendu lisible donne le même pseudonyme au même nom.
+  const bis = await client.callTool({ name: "coder_texte", arguments: { contenu: "Hamid Chraïbi a rappelé.", rendu: "lisible" } });
+  const bloc = bis.content.find((c) => c.type === "text" && c.text.startsWith("⟦HIDDEN-TOKENS:TEXTE-CODE⟧"));
+  assert.ok(bloc.text.includes(hamid.pseudo), `pseudonyme instable : ${bloc.text}`);
+  assert.ok(!bloc.text.includes("Hamid"));
+  // Le journal « ce que l'IA a vu » note les pseudonymes : c'est ce que l'IA a vu.
+  const journalDir = path.join(workdir, "Hidden-Tokens", "journal-ia");
+  const journal = fs.readdirSync(journalDir).filter((n) => n.endsWith(".jsonl")).map((n) => fs.readFileSync(path.join(journalDir, n), "utf8")).join("\n");
+  assert.ok(journal.includes(hamid.pseudo));
+  assert.ok(!journal.includes("Chraïbi"));
+  // Sans l'option, le mode codes reste le défaut : la même personne est de nouveau un code.
+  const codes = await client.callTool({ name: "coder_texte", arguments: { contenu: "Hamid Chraïbi a rappelé." } });
+  const blocCodes = codes.content.find((c) => c.type === "text" && c.text.startsWith("⟦HIDDEN-TOKENS:TEXTE-CODE⟧"));
+  assert.ok(blocCodes.text.includes(hamid.code) && !blocCodes.text.includes(hamid.pseudo));
+});
+
+test("etat_cle sur un dossier neuf : la ligne « Rendu » est là, clé vide comprise", async () => {
+  const vide = fs.mkdtempSync(path.join(os.tmpdir(), "anx-vide-"));
+  fs.mkdirSync(path.join(vide, "Hidden-Tokens"));
+  fs.writeFileSync(path.join(vide, "Hidden-Tokens", "reglages.json"), JSON.stringify({ rendu: "lisible" }));
+  const c = new Client({ name: "test-vide", version: "1" });
+  await c.connect(new StdioClientTransport({ command: process.execPath, args: [serverPath], env: { ...process.env, ANX_WORKDIR: vide, ANX_SENTINELLE: "non", ANX_LICENCE: testLicence() } }));
+  const out = resultText(await c.callTool({ name: "etat_cle", arguments: {} }));
+  await c.close();
+  assert.match(out, /Clé de session vide/);
+  assert.match(out, /Rendu : « lisible » \(réglage du dossier/);
+});
+
 test("etat_cle : comptes sans correspondances", async () => {
   const res = await client.callTool({ name: "etat_cle", arguments: {} });
   const out = resultText(res);
