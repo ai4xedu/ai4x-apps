@@ -76,7 +76,7 @@ import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } fro
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.23.1";
+export const VERSION = "2.23.2";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -2638,8 +2638,11 @@ tool(
     const auditLine = audit.risks
       ? `🚨 Confinement : ${audit.risks} risque(s) — appelle verifier_confinement pour le détail.`
       : "Confinement : aucune autre porte repérée vers le dossier de travail.";
+    // Le rendu du dossier, dit AUSSI sur une clé vide : c'est sur un dossier
+    // neuf qu'on vérifie le réglage (recette M2, 24/10/2026).
+    const rendu = readRenderSetting(OUTDIR);
     if (!book.entries.length) {
-      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, sortieLine, licLine, teamLine, politiqueLine, auditLine].filter(Boolean).join("\n"));
+      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, sortieLine, `Rendu : « ${rendu.mode} » (${rendu.source}).`, licLine, teamLine, politiqueLine, auditLine].filter(Boolean).join("\n"));
     }
     const byPrefix = {};
     for (const e of book.entries) {
@@ -2648,7 +2651,6 @@ tool(
     }
     const detail = Object.entries(byPrefix).map(([p, n]) => `${n} × ${PREFIX_LABEL[p] || p}`).join(", ");
     // v2.23 — le rendu du dossier et le nombre de pseudonymes déjà posés.
-    const rendu = readRenderSetting(OUTDIR);
     const nbPseudos = book.entries.filter((e) => e.pseudo).length;
     const renduLine = `Rendu : « ${rendu.mode} » (${rendu.source})${nbPseudos ? ` — ${nbPseudos} code(s) ont un pseudonyme dans la clé (rendu lisible).` : "."}`;
     return text(
