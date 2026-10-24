@@ -476,6 +476,18 @@ test("rendu lisible (v2.23) : pseudonymes dans la réponse et le fichier, zéro 
   assert.ok(blocCodes.text.includes(hamid.code) && !blocCodes.text.includes(hamid.pseudo));
 });
 
+test("etat_cle sur un dossier neuf : la ligne « Rendu » est là, clé vide comprise", async () => {
+  const vide = fs.mkdtempSync(path.join(os.tmpdir(), "anx-vide-"));
+  fs.mkdirSync(path.join(vide, "Hidden-Tokens"));
+  fs.writeFileSync(path.join(vide, "Hidden-Tokens", "reglages.json"), JSON.stringify({ rendu: "lisible" }));
+  const c = new Client({ name: "test-vide", version: "1" });
+  await c.connect(new StdioClientTransport({ command: process.execPath, args: [serverPath], env: { ...process.env, ANX_WORKDIR: vide, ANX_SENTINELLE: "non", ANX_LICENCE: testLicence() } }));
+  const out = resultText(await c.callTool({ name: "etat_cle", arguments: {} }));
+  await c.close();
+  assert.match(out, /Clé de session vide/);
+  assert.match(out, /Rendu : « lisible » \(réglage du dossier/);
+});
+
 test("etat_cle : comptes sans correspondances", async () => {
   const res = await client.callTool({ name: "etat_cle", arguments: {} });
   const out = resultText(res);

@@ -97,6 +97,9 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.23.2 (recette du 24/10/2026). `etat_cle` dit le rendu du dossier aussi sur
+une clé vide : c'est sur un dossier neuf qu'on vérifie le réglage.
+
 v2.23.1 (une société, un code, 24/10/2026). Vu en passant une note de dossier
 au rendu lisible : « signé entre M. Chraïbi et Gharb Primeurs SARL. » donnait
 UNE société « M. Chraïbi et Gharb Primeurs SARL. » — la personne disparaissait
