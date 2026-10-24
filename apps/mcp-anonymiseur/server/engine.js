@@ -755,19 +755,26 @@ export function anonymizeDocument(ws, book, extra, opts) {
 }
 
 /* Remplace les codes d'une clé dans un texte (insensible à la casse).
-   map : CODE (majuscules) -> valeur réelle. */
+   map : CODE (majuscules) -> valeur réelle. Depuis la v2.23, la table peut
+   aussi porter des PSEUDONYMES (rendu lisible, cf. pseudonymes.js) : des mots
+   avec accents, d'où les frontières Unicode plutôt que \b (qui ne connaît
+   que l'ASCII : « \bÉric\b » ne trouvait pas « Éric »). Un pseudonyme n'est
+   remplacé que s'il commence par une majuscule ou un chiffre : « horizon » au
+   fil d'une phrase n'est pas la société « Horizon Négoce ». */
+const CODE_LIKE_RX = /^[A-Z]{2,10}-\d{3,}$/;
 export function decodeText(input, map) {
   const codes = Object.keys(map).sort((a, b) => b.length - a.length);
   if (!codes.length) return { text: String(input), replaced: 0, used: 0 };
   const rx = new RegExp(
-    "\\b(" + codes.map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")\\b",
-    "gi"
+    "(?<![\\p{L}\\p{N}])(" + codes.map((c) => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")(?![\\p{L}\\p{N}])",
+    "giu"
   );
   const used = {};
   let replaced = 0;
   const out = String(input).replace(rx, (m) => {
     const v = map[m.toUpperCase()];
     if (v === undefined) return m;
+    if (!CODE_LIKE_RX.test(m.toUpperCase()) && /^\p{Ll}/u.test(m)) return m;
     used[m.toUpperCase()] = 1;
     replaced++;
     return v;
