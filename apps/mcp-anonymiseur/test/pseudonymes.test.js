@@ -208,6 +208,28 @@ test("aucun MOT d'un pseudonyme n'est une valeur réelle : le verrou de sortie n
   }
 });
 
+test("un pseudonyme ne partage aucun mot avec la valeur qu'il remplace, quelle que soit la graine", () => {
+  const motEntier = (v) => new RegExp(`(?<![\\p{L}])${v}(?![\\p{L}])`, "iu");
+  for (let i = 0; i < 60; i++) {
+    const book = newCodebook();
+    book.pseudonymes = { graine: `g${i}`, deltaJours: 40 };
+    codeFor(book, "societe", "Atlas Négoce SARL AU");       // « Atlas » est aussi une amorce
+    codeFor(book, "societe", "Garage Horizon");            // « Horizon » aussi
+    codeFor(book, "personne", "Karim El Amrani");          // « Karim » et « Amrani » sont dans les listes
+    codeFor(book, "prenom", "Mehdi");
+    codeFor(book, "nom", "Tazi");
+    codeFor(book, "lieu", "Settat");
+    rendreLisible(book.entries.map((e) => e.code).join(" "), book);
+    for (const e of book.entries) {
+      assert.ok(e.pseudo, `pas de pseudonyme pour ${e.code} (graine ${i})`);
+      for (const mot of e.value.split(/[\s-]+/)) {
+        if (/^(SARL|AU|El|Garage)$/.test(mot)) continue;   // forme juridique, particule, mot générique gardé : pas des noms
+        assert.ok(!motEntier(mot).test(e.pseudo), `« ${mot} » réapparaît dans « ${e.pseudo} » (graine ${i})`);
+      }
+    }
+  }
+});
+
 test("une valeur réelle qui coïncide avec un pseudonyme existant le fait renouveler, et le dit", () => {
   const book = newCodebook();
   rendreLisible(coder(book, "Dossier de Karim Benali."), book);

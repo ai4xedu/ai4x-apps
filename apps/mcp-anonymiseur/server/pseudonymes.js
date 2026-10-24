@@ -220,6 +220,9 @@ function acceptable(cand, ctx, { tokensUnique = true } = {}) {
   const toks = k.split(" ");
   for (let i = 0; i < toks.length; i++) {
     if (ctx.reels.has(toks[i])) return false;
+    // Aucun mot de la valeur réelle que ce pseudonyme remplace : « Atlas
+    // Services » pour « Atlas Négoce » livrerait la moitié du vrai nom.
+    if (ctx.exclure && ctx.exclure.has(toks[i])) return false;
     if (tokensUnique && ctx.usedTokens.has(toks[i])) return false;
     // Une valeur réelle de plusieurs mots (ou à trait d'union : « Import-Export »
     // se replie en « import export ») cachée dans le candidat.
@@ -343,6 +346,7 @@ function pseudoSociete(value, graine, code, ctx) {
   // (Un mot générique qui est lui-même une valeur de la clé n'est pas gardé :
   // le verrou de sortie le recoderait.)
   const keep = words.length > 1 && generiques.has(fold(words[0])) && !ctx.reels.has(fold(words[0])) ? words[0] : "";
+  if (keep && ctx.exclure) ctx.exclure.delete(fold(keep));   // le mot générique gardé n'est pas « la moitié du nom »
   const amorces = L.societes.amorces, suites = L.societes.suites;
   const render = (am, su) => likeCase(core, [keep, am, su].filter(Boolean).join(" ")) + (forme ? ` ${forme}` : "");
   // D'abord « Garage Atlas » (si mot courant gardé), sinon « Atlas Négoce ».
@@ -444,6 +448,14 @@ export function pseudonymFor(book, entry, ctx) {
   const value = String(entry.value);
   if (kind === "partie") kind = LEGAL_TAIL_RX.test(value) ? "societe" : value.trim().split(/\s+/).length > 1 ? "personne" : "nom";
   let pseudo = null, alias = null;
+  if (kind !== "naissance") {
+    // Les mots de la valeur réelle sont interdits dans son pseudonyme (pas
+    // pour une date : l'année décalée est souvent la même). Contexte dérivé :
+    // les ensembles partagés (used, usedTokens…) restent ceux du rendu.
+    // (sans la forme juridique, qui est reprise telle quelle)
+    const exclure = new Set(foldPhrase(value.replace(LEGAL_TAIL_RX, "")).split(" ").filter(Boolean));
+    ctx = Object.assign(Object.create(ctx), { exclure });
+  }
   if (kind === "prenom") pseudo = pseudoPrenom(value, graine, entry.code, ctx), pseudo = pseudo && likeCase(value, pseudo);
   else if (kind === "nom") pseudo = pseudoNom(value, graine, entry.code, ctx), pseudo = pseudo && likeCase(value, pseudo);
   else if (kind === "personne") { const r = pseudoPersonne(value, graine, entry.code, ctx); if (r) ({ pseudo, alias } = r); }
