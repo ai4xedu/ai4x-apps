@@ -109,6 +109,10 @@ déjà trouvée (« Voir Gharb Primeurs SARL ») est cette société ; le nom nu
 (« Gharb Primeurs », deux mots au moins) est un alias du même code, y compris
 avant la première mention complète. La colonne « Date de naissance » d'un
 tableur est codée `NAISS-…` (décalée en rendu lisible), plus `CODE-…`. Le
+texte du rendu lisible est rectifié : seules les dates de NAISSANCE sont
+décalées, les autres restent exactes, donc un âge calculé à une date du dossier
+peut différer d'un an (la v2.23.0 disait « les âges restent justes ») ; la
+règle « 1 bis » demande à l'IA de le signaler sur un seuil d'âge. Le
 brouillage du mode « indice » est calculé en millièmes entiers (il sortait d'un
 cheveu de ±20 % une fois sur 401). Le banc d'essai retrouve le dossier
 `Hidden-Tokens/` (il cherchait encore `Anonymiseur-Ai4x/`) : scores identiques
@@ -122,7 +126,9 @@ patronyme de la même aire, raison sociale fictive avec la même forme juridique
 (« Atlas Négoce SARL AU » → « Horizon Services SARL AU », le mot générique
 « Garage », « Transports » reste), ville du même pays et de taille comparable,
 date de naissance décalée d'un delta SECRET constant par dossier (30 à 400
-jours : âges et durées restent justes). Les identifiants (EMAIL, TEL, RIB, CIN,
+jours : l'écart entre deux dates de naissance reste juste ; les autres dates
+restent exactes, donc un âge calculé à l'une d'elles peut différer d'un an —
+la règle « 1 bis » le dit à l'IA). Les identifiants (EMAIL, TEL, RIB, CIN,
 ICE…), adresses, références et éléments interdits gardent leur code ; les
 montants relèvent toujours du réglage Nombres. Le pseudonyme est écrit dans la
 clé (`cle-de-session.json`, champ `pseudo` de l'entrée ; graine et delta dans

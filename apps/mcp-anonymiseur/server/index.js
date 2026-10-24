@@ -149,7 +149,7 @@ const renduSchema = z.enum(RENDER_MODES).optional()
   .describe("Rendu de ce que l'IA reçoit. Absent = réglage du dossier posé dans l'appli Hidden Tokens, sinon « codes » : " +
     "chaque donnée devient un code (NOM-001…). « lisible » : prénoms, noms, sociétés, villes codées et dates de naissance " +
     "deviennent des PSEUDONYMES fictifs — même genre et même aire culturelle, même forme juridique, ville de taille " +
-    "comparable, dates décalées d'un delta secret constant (durées justes) ; stables d'un fichier à l'autre, écrits dans " +
+    "comparable, dates décalées d'un delta secret constant (écart entre dates de naissance juste ; un âge à une autre date peut varier d'un an) ; stables d'un fichier à l'autre, écrits dans " +
     "la clé, retraduits par deanonymiser comme les codes. Identifiants, adresses et références restent des codes.");
 function modeRendu(demande) {
   if (demande && RENDER_MODES.includes(demande)) return { mode: demande, source: "demandé pour cet appel" };
@@ -757,7 +757,7 @@ function rulesBlock(book, lisible = null) {
     // v2.23 — rendu lisible : ce que l'IA prend pour des noms sont des
     // pseudonymes ; la consigne de recopie vaut pour eux aussi.
     ...(lisible && lisible.rendus ? [
-      "1 bis. RENDU LISIBLE : les prénoms, noms, sociétés, villes et dates de naissance que tu lis ici sont des PSEUDONYMES fictifs posés par Hidden Tokens (même personne = même pseudonyme). Recopie-les EXACTEMENT tels quels, ne les traduis pas, ne les abrège pas, n'en déduis rien sur les personnes réelles ; deanonymiser les retraduit comme les codes.",
+      "1 bis. RENDU LISIBLE : les prénoms, noms, sociétés, villes et dates de naissance que tu lis ici sont des PSEUDONYMES fictifs posés par Hidden Tokens (même personne = même pseudonyme). Recopie-les EXACTEMENT tels quels, ne les traduis pas, ne les abrège pas, n'en déduis rien sur les personnes réelles ; deanonymiser les retraduit comme les codes. Les dates de naissance sont décalées d'un écart secret (les autres dates sont exactes) : un âge calculé à une date du dossier peut être faux d'un an — si la réponse dépend d'un seuil d'âge (majorité, retraite…), dis-le et demande la vraie réponse à l'utilisateur.",
     ] : []),
     "2. N'essaie pas de deviner les identités réelles ; n'invente aucun nom, email ou numéro.",
     "3. Dans les tableaux ou documents produits, garde les codes dans les mêmes colonnes.",
