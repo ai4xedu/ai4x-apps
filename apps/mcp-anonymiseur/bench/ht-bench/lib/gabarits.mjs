@@ -251,6 +251,60 @@ Indemnité à verser sur le RIB ${g.ribMa()}. Garantie ${g.sigle(["RC", "AMO", "
   },
 };
 
+/* Finance marocaine (v0.2) : KYC, monétique, effets, crédit, auto. */
+const SIGLES_FIN = ["Bank Al-Maghrib", "BAM", "AMMC", "ACAPS", "UTRF", "LCN", "KYC", "PPE", "TEG", "TAEG", "SWIFT", "CMI"];
+Object.assign(banque, {
+  kyc(g) {
+    const h = g.h, cl = g.personne("ma"), be = g.personne("mix"), soc = h.pile(0.5);
+    return `FICHE ${g.sigle(["KYC"])} — OUVERTURE DE COMPTE
+Client : ${cl.m}, né${h.pile(0.5) ? "e" : ""} le ${g.naissance()} à ${g.ville("ma")}
+CIN : ${g.cin()} — ${c(h, "Passeport", "Titre de séjour")} : ${g.passeport()}
+Adresse : ${g.adresseMa()}
+Téléphone : ${g.tel("ma")} — E-mail : ${g.email(cl.p)}
+Profession : ${c(h, "ingénieur", "commerçant", "médecin", "enseignante")} — Revenus mensuels : ${g.montant("MAD")}
+${soc ? `Employeur : ${g.societe("ma")} (ICE ${g.ice()})` : `Activité : auto-entrepreneur, IF ${g.if()}`}
+Personne politiquement exposée (${g.sigle(["PPE"])}) : non. Bénéficiaire effectif : ${be.m}.
+Compte ouvert le ${g.date()} : ${g.ribMa()} — agence de ${g.ville("ma")}.
+Contrôle ${g.sigle(["UTRF"])} / ${g.sigle(["Bank Al-Maghrib", "BAM"])} : RAS.`;
+  },
+  carte(g) {
+    const h = g.h, cl = g.personne("ma");
+    return `OPPOSITION SUR CARTE BANCAIRE — ${g.date()}
+Titulaire : ${cl.m}, CIN ${g.cin()}
+Carte n° ${g.carte()}, expire ${L("DATE", `${String(h.entier(1, 12)).padStart(2, "0")}/${h.entier(27, 31)}`, "expiration")}, CVV ${g.cvv()}
+Motif : ${c(h, "perte", "vol", "utilisation frauduleuse")} signalé${h.pile(0.5) ? "e" : ""} au ${g.tel("ma")}.
+Opérations contestées : ${g.montant("MAD")} le ${g.date()} et ${g.montant("MAD")} le ${g.date()} (réseau ${g.sigle(["CMI"])}).
+Nouvelle carte : ${g.carte()}. Remboursement sur ${g.ibanMa()}.`;
+  },
+  effets(g) {
+    const h = g.h, tireur = g.societe("ma"), tire = g.personne("ma");
+    return `BORDEREAU DE REMISE — ${g.date()}
+Remettant : ${tireur} — ICE ${g.ice()} — compte ${g.ribMa()}
+Chèque n° ${g.cheque()} de ${tire.m}, montant ${g.montant("MAD")}
+${g.sigle(["LCN"])} n° ${g.lcn()} échéance ${g.date()}, tiré ${g.personne("mix").m}, montant ${g.montant("MAD")}
+Chèque n° ${g.cheque()} revenu impayé (provision insuffisante) : avis au tireur ${tire.m}, ${g.tel("ma")}.
+${phraseMot(g)}`;
+  },
+  credit(g) {
+    const h = g.h, emp = g.personne("ma"), co = g.personne("ma");
+    return `DOSSIER DE CRÉDIT ${c(h, "IMMOBILIER", "À LA CONSOMMATION")} n° ${g.dossierCredit()}
+Emprunteur : ${emp.m}, CIN ${g.cin()}, ${g.tel("ma")}
+Co-emprunteur : ${co.m}, CIN ${g.cin()}
+Employeur : ${g.societe("ma")} — salaire net ${g.montant("MAD")} — ancienneté ${g.mesure(["4 ans", "11 ans", "18 mois"])}
+Montant : ${g.montant("MAD")} sur ${g.mesure(["240 mois", "84 mois", "300 mois"])} — ${g.sigle(["TEG", "TAEG"])} ${g.mesure(["4,25 %", "6,90 %", "5,10 %"])}
+Bien : ${g.adresseMa()} — garantie ${c(h, "hypothèque de premier rang", "caution solidaire", "nantissement")}
+Prélèvement mensuel sur ${g.ribMa()} à compter du ${g.date()}.`;
+  },
+  sinistreAuto(g) {
+    const h = g.h, ass = g.personne("ma"), adv = g.personne("ma");
+    return `CONSTAT AMIABLE — ${g.date()} à ${g.ville("ma")}
+Véhicule A : immatriculé ${g.immatMa()}, conducteur ${ass.m}, permis [[PASSEPORT|permis:${h.entier(1, 99)}/${h.chiffres(6)}]], contrat n° ${g.dossierCredit()}
+Véhicule B : immatriculé ${g.immatMa()}, conducteur ${adv.m}, joignable au ${g.tel("ma")}
+Dommages estimés : ${g.montant("MAD")} ; franchise ${g.montant("MAD")}. Garantie ${g.sigle(["ACAPS"])} : barème de responsabilité.
+Indemnité à verser sur ${g.ribMa()}.`;
+  },
+});
+
 /* --------------------------------------------------------------- SANTÉ */
 const DCI = ["paracétamol 1 g", "amoxicilline 1 g", "metformine 850 mg", "ibuprofène 400 mg", "oméprazole 20 mg", "Doliprane 1000 mg", "insuline glargine"];
 const EXAMENS = ["IRM", "ECG", "HbA1c", "NFS", "scanner thoracique", "échographie abdominale"];

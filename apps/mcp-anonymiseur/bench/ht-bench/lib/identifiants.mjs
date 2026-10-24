@@ -206,3 +206,36 @@ export function imei(h) {
 }
 export const imsi = (h) => ({ valeur: "604" + h.choix(["00", "01", "02", "05", "10"]) + h.chiffres(10), variante: "imsi-colle" });
 export const iccid = (h) => ({ valeur: luhnComplete("89212" + h.choix(["00", "01", "05"]) + h.chiffres(11)), variante: "iccid-colle" });
+
+/* Finance (v0.2). Cartes : préfixes de numéros de TEST (Visa 4532…, Mastercard
+   5155…, CMI 6011…), clé de Luhn ; jamais un vrai numéro. */
+export function carte(h) {
+  const pan = luhnComplete(h.choix(["453201", "515599", "601100", "406010"]) + h.chiffres(9));
+  const g = pan.replace(/(\d{4})(?=\d)/g, "$1 ");
+  return h.choix([
+    { valeur: g, variante: "carte-groupes" },
+    { valeur: pan, variante: "carte-collee" },
+    { valeur: g.replace(/ /g, "-"), variante: "carte-tirets" },
+    { valeur: `${pan.slice(0, 4)} **** **** ${pan.slice(-4)}`, variante: "carte-masquee" },
+  ]);
+}
+export const cvv = (h) => ({ valeur: h.chiffres(3), variante: "cvv-3" });
+export const passeport = (h) => h.choix([
+  { valeur: h.lettres(2) + h.chiffres(7), variante: "passeport-ma" },
+  { valeur: `${h.entier(2015, 2026)}/${h.chiffres(7)}`, variante: "titre-sejour" },
+]);
+/* Plaque marocaine : numéro d'ordre, lettre (série), code préfecture. */
+export function immatMa(h) {
+  const n = h.entier(1, 99999), l = h.choix(["A", "B", "D", "H", "E"]), r = h.entier(1, 89);
+  return h.choix([
+    { valeur: `${n}-${l}-${r}`, variante: "plaque-ma-tirets" },
+    { valeur: `${n} | ${l} | ${r}`, variante: "plaque-ma-barres" },
+    { valeur: `${n}/${l}/${r}`, variante: "plaque-ma-slash" },
+  ]);
+}
+export const cheque = (h) => ({ valeur: h.chiffres(7), variante: "cheque-7" });
+export const lcn = (h) => ({ valeur: h.chiffres(7), variante: "lcn-7" });
+export const dossierCredit = (h) => h.choix([
+  { valeur: `${h.choix(["CRI", "CC", "CONSO", "LEAS"])}-${h.entier(2024, 2026)}-${h.chiffres(6)}`, variante: "credit-prefixe" },
+  { valeur: h.chiffres(11), variante: "credit-numerique" },
+]);

@@ -1,13 +1,13 @@
 {
   "nom": "HT-Bench",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "split": "dev",
   "graine": "ht-bench-v0",
   "synthetique": true,
-  "sha256": "63117fe4d240262b3d4c503d4373d6f64e0a26480f8e1281aefb8b01bb216668",
-  "documents": 268,
-  "positifs": 2473,
-  "leurres": 1955,
+  "sha256": "ef5fd01fe4476e39e0ca7c53786272f6c0f5489fe1fc29f54a36e60c95a780a2",
+  "documents": 328,
+  "positifs": 3006,
+  "leurres": 2351,
   "par_pack": {
     "core": {
       "documents": 46,
@@ -25,9 +25,9 @@
       "leurres": 308
     },
     "banque-assurance": {
-      "documents": 37,
-      "positifs": 342,
-      "leurres": 277
+      "documents": 97,
+      "positifs": 875,
+      "leurres": 673
     },
     "sante": {
       "documents": 37,
@@ -46,34 +46,40 @@
     }
   },
   "par_type": {
-    "ADRESSE": 161,
+    "ADRESSE": 185,
     "BIC": 24,
-    "CIN": 139,
+    "CARTE": 24,
+    "CIN": 187,
     "CNSS": 74,
-    "EMAIL": 165,
+    "CONTRAT": 24,
+    "CVV": 12,
+    "EFFET": 36,
+    "EMAIL": 177,
     "FACTURE": 24,
-    "IBAN": 41,
+    "IBAN": 53,
     "ICCID": 12,
-    "ICE": 74,
-    "IF": 45,
+    "ICE": 91,
+    "IF": 52,
     "IMEI": 26,
+    "IMMAT": 24,
     "IMSI": 19,
     "MATRICULE": 24,
-    "NAISSANCE": 74,
+    "NAISSANCE": 86,
     "NIR": 46,
+    "PASSEPORT": 24,
     "PATENTE": 9,
     "PATIENT": 24,
-    "PERSONNE": 733,
+    "PERSONNE": 853,
     "POLICE": 12,
     "PRATICIEN": 36,
     "RC": 45,
     "RG": 48,
-    "RIB": 54,
+    "RIB": 102,
     "SINISTRE": 12,
     "SIREN": 24,
     "SIRET": 28,
-    "SOCIETE": 156,
-    "TEL": 340,
+    "SOCIETE": 185,
+    "TEL": 400,
     "TVA": 4
   }
 }

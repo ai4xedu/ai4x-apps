@@ -1,12 +1,12 @@
 {
   "note": "Rappel sur les identifiants directs, mesuré par HT-Bench. La CI (bench:ht:controle) échoue s'il baisse. Réenregistrer : node bench/ht-bench/evaluer.mjs --enregistrer-reference",
-  "version_jeu": "0.1.0",
-  "jeu_sha256": "63117fe4d240262b3d4c503d4373d6f64e0a26480f8e1281aefb8b01bb216668",
+  "version_jeu": "0.2.0",
+  "jeu_sha256": "ef5fd01fe4476e39e0ca7c53786272f6c0f5489fe1fc29f54a36e60c95a780a2",
   "version_moteur": "2.23.2",
   "global": {
-    "n": 1853,
-    "detectes": 1808,
-    "rappel": 0.9757150566648678
+    "n": 2237,
+    "detectes": 2174,
+    "rappel": 0.9718372820742065
   },
   "par_pack": {
     "core": {
@@ -25,9 +25,9 @@
       "rappel": 0.9746376811594203
     },
     "banque-assurance": {
-      "n": 270,
-      "detectes": 264,
-      "rappel": 0.9777777777777777
+      "n": 654,
+      "detectes": 630,
+      "rappel": 0.963302752293578
     },
     "sante": {
       "n": 207,
@@ -47,13 +47,13 @@
   },
   "par_type": {
     "PERSONNE": {
-      "n": 733,
-      "detectes": 721,
-      "rappel": 0.9836289222373806
+      "n": 853,
+      "detectes": 837,
+      "rappel": 0.981242672919109
     },
     "CIN": {
-      "n": 139,
-      "detectes": 139,
+      "n": 187,
+      "detectes": 187,
       "rappel": 1
     },
     "NIR": {
@@ -67,13 +67,13 @@
       "rappel": 0.8378378378378378
     },
     "ICE": {
-      "n": 74,
-      "detectes": 74,
+      "n": 91,
+      "detectes": 91,
       "rappel": 1
     },
     "IF": {
-      "n": 45,
-      "detectes": 45,
+      "n": 52,
+      "detectes": 52,
       "rappel": 1
     },
     "RC": {
@@ -92,24 +92,24 @@
       "rappel": 1
     },
     "TEL": {
-      "n": 340,
-      "detectes": 340,
+      "n": 400,
+      "detectes": 400,
       "rappel": 1
     },
     "EMAIL": {
-      "n": 165,
-      "detectes": 165,
+      "n": 177,
+      "detectes": 177,
       "rappel": 1
     },
     "IBAN": {
-      "n": 41,
-      "detectes": 40,
-      "rappel": 0.975609756097561
+      "n": 53,
+      "detectes": 52,
+      "rappel": 0.9811320754716981
     },
     "RIB": {
-      "n": 54,
-      "detectes": 51,
-      "rappel": 0.9444444444444444
+      "n": 102,
+      "detectes": 97,
+      "rappel": 0.9509803921568627
     },
     "IMEI": {
       "n": 26,
@@ -119,6 +119,21 @@
     "IMSI": {
       "n": 19,
       "detectes": 19,
+      "rappel": 1
+    },
+    "CARTE": {
+      "n": 24,
+      "detectes": 24,
+      "rappel": 1
+    },
+    "CVV": {
+      "n": 12,
+      "detectes": 0,
+      "rappel": 0
+    },
+    "PASSEPORT": {
+      "n": 24,
+      "detectes": 24,
       "rappel": 1
     }
   }

@@ -28,6 +28,10 @@ export const POSITIFS = {
   RIB:       { libelle: "RIB", direct: true, prefixes: ["RIB"] },
   IMEI:      { libelle: "IMEI", direct: true, prefixes: ["IMEI"] },
   IMSI:      { libelle: "IMSI", direct: true, prefixes: ["IMSI"] },
+  // Finance (v0.2) : la carte et son cryptogramme sont des identifiants directs.
+  CARTE:     { libelle: "Numéro de carte bancaire", direct: true, prefixes: ["CARTE"] },
+  CVV:       { libelle: "Cryptogramme (CVV / CVC)", direct: true, prefixes: ["CVV", "CARTE"] },
+  PASSEPORT: { libelle: "Passeport, titre de séjour, permis", direct: true, prefixes: ["CIN", "PASSEPORT", "PERMIS", "REF"] },
   // Indirects ou propres à un métier : mesurés, hors du contrôle de la CI.
   BIC:       { libelle: "BIC / SWIFT", direct: false, prefixes: ["BIC"] },
   ICCID:     { libelle: "ICCID (carte SIM)", direct: false, prefixes: ["ICCID"] },
@@ -43,6 +47,9 @@ export const POSITIFS = {
   SINISTRE:  { libelle: "N° de sinistre", direct: false, prefixes: ["SINISTRE"] },
   FACTURE:   { libelle: "N° de facture / pièce", direct: false, prefixes: ["FACTURE", "PIECE", "REF"] },
   RG:        { libelle: "N° RG / parquet", direct: false, prefixes: ["RG", "PARQUET", "REF"] },
+  IMMAT:     { libelle: "Immatriculation (véhicule)", direct: false, prefixes: ["IMMAT"] },
+  EFFET:     { libelle: "N° de chèque ou de LCN", direct: false, prefixes: ["CHEQUE", "LCN", "REF"] },
+  CONTRAT:   { libelle: "N° de contrat ou de dossier de crédit", direct: false, prefixes: ["REF", "CONTRAT", "POLICE"] },
 };
 
 export const LEURRES = {
