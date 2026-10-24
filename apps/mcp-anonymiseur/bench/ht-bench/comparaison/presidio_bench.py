@@ -10,7 +10,9 @@ Presidio ne sont déclarés que pour l'anglais) ; on garde l'union des
 
 Garde réseau : avant tout import de Presidio ou de spaCy, toute tentative de
 connexion (socket, résolution DNS) lève une erreur et le script s'arrête en
-code 3. Les modèles s'installent une fois avec requirements.txt ; le score,
+code 3. (Telle que livrée, Presidio télécharge la liste publique des suffixes
+via tldextract au premier e-mail analysé : on la remplace par la copie
+embarquée de tldextract.) Les modèles s'installent une fois avec requirements.txt ; le score,
 lui, ne touche jamais au réseau.
 
 Sortie : une ligne JSON par document, {"id", "etendues": [{"debut", "fin",
@@ -37,6 +39,13 @@ socket.create_connection = _refus
 socket.getaddrinfo = _refus
 for var in ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "SPACY_OFFLINE"):
     os.environ[var] = "1"
+
+# Le reconnaisseur d'e-mails de Presidio appelle tldextract, qui TÉLÉCHARGE
+# la liste publique des suffixes au premier usage (la garde ci-dessus l'a
+# surpris). On lui donne sa copie embarquée : même liste, zéro connexion.
+import tldextract  # noqa: E402
+
+tldextract.extract = tldextract.TLDExtract(suffix_list_urls=(), cache_dir=None)
 
 
 def utf16(texte, i):

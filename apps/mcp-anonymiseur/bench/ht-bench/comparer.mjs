@@ -28,6 +28,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..", "..");
 const SPLIT = process.argv.includes("--split") ? splitDemande() : "test";
 const SORTIE = path.join(here, "resultats", SPLIT === "dev" ? "" : SPLIT);
+const pct = (x) => (x === null || x === undefined ? "—" : `${(100 * x).toFixed(1)} %`);
 const PYTHON = process.env.HT_BENCH_PYTHON
   || path.join(here, "comparaison", ".venv", process.platform === "win32" ? "Scripts/python.exe" : "bin/python");
 
@@ -113,7 +114,6 @@ fs.mkdirSync(SORTIE, { recursive: true });
 fs.writeFileSync(path.join(SORTIE, "comparaison.json"), JSON.stringify({ ...comparaison, secondes: undefined }, null, 1) + "\n");
 fs.writeFileSync(path.join(SORTIE, "comparaison.md"), rapport(comparaison));
 
-const pct = (x) => (x === null || x === undefined ? "—" : `${(100 * x).toFixed(1)} %`);
 console.log(`\nHT-Bench ${manifeste.version} (${SPLIT}) — Hidden Tokens v${version} face à Presidio ${outil.version}, ${docs.length} documents\n`);
 console.log("  Pack                   Direct HT    Direct Presidio");
 for (const [p, v] of Object.entries(comparaison.par_pack)) console.log(`  ${p.padEnd(22)} ${pct(v.hidden_tokens.direct.rappel).padStart(8)}    ${pct(v.presidio.direct.rappel).padStart(8)}`);

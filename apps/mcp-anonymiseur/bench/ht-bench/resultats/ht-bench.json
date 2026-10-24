@@ -2,7 +2,7 @@
  "banc": "HT-Bench",
  "version_jeu": "0.1.0",
  "split": "dev",
- "jeu_sha256": "406f450d99863315c2d9099580565bea8c72db5fa2522d9e6bd1c1bce3787348",
+ "jeu_sha256": "63117fe4d240262b3d4c503d4373d6f64e0a26480f8e1281aefb8b01bb216668",
  "version_moteur": "2.22.0",
  "chemin": "anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte",
  "documents": 268,
