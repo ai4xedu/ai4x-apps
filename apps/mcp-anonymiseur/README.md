@@ -97,6 +97,17 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.25.0 (finance marocaine et packs par défaut, 24/10/2026). Un dossier qui n'a
+pas choisi ses packs reçoit d'office `telecom-ma`, `juridique-fr`, `rh-paie`,
+`banque-assurance` et `expertise-comptable` (choisis par la mesure HT-Bench :
+plus de rappel, aucune sortie corrompue) ; `"packs": [...]` ou la politique
+signée l'emportent, `[]` les retire. Packs `banque-assurance` 1.1 (CVV, LCN,
+plaques marocaines, RIB marocain, sigles KYC / PPE / UTRF en clair) et
+`expertise-comptable` 1.1 (facture, pièce, déclaration annoncées sans plus
+jamais coder « pièce jointe » ni le verbe « avoir » ; EBITDA, BFR, DSO… en
+clair) ; le vocabulaire des packs reste lisible dans l'aperçu. Pack
+`notariat-ma`. Banc de détection HT-Bench (`bench/ht-bench/`, contrôlé en CI).
+
 v2.24.0 (toutes les dates, en option, 24/10/2026). En rendu lisible, un nouveau
 réglage `dates` : « naissance » (défaut, inchangé : seules les dates de naissance
 sont décalées, un âge à une autre date peut varier d'un an) ou « toutes » : toutes
@@ -682,7 +693,7 @@ inconnu bloque l'anonymisation. Sept packs : `telecom-ma`, `juridique-fr`,
 `banque-assurance`, `sante`, `expertise-comptable`, `rh-paie`, `notariat-ma`.
 Spec : `SPEC-PACKS-METIER.md` (dépôt nanomizer). Tests : `test/packs.test.js`.
 
-**`notariat-ma` (v2.24)** — l'étude de notaire marocaine. Codés, chacun sous
+**`notariat-ma` (v2.25)** — l'étude de notaire marocaine. Codés, chacun sous
 son préfixe, le libellé restant devant le code (« titre foncier n° TF-001 ») :
 le numéro de titre foncier avec son indice de conservation (`12345/63`,
 `28.517/C`, `18 220/F` ; « TF », « T.F. », « titre foncier [mère] »,

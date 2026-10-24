@@ -164,7 +164,28 @@ node test/campagne-mvp.mjs                 # 44 contrôles sur l'artefact (clé 
   directement dans la conversation ne passe par aucun verrou ; un contexte très
   précis peut permettre une identification indirecte.
 
-## Études de notaires au Maroc : le pack Notariat (v2.24)
+## Banques, assurances, experts-comptables, DAF (v2.25)
+
+Rien à activer : un dossier sans réglage de packs a d'office **Télécom,
+Juridique, RH-paie, Banque-assurance et Expertise comptable**. Le plan le dit
+(« pack … (par défaut) »). Pour n'en garder qu'un : menu du dossier → Packs, ou
+`"packs": [...]` dans la politique signée. Ce qu'on peut dire, chiffres
+HT-Bench (jeu de test synthétique, `bench/ht-bench/resultats/test/`) :
+
+- ✅ Identifiants directs détectés : **99,5 %** en banque-assurance, **99,3 %** en
+  expertise comptable ; Presidio (Microsoft), sur les mêmes documents : 64 % et
+  82 %. Carte et **cryptogramme (CVV)**, **LCN**, chèque, **plaque marocaine**,
+  RIB, IBAN, CIN, passeport ou titre de séjour, ICE, IF, RC, CNSS sont codés.
+- ✅ Le travail reste possible : montants, taux, dates, et le vocabulaire du
+  métier (KYC, PPE, UTRF, Bank Al-Maghrib, TEG, EBITDA, BFR, DSO, CAPEX, PCGE,
+  CAC, pièce jointe…) restent lisibles — 0,1 % de leurres codés en expertise
+  comptable.
+- ⚠️ Les prénoms à apostrophe (Ma'ati, R'kia) laissent leur première lettre en
+  clair ; le n° d'affiliation CNSS employeur à 7 chiffres n'est pas toujours
+  codé. Corrections moteur prévues.
+- ⚠️ Le pack Santé n'est PAS actif par défaut : à activer dans le dossier.
+
+## Études de notaires au Maroc : le pack Notariat (v2.25)
 
 À activer dans l'appli (menu du dossier → Packs → « Notariat — étude de
 notaire, Maroc ») ou dans la politique signée (`"packs": ["notariat-ma"]`).

@@ -1,6 +1,6 @@
 {
  "split": "test",
- "version_moteur": "2.23.2",
+ "version_moteur": "2.25.0",
  "jeu_sha256": "4881c8d2bc9febe584e4dab351739c8bd00858a20eab834c15993fcace79e10b",
  "configs": {
   "aucun": {

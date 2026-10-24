@@ -239,7 +239,7 @@ test("export CDR (mode tableau) : les colonnes des identifiants sont codées par
   } finally { await client.close(); fs.rmSync(root, { recursive: true, force: true }); }
 });
 
-/* NOTARIAT (v2.24) : deux actes fictifs d'une étude marocaine. Chaque valeur
+/* NOTARIAT (v2.25) : deux actes fictifs d'une étude marocaine. Chaque valeur
    réelle est cherchée dans la sortie ; le vocabulaire de l'acte doit rester
    lisible pour que l'IA puisse relire, résumer ou rédiger. Le prix relève du
    réglage Nombres (mode tableau), pas du pack. */
