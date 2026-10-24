@@ -341,3 +341,72 @@ test("pseudonymFor : type non rendu → null, entrée déjà pseudonymisée → 
   assert.ok(p && p !== "Benali");
   assert.equal(pseudonymFor(book, book.entries[1], contextFor(book, "")), p);
 });
+
+/* ---------------------------------------------- v2.24 — toutes les dates */
+import { decalerDates, retourDates, readDatesSetting } from "../server/pseudonymes.js";
+
+test("décaler toutes les dates : chaque écriture garde sa forme ; dates impossibles, années seules et codes intacts", () => {
+  const t = "Le 15/01/2026, le 5/1/2026, le 15.01.2026, le 15-01-2026, le 2026-01-15, le 15 janvier 2026, le 1er mars 2026, le 31/02/2026, en 2026, en 03/2026, NAISS-001.";
+  const r = decalerDates(t, 10);
+  assert.equal(r.text, "Le 25/01/2026, le 15/1/2026, le 25.01.2026, le 25-01-2026, le 2026-01-25, le 25 janvier 2026, le 11 mars 2026, le 31/02/2026, en 2026, en 03/2026, NAISS-001.");
+  assert.equal(r.n, 7);
+  assert.equal(decalerDates(r.text, -10).text, t, "le retour est exact");
+});
+
+test("« toutes » : âges et délais calculés dans le calendrier décalé sont exacts, et la réponse revient en vraies dates", () => {
+  const book = newCodebook();
+  book.pseudonymes = { graine: "toutes", deltaJours: 63, v: 2 };
+  const r = rendreLisible(coder(book, "M. Hamid Chraïbi, né le 12/04/1981, a signé le 15/01/2026 ; mise en demeure le 10 mars 2026."), book, null, { dates: "toutes" });
+  assert.equal(r.dates, "toutes");
+  assert.equal(r.datesDecalees, 2);
+  for (const v of ["12/04/1981", "15/01/2026", "10 mars 2026"]) assert.ok(!r.text.includes(v), `date réelle visible : ${v}`);
+  const naiss = r.text.match(/né le (\d{2})\/(\d{2})\/(\d{4})/).slice(1).map(Number);
+  const sig = r.text.match(/signé le (\d{2})\/(\d{2})\/(\d{4})/).slice(1).map(Number);
+  // L'âge à la signature, calculé sur les dates décalées : 44 ans, comme en vrai.
+  const age = sig[2] - naiss[2] - (sig[1] < naiss[1] || (sig[1] === naiss[1] && sig[0] < naiss[0]) ? 1 : 0);
+  assert.equal(age, 44);
+  // L'IA calcule un délai de 15 jours dans le calendrier décalé.
+  const lim = new Date(Date.UTC(sig[2], sig[1] - 1, sig[0]) + 15 * 864e5);
+  const p2 = (n) => String(n).padStart(2, "0");
+  const reponse = `Signé le ${p2(sig[0])}/${p2(sig[1])}/${sig[2]} par un client né le ${p2(naiss[0])}/${p2(naiss[1])}/${naiss[2]} ; réponse attendue avant le ${p2(lim.getUTCDate())}/${p2(lim.getUTCMonth() + 1)}/${lim.getUTCFullYear()}.`;
+  const map = tableDecodage(book);
+  assert.equal(decodeText(retourDates(book)(reponse), map).text, "Signé le 15/01/2026 par un client né le 12/04/1981 ; réponse attendue avant le 30/01/2026.");
+});
+
+test("le mode des dates est figé au premier rendu du dossier ; un texte du navigateur ne le fige pas et ne décale rien", () => {
+  const book = newCodebook();
+  // Le navigateur passe d'abord : pas de décalage, pas de verrou.
+  const nav = rendreLisible(coder(book, "M. Hamid Chraïbi a signé le 15/01/2026."), book, null, { sansDecalage: true });
+  assert.ok(nav.text.includes("15/01/2026"));
+  assert.equal(book.pseudonymes.dates, undefined);
+  // Premier rendu dans Claude en « naissance » : figé.
+  rendreLisible(coder(book, "Signé le 15/01/2026."), book, null, { dates: "naissance" });
+  assert.equal(book.pseudonymes.dates, "naissance");
+  // Demander « toutes » ensuite ne change rien, et le compte rendu le dit.
+  const ensuite = rendreLisible(coder(book, "Signé le 15/01/2026."), book, null, { dates: "toutes" });
+  assert.equal(ensuite.dates, "naissance");
+  assert.ok(ensuite.text.includes("15/01/2026"));
+  assert.match(describeRendu("lisible", "test", ensuite), /figé en « naissance »/);
+  // En « naissance », le décodage ne touche pas aux dates.
+  assert.equal(retourDates(book)("le 15/01/2026"), "le 15/01/2026");
+  // Une clé d'avant la v2.24 (sans v) est en « naissance ».
+  const ancien = newCodebook();
+  ancien.pseudonymes = { graine: "x", deltaJours: 40 };
+  rendreLisible(coder(ancien, "Signé le 15/01/2026."), ancien, null, { dates: "toutes" });
+  assert.equal(ancien.pseudonymes.dates, "naissance");
+});
+
+test("réglage des dates : reglages.json (dates), puis ANX_DATES, puis « naissance »", () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "anx-dates-"));
+  assert.equal(readDatesSetting(dir, {}).mode, "naissance");
+  assert.equal(readDatesSetting(dir, { ANX_DATES: "toutes" }).mode, "toutes");
+  fs.writeFileSync(path.join(dir, "reglages.json"), JSON.stringify({ rendu: "lisible", dates: "toutes" }));
+  assert.equal(readDatesSetting(dir, {}).mode, "toutes");
+});
+
+test("« toutes » : les jours-mois sans année d'une explication sont ramenés aussi ; une fraction ne l'est pas", () => {
+  const book = newCodebook();
+  book.pseudonymes = { graine: "jm", deltaJours: 10, v: 2, dates: "toutes" };
+  assert.equal(retourDates(book)("Échéance le 25/03/2026 ; anniversaire le 13 juillet ; du 13/07 au 24/11 ; les 3/4 des parts ; score 12/20."),
+    "Échéance le 15/03/2026 ; anniversaire le 3 juillet ; du 03/07 au 14/11 ; les 3/4 des parts ; score 12/20.");
+});

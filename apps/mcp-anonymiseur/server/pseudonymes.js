@@ -81,6 +81,28 @@ export function readRenderSetting(outdir, env = process.env) {
   return { mode: DEFAULT_RENDER_MODE, source: "défaut" };
 }
 
+/* v2.24 — LES DATES. Par défaut (« naissance »), seules les dates de
+   naissance sont décalées : les autres restent exactes, et un âge calculé à
+   l'une d'elles peut être faux d'un an. Avec « toutes », TOUTES les dates
+   complètes du dossier sont décalées du même nombre de jours : l'IA vit dans
+   un calendrier décalé où âges et délais sont exacts, et le décodage ramène
+   TOUTES les dates de sa réponse (y compris celles qu'elle a calculées).
+   Le réglage est FIGÉ dans la clé au premier rendu lisible du dossier : un
+   dossier qui mélangerait les deux décoderait de vraies dates à tort.
+   Réglage : reglages.json (`dates`), ANX_DATES, option `dates` ; défaut
+   « naissance ». */
+export const DATE_MODES = ["naissance", "toutes"];
+export const DEFAULT_DATE_MODE = "naissance";
+export function readDatesSetting(outdir, env = process.env) {
+  try {
+    const r = JSON.parse(fs.readFileSync(path.join(outdir, FICHIER_REGLAGES), "utf8"));
+    if (r && DATE_MODES.includes(r.dates)) return { mode: r.dates, source: "réglage du dossier, posé dans l'appli Hidden Tokens" };
+  } catch {}
+  const e = String(env.ANX_DATES || "").trim();
+  if (DATE_MODES.includes(e)) return { mode: e, source: "réglage de l'extension" };
+  return { mode: DEFAULT_DATE_MODE, source: "défaut" };
+}
+
 /* ----------------------------------------------------------------- lexique - */
 
 let LEX = null;
@@ -151,13 +173,18 @@ function randomInt(min, max) {
    Le delta vaut de 30 à 400 jours, dans un sens ou l'autre : assez pour
    qu'une date décalée ne soit pas la vraie à quelques jours près, assez peu
    pour qu'un âge reste crédible. */
-export function secretPseudo(book) {
+export function secretPseudo(book, dates = null) {
   let s = book.pseudonymes;
   if (!s || typeof s.graine !== "string" || !Number.isInteger(s.deltaJours)) {
     const sens = randomInt(0, 2) ? 1 : -1;
-    s = { graine: crypto.randomBytes(16).toString("hex"), deltaJours: sens * randomInt(30, 401) };
+    // v: 2 — le mode des dates n'est figé qu'au premier rendu qui le choisit.
+    s = { graine: crypto.randomBytes(16).toString("hex"), deltaJours: sens * randomInt(30, 401), v: 2 };
     book.pseudonymes = s;
   }
+  // Une clé d'avant la v2.24 (sans v) n'a décalé que les naissances : elle le reste.
+  if (!DATE_MODES.includes(s.dates) && !s.v) s.dates = DEFAULT_DATE_MODE;
+  // Premier rendu qui choisit : le mode est figé pour le dossier.
+  if (!DATE_MODES.includes(s.dates) && DATE_MODES.includes(dates)) s.dates = dates;
   return s;
 }
 
@@ -425,6 +452,116 @@ export function shiftDate(value, delta) {
   return null;
 }
 
+/* Les dates COMPLÈTES d'un texte : 15/01/2026, 5/1/2026, 15.01.2026,
+   15-01-2026, 2026-01-15, « 15 janvier 2026 », « 1er mars 2026 ». Une année
+   seule, un mois seul ou une année sur deux chiffres ne sont pas des dates
+   complètes : ils restent (trop d'ambiguïtés avec des nombres). Les codes
+   (NAISS-001…) ne sont jamais touchés. */
+const MOIS_ALT = "janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre";
+const DATE_COMPLETE_RX = new RegExp(
+  `(?<![\\p{L}\\p{N}/.\\-])(?:(\\d{4})-(\\d{2})-(\\d{2})|(\\d{1,2})([/.\\-])(\\d{1,2})\\5(\\d{4})|(1er|\\d{1,2})\\s+(${MOIS_ALT})\\s+(\\d{4}))(?![\\p{L}\\p{N}]|[/.\\-]\\d)`, "giu");
+
+function dateValide(y, m, d) {
+  const t = new Date(Date.UTC(y, m - 1, d));
+  return t.getUTCFullYear() === y && t.getUTCMonth() === m - 1 && t.getUTCDate() === d;
+}
+
+/* Décale de `delta` jours toutes les dates complètes d'un texte, en gardant
+   leur écriture. Renvoie { text, n }. */
+export function decalerDates(input, delta) {
+  let n = 0;
+  const p2 = (x) => String(x).padStart(2, "0");
+  const un = (seg) => seg.replace(DATE_COMPLETE_RX, (m, iy, im, id, nd, sep, nm, ny, td, tm, ty) => {
+    if (iy) {
+      const [y, mo, d] = [Number(iy), Number(im), Number(id)];
+      if (!dateValide(y, mo, d)) return m;
+      const t = new Date(Date.UTC(y, mo - 1, d) + delta * 86400000);
+      n++;
+      return `${t.getUTCFullYear()}-${p2(t.getUTCMonth() + 1)}-${p2(t.getUTCDate())}`;
+    }
+    if (nd) {
+      const [d, mo, y] = [Number(nd), Number(nm), Number(ny)];
+      if (!dateValide(y, mo, d)) return m;
+      const t = new Date(Date.UTC(y, mo - 1, d) + delta * 86400000);
+      n++;
+      // Le style se lit sur la date entière : « 15/01 », « 05/3 » ou « 15/12 » sont
+      // à zéros ; « 5/1 » ou « 15/1 » sans (sinon « 5/1 » → « 15/1 » → « 05/1 »).
+      const zeros = nd.startsWith("0") || nm.startsWith("0") || (nd.length === 2 && nm.length === 2);
+      const jj = zeros ? p2(t.getUTCDate()) : String(t.getUTCDate());
+      const mm = zeros ? p2(t.getUTCMonth() + 1) : String(t.getUTCMonth() + 1);
+      return `${jj}${sep}${mm}${sep}${t.getUTCFullYear()}`;
+    }
+    const r = shiftDate(m, delta);
+    if (r) n++;
+    return r || m;
+  });
+  // Hors des codes : NAISS-001 n'est pas une date.
+  let out = "", last = 0;
+  for (const c of String(input).matchAll(CODE_RX)) { out += un(String(input).slice(last, c.index)) + c[0]; last = c.index + c[0].length; }
+  out += un(String(input).slice(last));
+  return { text: out, n };
+}
+
+/* Les jours-mois SANS année que l'IA écrit en expliquant un calcul (« son
+   anniversaire tombe le 19 janvier », « du 03/08 au 12/02 ») : ramenés eux
+   aussi (essai A/B du 24/10/2026 : sinon l'explication décodée devient
+   incohérente). Un jour-mois numérique n'est pris qu'à deux chiffres chacun
+   (« 03/08 », pas « 3/4 », une fraction) et non suivi d'une année. Le
+   calcul se fait sur une année non bissextile. Une année seule (« 2027 »)
+   ne se ramène pas : la règle « 1 bis » demande des dates complètes. */
+const JOUR_MOIS_RX = new RegExp(
+  `(?<![\\p{L}\\p{N}/.\\-])(?:(\\d{2})([/.])(\\d{2})(?![\\p{N}]|[/.\\-]\\d)|(1er|\\d{1,2})\\s+(${MOIS_ALT})(?!\\s+\\d{4})(?![\\p{L}]))`, "giu");
+function decalerJoursMois(input, delta) {
+  const p2 = (x) => String(x).padStart(2, "0");
+  const un = (seg) => seg.replace(JOUR_MOIS_RX, (m, nd, sep, nm, td, tm) => {
+    let d, mo;
+    if (nd) { [d, mo] = [Number(nd), Number(nm)]; } else {
+      const i = MOIS_FOLD.indexOf(fold(tm));
+      if (i < 0) return m;
+      [d, mo] = [td === "1er" ? 1 : Number(td), i + 1];
+    }
+    if (!dateValide(2025, mo, d)) return m;
+    const t = new Date(Date.UTC(2025, mo - 1, d) + delta * 86400000);
+    if (nd) return `${p2(t.getUTCDate())}${sep}${p2(t.getUTCMonth() + 1)}`;
+    const jour = t.getUTCDate() === 1 ? "1er" : String(t.getUTCDate());
+    const mois = /^\p{Lu}/u.test(tm) ? MOIS[t.getUTCMonth()].replace(/^\p{L}/u, (c) => c.toUpperCase()) : MOIS[t.getUTCMonth()];
+    return `${jour} ${mois}`;
+  });
+  let out = "", last = 0;
+  for (const c of String(input).matchAll(CODE_RX)) { out += un(String(input).slice(last, c.index)) + c[0]; last = c.index + c[0].length; }
+  return out + un(String(input).slice(last));
+}
+
+/* Le retour : ramène TOUTES les dates d'une réponse de l'IA (dossier en
+   « toutes »), y compris celles qu'elle a calculées dans le calendrier
+   décalé. Les pseudonymes de dates de naissance (toutes leurs écritures) sont
+   mis à l'abri d'abord et rendus à leur vraie valeur : leur décalage a pu
+   être ajusté d'un jour ou deux pour rester unique. Identité si le dossier
+   n'est pas en « toutes ». */
+export function retourDates(book) {
+  const s = book && book.pseudonymes;
+  if (!s || s.dates !== "toutes" || !Number.isInteger(s.deltaJours)) return (t) => String(t);
+  const paires = [];
+  for (const e of book.entries || []) {
+    if (!/^NAISS-/.test(e.code) || !e.pseudo) continue;
+    for (const v of new Set([e.pseudo, ...ecrituresDate(e.pseudo)])) paires.push([v, e.value]);
+  }
+  paires.sort((a, b) => b[0].length - a[0].length);
+  const rx = paires.length ? new RegExp(`(?<![\\p{L}\\p{N}])(?:${paires.map(([v]) => v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}\\p{N}])`, "giu") : null;
+  const valeurDe = new Map(paires.map(([v, r]) => [v.toLowerCase(), r]));
+  return (t) => {
+    const abri = [];
+    let x = String(t);
+    if (rx) x = x.replace(rx, (m) => { abri.push(valeurDe.get(m.toLowerCase()) ?? m); return `\u0000${abri.length - 1}\u0000`; });
+    // Les dates complètes d'abord, mises à l'abri à leur tour ; puis les jours-mois seuls.
+    const faites = [];
+    x = decalerDates(x, -s.deltaJours).text.replace(DATE_COMPLETE_RX, (m) => { faites.push(m); return `\u0001${faites.length - 1}\u0001`; });
+    x = decalerJoursMois(x, -s.deltaJours);
+    x = x.replace(/\u0001(\d+)\u0001/g, (_, i) => faites[Number(i)]);
+    return x.replace(/\u0000(\d+)\u0000/g, (_, i) => abri[Number(i)]);
+  };
+}
+
 /* ---------------------------------------------------------- attribution --- */
 
 /* Les préfixes rendus, et comment. Les catégories de la politique du cabinet
@@ -499,8 +636,15 @@ function entriesByCode(book) {
    carnet (pseudonymes attribués). Renvoie { text, rendus, parType, restes,
    renouveles } — restes : codes laissés tels quels (identifiants, références,
    ou aucun pseudonyme acceptable). */
-export function rendreLisible(input, book, ctx) {
+export function rendreLisible(input, book, ctx, { dates = null, sansDecalage = false } = {}) {
   ctx = ctx || contextFor(book, input);
+  // sansDecalage (texte venu du navigateur) : ni décalage de toutes les dates,
+  // ni verrou du mode — c'est le premier rendu dans Claude qui le fixe.
+  const secret = secretPseudo(book, sansDecalage ? null : (dates || DEFAULT_DATE_MODE));
+  // « toutes » : les dates complètes d'abord (les naissances sont encore des
+  // codes à ce stade : elles ne sont pas décalées deux fois).
+  let datesDecalees = 0;
+  if (secret.dates === "toutes" && !sansDecalage) { const d = decalerDates(input, secret.deltaJours); input = d.text; datesDecalees = d.n; }
   const byCode = entriesByCode(book);
   const parType = {};
   let rendus = 0, restes = 0;
@@ -514,13 +658,13 @@ export function rendreLisible(input, book, ctx) {
     parType[label] = (parType[label] || 0) + 1;
     return p;
   });
-  return { text, rendus, parType, restes, renouveles: ctx.renouveles };
+  return { text, rendus, parType, restes, renouveles: ctx.renouveles, datesDecalees, dates: sansDecalage ? "naissance" : (secret.dates || DEFAULT_DATE_MODE), datesDemandees: sansDecalage ? null : dates };
 }
 
 /* Même chose sur les cellules texte d'une feuille (mutée en place). Le
    contexte est construit sur tout le texte de la feuille. */
-export function rendreFeuille(ws, book, ctx) {
-  const out = { rendus: 0, parType: {}, restes: 0, renouveles: 0, cells: 0 };
+export function rendreFeuille(ws, book, ctx, opts = {}) {
+  const out = { rendus: 0, parType: {}, restes: 0, renouveles: 0, cells: 0, datesDecalees: 0, dates: null };
   if (!ws || !ws["!ref"]) return out;
   const texts = [];
   for (const addr of Object.keys(ws)) {
@@ -533,10 +677,13 @@ export function rendreFeuille(ws, book, ctx) {
     if (addr[0] === "!") continue;
     const c = ws[addr];
     if (!c || (c.t !== "s" && c.t !== "str") || typeof c.v !== "string") continue;
-    const r = rendreLisible(c.v, book, ctx);
-    if (!r.rendus) continue;
+    const r = rendreLisible(c.v, book, ctx, opts);
+    out.dates = r.dates;
+    out.datesDemandees = r.datesDemandees;
+    if (!r.rendus && !r.datesDecalees) continue;
     ws[addr] = { t: "s", v: r.text };
     out.cells++;
+    out.datesDecalees += r.datesDecalees;
     out.rendus += r.rendus;
     out.restes += r.restes;
     for (const k of Object.keys(r.parType)) out.parType[k] = (out.parType[k] || 0) + r.parType[k];
@@ -620,6 +767,15 @@ export function describeRendu(mode, source, r = null) {
     lines.push(`${r.rendus} code(s) rendu(s) par un pseudonyme${parts ? ` (${parts})` : ""}, ${r.restes} code(s) conservé(s).`);
     if (r.renouveles) lines.push(`⚠️ ${r.renouveles} pseudonyme(s) renouvelé(s) : ils coïncidaient avec une valeur réelle entrée depuis dans la clé ou avec un mot de ce texte. Les textes rendus auparavant avec l'ancien pseudonyme ne se décodent plus par lui : les recoder.`);
   }
-  lines.push("Les dates de naissance sont décalées d'un même nombre de jours, secret, pour tout le dossier : l'écart entre deux dates de naissance reste juste, mais les autres dates restent exactes — un âge calculé à une date du dossier peut différer d'un an au plus (pour un seuil d'âge, demande la réponse à l'utilisateur). deanonymiser et decoder_word retraduisent les pseudonymes comme les codes. Pour revenir aux codes : rendu: \"codes\", ou le réglage du dossier dans l'appli Hidden Tokens.");
+  const toutes = r ? r.dates === "toutes" : false;
+  if (r && r.datesDemandees && r.dates && r.datesDemandees !== r.dates) {
+    lines.push(`ℹ️ Dates : ce dossier est figé en « ${r.dates} » depuis son premier rendu lisible (un dossier ne mélange pas les deux) ; pour changer, repartir d'une clé neuve (reinitialiser_cle).`);
+  }
+  if (toutes) {
+    lines.push(`DATES — « toutes » : ${r.datesDecalees || 0} date(s) décalée(s) ici. Toutes les dates complètes du dossier sont décalées d'un même nombre de jours, secret : âges et délais calculés sont EXACTS, et deanonymiser / decoder_word ramènent toutes les dates de la réponse, y compris celles que l'IA a calculées. Les jours de la semaine, eux, ne correspondent plus ; une date extérieure au dossier (date d'une loi, d'un jour férié) citée par l'IA serait ramenée à tort.`);
+  } else {
+    lines.push("Les dates de naissance sont décalées d'un même nombre de jours, secret, pour tout le dossier : l'écart entre deux dates de naissance reste juste, mais les autres dates restent exactes — un âge calculé à une date du dossier peut différer d'un an au plus (pour un seuil d'âge, demande la réponse à l'utilisateur).");
+  }
+  lines.push("deanonymiser et decoder_word retraduisent les pseudonymes comme les codes. Pour revenir aux codes : rendu: \"codes\", ou le réglage du dossier dans l'appli Hidden Tokens.");
   return lines.join("\n");
 }
