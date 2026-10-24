@@ -1,0 +1,151 @@
+{
+  "format": "hidden-tokens.pack/1",
+  "id": "rh-paie",
+  "nom": "RH et paie",
+  "version": "1.0.0",
+  "description": "Matricules, numéros de badge et de contrat de travail annoncés ; CNSS, numéro de sécurité sociale, IBAN, dates de naissance sont reconnus par le moteur ; les salaires relèvent du réglage Nombres (finance d'une personne, protégée par défaut). Intitulés de postes, droit du travail, éléments de paie et organismes laissés en clair pour que l'IA travaille sur un contrat, un entretien annuel ou une procédure.",
+  "regles": [
+    {
+      "id": "P-001",
+      "type": "motif",
+      "libelle": "Matricule salarié annoncé",
+      "prefixe": "MATRICULE",
+      "motif": "(?<=\\bmatricule\\s*(?:salari[ée]|employ[ée])?\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9-]{2,12}(?![A-Z0-9-])",
+      "exemple": "matricule : EMP-04471"
+    },
+    {
+      "id": "P-002",
+      "type": "motif",
+      "libelle": "Numéro de badge annoncé",
+      "prefixe": "BADGE",
+      "motif": "(?<=\\bbadge\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9-]{2,12}(?![A-Z0-9-])",
+      "exemple": "badge n° 00812"
+    },
+    {
+      "id": "P-003",
+      "type": "motif",
+      "libelle": "Numéro de contrat de travail ou de dossier RH annoncé",
+      "prefixe": "DOSSIERRH",
+      "motif": "(?<=\\b(?:contrat\\s*(?:de\\s*travail)?|dossier\\s*(?:RH|personnel)|DPAE)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{3,15}(?![A-Z0-9/-])",
+      "exemple": "contrat de travail n° CT/2026/031"
+    },
+    {
+      "id": "P-010",
+      "type": "laisser_en_clair",
+      "libelle": "Postes et organisation",
+      "termes": [
+        "directeur général",
+        "directrice générale",
+        "directeur des ressources humaines",
+        "responsable RH",
+        "chargé de recrutement",
+        "chef de projet",
+        "développeur",
+        "ingénieur",
+        "technicien",
+        "comptable",
+        "contrôleur de gestion",
+        "commercial",
+        "assistante de direction",
+        "assistant de direction",
+        "chef d'équipe",
+        "opérateur",
+        "téléconseiller",
+        "stagiaire",
+        "alternant",
+        "apprenti",
+        "cadre",
+        "agent de maîtrise",
+        "employé",
+        "ouvrier",
+        "CSE",
+        "délégué du personnel",
+        "comité d'entreprise",
+        "syndicat"
+      ]
+    },
+    {
+      "id": "P-011",
+      "type": "laisser_en_clair",
+      "libelle": "Droit du travail et procédures",
+      "termes": [
+        "Code du travail",
+        "convention collective",
+        "contrat à durée indéterminée",
+        "contrat à durée déterminée",
+        "CDI",
+        "CDD",
+        "période d'essai",
+        "préavis",
+        "licenciement",
+        "licenciement économique",
+        "rupture conventionnelle",
+        "démission",
+        "faute grave",
+        "avertissement",
+        "mise à pied",
+        "entretien préalable",
+        "entretien annuel",
+        "entretien professionnel",
+        "fiche de poste",
+        "organigramme",
+        "télétravail",
+        "temps partiel",
+        "heures supplémentaires",
+        "congés payés",
+        "RTT",
+        "congé maternité",
+        "congé parental",
+        "arrêt maladie",
+        "accident du travail",
+        "inspection du travail",
+        "prud'hommes",
+        "médecine du travail",
+        "plan de formation"
+      ]
+    },
+    {
+      "id": "P-012",
+      "type": "laisser_en_clair",
+      "libelle": "Paie et organismes",
+      "termes": [
+        "bulletin de paie",
+        "salaire brut",
+        "salaire net",
+        "net imposable",
+        "prime d'ancienneté",
+        "prime de rendement",
+        "treizième mois",
+        "indemnité de licenciement",
+        "indemnité de transport",
+        "avantage en nature",
+        "cotisations sociales",
+        "prélèvement à la source",
+        "SMIG",
+        "SMIC",
+        "CNSS",
+        "AMO",
+        "CIMR",
+        "mutuelle",
+        "URSSAF",
+        "France Travail",
+        "Pôle emploi",
+        "retraite complémentaire"
+      ]
+    }
+  ],
+  "entetes": [
+    {
+      "motif": "matricule|\\bbadge\\b|n[°o]\\s*(?:salari[ée]|employ[ée]|agent)",
+      "prefixe": "MATRICULE",
+      "libelle": "Matricule / badge",
+      "exemple": "Matricule"
+    },
+    {
+      "motif": "salari[ée]|employ[ée]|collaborat|agent|nom\\s*pr[ée]nom",
+      "prefixe": "PERSONNE",
+      "libelle": "Salarié",
+      "exemple": "Salarié"
+    }
+  ]
+}

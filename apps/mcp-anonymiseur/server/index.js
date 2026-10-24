@@ -75,7 +75,7 @@ import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } fro
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.21.0";
+export const VERSION = "2.22.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -286,19 +286,30 @@ let reglesCourantes = null;
 function regles() {
   const d = lireReglesDossier(OUTDIR);
   let organisation = [], typesSupplementaires = [], noms = null;
+  const entetes = [...(d.entetes || [])];
   const erreurs = [...d.erreurs];
   if (POLITIQUE) {
     const c = politiqueCourante || controlerPolitique();
     if (!POLITIQUE.bloquant(c)) {
       const o = POLITIQUE.reglesOrganisation(c);
       organisation = o.regles;
+      entetes.push(...(o.entetes || []));
       erreurs.push(...o.erreurs);
       typesSupplementaires = POLITIQUE.typesOrganisation(c);
       noms = (t) => POLITIQUE.analyserNoms(c, [t]).extras;
     }
   }
-  reglesCourantes = compilerRegles({ dossier: d.regles, organisation, noms, typesSupplementaires, erreurs });
+  reglesCourantes = compilerRegles({ dossier: d.regles, organisation, entetes, noms, typesSupplementaires, erreurs });
   return reglesCourantes;
+}
+/* Mode tableau : un en-tête reconnu par un pack (« MSISDN », « IMSI »…) force
+   la colonne sous le préfixe du pack, avant les choix de l'utilisateur. */
+function appliquerEntetesPacks(cols) {
+  const tc = regles().typeColonne;
+  for (const col of cols) {
+    const t = tc(col.header);
+    if (t) { col.type = t; col.checked = true; }
+  }
 }
 /* Les valeurs à laisser en clair : celles de l'appel + celles des règles. */
 function exclusions(valeurs) {
@@ -1457,6 +1468,7 @@ tool(
     /* ------------------------------------------------- MODE TABLEAU ------- */
     const cols = scanSheet(ws);
     if (!cols.length) return err(`L'${sheetLabel} est vide.`);
+    appliquerEntetesPacks(cols);
 
     const norm = (s) => String(s).trim().toLowerCase();
     const force = colonnes_a_coder.map(norm);
@@ -1632,6 +1644,7 @@ function anonymizeWorkbook(wb, book, extras, docOpts, numberMode = "auto", numbe
       base = res.stats;
     } else {
       const cols = scanSheet(ws);
+      appliquerEntetesPacks(cols);
       const res = anonymizeSheet(ws, cols, book);
       outWs = res.ws;
       const byType = {};

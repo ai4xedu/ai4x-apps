@@ -14,7 +14,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { validerRegles } from "./regles.js";
+import { validerRegles, verifierMotif, PREFIXE_RX, prefixesReserves } from "./regles.js";
+import { TYPES } from "./engine.js";
 
 export const FORMAT_PACK = "hidden-tokens.pack/1";
 export const ID_PACK_RX = /^[a-z][a-z0-9-]{2,30}$/;
@@ -32,7 +33,7 @@ function charger() {
     let pack;
     try { pack = JSON.parse(fs.readFileSync(path.join(DOSSIER, n), "utf8")); } catch { continue; }
     const v = validerPack(pack);
-    if (v.ok) cache.set(pack.id, { pack, regles: v.regles, erreurs: v.erreurs });
+    if (v.ok) cache.set(pack.id, { pack, regles: v.regles, entetes: v.entetes, erreurs: v.erreurs });
   }
   return cache;
 }
@@ -45,13 +46,39 @@ export function validerPack(pack) {
   if (!pack.nom || !pack.version) return { ok: false, erreurs: ["nom ou version manquants"] };
   const v = validerRegles(pack.regles, { niveau: "pack" });
   const regles = v.regles.map((r) => ({ ...r, pack: pack.id }));
-  return { ok: true, regles, erreurs: v.erreurs.map((e) => `pack ${pack.id}, ${e}`) };
+  const e = validerEntetes(pack.entetes);
+  const entetes = e.entetes.map((x) => ({ ...x, pack: pack.id }));
+  return { ok: true, regles, entetes, erreurs: [...v.erreurs, ...e.erreurs].map((m) => `pack ${pack.id}, ${m}`) };
+}
+
+/* En-têtes de colonnes (mode tableau, SPEC-PACKS-METIER §1) : un motif sur
+   l'en-tête → la colonne entière est codée sous le préfixe. Préfixe du moteur
+   (TEL, RIB, REF…) ou préfixe maison du pack. */
+export function validerEntetes(liste) {
+  const entetes = [];
+  const erreurs = [];
+  if (liste === undefined || liste === null) return { entetes, erreurs };
+  if (!Array.isArray(liste)) return { entetes, erreurs: ["« entetes » doit être une liste"] };
+  const reserves = prefixesReserves();
+  liste.forEach((e, i) => {
+    const ou = `en-tête n°${i + 1}`;
+    if (!e || typeof e !== "object") { erreurs.push(`${ou} : doit être un objet`); return; }
+    const v = verifierMotif(e.motif);
+    if (!v.ok) { erreurs.push(`${ou} : motif refusé : ${v.raison}`); return; }
+    const p = String(e.prefixe ?? "").trim().toUpperCase();
+    if (!PREFIXE_RX.test(p)) { erreurs.push(`${ou} : préfixe invalide`); return; }
+    if (reserves.has(p) && !TYPES.some((t) => t.prefix === p)) { erreurs.push(`${ou} : préfixe « ${p} » réservé`); return; }
+    if (typeof e.exemple !== "string" || !e.exemple.trim() || !new RegExp(e.motif, "iu").test(e.exemple)) { erreurs.push(`${ou} : exemple obligatoire, reconnu par le motif`); return; }
+    entetes.push({ motif: String(e.motif), prefixe: p, libelle: typeof e.libelle === "string" ? e.libelle.trim().slice(0, 80) : p, exemple: e.exemple.trim() });
+  });
+  return { entetes, erreurs };
 }
 
 export function listerPacks() {
   return [...charger().values()].map(({ pack, regles }) => ({
     id: pack.id, nom: pack.nom, version: pack.version, description: pack.description || "",
     motifs: regles.filter((r) => r.type === "motif").length,
+    entetes: (charger().get(pack.id).entetes || []).length,
     termes_codes: regles.filter((r) => r.type === "toujours_coder").reduce((n, r) => n + r.termes.length, 0),
     termes_clairs: regles.filter((r) => r.type === "laisser_en_clair").reduce((n, r) => n + r.termes.length, 0),
     regles: regles.map((r) => ({ id: r.id, type: r.type, libelle: r.libelle, prefixe: r.prefixe, exemple: r.exemple, termes: r.termes ? r.termes.length : undefined, controle: r.controle })),
@@ -67,10 +94,11 @@ export function lirePack(id) {
    ou mal formé est une erreur (fail closed). */
 export function developperPacks(ids) {
   const regles = [];
+  const entetes = [];
   const erreurs = [];
   const vus = new Set();
-  if (ids === undefined || ids === null) return { regles, erreurs };
-  if (!Array.isArray(ids)) return { regles, erreurs: ["« packs » doit être une liste d'identifiants"] };
+  if (ids === undefined || ids === null) return { regles, entetes, erreurs };
+  if (!Array.isArray(ids)) return { regles, entetes, erreurs: ["« packs » doit être une liste d'identifiants"] };
   for (const id of ids) {
     const s = String(id);
     if (vus.has(s)) continue;
@@ -78,9 +106,10 @@ export function developperPacks(ids) {
     const e = charger().get(s);
     if (!e) { erreurs.push(`pack « ${s.slice(0, 40)} » inconnu de ce connecteur : mettez à jour l'appli (ou retirez-le des réglages)`); continue; }
     regles.push(...e.regles);
+    entetes.push(...(e.entetes || []));
     erreurs.push(...e.erreurs);
   }
-  return { regles, erreurs };
+  return { regles, entetes, erreurs };
 }
 
 /* Pour les tests et la console : relire sans cache. */

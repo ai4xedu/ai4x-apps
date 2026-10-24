@@ -1,0 +1,141 @@
+{
+  "format": "hidden-tokens.pack/1",
+  "id": "expertise-comptable",
+  "nom": "Expertise comptable — Maroc et France",
+  "version": "1.0.0",
+  "description": "Numéros de facture, de pièce et d'écriture annoncés, TVA intracommunautaire française, ICE / IF / RC / CNSS / patente et SIRET reconnus par le moteur ; plan comptable, impôts, états financiers, administrations et logiciels laissés en clair pour que l'IA travaille sur un grand livre, une liasse ou un courrier client. Les montants relèvent du réglage Nombres.",
+  "regles": [
+    {
+      "id": "P-001",
+      "type": "motif",
+      "libelle": "Numéro de facture annoncé",
+      "prefixe": "FACTURE",
+      "motif": "(?<=\\b(?:facture|fact\\.?|invoice|avoir)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{2,20}(?![A-Z0-9/-])",
+      "exemple": "facture n° FA-2026-00412"
+    },
+    {
+      "id": "P-002",
+      "type": "motif",
+      "libelle": "Numéro de pièce ou d'écriture annoncé",
+      "prefixe": "PIECE",
+      "motif": "(?<=\\b(?:pi[èe]ce|[ée]criture|bon\\s*de\\s*commande|\\bBC\\b|devis)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{2,20}(?![A-Z0-9/-])",
+      "exemple": "pièce n° OD-0917"
+    },
+    {
+      "id": "P-003",
+      "type": "motif",
+      "libelle": "Numéro de TVA intracommunautaire (France)",
+      "prefixe": "TVA",
+      "motif": "(?<![A-Z0-9])FR\\s?\\d{2}\\s?\\d{3}\\s?\\d{3}\\s?\\d{3}(?!\\d)",
+      "exemple": "FR 12 123 456 782"
+    },
+    {
+      "id": "P-004",
+      "type": "motif",
+      "libelle": "Identifiant DGI / déclaration en ligne annoncé",
+      "prefixe": "DECLAR",
+      "motif": "(?<=\\b(?:d[ée]claration|t[ée]l[ée]d[ée]claration|SIMPL|identifiant\\s*DGI)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{5,20}(?![A-Z0-9/-])",
+      "exemple": "déclaration n° DGI-2026-118877"
+    },
+    {
+      "id": "P-010",
+      "type": "laisser_en_clair",
+      "libelle": "États financiers et plan comptable",
+      "termes": [
+        "chiffre d'affaires",
+        "résultat net",
+        "résultat d'exploitation",
+        "bilan",
+        "compte de résultat",
+        "compte de produits et charges",
+        "grand livre",
+        "balance générale",
+        "balance âgée",
+        "journal des achats",
+        "journal des ventes",
+        "journal de banque",
+        "opérations diverses",
+        "immobilisations",
+        "amortissements",
+        "provisions",
+        "stocks",
+        "créances clients",
+        "dettes fournisseurs",
+        "capitaux propres",
+        "trésorerie",
+        "charges constatées d'avance",
+        "produits constatés d'avance",
+        "lettrage",
+        "rapprochement bancaire",
+        "clôture",
+        "exercice comptable",
+        "liasse fiscale",
+        "annexe"
+      ]
+    },
+    {
+      "id": "P-011",
+      "type": "laisser_en_clair",
+      "libelle": "Impôts, taxes et administrations",
+      "termes": [
+        "TVA collectée",
+        "TVA déductible",
+        "TVA à payer",
+        "crédit de TVA",
+        "impôt sur les sociétés",
+        "impôt sur le revenu",
+        "cotisation minimale",
+        "taxe professionnelle",
+        "taxe d'habitation",
+        "droits d'enregistrement",
+        "retenue à la source",
+        "acompte provisionnel",
+        "DGI",
+        "SIMPL",
+        "Trésorerie générale",
+        "CNSS",
+        "AMO",
+        "CIMR",
+        "URSSAF",
+        "DGFiP",
+        "impots.gouv",
+        "Ordre des experts-comptables",
+        "commissaire aux comptes",
+        "CGNC",
+        "plan comptable général",
+        "IFRS"
+      ]
+    },
+    {
+      "id": "P-012",
+      "type": "laisser_en_clair",
+      "libelle": "Logiciels et formats",
+      "termes": [
+        "Sage",
+        "Ciel",
+        "Cegid",
+        "QuickBooks",
+        "Odoo",
+        "EBP",
+        "Pennylane",
+        "fichier des écritures comptables",
+        "FEC",
+        "export Excel"
+      ]
+    }
+  ],
+  "entetes": [
+    {
+      "motif": "n[°o]\\s*(?:de\\s*)?facture|facture|invoice|n[°o]\\s*(?:de\\s*)?pi[èe]ce|pi[èe]ce|r[ée]f[ée]rence\\s*(?:pi[èe]ce|[ée]criture)",
+      "prefixe": "PIECE",
+      "libelle": "Pièce / facture",
+      "exemple": "N° facture"
+    },
+    {
+      "motif": "tiers|client|fournisseur|compte\\s*tiers|auxiliaire",
+      "prefixe": "SOCIETE",
+      "libelle": "Tiers",
+      "exemple": "Compte tiers"
+    }
+  ]
+}
