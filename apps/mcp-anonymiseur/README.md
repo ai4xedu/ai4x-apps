@@ -582,7 +582,7 @@ La campagne de validation (`node test/campagne-mvp.mjs`, 44 contrôles) émet
 elle-même une licence d'un jour avec la clé privée du poste — sans quoi elle ne
 testerait que l'écran de blocage. Elle exige la VRAIE clé (elle teste
 l'artefact, qui ne connaît que la clé de production) et vérifie que la clé de
-test n'y est ni embarquée ni honorée (C3).## Les packs métier (v2.21–2.22)
+test n'y est ni embarquée ni honorée (C3).## Les packs métier (v2.21–2.24)
 
 `packs/<id>.json` : des règles livrées avec le connecteur (motifs avec clé de
 contrôle `luhn`/`iban`, préfixes du moteur autorisés, termes en clair, et
@@ -590,8 +590,30 @@ depuis la 2.22 des `entetes` : en mode tableau, un en-tête reconnu force la
 colonne sous le préfixe), activées par référence — `"packs": [...]` dans
 `Hidden-Tokens/reglages.json` (appli) ou dans la politique signée (console).
 `server/packs.js` les développe à chaque compilation des règles ; un pack
-inconnu bloque l'anonymisation. Six packs : `telecom-ma`, `juridique-fr`,
-`banque-assurance`, `sante`, `expertise-comptable`, `rh-paie`. Spec :
-`SPEC-PACKS-METIER.md` (dépôt nanomizer). Tests : `test/packs.test.js`.
+inconnu bloque l'anonymisation. Sept packs : `telecom-ma`, `juridique-fr`,
+`banque-assurance`, `sante`, `expertise-comptable`, `rh-paie`, `notariat-ma`.
+Spec : `SPEC-PACKS-METIER.md` (dépôt nanomizer). Tests : `test/packs.test.js`.
+
+**`notariat-ma` (v2.24)** — l'étude de notaire marocaine. Codés, chacun sous
+son préfixe, le libellé restant devant le code (« titre foncier n° TF-001 ») :
+le numéro de titre foncier avec son indice de conservation (`12345/63`,
+`28.517/C`, `18 220/F` ; « TF », « T.F. », « titre foncier [mère] »,
+énumérations « n° 3310/F et 3311/F » comprises) → `TF` ; la réquisition
+d'immatriculation → `REQUISIT` ; la minute et le répertoire annoncés →
+`MINUTE`, `REPERTOIRE` ; la référence d'un acte adoulaire ou d'hérédité
+(« n° 345, page 210 ») → `ADOUL` ; le nom de la propriété (« propriété dite
+« … » ») → `PROPRIETE`. En clair : conservation foncière, ANCFCC, Tadbirnot,
+hypothèque, mainlevée, indivision, succession, actes (vente, promesse,
+partage, adoulaire, hérédité), droits réels, fiscalité de l'acte (droits
+d'enregistrement, taxe notariale, TPI, quitus). Parties, CIN, RIB, ICE, RC,
+adresses : le moteur, comme partout. Le verrou connaît désormais `TF`,
+`ANCFCC`, `Tadbirnot`, `adoul` : jamais pris pour des noms, pack actif ou
+non. Pas de motif cadastral : le Maroc n'a pas de référence de parcelle au
+format reconnaissable hors du titre ou de la réquisition (un « lot n° » de
+lotissement est trop ambigu, et `LOT` est déjà pris par le pack santé).
+
+Le banc (`npm run bench`) mesure désormais les montants en gabarit
+(`ANX_CHIFFRES=auto` pour mesurer le défaut) et lit le dossier `Hidden-Tokens/`
+(il cherchait encore `Anonymiseur-Ai4x/` depuis la v2.14 et s'arrêtait).
 
 

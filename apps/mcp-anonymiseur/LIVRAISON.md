@@ -163,3 +163,24 @@ node test/campagne-mvp.mjs                 # 44 contrôles sur l'artefact (clé 
   **pseudonymisation réversible + relecture du plan**. Un texte collé
   directement dans la conversation ne passe par aucun verrou ; un contexte très
   précis peut permettre une identification indirecte.
+
+## Études de notaires au Maroc : le pack Notariat (v2.24)
+
+À activer dans l'appli (menu du dossier → Packs → « Notariat — étude de
+notaire, Maroc ») ou dans la politique signée (`"packs": ["notariat-ma"]`).
+Ce qu'on peut dire, et vérifier devant le notaire sur un acte de démonstration :
+
+- ✅ Les numéros de **titre foncier** (avec l'indice de conservation : 12345/63,
+  28.517/C), de **réquisition d'immatriculation**, de **minute**, de
+  **répertoire**, la référence de l'**acte adoulaire** et le **nom de la
+  propriété** arrivent chez Claude codés (TF-001, REQUISIT-001…), le libellé
+  devant ; les parties, CIN, RIB, ICE, RC, adresses le sont par le moteur.
+- ✅ Le vocabulaire de l'acte reste lisible : conservation foncière, ANCFCC,
+  hypothèque, indivision, succession, acte adoulaire, Tadbirnot, droits
+  d'enregistrement, taxe notariale… L'IA peut relire, résumer, rédiger.
+- ⚠️ Le prix et les montants écrits dans le corps d'un acte restent en clair
+  (le réglage Nombres porte sur les tableurs). Un numéro de titre écrit sans
+  aucune annonce (ni « TF », ni « titre foncier », ni « n° … et ») est laissé
+  au moteur, qui le code en référence ou le laisse s'il ressemble à une date.
+- ⚠️ « 450 m² » sort aujourd'hui en « 450 REF-001 » (le moteur prend « m² »
+  pour une référence) : lisible au sens, mais à corriger dans le moteur.

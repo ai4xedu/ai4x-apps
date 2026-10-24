@@ -1,6 +1,6 @@
 {
   "name": "anonymiseur-ai4x",
-  "version": "2.22.0",
+  "version": "2.24.0",
   "description": "Hidden Tokens (moteur Nanomizer) — Anonymiseur de données Ai4x : serveur MCP local (pseudonymisation fail-closed avant IA)",
   "main": "index.js",
   "directories": {
