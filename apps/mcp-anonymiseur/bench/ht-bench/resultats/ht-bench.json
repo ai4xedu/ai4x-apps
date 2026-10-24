@@ -2,47 +2,47 @@
  "banc": "HT-Bench",
  "version_jeu": "0.2.0",
  "split": "dev",
- "jeu_sha256": "ef5fd01fe4476e39e0ca7c53786272f6c0f5489fe1fc29f54a36e60c95a780a2",
+ "jeu_sha256": "a21f6f11d5f7a115b22d1558bf70dbb260be72c59df5424d6ca7dd40e2267714",
  "version_moteur": "2.23.2",
  "chemin": "anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte",
- "documents": 328,
+ "documents": 376,
  "global": {
   "direct": {
-   "n": 2237,
-   "detectes": 2174,
-   "partiels": 38,
-   "manques": 25,
-   "rappel": 0.9718372820742065
+   "n": 2565,
+   "detectes": 2516,
+   "partiels": 36,
+   "manques": 13,
+   "rappel": 0.980896686159844
   },
   "tous": {
-   "n": 3006,
-   "detectes": 2884,
-   "partiels": 43,
-   "manques": 79,
-   "rappel": 0.959414504324684
+   "n": 3463,
+   "detectes": 3378,
+   "partiels": 36,
+   "manques": 49,
+   "rappel": 0.9754548079699682
   },
-  "precision": 0.8382320923143914,
-  "passages": 4593,
+  "precision": 0.8743126472898665,
+  "passages": 5092,
   "leurres": {
-   "n": 2351,
-   "codes": 247,
-   "taux_faux_positifs": 0.10506167588260315
+   "n": 3064,
+   "codes": 190,
+   "taux_faux_positifs": 0.06201044386422976
   }
  },
  "par_type": {
   "PERSONNE": {
    "libelle": "Nom de personne",
    "direct": true,
-   "n": 853,
-   "detectes": 837,
-   "partiels": 15,
+   "n": 975,
+   "detectes": 958,
+   "partiels": 16,
    "manques": 1,
-   "rappel": 0.981242672919109,
-   "passages": 2097,
-   "passages_justes": 1582,
-   "precision": 0.7544110634239389,
-   "f1": 0.8530046205109457,
-   "bien_etiquetes": 825
+   "rappel": 0.9825641025641025,
+   "passages": 2285,
+   "passages_justes": 1839,
+   "precision": 0.8048140043763676,
+   "f1": 0.8848506612791637,
+   "bien_etiquetes": 944
   },
   "CIN": {
    "libelle": "CIN marocaine",
@@ -89,44 +89,44 @@
   "ICE": {
    "libelle": "ICE",
    "direct": true,
-   "n": 91,
-   "detectes": 91,
+   "n": 164,
+   "detectes": 164,
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 92,
-   "passages_justes": 91,
-   "precision": 0.9891304347826086,
-   "f1": 0.994535519125683,
-   "bien_etiquetes": 91
+   "passages": 165,
+   "passages_justes": 164,
+   "precision": 0.9939393939393939,
+   "f1": 0.9969604863221885,
+   "bien_etiquetes": 164
   },
   "IF": {
    "libelle": "Identifiant fiscal (IF)",
    "direct": true,
-   "n": 52,
-   "detectes": 52,
+   "n": 64,
+   "detectes": 64,
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 31,
-   "passages_justes": 31,
+   "passages": 36,
+   "passages_justes": 36,
    "precision": 1,
    "f1": 1,
-   "bien_etiquetes": 31
+   "bien_etiquetes": 36
   },
   "RC": {
    "libelle": "Registre de commerce (RC)",
    "direct": true,
-   "n": 45,
-   "detectes": 45,
+   "n": 57,
+   "detectes": 57,
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 45,
-   "passages_justes": 45,
+   "passages": 57,
+   "passages_justes": 57,
    "precision": 1,
    "f1": 1,
-   "bien_etiquetes": 45
+   "bien_etiquetes": 57
   },
   "SIREN": {
    "libelle": "SIREN",
@@ -136,10 +136,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 200,
+   "passages": 208,
    "passages_justes": 24,
-   "precision": 0.12,
-   "f1": 0.21428571428571425,
+   "precision": 0.11538461538461539,
+   "f1": 0.20689655172413793,
    "bien_etiquetes": 24
   },
   "SIRET": {
@@ -159,30 +159,30 @@
   "TEL": {
    "libelle": "Téléphone",
    "direct": true,
-   "n": 400,
-   "detectes": 400,
+   "n": 473,
+   "detectes": 473,
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 372,
-   "passages_justes": 372,
+   "passages": 439,
+   "passages_justes": 439,
    "precision": 1,
    "f1": 1,
-   "bien_etiquetes": 372
+   "bien_etiquetes": 439
   },
   "EMAIL": {
    "libelle": "E-mail",
    "direct": true,
-   "n": 177,
-   "detectes": 177,
+   "n": 201,
+   "detectes": 201,
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 177,
-   "passages_justes": 177,
+   "passages": 201,
+   "passages_justes": 201,
    "precision": 1,
    "f1": 1,
-   "bien_etiquetes": 177
+   "bien_etiquetes": 201
   },
   "IBAN": {
    "libelle": "IBAN",
@@ -192,25 +192,25 @@
    "partiels": 1,
    "manques": 0,
    "rappel": 0.9811320754716981,
-   "passages": 149,
+   "passages": 164,
    "passages_justes": 52,
-   "precision": 0.348993288590604,
-   "f1": 0.5148514851485149,
+   "precision": 0.3170731707317073,
+   "f1": 0.4792626728110599,
    "bien_etiquetes": 52
   },
   "RIB": {
    "libelle": "RIB",
    "direct": true,
-   "n": 102,
-   "detectes": 97,
-   "partiels": 5,
+   "n": 114,
+   "detectes": 112,
+   "partiels": 2,
    "manques": 0,
-   "rappel": 0.9509803921568627,
+   "rappel": 0.9824561403508771,
    "passages": 0,
    "passages_justes": 0,
    "precision": null,
    "f1": null,
-   "bien_etiquetes": 97
+   "bien_etiquetes": 112
   },
   "IMEI": {
    "libelle": "IMEI",
@@ -248,25 +248,25 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 48,
+   "passages": 45,
    "passages_justes": 24,
-   "precision": 0.5,
-   "f1": 0.6666666666666666,
+   "precision": 0.5333333333333333,
+   "f1": 0.6956521739130436,
    "bien_etiquetes": 24
   },
   "CVV": {
    "libelle": "Cryptogramme (CVV / CVC)",
    "direct": true,
    "n": 12,
-   "detectes": 0,
+   "detectes": 12,
    "partiels": 0,
-   "manques": 12,
-   "rappel": 0,
-   "passages": 0,
-   "passages_justes": 0,
-   "precision": null,
-   "f1": null,
-   "bien_etiquetes": 0
+   "manques": 0,
+   "rappel": 1,
+   "passages": 12,
+   "passages_justes": 12,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 12
   },
   "PASSEPORT": {
    "libelle": "Passeport, titre de séjour, permis",
@@ -327,16 +327,16 @@
   "SOCIETE": {
    "libelle": "Société",
    "direct": false,
-   "n": 185,
-   "detectes": 185,
+   "n": 279,
+   "detectes": 279,
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 327,
-   "passages_justes": 173,
-   "precision": 0.5290519877675841,
-   "f1": 0.6920000000000001,
-   "bien_etiquetes": 173
+   "passages": 433,
+   "passages_justes": 279,
+   "precision": 0.6443418013856813,
+   "f1": 0.7837078651685394,
+   "bien_etiquetes": 279
   },
   "NAISSANCE": {
    "libelle": "Date de naissance",
@@ -430,11 +430,11 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 0,
-   "passages_justes": 0,
-   "precision": null,
-   "f1": null,
-   "bien_etiquetes": 0
+   "passages": 11,
+   "passages_justes": 11,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 11
   },
   "SINISTRE": {
    "libelle": "N° de sinistre",
@@ -444,25 +444,25 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 23,
+   "passages": 12,
    "passages_justes": 12,
-   "precision": 0.5217391304347826,
-   "f1": 0.6857142857142856,
+   "precision": 1,
+   "f1": 1,
    "bien_etiquetes": 12
   },
   "FACTURE": {
    "libelle": "N° de facture / pièce",
    "direct": false,
-   "n": 24,
-   "detectes": 24,
+   "n": 48,
+   "detectes": 48,
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 4,
-   "passages_justes": 0,
-   "precision": 0,
-   "f1": 0,
-   "bien_etiquetes": 0
+   "passages": 24,
+   "passages_justes": 24,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 24
   },
   "RG": {
    "libelle": "N° RG / parquet",
@@ -482,29 +482,29 @@
    "libelle": "Immatriculation (véhicule)",
    "direct": false,
    "n": 24,
-   "detectes": 2,
-   "partiels": 5,
-   "manques": 17,
-   "rappel": 0.08333333333333333,
-   "passages": 2,
-   "passages_justes": 2,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 24,
+   "passages_justes": 24,
    "precision": 1,
-   "f1": 0.15384615384615385,
-   "bien_etiquetes": 2
+   "f1": 1,
+   "bien_etiquetes": 24
   },
   "EFFET": {
    "libelle": "N° de chèque ou de LCN",
    "direct": false,
-   "n": 36,
-   "detectes": 24,
+   "n": 47,
+   "detectes": 36,
    "partiels": 0,
-   "manques": 12,
-   "rappel": 0.6666666666666666,
-   "passages": 24,
-   "passages_justes": 24,
+   "manques": 11,
+   "rappel": 0.7659574468085106,
+   "passages": 36,
+   "passages_justes": 36,
    "precision": 1,
-   "f1": 0.8,
-   "bien_etiquetes": 24
+   "f1": 0.8674698795180723,
+   "bien_etiquetes": 36
   },
   "CONTRAT": {
    "libelle": "N° de contrat ou de dossier de crédit",
@@ -753,27 +753,27 @@
    "documents": 97,
    "direct": {
     "n": 654,
-    "detectes": 630,
-    "partiels": 12,
-    "manques": 12,
-    "rappel": 0.963302752293578
+    "detectes": 646,
+    "partiels": 8,
+    "manques": 0,
+    "rappel": 0.9877675840978594
    },
    "tous": {
     "n": 875,
-    "detectes": 817,
-    "partiels": 17,
-    "manques": 41,
-    "rappel": 0.9337142857142857
+    "detectes": 867,
+    "partiels": 8,
+    "manques": 0,
+    "rappel": 0.9908571428571429
    },
-   "precision": 0.7741935483870968,
-   "f1": 0.8465041984156108,
-   "passages": 1488,
-   "passages_leurres": 78,
-   "passages_hors_etiquette": 258,
+   "precision": 0.8278972935461485,
+   "f1": 0.9020766415113757,
+   "passages": 1441,
+   "passages_leurres": 25,
+   "passages_hors_etiquette": 223,
    "leurres": {
     "n": 673,
-    "codes": 78,
-    "taux_faux_positifs": 0.11589895988112928
+    "codes": 25,
+    "taux_faux_positifs": 0.03714710252600297
    },
    "direct_par_type": {
     "CARTE": {
@@ -792,10 +792,10 @@
     },
     "CVV": {
      "n": 12,
-     "detectes": 0,
+     "detectes": 12,
      "partiels": 0,
-     "manques": 12,
-     "rappel": 0
+     "manques": 0,
+     "rappel": 1
     },
     "EMAIL": {
      "n": 24,
@@ -841,10 +841,10 @@
     },
     "RIB": {
      "n": 82,
-     "detectes": 78,
-     "partiels": 4,
+     "detectes": 82,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.9512195121951219
+     "rappel": 1
     },
     "TEL": {
      "n": 96,
@@ -927,30 +927,30 @@
    }
   },
   "expertise-comptable": {
-   "documents": 37,
+   "documents": 85,
    "direct": {
-    "n": 287,
-    "detectes": 282,
-    "partiels": 5,
+    "n": 615,
+    "detectes": 608,
+    "partiels": 7,
     "manques": 0,
-    "rappel": 0.9825783972125436
+    "rappel": 0.9886178861788618
    },
    "tous": {
-    "n": 401,
-    "detectes": 396,
-    "partiels": 5,
-    "manques": 0,
-    "rappel": 0.9875311720698254
+    "n": 858,
+    "detectes": 840,
+    "partiels": 7,
+    "manques": 11,
+    "rappel": 0.9790209790209791
    },
-   "precision": 0.8863232682060391,
-   "f1": 0.9341940729989812,
-   "passages": 563,
-   "passages_leurres": 5,
-   "passages_hors_etiquette": 59,
+   "precision": 0.9558160504959423,
+   "f1": 0.9672793638378309,
+   "passages": 1109,
+   "passages_leurres": 1,
+   "passages_hors_etiquette": 48,
    "leurres": {
-    "n": 439,
-    "codes": 5,
-    "taux_faux_positifs": 0.011389521640091117
+    "n": 1152,
+    "codes": 1,
+    "taux_faux_positifs": 0.0008680555555555555
    },
    "direct_par_type": {
     "CIN": {
@@ -968,8 +968,8 @@
      "rappel": 1
     },
     "EMAIL": {
-     "n": 24,
-     "detectes": 24,
+     "n": 48,
+     "detectes": 48,
      "partiels": 0,
      "manques": 0,
      "rappel": 1
@@ -982,39 +982,39 @@
      "rappel": 1
     },
     "ICE": {
+     "n": 118,
+     "detectes": 118,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "IF": {
      "n": 45,
      "detectes": 45,
      "partiels": 0,
      "manques": 0,
      "rappel": 1
     },
-    "IF": {
-     "n": 33,
-     "detectes": 33,
-     "partiels": 0,
-     "manques": 0,
-     "rappel": 1
-    },
     "PERSONNE": {
-     "n": 87,
-     "detectes": 83,
-     "partiels": 4,
+     "n": 209,
+     "detectes": 204,
+     "partiels": 5,
      "manques": 0,
-     "rappel": 0.9540229885057471
+     "rappel": 0.9760765550239234
     },
     "RC": {
-     "n": 33,
-     "detectes": 33,
+     "n": 45,
+     "detectes": 45,
      "partiels": 0,
      "manques": 0,
      "rappel": 1
     },
     "RIB": {
-     "n": 8,
-     "detectes": 7,
-     "partiels": 1,
+     "n": 20,
+     "detectes": 18,
+     "partiels": 2,
      "manques": 0,
-     "rappel": 0.875
+     "rappel": 0.9
     },
     "SIRET": {
      "n": 4,
@@ -1024,8 +1024,8 @@
      "rappel": 1
     },
     "TEL": {
-     "n": 24,
-     "detectes": 24,
+     "n": 97,
+     "detectes": 97,
      "partiels": 0,
      "manques": 0,
      "rappel": 1
@@ -1310,26 +1310,26 @@
   "CVV · cvv-3": {
    "direct": true,
    "n": 12,
-   "detectes": 0,
-   "partiels": 0,
-   "manques": 12,
-   "rappel": 0
-  },
-  "EFFET · cheque-7": {
-   "direct": false,
-   "n": 24,
-   "detectes": 24,
+   "detectes": 12,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
+  "EFFET · cheque-7": {
+   "direct": false,
+   "n": 35,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 11,
+   "rappel": 0.6857142857142857
+  },
   "EFFET · lcn-7": {
    "direct": false,
    "n": 12,
-   "detectes": 0,
+   "detectes": 12,
    "partiels": 0,
-   "manques": 12,
-   "rappel": 0
+   "manques": 0,
+   "rappel": 1
   },
   "EMAIL · generique": {
    "direct": true,
@@ -1341,40 +1341,48 @@
   },
   "EMAIL · initiale.nom": {
    "direct": true,
-   "n": 34,
-   "detectes": 34,
+   "n": 38,
+   "detectes": 38,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "EMAIL · majuscules": {
    "direct": true,
-   "n": 33,
-   "detectes": 33,
+   "n": 38,
+   "detectes": 38,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "EMAIL · nom_prenom": {
    "direct": true,
-   "n": 31,
-   "detectes": 31,
+   "n": 36,
+   "detectes": 36,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "EMAIL · prenom.nom": {
    "direct": true,
-   "n": 39,
-   "detectes": 39,
+   "n": 45,
+   "detectes": 45,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "EMAIL · prenomnom-chiffres": {
    "direct": true,
-   "n": 28,
-   "detectes": 28,
+   "n": 32,
+   "detectes": 32,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "FACTURE · declaration": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -1389,8 +1397,8 @@
   },
   "FACTURE · —": {
    "direct": false,
-   "n": 12,
-   "detectes": 12,
+   "n": 24,
+   "detectes": 24,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -1437,24 +1445,24 @@
   },
   "ICE · ice-colle": {
    "direct": true,
-   "n": 64,
-   "detectes": 64,
+   "n": 112,
+   "detectes": 112,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "ICE · ice-par-3": {
    "direct": true,
-   "n": 27,
-   "detectes": 27,
+   "n": 52,
+   "detectes": 52,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "IF · if-nombre": {
    "direct": true,
-   "n": 52,
-   "detectes": 52,
+   "n": 64,
+   "detectes": 64,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -1486,26 +1494,26 @@
   "IMMAT · plaque-ma-barres": {
    "direct": false,
    "n": 12,
-   "detectes": 0,
+   "detectes": 12,
    "partiels": 0,
-   "manques": 12,
-   "rappel": 0
+   "manques": 0,
+   "rappel": 1
   },
   "IMMAT · plaque-ma-slash": {
    "direct": false,
    "n": 5,
-   "detectes": 0,
-   "partiels": 5,
+   "detectes": 5,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0
+   "rappel": 1
   },
   "IMMAT · plaque-ma-tirets": {
    "direct": false,
    "n": 7,
-   "detectes": 2,
+   "detectes": 7,
    "partiels": 0,
-   "manques": 5,
-   "rappel": 0.2857142857142857
+   "manques": 0,
+   "rappel": 1
   },
   "IMSI · imsi-colle": {
    "direct": true,
@@ -1605,61 +1613,117 @@
   },
   "PERSONNE · fr-nom-mot-courant": {
    "direct": true,
-   "n": 35,
-   "detectes": 35,
+   "n": 38,
+   "detectes": 38,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "PERSONNE · fr-particule": {
    "direct": true,
-   "n": 36,
-   "detectes": 33,
+   "n": 39,
+   "detectes": 36,
    "partiels": 2,
    "manques": 1,
-   "rappel": 0.9166666666666666
+   "rappel": 0.9230769230769231
   },
   "PERSONNE · fr-simple": {
    "direct": true,
-   "n": 181,
-   "detectes": 181,
+   "n": 189,
+   "detectes": 189,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "PERSONNE · mag-ait-apostrophe": {
    "direct": true,
-   "n": 13,
-   "detectes": 13,
+   "n": 18,
+   "detectes": 18,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "PERSONNE · mag-ait-espace": {
    "direct": true,
-   "n": 25,
-   "detectes": 23,
+   "n": 33,
+   "detectes": 31,
    "partiels": 2,
    "manques": 0,
-   "rappel": 0.92
+   "rappel": 0.9393939393939394
   },
   "PERSONNE · mag-ait-tiret": {
    "direct": true,
-   "n": 29,
-   "detectes": 27,
+   "n": 34,
+   "detectes": 32,
    "partiels": 2,
    "manques": 0,
-   "rappel": 0.9310344827586207
+   "rappel": 0.9411764705882353
   },
   "PERSONNE · mag-ait-trema": {
    "direct": true,
-   "n": 21,
-   "detectes": 21,
+   "n": 23,
+   "detectes": 23,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "PERSONNE · mag-al-espace": {
+   "direct": true,
+   "n": 32,
+   "detectes": 32,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-ben-colle": {
+   "direct": true,
+   "n": 42,
+   "detectes": 41,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9761904761904762
+  },
+  "PERSONNE · mag-ben-espace": {
+   "direct": true,
+   "n": 53,
+   "detectes": 52,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9811320754716981
+  },
+  "PERSONNE · mag-ben-tiret": {
+   "direct": true,
+   "n": 34,
+   "detectes": 34,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-double": {
+   "direct": true,
+   "n": 87,
+   "detectes": 86,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9885057471264368
+  },
+  "PERSONNE · mag-el-colle": {
+   "direct": true,
+   "n": 20,
+   "detectes": 20,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-el-espace": {
+   "direct": true,
+   "n": 38,
+   "detectes": 36,
+   "partiels": 2,
+   "manques": 0,
+   "rappel": 0.9473684210526315
+  },
+  "PERSONNE · mag-el-tiret": {
    "direct": true,
    "n": 26,
    "detectes": 26,
@@ -1667,77 +1731,21 @@
    "manques": 0,
    "rappel": 1
   },
-  "PERSONNE · mag-ben-colle": {
-   "direct": true,
-   "n": 41,
-   "detectes": 40,
-   "partiels": 1,
-   "manques": 0,
-   "rappel": 0.975609756097561
-  },
-  "PERSONNE · mag-ben-espace": {
-   "direct": true,
-   "n": 49,
-   "detectes": 48,
-   "partiels": 1,
-   "manques": 0,
-   "rappel": 0.9795918367346939
-  },
-  "PERSONNE · mag-ben-tiret": {
-   "direct": true,
-   "n": 31,
-   "detectes": 31,
-   "partiels": 0,
-   "manques": 0,
-   "rappel": 1
-  },
-  "PERSONNE · mag-double": {
-   "direct": true,
-   "n": 74,
-   "detectes": 73,
-   "partiels": 1,
-   "manques": 0,
-   "rappel": 0.9864864864864865
-  },
-  "PERSONNE · mag-el-colle": {
-   "direct": true,
-   "n": 18,
-   "detectes": 18,
-   "partiels": 0,
-   "manques": 0,
-   "rappel": 1
-  },
-  "PERSONNE · mag-el-espace": {
-   "direct": true,
-   "n": 37,
-   "detectes": 35,
-   "partiels": 2,
-   "manques": 0,
-   "rappel": 0.9459459459459459
-  },
-  "PERSONNE · mag-el-tiret": {
-   "direct": true,
-   "n": 18,
-   "detectes": 18,
-   "partiels": 0,
-   "manques": 0,
-   "rappel": 1
-  },
   "PERSONNE · mag-ould": {
    "direct": true,
-   "n": 40,
-   "detectes": 37,
-   "partiels": 3,
+   "n": 48,
+   "detectes": 44,
+   "partiels": 4,
    "manques": 0,
-   "rappel": 0.925
+   "rappel": 0.9166666666666666
   },
   "PERSONNE · mag-simple": {
    "direct": true,
-   "n": 179,
-   "detectes": 178,
+   "n": 221,
+   "detectes": 220,
    "partiels": 1,
    "manques": 0,
-   "rappel": 0.994413407821229
+   "rappel": 0.995475113122172
   },
   "POLICE · —": {
    "direct": false,
@@ -1757,8 +1765,8 @@
   },
   "RC · rc-nombre": {
    "direct": true,
-   "n": 45,
-   "detectes": 45,
+   "n": 57,
+   "detectes": 57,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -1789,32 +1797,32 @@
   },
   "RIB · rib-ma-colle": {
    "direct": true,
-   "n": 26,
-   "detectes": 26,
+   "n": 30,
+   "detectes": 30,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "RIB · rib-ma-groupes": {
    "direct": true,
-   "n": 28,
-   "detectes": 25,
-   "partiels": 3,
+   "n": 30,
+   "detectes": 29,
+   "partiels": 1,
    "manques": 0,
-   "rappel": 0.8928571428571429
+   "rappel": 0.9666666666666667
   },
   "RIB · rib-ma-par-4": {
    "direct": true,
-   "n": 22,
-   "detectes": 20,
-   "partiels": 2,
+   "n": 25,
+   "detectes": 24,
+   "partiels": 1,
    "manques": 0,
-   "rappel": 0.9090909090909091
+   "rappel": 0.96
   },
   "RIB · rib-ma-tirets": {
    "direct": true,
-   "n": 26,
-   "detectes": 26,
+   "n": 29,
+   "detectes": 29,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -1861,24 +1869,24 @@
   },
   "SOCIETE · casse-titre": {
    "direct": false,
-   "n": 52,
-   "detectes": 52,
+   "n": 88,
+   "detectes": 88,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "SOCIETE · majuscules": {
    "direct": false,
-   "n": 61,
-   "detectes": 61,
+   "n": 91,
+   "detectes": 91,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "SOCIETE · societe-forme": {
    "direct": false,
-   "n": 72,
-   "detectes": 72,
+   "n": 100,
+   "detectes": 100,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -2021,13 +2029,29 @@
   },
   "TEL · ma-fixe-00212": {
    "direct": true,
-   "n": 6,
-   "detectes": 6,
+   "n": 8,
+   "detectes": 8,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-fixe-intl-3-6": {
+   "direct": true,
+   "n": 8,
+   "detectes": 8,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-intl-colle": {
+   "direct": true,
+   "n": 11,
+   "detectes": 11,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-intl-espaces": {
    "direct": true,
    "n": 7,
    "detectes": 7,
@@ -2035,34 +2059,18 @@
    "manques": 0,
    "rappel": 1
   },
-  "TEL · ma-fixe-intl-colle": {
-   "direct": true,
-   "n": 10,
-   "detectes": 10,
-   "partiels": 0,
-   "manques": 0,
-   "rappel": 1
-  },
-  "TEL · ma-fixe-intl-espaces": {
-   "direct": true,
-   "n": 6,
-   "detectes": 6,
-   "partiels": 0,
-   "manques": 0,
-   "rappel": 1
-  },
   "TEL · ma-fixe-intl-tirets": {
    "direct": true,
-   "n": 6,
-   "detectes": 6,
+   "n": 7,
+   "detectes": 7,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-fixe-intl-zero-parenthese": {
    "direct": true,
-   "n": 2,
-   "detectes": 2,
+   "n": 3,
+   "detectes": 3,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -2077,29 +2085,13 @@
   },
   "TEL · ma-fixe-national-4-2-2-2": {
    "direct": true,
-   "n": 8,
-   "detectes": 8,
+   "n": 11,
+   "detectes": 11,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-fixe-national-colle": {
-   "direct": true,
-   "n": 9,
-   "detectes": 9,
-   "partiels": 0,
-   "manques": 0,
-   "rappel": 1
-  },
-  "TEL · ma-fixe-national-espaces": {
-   "direct": true,
-   "n": 7,
-   "detectes": 7,
-   "partiels": 0,
-   "manques": 0,
-   "rappel": 1
-  },
-  "TEL · ma-fixe-national-points": {
    "direct": true,
    "n": 11,
    "detectes": 11,
@@ -2107,18 +2099,34 @@
    "manques": 0,
    "rappel": 1
   },
+  "TEL · ma-fixe-national-espaces": {
+   "direct": true,
+   "n": 9,
+   "detectes": 9,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-national-points": {
+   "direct": true,
+   "n": 13,
+   "detectes": 13,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
   "TEL · ma-fixe-national-tirets": {
    "direct": true,
-   "n": 4,
-   "detectes": 4,
+   "n": 8,
+   "detectes": 8,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-mobile-00212": {
    "direct": true,
-   "n": 20,
-   "detectes": 20,
+   "n": 25,
+   "detectes": 25,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -2133,40 +2141,40 @@
   },
   "TEL · ma-mobile-intl-3-6": {
    "direct": true,
-   "n": 25,
-   "detectes": 25,
+   "n": 30,
+   "detectes": 30,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-mobile-intl-colle": {
    "direct": true,
-   "n": 13,
-   "detectes": 13,
+   "n": 17,
+   "detectes": 17,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-mobile-intl-espaces": {
    "direct": true,
-   "n": 21,
-   "detectes": 21,
+   "n": 24,
+   "detectes": 24,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-mobile-intl-tirets": {
    "direct": true,
-   "n": 13,
-   "detectes": 13,
+   "n": 16,
+   "detectes": 16,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-mobile-intl-zero-parenthese": {
    "direct": true,
-   "n": 15,
-   "detectes": 15,
+   "n": 21,
+   "detectes": 21,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -2181,29 +2189,21 @@
   },
   "TEL · ma-mobile-msisdn-sans-plus": {
    "direct": true,
-   "n": 20,
-   "detectes": 20,
+   "n": 26,
+   "detectes": 26,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-mobile-national-4-2-2-2": {
    "direct": true,
-   "n": 19,
-   "detectes": 19,
+   "n": 24,
+   "detectes": 24,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-mobile-national-colle": {
-   "direct": true,
-   "n": 17,
-   "detectes": 17,
-   "partiels": 0,
-   "manques": 0,
-   "rappel": 1
-  },
-  "TEL · ma-mobile-national-espaces": {
    "direct": true,
    "n": 20,
    "detectes": 20,
@@ -2211,18 +2211,26 @@
    "manques": 0,
    "rappel": 1
   },
+  "TEL · ma-mobile-national-espaces": {
+   "direct": true,
+   "n": 26,
+   "detectes": 26,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
   "TEL · ma-mobile-national-points": {
    "direct": true,
-   "n": 12,
-   "detectes": 12,
+   "n": 18,
+   "detectes": 18,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "TEL · ma-mobile-national-tirets": {
    "direct": true,
-   "n": 19,
-   "detectes": 19,
+   "n": 20,
+   "detectes": 20,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -2261,15 +2269,15 @@
    "rappel": 1
   },
   "PERSONNE · nom-majuscules": {
-   "n": 104,
-   "detectes": 103,
+   "n": 123,
+   "detectes": 122,
    "partiels": 1,
    "manques": 0,
-   "rappel": 0.9903846153846154
+   "rappel": 0.991869918699187
   },
   "PERSONNE · nom-majuscules-avant": {
-   "n": 154,
-   "detectes": 154,
+   "n": 177,
+   "detectes": 177,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -2282,39 +2290,39 @@
    "rappel": 0.9864864864864865
   },
   "PERSONNE · prenom-apostrophe": {
-   "n": 55,
-   "detectes": 48,
+   "n": 59,
+   "detectes": 52,
    "partiels": 7,
    "manques": 0,
-   "rappel": 0.8727272727272727
+   "rappel": 0.8813559322033898
   },
   "PERSONNE · prenom-compose": {
-   "n": 107,
-   "detectes": 107,
+   "n": 125,
+   "detectes": 125,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
   },
   "PERSONNE · prenom-seul": {
-   "n": 41,
-   "detectes": 40,
+   "n": 65,
+   "detectes": 64,
    "partiels": 1,
    "manques": 0,
-   "rappel": 0.975609756097561
+   "rappel": 0.9846153846153847
   }
  },
  "par_leurre": {
   "MONTANT": {
    "libelle": "Montant",
-   "n": 624,
+   "n": 1012,
    "codes": 38,
-   "taux": 0.060897435897435896
+   "taux": 0.037549407114624504
   },
   "DATE": {
    "libelle": "Date (hors naissance)",
-   "n": 675,
+   "n": 785,
    "codes": 10,
-   "taux": 0.014814814814814815
+   "taux": 0.012738853503184714
   },
   "ARTICLE": {
    "libelle": "Article ou texte de loi",
@@ -2324,9 +2332,9 @@
   },
   "SIGLE": {
    "libelle": "Sigle ou terme du lexique",
-   "n": 331,
-   "codes": 118,
-   "taux": 0.3564954682779456
+   "n": 462,
+   "codes": 61,
+   "taux": 0.13203463203463203
   },
   "MOT": {
    "libelle": "Mot courant qui ressemble à un nom",
@@ -2336,7 +2344,7 @@
   },
   "VILLE": {
    "libelle": "Ville",
-   "n": 192,
+   "n": 204,
    "codes": 0,
    "taux": 0
   },
@@ -2348,15 +2356,15 @@
   },
   "COMPTE": {
    "libelle": "N° de compte comptable",
-   "n": 79,
+   "n": 103,
    "codes": 0,
    "taux": 0
   },
   "MESURE": {
    "libelle": "Durée, quantité, dosage",
-   "n": 126,
+   "n": 174,
    "codes": 1,
-   "taux": 0.007936507936507936
+   "taux": 0.005747126436781609
   }
  },
  "manques": [
@@ -2814,42 +2822,6 @@
    "vu_par_ia": true
   },
   {
-   "doc": "banque-assurance/virement/003",
-   "pack": "banque-assurance",
-   "type": "RIB",
-   "direct": true,
-   "variante": "rib-ma-par-4",
-   "traits": [],
-   "valeur": "3509 6618 2146 6793 3256 3429",
-   "statut": "partiel",
-   "prefixes": [
-    "CARTE"
-   ],
-   "en_clair": [
-    "3256",
-    "3429"
-   ],
-   "vu_par_ia": false
-  },
-  {
-   "doc": "banque-assurance/virement/012",
-   "pack": "banque-assurance",
-   "type": "RIB",
-   "direct": true,
-   "variante": "rib-ma-groupes",
-   "traits": [],
-   "valeur": "007 224 4161941191840505 25",
-   "statut": "partiel",
-   "prefixes": [
-    "CARTE"
-   ],
-   "en_clair": [
-    "007",
-    "25"
-   ],
-   "vu_par_ia": true
-  },
-  {
    "doc": "banque-assurance/sinistre/001",
    "pack": "banque-assurance",
    "type": "PERSONNE",
@@ -2884,306 +2856,6 @@
    "vu_par_ia": true
   },
   {
-   "doc": "banque-assurance/carte/001",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "223",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "223"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/002",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "936",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "936"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/003",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "663",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "663"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/004",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "206",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "206"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/005",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "197",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "197"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/006",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "462",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "462"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/007",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "092",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "092"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/008",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "709",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "709"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/009",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "449",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "449"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/010",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "267",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "267"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/011",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "444",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "444"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/carte/012",
-   "pack": "banque-assurance",
-   "type": "CVV",
-   "direct": true,
-   "variante": "cvv-3",
-   "traits": [],
-   "valeur": "224",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "224"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/001",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "7908281",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "7908281"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/002",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "5909659",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "5909659"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/003",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "6626564",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "6626564"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/004",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "9189812",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "9189812"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/005",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "6286129",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "6286129"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/006",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "0230653",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "0230653"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/007",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "1923807",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "1923807"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/008",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "8641306",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "8641306"
-   ],
-   "vu_par_ia": true
-  },
-  {
    "doc": "banque-assurance/effets/009",
    "pack": "banque-assurance",
    "type": "PERSONNE",
@@ -3206,21 +2878,6 @@
   {
    "doc": "banque-assurance/effets/009",
    "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "4616886",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "4616886"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/009",
-   "pack": "banque-assurance",
    "type": "PERSONNE",
    "direct": true,
    "variante": "mag-ait-tiret",
@@ -3235,205 +2892,6 @@
    ],
    "en_clair": [
     "R"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/010",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "1069558",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "1069558"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/011",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "6338445",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "6338445"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/012",
-   "pack": "banque-assurance",
-   "type": "EFFET",
-   "direct": false,
-   "variante": "lcn-7",
-   "traits": [],
-   "valeur": "1849130",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "1849130"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/credit/003",
-   "pack": "banque-assurance",
-   "type": "RIB",
-   "direct": true,
-   "variante": "rib-ma-groupes",
-   "traits": [],
-   "valeur": "190 029 2830851740201749 72",
-   "statut": "partiel",
-   "prefixes": [
-    "CARTE"
-   ],
-   "en_clair": [
-    "190",
-    "72"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/001",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-tirets",
-   "traits": [],
-   "valeur": "87554-D-7",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "87554",
-    "D",
-    "7"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/001",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-slash",
-   "traits": [],
-   "valeur": "45528/D/50",
-   "statut": "partiel",
-   "prefixes": [
-    "REF"
-   ],
-   "en_clair": [
-    "45528"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/002",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "36259 | D | 59",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "36259",
-    "D",
-    "59"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/002",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "37241 | H | 57",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "37241",
-    "H",
-    "57"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/003",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "61717 | A | 30",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "61717",
-    "A",
-    "30"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/003",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "15470 | H | 61",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "15470",
-    "H",
-    "61"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/004",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "3934 | H | 30",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "3934",
-    "H",
-    "30"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/004",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-slash",
-   "traits": [],
-   "valeur": "44834/E/31",
-   "statut": "partiel",
-   "prefixes": [
-    "REF"
-   ],
-   "en_clair": [
-    "44834"
    ],
    "vu_par_ia": true
   },
@@ -3454,262 +2912,6 @@
    ],
    "en_clair": [
     "R"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/005",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "71197 | E | 56",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "71197",
-    "E",
-    "56"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/005",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "68578 | A | 32",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "68578",
-    "A",
-    "32"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/006",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-slash",
-   "traits": [],
-   "valeur": "32800/A/61",
-   "statut": "partiel",
-   "prefixes": [
-    "REF"
-   ],
-   "en_clair": [
-    "32800"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/007",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "12708 | A | 28",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "12708",
-    "A",
-    "28"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/007",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-slash",
-   "traits": [],
-   "valeur": "33707/H/52",
-   "statut": "partiel",
-   "prefixes": [
-    "REF"
-   ],
-   "en_clair": [
-    "33707"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/008",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-slash",
-   "traits": [],
-   "valeur": "21358/H/36",
-   "statut": "partiel",
-   "prefixes": [
-    "REF"
-   ],
-   "en_clair": [
-    "21358"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/009",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-tirets",
-   "traits": [],
-   "valeur": "66769-B-20",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "66769",
-    "B",
-    "20"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/009",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-tirets",
-   "traits": [],
-   "valeur": "62701-H-73",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "62701",
-    "H",
-    "73"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/010",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "47390 | B | 21",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "47390",
-    "B",
-    "21"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/010",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "14115 | A | 29",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "14115",
-    "A",
-    "29"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/010",
-   "pack": "banque-assurance",
-   "type": "RIB",
-   "direct": true,
-   "variante": "rib-ma-groupes",
-   "traits": [],
-   "valeur": "022 280 9559019490483689 93",
-   "statut": "partiel",
-   "prefixes": [
-    "CARTE"
-   ],
-   "en_clair": [
-    "022",
-    "93"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/011",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-tirets",
-   "traits": [],
-   "valeur": "73593-A-10",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "73593",
-    "A",
-    "10"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/011",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-tirets",
-   "traits": [],
-   "valeur": "83320-H-34",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "83320",
-    "H",
-    "34"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/012",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "96340 | B | 88",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "96340",
-    "B",
-    "88"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/012",
-   "pack": "banque-assurance",
-   "type": "IMMAT",
-   "direct": false,
-   "variante": "plaque-ma-barres",
-   "traits": [],
-   "valeur": "77830 | D | 44",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "77830",
-    "D",
-    "44"
    ],
    "vu_par_ia": true
   },
@@ -4044,7 +3246,7 @@
    "valeur": "Rachida Ould Bah",
    "statut": "partiel",
    "prefixes": [
-    "NOM-002"
+    "PRENOM"
    ],
    "en_clair": [
     "Bah"
@@ -4102,6 +3304,206 @@
    ],
    "en_clair": [
     "Roux"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/001",
+   "pack": "expertise-comptable",
+   "type": "RIB",
+   "direct": true,
+   "variante": "rib-ma-groupes",
+   "traits": [],
+   "valeur": "013 134 9616370589708679 28",
+   "statut": "partiel",
+   "prefixes": [
+    "CARTE"
+   ],
+   "en_clair": [
+    "013",
+    "28"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/001",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "4237529",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "4237529"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/002",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "4457560",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "4457560"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/002",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "5347766",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "5347766"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/003",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "0537828",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "0537828"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/003",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "3159073",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "3159073"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/005",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "0744611",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "0744611"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/009",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "2449558",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "2449558"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/010",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "7339130",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "7339130"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/010",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "8691572",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "8691572"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/011",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "7691163",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "7691163"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/012",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "5563453",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "5563453"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/reporting/001",
+   "pack": "expertise-comptable",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ould",
+   "traits": [],
+   "valeur": "Abdelaziz Ould Cheikh",
+   "statut": "partiel",
+   "prefixes": [
+    "PRENOM"
+   ],
+   "en_clair": [
+    "Cheikh"
    ],
    "vu_par_ia": true
   },
@@ -4387,15 +3789,15 @@
   }
  ],
  "verrou_de_sortie": {
-  "manques_directs": 63,
-  "manques_directs_vus_par_ia": 60,
+  "manques_directs": 49,
+  "manques_directs_vus_par_ia": 47,
   "masquages_par_pack": {
    "core": 0,
    "telecom-ma": 0,
    "juridique-fr": 0,
-   "banque-assurance": 12,
+   "banque-assurance": 0,
    "sante": 58,
-   "expertise-comptable": 13,
+   "expertise-comptable": 0,
    "rh-paie": 24
   }
  },
@@ -4961,26 +4363,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/kyc/001",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/001",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/kyc/002",
    "pack": "banque-assurance",
    "type": "SIGLE",
@@ -4991,36 +4373,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/kyc/002",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/002",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/002",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "BAM",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/kyc/003",
    "pack": "banque-assurance",
    "type": "SIGLE",
@@ -5028,36 +4380,6 @@
    "valeur": "KYC",
    "prefixes": [
     "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/003",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/003",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/003",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "BAM",
-   "prefixes": [
-    "NOM"
    ]
   },
   {
@@ -5071,26 +4393,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/kyc/004",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/004",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/kyc/005",
    "pack": "banque-assurance",
    "type": "SIGLE",
@@ -5101,26 +4403,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/kyc/005",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/005",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/kyc/006",
    "pack": "banque-assurance",
    "type": "SIGLE",
@@ -5128,36 +4410,6 @@
    "valeur": "KYC",
    "prefixes": [
     "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/006",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/006",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/006",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "BAM",
-   "prefixes": [
-    "NOM"
    ]
   },
   {
@@ -5171,26 +4423,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/kyc/007",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/007",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/kyc/008",
    "pack": "banque-assurance",
    "type": "SIGLE",
@@ -5201,36 +4433,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/kyc/008",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/008",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/008",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "BAM",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/kyc/009",
    "pack": "banque-assurance",
    "type": "SIGLE",
@@ -5238,36 +4440,6 @@
    "valeur": "KYC",
    "prefixes": [
     "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/009",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/009",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/009",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "BAM",
-   "prefixes": [
-    "NOM"
    ]
   },
   {
@@ -5281,26 +4453,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/kyc/010",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/010",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/kyc/011",
    "pack": "banque-assurance",
    "type": "SIGLE",
@@ -5311,26 +4463,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/kyc/011",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/011",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/kyc/012",
    "pack": "banque-assurance",
    "type": "SIGLE",
@@ -5338,26 +4470,6 @@
    "valeur": "KYC",
    "prefixes": [
     "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/012",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PPE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/kyc/012",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "UTRF",
-   "prefixes": [
-    "NOM"
    ]
   },
   {
@@ -5461,26 +4573,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/effets/001",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/002",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/effets/002",
    "pack": "banque-assurance",
    "type": "MOT",
@@ -5491,56 +4583,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/effets/003",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/004",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/005",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/006",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/007",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
    "doc": "banque-assurance/effets/007",
    "pack": "banque-assurance",
    "type": "MOT",
@@ -5548,176 +4590,6 @@
    "valeur": "Noël",
    "prefixes": [
     "PRENOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/008",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/009",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/010",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/011",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/effets/012",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "LCN",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/001",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/002",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/003",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/004",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/005",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/006",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TAEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/007",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/008",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/009",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/010",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TAEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/011",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TEG",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "banque-assurance/credit/012",
-   "pack": "banque-assurance",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "TAEG",
-   "prefixes": [
-    "NOM"
    ]
   },
   {
@@ -6018,46 +4890,6 @@
    "valeur": "insuline glargine",
    "prefixes": [
     "CODE"
-   ]
-  },
-  {
-   "doc": "expertise-comptable/grandLivre/002",
-   "pack": "expertise-comptable",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PCGE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "expertise-comptable/grandLivre/003",
-   "pack": "expertise-comptable",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PCGE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "expertise-comptable/grandLivre/006",
-   "pack": "expertise-comptable",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PCGE",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "expertise-comptable/grandLivre/010",
-   "pack": "expertise-comptable",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "PCGE",
-   "prefixes": [
-    "NOM"
    ]
   },
   {
@@ -6921,15 +5753,7 @@
    "n": 12
   },
   {
-   "passage": "NOM « Contrôle »",
-   "n": 12
-  },
-  {
    "passage": "NOM « CRÉDIT »",
-   "n": 12
-  },
-  {
-   "passage": "NOM « CVV »",
    "n": 12
   },
   {
@@ -6965,15 +5789,15 @@
    "n": 12
   },
   {
+   "passage": "NOM « Télédéclaration »",
+   "n": 12
+  },
+  {
    "passage": "NOM « TICKET »",
    "n": 12
   },
   {
    "passage": "NOM « VIREMENT »",
-   "n": 12
-  },
-  {
-   "passage": "NOM-001 « FACTURE »",
    "n": 12
   },
   {
@@ -6998,10 +5822,6 @@
   },
   {
    "passage": "NOM « Reprise »",
-   "n": 11
-  },
-  {
-   "passage": "SINISTRE « Police »",
    "n": 11
   },
   {
@@ -7081,18 +5901,6 @@
    "n": 2
   },
   {
-   "passage": "NOM-002-002 « Facture »",
-   "n": 2
-  },
-  {
-   "passage": "NOM-003 « Facture »",
-   "n": 2
-  },
-  {
-   "passage": "NOM-005-002 « Facture »",
-   "n": 2
-  },
-  {
    "passage": "SOCIETE « ORDRE DE VIREMENT INTERNATIONAL »",
    "n": 2
   },
@@ -7111,26 +5919,6 @@
   {
    "passage": "NOM « Patient »",
    "n": 1
-  },
-  {
-   "passage": "NOM-002 « Facture »",
-   "n": 1
-  },
-  {
-   "passage": "NOM-002-003 « Facture »",
-   "n": 1
-  },
-  {
-   "passage": "NOM-003-002 « Facture »",
-   "n": 1
-  },
-  {
-   "passage": "NOM-003-004 « Facture »",
-   "n": 1
-  },
-  {
-   "passage": "NOM-006 « Facture »",
-   "n": 1
   }
  ],
  "plus_gros_ecarts": [
@@ -7145,16 +5933,6 @@
    "perdues": 17
   },
   {
-   "cle": "CVV · cvv-3",
-   "direct": true,
-   "n": 12,
-   "detectes": 0,
-   "partiels": 0,
-   "manques": 12,
-   "rappel": 0,
-   "perdues": 12
-  },
-  {
    "cle": "CNSS · cnss-affiliation-7",
    "direct": true,
    "n": 25,
@@ -7165,38 +5943,37 @@
    "perdues": 12
   },
   {
-   "cle": "RIB · rib-ma-groupes",
+   "cle": "PERSONNE · mag-ould",
    "direct": true,
-   "n": 28,
-   "detectes": 25,
-   "partiels": 3,
+   "n": 48,
+   "detectes": 44,
+   "partiels": 4,
    "manques": 0,
-   "rappel": 0.8928571428571429,
-   "perdues": 3
+   "rappel": 0.9166666666666666,
+   "perdues": 4
   },
   {
    "cle": "PERSONNE · fr-particule",
    "direct": true,
-   "n": 36,
-   "detectes": 33,
+   "n": 39,
+   "detectes": 36,
    "partiels": 2,
    "manques": 1,
-   "rappel": 0.9166666666666666,
+   "rappel": 0.9230769230769231,
    "perdues": 3
+  },
+  {
+   "cle": "PERSONNE · mag-ait-espace",
+   "direct": true,
+   "n": 33,
+   "detectes": 31,
+   "partiels": 2,
+   "manques": 0,
+   "rappel": 0.9393939393939394,
+   "perdues": 2
   }
  ],
  "documents_imbriques": [
-  "banque-assurance/sinistre/001",
-  "banque-assurance/sinistre/002",
-  "banque-assurance/sinistre/004",
-  "banque-assurance/sinistre/005",
-  "banque-assurance/sinistre/006",
-  "banque-assurance/sinistre/007",
-  "banque-assurance/sinistre/008",
-  "banque-assurance/sinistre/009",
-  "banque-assurance/sinistre/010",
-  "banque-assurance/sinistre/011",
-  "banque-assurance/sinistre/012",
   "sante/compteRendu/004",
   "sante/compteRendu/007",
   "sante/compteRendu/008",
@@ -7205,28 +5982,6 @@
   "sante/lettreLiaison/006",
   "sante/ordonnance/001",
   "sante/ordonnance/002",
-  "sante/ordonnance/007",
-  "expertise-comptable/facture/001",
-  "expertise-comptable/facture/002",
-  "expertise-comptable/facture/003",
-  "expertise-comptable/facture/004",
-  "expertise-comptable/facture/005",
-  "expertise-comptable/facture/006",
-  "expertise-comptable/facture/007",
-  "expertise-comptable/facture/008",
-  "expertise-comptable/facture/009",
-  "expertise-comptable/facture/010",
-  "expertise-comptable/facture/011",
-  "expertise-comptable/facture/012",
-  "expertise-comptable/grandLivre/001",
-  "expertise-comptable/grandLivre/002",
-  "expertise-comptable/grandLivre/003",
-  "expertise-comptable/grandLivre/004",
-  "expertise-comptable/grandLivre/005",
-  "expertise-comptable/grandLivre/007",
-  "expertise-comptable/grandLivre/008",
-  "expertise-comptable/grandLivre/010",
-  "expertise-comptable/grandLivre/011",
-  "expertise-comptable/grandLivre/012"
+  "sante/ordonnance/007"
  ]
 }

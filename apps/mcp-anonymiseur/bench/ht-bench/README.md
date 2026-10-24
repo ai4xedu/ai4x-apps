@@ -11,6 +11,7 @@ npm run bench:ht            # note le jeu dev → resultats/ht-bench.json + resu
 npm run bench:ht:controle   # idem, puis échec si le rappel sur les identifiants directs passe sous reference.json
 npm run bench:ht:test       # note le jeu de test (celui qu'on publie) → resultats/test/
 npm run bench:ht:comparer   # Hidden Tokens face à Presidio, jeu de test → resultats/test/comparaison.md
+npm run bench:ht:packs -- --candidat telecom-ma,banque-assurance   # quels packs préinstaller ? → resultats/packs.md
 npm run bench:ht:generer    # régénère dataset/ (dev et test) depuis les graines
 node bench/ht-bench/evaluer.mjs --enregistrer-reference   # réécrit reference.json (jeu dev)
 ```
@@ -25,6 +26,10 @@ Le banc complet prend une dizaine de secondes. En CI, le job `ht-bench` (`.githu
 - **test** (`dataset/test/ht-bench.jsonl`, graine `ht-bench-v0-test`) : mêmes gabarits, mais d'autres valeurs et d'autres tournures. **On ne règle rien dessus.** `--controle` et `--enregistrer-reference` refusent `--split test`.
 
 La règle : un chiffre publié (rapport « État de la confidentialité IA », site, argumentaire) vient **toujours** du jeu de test. Une règle écrite après avoir regardé un manque du jeu de test le contamine. Dans ce cas, on change la graine de test (`SPLITS.test.graine` dans `generer.mjs`), on monte `VERSION_JEU`, et on le dit dans la PR. Les noms viennent des mêmes listes dans les deux jeux, donc les prénoms et noms se recoupent. Les combinaisons et les identifiants, eux, sont tirés à part : `test/ht-bench.test.js` vérifie que moins de 1 % des identifiants se retrouvent dans les deux jeux.
+
+## Quels packs préinstaller ?
+
+`npm run bench:ht:packs` fait passer chaque document trois fois : sans pack, avec le pack de son métier, puis avec les six packs ensemble. `--candidat a,b,c` ajoute une quatrième passe, où un jeu de packs est activé pour tous les documents, comme chez un client qui n'a rien réglé. Un pack se gagne sa place par défaut s'il ajoute du rappel sans coder de leurres ni corrompre la sortie, chez lui comme chez les autres métiers. La décision se prend sur dev et se confirme sur test (`--split test`).
 
 ## Comparaison avec un outil américain (Presidio)
 
@@ -49,7 +54,7 @@ Chaque document passe par **`anonymiser_fichier` sur un `.md`**, c'est-à-dire `
 - **Précision(type)** = parmi les passages codés sous un préfixe de ce type, ceux qui recouvrent bien une valeur de ce type. **Précision(pack)** = parmi tous les passages codés, ceux qui recouvrent une valeur étiquetée. Comme le verrou code tout mot inconnu, cette précision baisse quand il sur-code.
 - **F1** = 2PR / (P + R).
 - **Leurres codés** : un leurre (montant, date, article de loi, sigle, mot courant, ville seule, médicament…) est un faux positif dès qu'un de ses caractères est codé.
-- **Identifiants directs** : noms, CIN, NIR, CNSS, ICE, IF, RC, SIREN, SIRET, téléphones, e-mails, IBAN, RIB, IMEI, IMSI. La cible est un rappel ≥ 99 % par pack, et c'est ce rappel que contrôle la CI. Les autres types (adresse, société, date de naissance, BIC, numéros de dossier…) sont mesurés mais pas contrôlés.
+- **Identifiants directs** : noms, CIN, NIR, CNSS, ICE, IF, RC, SIREN, SIRET, téléphones, e-mails, IBAN, RIB, IMEI, IMSI, carte bancaire, cryptogramme (CVV), passeport / titre de séjour / permis. La cible est un rappel ≥ 99 % par pack, et c'est ce rappel que contrôle la CI. Les autres types (adresse, société, date de naissance, BIC, numéros de dossier…) sont mesurés mais pas contrôlés.
 - **Vu par l'IA** : pour chaque valeur manquée, le banc regarde si le morceau resté en clair apparaît encore dans la réponse de `coder_texte`, verrou de sortie compris, ou si ce dernier filet l'a rattrapé.
 - **Sortie corrompue** : il arrive que le texte codé ne soit plus « l'original + des codes », par exemple avec des codes imbriqués (`NOM-001-002`) ou un morceau de mot recodé. Le document est alors réaligné par plus longue sous-suite commune et signalé dans le rapport.
 

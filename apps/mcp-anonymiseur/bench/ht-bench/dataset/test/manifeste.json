@@ -4,10 +4,10 @@
   "split": "test",
   "graine": "ht-bench-v0-test",
   "synthetique": true,
-  "sha256": "63cd677aedcfc66325698dbea2a995576c926a2d2031a2275f00e38ebffe7cb3",
-  "documents": 318,
-  "positifs": 2964,
-  "leurres": 2312,
+  "sha256": "4881c8d2bc9febe584e4dab351739c8bd00858a20eab834c15993fcace79e10b",
+  "documents": 366,
+  "positifs": 3420,
+  "leurres": 3029,
   "par_pack": {
     "core": {
       "documents": 42,
@@ -35,9 +35,9 @@
       "leurres": 240
     },
     "expertise-comptable": {
-      "documents": 36,
-      "positifs": 386,
-      "leurres": 425
+      "documents": 84,
+      "positifs": 842,
+      "leurres": 1142
     },
     "rh-paie": {
       "documents": 36,
@@ -53,13 +53,13 @@
     "CNSS": 72,
     "CONTRAT": 24,
     "CVV": 12,
-    "EFFET": 36,
-    "EMAIL": 176,
-    "FACTURE": 24,
+    "EFFET": 48,
+    "EMAIL": 200,
+    "FACTURE": 48,
     "IBAN": 55,
     "ICCID": 12,
-    "ICE": 87,
-    "IF": 46,
+    "ICE": 159,
+    "IF": 58,
     "IMEI": 24,
     "IMMAT": 24,
     "IMSI": 19,
@@ -69,17 +69,17 @@
     "PASSEPORT": 24,
     "PATENTE": 5,
     "PATIENT": 24,
-    "PERSONNE": 847,
+    "PERSONNE": 965,
     "POLICE": 12,
     "PRATICIEN": 36,
-    "RC": 41,
+    "RC": 53,
     "RG": 48,
-    "RIB": 97,
+    "RIB": 109,
     "SINISTRE": 12,
     "SIREN": 24,
     "SIRET": 31,
-    "SOCIETE": 181,
-    "TEL": 390,
+    "SOCIETE": 279,
+    "TEL": 462,
     "TVA": 7
   }
 }

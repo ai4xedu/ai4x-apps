@@ -390,6 +390,62 @@ Les télédéclarations SIMPL sont faites au nom de l'entreprise (IF ${g.if()}).
   },
 };
 
+/* Directeurs financiers et experts-comptables (v0.2) : ce que la DAF
+   envoie vraiment — rapprochement, TVA, reporting, balance âgée. Beaucoup
+   d'indicateurs et de sigles qui DOIVENT rester lisibles. */
+const SIGLES_DAF = ["EBITDA", "EBE", "BFR", "DSO", "DPO", "CAPEX", "OPEX", "KPI", "PCGE", "CGNC", "IFRS", "CAC", "DGI", "SIMPL", "TVA", "IS"];
+Object.assign(comptable, {
+  rapprochement(g) {
+    const h = g.h, soc = g.societe("ma");
+    const lignes = Array.from({ length: h.entier(3, 5) }, () => c(h,
+      `Chèque n° ${g.cheque()} émis à ${g.personne("ma").m}, non débité | ${g.montant("MAD")}`,
+      `Virement reçu de ${g.societe("ma")} non comptabilisé | ${g.montant("MAD")}`,
+      `Frais bancaires du ${g.date()} | ${g.montant("MAD")}`,
+      `Prélèvement ${g.sigle(["CNSS", "DGI"])} du ${g.date()} | ${g.montant("MAD")}`));
+    return `RAPPROCHEMENT BANCAIRE au ${g.date()} — ${soc}
+Compte ${g.compte()} — RIB ${g.ribMa()}
+Solde relevé : ${g.montant("MAD")} | Solde comptable : ${g.montant("MAD")}
+Écarts :
+${lignes.join("\n")}
+Préparé par ${g.personne("mix").m} (${g.email(g.personne("mix").p)}), validé par le ${g.sigle(["CAC"])}.`;
+  },
+  declarationTva(g) {
+    const h = g.h, soc = g.societe("ma"), dir = g.personne("ma");
+    return `DÉCLARATION DE ${g.sigle(["TVA"])} — ${c(h, "régime mensuel", "régime trimestriel")}, période ${L("DATE", `${c(h, "janvier", "mars", "juin", "septembre")} ${h.entier(2024, 2026)}`, "periode")}
+Contribuable : ${soc} — IF ${g.if()} — ICE ${g.ice()} — RC ${g.ville("ma")} ${g.rc()}
+Télédéclaration ${g.sigle(["SIMPL"])} n° [[FACTURE|declaration:${h.choix(["TVA", "DGI"])}-${h.entier(2024, 2026)}-${h.chiffres(6)}]]
+Chiffre d'affaires taxable à ${g.mesure(["20 %", "14 %", "10 %", "7 %"])} : ${g.montant("MAD")}
+TVA collectée : ${g.montant("MAD")} — TVA déductible : ${g.montant("MAD")} — Crédit de TVA reporté : ${g.montant("MAD")}
+Pièce justificative : facture n° [[FACTURE:F-${h.entier(2024, 2026)}-${h.chiffres(4)}]] du ${g.date()}.
+Pièce jointe : état des déductions. Le signataire, ${dir.m}, déclare avoir vérifié l'exactitude des montants.`;
+  },
+  reporting(g) {
+    const h = g.h, daf = g.personne("mix"), dg = g.personne("ma"), banq = g.personne("mix"), cl1 = g.societe("ma"), cl2 = g.societe(h.pile(0.5) ? "fr" : "ma");
+    return `De : ${daf.m} <${g.email(daf.p)}>
+À : ${dg.m}
+Objet : reporting ${g.sigle(["KPI"])} de ${L("DATE", c(h, "septembre", "octobre", "novembre"), "mois")}
+
+Bonjour ${g.prenom(dg.p)},
+Chiffre d'affaires du mois : ${g.montant("MAD")} (budget ${g.montant("MAD")}). ${g.sigle(["EBITDA", "EBE"])} : ${g.montant("MAD")}, marge de ${g.mesure(["14,2 %", "9,8 %", "21,5 %"])}.
+${g.sigle(["BFR"])} à ${g.mesure(["47 jours", "62 jours", "38 jours"])} de CA ; ${g.sigle(["DSO"])} remonte à ${g.mesure(["71 jours", "58 jours"])} à cause de ${cl1} (${g.montant("MAD")} échus) et de ${cl2}.
+Trésorerie fin de mois : ${g.montant("MAD")} ; ligne de crédit à renouveler avec ${banq.m} (${g.tel("ma")}) avant le ${g.date()}.
+${g.sigle(["CAPEX"])} engagés : ${g.montant("MAD")}. Clôture prévue le ${g.date()} avec le ${g.sigle(["CAC"])}.
+Bien à toi,
+${g.prenom(daf.p)}`;
+  },
+  balanceAgee(g) {
+    const h = g.h;
+    const lignes = Array.from({ length: h.entier(4, 6) }, () => {
+      const t = h.pile(0.6) ? g.societe("ma") : g.personne("ma").m;
+      return `${t} | ICE ${g.ice()} | ${g.montant("MAD")} | ${g.montant("MAD")} | ${g.montant("MAD")} | relance au ${g.tel("ma")}`;
+    });
+    return `BALANCE ÂGÉE CLIENTS au ${g.date()} — compte ${g.compte()}
+Tiers | Identifiant | 0-30 j | 31-90 j | > 90 j | Action
+${lignes.join("\n")}
+Provision pour créances douteuses proposée : ${g.montant("MAD")} (${g.sigle(["PCGE", "IFRS"])}).`;
+  },
+});
+
 /* --------------------------------------------------------------- RH-PAIE */
 const rh = {
   bulletinMa(g) {

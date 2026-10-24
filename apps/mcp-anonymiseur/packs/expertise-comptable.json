@@ -2,15 +2,15 @@
   "format": "hidden-tokens.pack/1",
   "id": "expertise-comptable",
   "nom": "Expertise comptable — Maroc et France",
-  "version": "1.0.0",
-  "description": "Numéros de facture, de pièce et d'écriture annoncés, TVA intracommunautaire française, ICE / IF / RC / CNSS / patente et SIRET reconnus par le moteur ; plan comptable, impôts, états financiers, administrations et logiciels laissés en clair pour que l'IA travaille sur un grand livre, une liasse ou un courrier client. Les montants relèvent du réglage Nombres.",
+  "version": "1.1.0",
+  "description": "Numéros de facture, de pièce, d'écriture et de déclaration annoncés (mot entier, sur la même ligne, avec au moins un chiffre), TVA intracommunautaire française ; plan comptable, impôts, états financiers, indicateurs de la direction financière, administrations et logiciels laissés en clair pour que l'IA travaille sur un grand livre, une liasse, un reporting ou un courrier client. Les montants relèvent du réglage Nombres.",
   "regles": [
     {
       "id": "P-001",
       "type": "motif",
       "libelle": "Numéro de facture annoncé",
       "prefixe": "FACTURE",
-      "motif": "(?<=\\b(?:facture|fact\\.?|invoice|avoir)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{2,20}(?![A-Z0-9/-])",
+      "motif": "(?<=\\b(?:facture|fact\\.|invoice)[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)(?![A-Z]{2,}-(?:\\d{3}|\\d{8})(?![A-Z0-9-]))(?=[A-Z/-]*\\d)[A-Z0-9][A-Z0-9/-]{2,20}(?![A-Z0-9/-])",
       "exemple": "facture n° FA-2026-00412"
     },
     {
@@ -18,7 +18,7 @@
       "type": "motif",
       "libelle": "Numéro de pièce ou d'écriture annoncé",
       "prefixe": "PIECE",
-      "motif": "(?<=\\b(?:pi[èe]ce|[ée]criture|bon\\s*de\\s*commande|\\bBC\\b|devis)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{2,20}(?![A-Z0-9/-])",
+      "motif": "(?<=\\b(?:pi[èe]ce|[ée]criture|bon[ \\t]*de[ \\t]*commande|BC|devis)[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)(?![A-Z]{2,}-(?:\\d{3}|\\d{8})(?![A-Z0-9-]))(?=[A-Z/-]*\\d)[A-Z0-9][A-Z0-9/-]{2,20}(?![A-Z0-9/-])",
       "exemple": "pièce n° OD-0917"
     },
     {
@@ -34,8 +34,16 @@
       "type": "motif",
       "libelle": "Identifiant DGI / déclaration en ligne annoncé",
       "prefixe": "DECLAR",
-      "motif": "(?<=\\b(?:d[ée]claration|t[ée]l[ée]d[ée]claration|SIMPL|identifiant\\s*DGI)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{5,20}(?![A-Z0-9/-])",
+      "motif": "(?<=\\b(?:(?:t[ée]l[ée])?d[ée]claration|SIMPL|identifiant DGI)[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)(?![A-Z]{2,}-(?:\\d{3}|\\d{8})(?![A-Z0-9-]))(?=[A-Z/-]*\\d)[A-Z0-9][A-Z0-9/-]{5,20}(?![A-Z0-9/-])",
       "exemple": "déclaration n° DGI-2026-118877"
+    },
+    {
+      "id": "P-005",
+      "type": "motif",
+      "libelle": "Numéro d'avoir annoncé (« avoir n° … », jamais le verbe)",
+      "prefixe": "FACTURE",
+      "motif": "(?<=\\bavoir[ \\t]*n[°o]\\.?[ \\t]*[:=]?[ \\t]*)(?![A-Z]{2,}-(?:\\d{3}|\\d{8})(?![A-Z0-9-]))(?=[A-Z/-]*\\d)[A-Z0-9][A-Z0-9/-]{2,20}(?![A-Z0-9/-])",
+      "exemple": "avoir n° AV-2026-0031"
     },
     {
       "id": "P-010",
@@ -103,7 +111,9 @@
         "commissaire aux comptes",
         "CGNC",
         "plan comptable général",
-        "IFRS"
+        "IFRS",
+        "PCGE",
+        "CAC"
       ]
     },
     {
@@ -121,6 +131,29 @@
         "fichier des écritures comptables",
         "FEC",
         "export Excel"
+      ]
+    },
+    {
+      "id": "P-013",
+      "type": "laisser_en_clair",
+      "libelle": "Indicateurs de la direction financière",
+      "termes": [
+        "EBITDA",
+        "EBE",
+        "BFR",
+        "DSO",
+        "DPO",
+        "CAPEX",
+        "OPEX",
+        "KPI",
+        "P&L",
+        "cash-flow",
+        "free cash-flow",
+        "covenant",
+        "budget",
+        "reporting",
+        "marge brute",
+        "besoin en fonds de roulement"
       ]
     }
   ],

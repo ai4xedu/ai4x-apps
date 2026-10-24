@@ -1,12 +1,12 @@
 {
   "note": "Rappel sur les identifiants directs, mesuré par HT-Bench. La CI (bench:ht:controle) échoue s'il baisse. Réenregistrer : node bench/ht-bench/evaluer.mjs --enregistrer-reference",
   "version_jeu": "0.2.0",
-  "jeu_sha256": "ef5fd01fe4476e39e0ca7c53786272f6c0f5489fe1fc29f54a36e60c95a780a2",
+  "jeu_sha256": "a21f6f11d5f7a115b22d1558bf70dbb260be72c59df5424d6ca7dd40e2267714",
   "version_moteur": "2.23.2",
   "global": {
-    "n": 2237,
-    "detectes": 2174,
-    "rappel": 0.9718372820742065
+    "n": 2565,
+    "detectes": 2516,
+    "rappel": 0.980896686159844
   },
   "par_pack": {
     "core": {
@@ -26,8 +26,8 @@
     },
     "banque-assurance": {
       "n": 654,
-      "detectes": 630,
-      "rappel": 0.963302752293578
+      "detectes": 646,
+      "rappel": 0.9877675840978594
     },
     "sante": {
       "n": 207,
@@ -35,9 +35,9 @@
       "rappel": 0.9855072463768116
     },
     "expertise-comptable": {
-      "n": 287,
-      "detectes": 282,
-      "rappel": 0.9825783972125436
+      "n": 615,
+      "detectes": 608,
+      "rappel": 0.9886178861788618
     },
     "rh-paie": {
       "n": 228,
@@ -47,9 +47,9 @@
   },
   "par_type": {
     "PERSONNE": {
-      "n": 853,
-      "detectes": 837,
-      "rappel": 0.981242672919109
+      "n": 975,
+      "detectes": 958,
+      "rappel": 0.9825641025641025
     },
     "CIN": {
       "n": 187,
@@ -67,18 +67,18 @@
       "rappel": 0.8378378378378378
     },
     "ICE": {
-      "n": 91,
-      "detectes": 91,
+      "n": 164,
+      "detectes": 164,
       "rappel": 1
     },
     "IF": {
-      "n": 52,
-      "detectes": 52,
+      "n": 64,
+      "detectes": 64,
       "rappel": 1
     },
     "RC": {
-      "n": 45,
-      "detectes": 45,
+      "n": 57,
+      "detectes": 57,
       "rappel": 1
     },
     "SIREN": {
@@ -92,13 +92,13 @@
       "rappel": 1
     },
     "TEL": {
-      "n": 400,
-      "detectes": 400,
+      "n": 473,
+      "detectes": 473,
       "rappel": 1
     },
     "EMAIL": {
-      "n": 177,
-      "detectes": 177,
+      "n": 201,
+      "detectes": 201,
       "rappel": 1
     },
     "IBAN": {
@@ -107,9 +107,9 @@
       "rappel": 0.9811320754716981
     },
     "RIB": {
-      "n": 102,
-      "detectes": 97,
-      "rappel": 0.9509803921568627
+      "n": 114,
+      "detectes": 112,
+      "rappel": 0.9824561403508771
     },
     "IMEI": {
       "n": 26,
@@ -128,8 +128,8 @@
     },
     "CVV": {
       "n": 12,
-      "detectes": 0,
-      "rappel": 0
+      "detectes": 12,
+      "rappel": 1
     },
     "PASSEPORT": {
       "n": 24,
