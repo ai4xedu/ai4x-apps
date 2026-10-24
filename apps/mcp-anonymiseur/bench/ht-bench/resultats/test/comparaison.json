@@ -4,7 +4,7 @@
  "version_jeu": "0.2.0",
  "jeu_sha256": "4881c8d2bc9febe584e4dab351739c8bd00858a20eab834c15993fcace79e10b",
  "hidden_tokens": {
-  "version": "2.23.2",
+  "version": "2.25.0",
   "chemin": "anonymiser_fichier (.md), pack du document activé"
  },
  "presidio": {

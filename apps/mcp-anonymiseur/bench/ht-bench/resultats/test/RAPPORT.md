@@ -1,6 +1,6 @@
 # HT-Bench 0.2.0 (jeu test) — rapport de détection
 
-Moteur Hidden Tokens **v2.23.2** · jeu `4881c8d2bc9febe5…` (synthétique, graine fixe) · 366 documents · 3420 valeurs à coder · 3029 leurres.
+Moteur Hidden Tokens **v2.25.0** · jeu `4881c8d2bc9febe5…` (synthétique, graine fixe) · 366 documents · 3420 valeurs à coder · 3029 leurres.
 
 Chemin mesuré : anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte. Une valeur compte comme détectée si toutes ses lettres et chiffres sont sous un code (les particules d'un nom — Ben, El, Aït, de… — peuvent rester en clair). Une valeur codée en partie est une fuite : elle compte comme manquée. Définitions complètes : `bench/ht-bench/README.md`.
 
