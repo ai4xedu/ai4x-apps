@@ -298,7 +298,7 @@ export function creerPolitiquePoste({ enrolement, etatDir, now = () => new Date(
     // Les packs métier de la politique (SPEC-PACKS-METIER §3) : développés ici,
     // depuis les fichiers de CE connecteur ; un pack inconnu bloque (fail closed).
     const d = developperPacks(c.politique.packs);
-    return { regles: [...v.regles, ...d.regles], erreurs: [...v.erreurs, ...d.erreurs].map((m) => `politique du cabinet, ${m}`) };
+    return { regles: [...v.regles, ...d.regles], entetes: d.entetes, erreurs: [...v.erreurs, ...d.erreurs].map((m) => `politique du cabinet, ${m}`) };
   }
   function typesOrganisation(c) {
     if (!c || !c.politique || c.bloque) return [];

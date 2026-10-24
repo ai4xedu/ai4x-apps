@@ -27,7 +27,7 @@ const codesDe = (t, prefixe) => [...t.matchAll(new RegExp(`(?<![A-Z])${prefixe}-
 
 test("chaque pack livré est valide : format, règles acceptées, exemples reconnus et contrôlés", () => {
   const fichiers = fs.readdirSync(PACKS).filter((n) => n.endsWith(".json"));
-  assert.deepEqual(fichiers.sort(), ["banque-assurance.json", "juridique-fr.json", "telecom-ma.json"]);
+  assert.deepEqual(fichiers.sort(), ["banque-assurance.json", "expertise-comptable.json", "juridique-fr.json", "rh-paie.json", "sante.json", "telecom-ma.json"]);
   for (const n of fichiers) {
     const pack = JSON.parse(fs.readFileSync(path.join(PACKS, n), "utf8"));
     assert.equal(pack.format, FORMAT_PACK);
@@ -41,10 +41,11 @@ test("chaque pack livré est valide : format, règles acceptées, exemples recon
       assert.ok(m, `${n} ${r.id} : l'exemple est reconnu`);
       if (r.controle) assert.ok(CONTROLES[r.controle](m[0]), `${n} ${r.id} : l'exemple passe ${r.controle}`);
     }
+    for (const e of pack.entetes || []) assert.ok(new RegExp(e.motif, "iu").test(e.exemple), `${n} en-tête ${e.prefixe} : l'exemple est reconnu`);
   }
   const l = listerPacks();
-  assert.equal(l.length, 3);
-  assert.ok(l.every((p) => p.nom && p.version && p.description && p.motifs >= 4));
+  assert.equal(l.length, 6);
+  assert.ok(l.every((p) => p.nom && p.version && p.description && p.motifs >= 3));
   assert.equal(lirePack("inconnu"), null);
 });
 
@@ -110,10 +111,10 @@ test("activation par reglages.json : packs par référence, pack inconnu = erreu
   assert.deepEqual(r.packs, ["telecom-ma", "juridique-fr"]);
   assert.equal(r.regles.length, 15);
   assert.ok(r.regles.every((x) => x.pack));
-  fs.writeFileSync(path.join(dir, "reglages.json"), JSON.stringify({ packs: ["sante"] }));
+  fs.writeFileSync(path.join(dir, "reglages.json"), JSON.stringify({ packs: ["sante-animale"] }));
   const r2 = lireReglesDossier(dir);
   assert.equal(r2.regles.length, 0);
-  assert.match(r2.erreurs[0], /pack « sante » inconnu de ce connecteur/);
+  assert.match(r2.erreurs[0], /pack « sante-animale » inconnu de ce connecteur/);
   const v = validerRegles([{ id: "D-001", type: "motif", libelle: "x", prefixe: "IMEI", motif: "\\d{15}", exemple: "351234567890124", controle: "luhn" }], { niveau: "dossier" });
   assert.equal(v.regles.length, 0);
   assert.match(v.erreurs[0], /réservé aux packs/);
@@ -158,5 +159,82 @@ test("politique avec packs : signée par la console, appliquée par le poste", a
     const code = fs.readFileSync(path.join(workdir, "Hidden-Tokens", "appel-anonymise.md"), "utf8");
     assert.match(code, /IMEI-\d{3,}/, code);
     assert.ok(code.includes("forfait") && code.includes("Pass Internet"), code);
+  } finally { await client.close(); fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test("santé : patient, assuré, praticien et lot annoncés codés ; spécialités, examens et médicaments en clair", () => {
+  const texte = "Patient IPP : 2026-048812, CNOPS n° 1234567890, vu aux urgences en cardiologie ; prescripteur RPPS 10001234567. Traitement : metformine, paracétamol. Lot n° B2026-0417. Diagnostic : diabète de type 2, échographie demandée au CHU.";
+  const { texte: t } = coder(texte, ["sante"]);
+  for (const v of ["2026-048812", "1234567890", "10001234567", "B2026-0417"]) assert.ok(!t.includes(v), `« ${v} » a fui :\n${t}`);
+  assert.equal(codesDe(t, "PATIENT").length, 1, t);
+  assert.equal(codesDe(t, "ASSURE").length, 1, t);
+  assert.equal(codesDe(t, "PRATICIEN").length, 1, t);
+  assert.equal(codesDe(t, "LOT").length, 1, t);
+  for (const clair of ["urgences", "cardiologie", "metformine", "paracétamol", "diabète de type 2", "échographie", "CHU", "CNOPS"]) assert.ok(t.includes(clair), `« ${clair} » :\n${t}`);
+});
+
+test("expertise comptable : facture, pièce, TVA intracom et déclaration codées ; plan comptable, impôts et logiciels en clair", () => {
+  const texte = "Facture n° FA-2026-00412 du fournisseur, pièce n° OD-0917, TVA intracom FR 12 123 456 782 ; déclaration n° DGI-2026-118877 déposée sur SIMPL. Le chiffre d'affaires et la TVA collectée sont au grand livre, saisis dans Sage avant la clôture de l'exercice comptable.";
+  const { texte: t } = coder(texte, ["expertise-comptable"]);
+  for (const v of ["FA-2026-00412", "OD-0917", "123 456 782", "DGI-2026-118877"]) assert.ok(!t.includes(v), `« ${v} » a fui :\n${t}`);
+  assert.equal(codesDe(t, "FACTURE").length, 1, t);
+  assert.equal(codesDe(t, "PIECE").length, 1, t);
+  assert.equal(codesDe(t, "TVA").length, 1, t);
+  assert.equal(codesDe(t, "DECLAR").length, 1, t);
+  for (const clair of ["chiffre d'affaires", "TVA collectée", "grand livre", "Sage", "clôture", "exercice comptable", "SIMPL"]) assert.ok(t.includes(clair), `« ${clair} » :\n${t}`);
+});
+
+test("RH et paie : matricule, badge et contrat codés ; postes, droit du travail et paie en clair", () => {
+  const texte = "Matricule : EMP-04471, badge n° 00812, contrat de travail n° CT/2026/031. Poste : chef de projet en CDI, période d'essai de 3 mois, convention collective applicable ; bulletin de paie avec salaire brut, prime d'ancienneté, cotisations CNSS et CIMR. Entretien annuel prévu.";
+  const { texte: t } = coder(texte, ["rh-paie"]);
+  for (const v of ["EMP-04471", "00812", "CT/2026/031"]) assert.ok(!t.includes(v), `« ${v} » a fui :\n${t}`);
+  assert.equal(codesDe(t, "MATRICULE").length, 1, t);
+  assert.equal(codesDe(t, "BADGE").length, 1, t);
+  assert.equal(codesDe(t, "DOSSIERRH").length, 1, t);
+  for (const clair of ["chef de projet", "CDI", "période d'essai", "convention collective", "bulletin de paie", "salaire brut", "prime d'ancienneté", "CNSS", "CIMR", "Entretien annuel"]) assert.ok(t.includes(clair), `« ${clair} » :\n${t}`);
+});
+
+test("en-têtes de colonnes : typeColonne du pack télécom force MSISDN → TEL, IMSI, IMEI, ICCID, ID client → REF ; un en-tête quelconque reste au moteur", () => {
+  const c = compilerRegles({ dossier: developperPacks(["telecom-ma"]).regles, entetes: developperPacks(["telecom-ma"]).entetes });
+  assert.equal(c.typeColonne("MSISDN appelant"), "tel");
+  assert.equal(c.typeColonne("IMSI"), "regle_IMSI");
+  assert.equal(c.typeColonne("IMEI"), "regle_IMEI");
+  assert.equal(c.typeColonne("ICCID SIM"), "regle_ICCID");
+  assert.equal(c.typeColonne("ID client"), "reference");
+  assert.equal(c.typeColonne("Durée (s)"), null);
+  assert.match(c.decrire(), /7 en-têtes de colonnes/);
+});
+
+/* De bout en bout : un export CDR fictif (Excel) avec le pack télécom activé
+   dans reglages.json — les colonnes MSISDN, IMSI, IMEI sont codées dès le
+   plan, la durée et le type d'appel restent lisibles. */
+test("export CDR (mode tableau) : les colonnes des identifiants sont codées par le pack, les mesures restent lisibles", async () => {
+  const { Client } = await import("@modelcontextprotocol/client");
+  const { StdioClientTransport } = await import("@modelcontextprotocol/client/stdio");
+  const { mint } = await import("./licence-test.mjs");
+  const { XLSX } = await import("../server/engine.js");
+  const root = tmp(), workdir = path.join(root, "dossier");
+  fs.mkdirSync(path.join(workdir, "Hidden-Tokens"), { recursive: true });
+  fs.writeFileSync(path.join(workdir, "Hidden-Tokens", "reglages.json"), JSON.stringify({ chiffres: "clair", packs: ["telecom-ma"] }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ["MSISDN appelant", "IMSI", "IMEI", "Type d'appel", "Durée (s)"],
+    ["212612345678", "604010123456789", "351234567890124", "voix sortant", 184],
+    ["212698765432", "604010987654321", "351234567890132", "data", 3600],
+  ]), "CDR");
+  XLSX.writeFile(wb, path.join(workdir, "cdr.xlsx"));
+  const client = new Client({ name: "cdr", version: "1.0.0" });
+  await client.connect(new StdioClientTransport({
+    command: process.execPath, args: [path.join(here, "..", "server", "index.js")],
+    env: { ...process.env, ANX_WORKDIR: workdir, ANX_LICENCE: mint({ v: 1, org: "Télécom Test", seats: 20, iat: "2026-10-20", exp: "9999-12-31", life: true }), ANX_TEAM_DIR: "", ANX_REGISTRE_DIR: "", ANX_ENROLEMENT: "", ANX_SENTINELLE: "non", NANOMIZER_SENTINELLE_DIR: path.join(root, ".absente") },
+  }));
+  try {
+    const plan = (await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "cdr.xlsx" } })).content.map((c) => c.text || "").join("\n");
+    assert.match(plan, /IMSI/, plan);
+    assert.match(plan, /IMEI/, plan);
+    const r = (await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "cdr.xlsx", confirmer: true } })).content.map((c) => c.text || "").join("\n");
+    for (const v of ["212612345678", "604010123456789", "351234567890124", "604010987654321"]) assert.ok(!r.includes(v), `« ${v} » a fui :\n${r}`);
+    assert.ok(/TEL-\d+/.test(r) && /IMSI-\d+/.test(r) && /IMEI-\d+/.test(r), r);
+    assert.ok(r.includes("voix sortant") && r.includes("184"), r);
   } finally { await client.close(); fs.rmSync(root, { recursive: true, force: true }); }
 });

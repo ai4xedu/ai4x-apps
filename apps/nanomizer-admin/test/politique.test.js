@@ -202,6 +202,6 @@ test("packs métier : la source les cite par identifiant, la politique signée l
   const r = compilerPolitique(src, { cabinet, sel: ouvert.sel, version: 1, maintenant: MAINTENANT });
   assert.deepEqual(r.erreurs || [], []);
   assert.deepEqual(r.politique.packs, ["telecom-ma", "juridique-fr"]);
-  src.packs = ["sante"];
-  assert.throws(() => compilerPolitique(src, { cabinet, sel: ouvert.sel, version: 1, maintenant: MAINTENANT }), /packs : « sante » inconnu/);
+  src.packs = ["sante-animale"];
+  assert.throws(() => compilerPolitique(src, { cabinet, sel: ouvert.sel, version: 1, maintenant: MAINTENANT }), /packs : « sante-animale » inconnu/);
 });

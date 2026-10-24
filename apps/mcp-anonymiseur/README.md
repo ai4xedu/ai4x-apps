@@ -582,4 +582,16 @@ La campagne de validation (`node test/campagne-mvp.mjs`, 44 contrôles) émet
 elle-même une licence d'un jour avec la clé privée du poste — sans quoi elle ne
 testerait que l'écran de blocage. Elle exige la VRAIE clé (elle teste
 l'artefact, qui ne connaît que la clé de production) et vérifie que la clé de
-test n'y est ni embarquée ni honorée (C3).
+test n'y est ni embarquée ni honorée (C3).## Les packs métier (v2.21–2.22)
+
+`packs/<id>.json` : des règles livrées avec le connecteur (motifs avec clé de
+contrôle `luhn`/`iban`, préfixes du moteur autorisés, termes en clair, et
+depuis la 2.22 des `entetes` : en mode tableau, un en-tête reconnu force la
+colonne sous le préfixe), activées par référence — `"packs": [...]` dans
+`Hidden-Tokens/reglages.json` (appli) ou dans la politique signée (console).
+`server/packs.js` les développe à chaque compilation des règles ; un pack
+inconnu bloque l'anonymisation. Six packs : `telecom-ma`, `juridique-fr`,
+`banque-assurance`, `sante`, `expertise-comptable`, `rh-paie`. Spec :
+`SPEC-PACKS-METIER.md` (dépôt nanomizer). Tests : `test/packs.test.js`.
+
+

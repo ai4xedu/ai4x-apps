@@ -257,7 +257,7 @@ export function lireReglesDossier(outdir) {
     const packs = r && typeof r === "object" ? r.packs : undefined;
     if (packs !== undefined) {
       const d = developperPacks(packs);
-      val = { regles: [...val.regles, ...d.regles], erreurs: [...val.erreurs, ...d.erreurs], packs: Array.isArray(packs) ? packs.map(String) : [] };
+      val = { regles: [...val.regles, ...d.regles], entetes: d.entetes, erreurs: [...val.erreurs, ...d.erreurs], packs: Array.isArray(packs) ? packs.map(String) : [] };
     }
   } catch {
     val = { regles: [], erreurs: [`${FICHIER_REGLAGES} illisible : aucune règle du dossier appliquée`] };
@@ -289,13 +289,13 @@ const pluriel = (n, s, p = s + "s") => `${n} ${n > 1 ? p : s}`;
    noms : la reconnaissance des noms de la politique (empreintes), pour
    l'arbitrage des exclusions ; typesSupplementaires : les catégories maison
    des règles « toujours_pseudonymiser » de la politique. */
-export function compilerRegles({ dossier = [], organisation = [], noms = null, typesSupplementaires = [], erreurs = [] } = {}) {
+export function compilerRegles({ dossier = [], organisation = [], entetes = [], noms = null, typesSupplementaires = [], erreurs = [] } = {}) {
   const types = new Map();
   for (const t of typesSupplementaires) if (!types.has(t.prefix)) types.set(t.prefix, { id: t.id, prefix: t.prefix, label: t.label });
   const parPack = new Map();   // id de pack → comptes, pour le plan
   const noterPack = (r, champ, n = 1) => {
     if (!r.pack) return;
-    if (!parPack.has(r.pack)) parPack.set(r.pack, { motifs: 0, termes: 0, clair: 0 });
+    if (!parPack.has(r.pack)) parPack.set(r.pack, { motifs: 0, termes: 0, clair: 0, entetes: 0 });
     parPack.get(r.pack)[champ] += n;
   };
   const typeFor = (r, niveau) => {
@@ -351,6 +351,26 @@ export function compilerRegles({ dossier = [], organisation = [], noms = null, t
   }
 
   const liste = [...types.values()];
+  // En-têtes de colonnes des packs (mode tableau) : l'en-tête qui correspond
+  // force la colonne entière sous le préfixe. Même type que les règles.
+  const colonnes = entetes.map((e) => {
+    const moteur = TYPES.find((t) => t.prefix === e.prefixe);
+    let id;
+    if (moteur) id = moteur.id;
+    else {
+      id = "regle_" + e.prefixe;
+      if (!types.has(e.prefixe)) types.set(e.prefixe, { id, prefix: e.prefixe, label: `${e.libelle} (pack)` });
+    }
+    return { rx: new RegExp(e.motif, "iu"), id, pack: e.pack };
+  });
+  for (const t of types.values()) if (!liste.includes(t)) liste.push(t);
+  const typeColonne = (header) => {
+    const h = String(header ?? "");
+    if (!h.trim()) return null;
+    const c = colonnes.find((x) => x.rx.test(h));
+    return c ? c.id : null;
+  };
+  for (const e of entetes) if (e.pack) { noterPack(e, "entetes"); }
   registerCustomTypes(liste);
 
   const trouver = (textes) => {
@@ -370,7 +390,7 @@ export function compilerRegles({ dossier = [], organisation = [], noms = null, t
     }
     return { text: s, replaced: n };
   };
-  const vide = !organisation.length && !dossier.length && !erreurs.length;
+  const vide = !organisation.length && !dossier.length && !entetes.length && !erreurs.length;
   const decrire = () => {
     if (vide) return "";
     const part = (niveau) => {
@@ -388,6 +408,7 @@ export function compilerRegles({ dossier = [], organisation = [], noms = null, t
       if (c.motifs) d.push(pluriel(c.motifs, "motif"));
       if (c.termes) d.push(`${pluriel(c.termes, "terme")} à coder`);
       if (c.clair) d.push(`${pluriel(c.clair, "terme")} en clair`);
+      if (c.entetes) d.push(`${pluriel(c.entetes, "en-tête de colonne", "en-têtes de colonnes")}`);
       bouts.push(`pack ${p ? p.nom : id} : ${d.join(", ")}`);
     }
     const notes = [];
@@ -395,5 +416,5 @@ export function compilerRegles({ dossier = [], organisation = [], noms = null, t
     if (erreurs.length) notes.push(`${pluriel(erreurs.length, "règle du dossier", "règles du dossier")} écartée${erreurs.length > 1 ? "s" : ""} : ${erreurs.join(" ; ")}`);
     return `📏 Règles de l'organisation : ${bouts.join(" ; ") || "aucune règle valide"}.${notes.length ? " " + notes.join(". ") + "." : ""}`;
   };
-  return { types: liste, trouver, exclusions, ignorees, erreurs, vide, masquer, decrire, comptes };
+  return { types: liste, trouver, exclusions, ignorees, erreurs, vide, masquer, decrire, comptes, typeColonne };
 }
