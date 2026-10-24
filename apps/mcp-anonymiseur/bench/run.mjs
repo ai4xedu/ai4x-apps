@@ -111,7 +111,7 @@ await call("anonymiser_dossier");
 await call("anonymiser_dossier", { confirmer: true });
 await client.close();
 
-const outDir = path.join(workdir, "Anonymiseur-Ai4x");
+const outDir = path.join(workdir, "Hidden-Tokens");   // Anonymiseur-Ai4x avant la v2.14
 const produced = fs.readdirSync(outDir).filter((n) => /-anonymise\.(xlsx|md|docx)$/.test(n) || /^rapport-lot-/.test(n));
 for (const n of produced) {
   const p = path.join(outDir, n);

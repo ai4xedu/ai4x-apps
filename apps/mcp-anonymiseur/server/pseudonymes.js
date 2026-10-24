@@ -14,7 +14,9 @@
 //                 (« Atlas Négoce SARL » → « Horizon Services SARL ») ;
 //   LIEU-…      → une ville du même pays et de taille comparable ;
 //   NAISS-…     → la date décalée d'un delta SECRET, constant par dossier :
-//                 les durées (âges, délais entre deux dates) restent justes.
+//                 l'écart entre deux dates de naissance reste juste ; les
+//                 AUTRES dates du dossier restent exactes, donc un âge
+//                 calculé à l'une d'elles peut différer d'un an au plus.
 //
 // Les montants relèvent du mécanisme Nombres (chiffres.js) ; les identifiants
 // (EMAIL, TEL, RIB, CIN, ICE…), adresses et références GARDENT leur code : une
@@ -591,6 +593,6 @@ export function describeRendu(mode, source, r = null) {
     lines.push(`${r.rendus} code(s) rendu(s) par un pseudonyme${parts ? ` (${parts})` : ""}, ${r.restes} code(s) conservé(s).`);
     if (r.renouveles) lines.push(`⚠️ ${r.renouveles} pseudonyme(s) renouvelé(s) : ils coïncidaient avec une valeur réelle entrée depuis dans la clé ou avec un mot de ce texte. Les textes rendus auparavant avec l'ancien pseudonyme ne se décodent plus par lui : les recoder.`);
   }
-  lines.push("Les dates de naissance sont décalées d'un même nombre de jours, secret, pour tout le dossier : âges et durées restent justes. deanonymiser et decoder_word retraduisent les pseudonymes comme les codes. Pour revenir aux codes : rendu: \"codes\", ou le réglage du dossier dans l'appli Hidden Tokens.");
+  lines.push("Les dates de naissance sont décalées d'un même nombre de jours, secret, pour tout le dossier : l'écart entre deux dates de naissance reste juste, mais les autres dates restent exactes — un âge calculé à une date du dossier peut différer d'un an au plus (pour un seuil d'âge, demande la réponse à l'utilisateur). deanonymiser et decoder_word retraduisent les pseudonymes comme les codes. Pour revenir aux codes : rendu: \"codes\", ou le réglage du dossier dans l'appli Hidden Tokens.");
   return lines.join("\n");
 }
