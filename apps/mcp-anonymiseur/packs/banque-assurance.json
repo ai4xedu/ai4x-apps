@@ -1,0 +1,23 @@
+{
+  "format": "hidden-tokens.pack/1",
+  "id": "banque-assurance",
+  "nom": "Banque et assurance",
+  "version": "1.0.0",
+  "description": "IBAN de tous pays (clé mod 97, même code que le RIB), BIC/SWIFT, n° de police, de sinistre et de chèque annoncés codés sous leur nom ; régulateurs, banques, assureurs de la place et vocabulaire des contrats laissés en clair.",
+  "regles": [
+    { "id": "P-001", "type": "motif", "libelle": "IBAN (tous pays, clé vérifiée)", "prefixe": "RIB",
+      "motif": "(?<![A-Z0-9])[A-Z]{2}\\d{2}(?:[ ]?[A-Z0-9]){11,30}(?![A-Z0-9])", "exemple": "FR76 3000 6000 0112 3456 7890 189", "controle": "iban" },
+    { "id": "P-002", "type": "motif", "libelle": "BIC / SWIFT annoncé", "prefixe": "BIC",
+      "motif": "(?<=\\b(?:BIC|SWIFT)\\s*[:=]?\\s*)[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?(?![A-Z0-9])", "exemple": "BIC : ABCDMAMCXXX" },
+    { "id": "P-003", "type": "motif", "libelle": "Numéro de police d'assurance annoncé", "prefixe": "POLICE",
+      "motif": "(?<=\\bpolice\\s*(?:d'assurance)?\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{5,19}(?![A-Z0-9/-])", "exemple": "police n° AUT/2026/004512" },
+    { "id": "P-004", "type": "motif", "libelle": "Numéro de sinistre annoncé", "prefixe": "SINISTRE",
+      "motif": "(?<=\\bsinistre\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{5,19}(?![A-Z0-9/-])", "exemple": "sinistre n° SIN-26-00871" },
+    { "id": "P-005", "type": "motif", "libelle": "Numéro de chèque annoncé", "prefixe": "CHEQUE",
+      "motif": "(?<=\\bch[èe]que\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)\\d{7}(?!\\d)", "exemple": "chèque n° 1234567" },
+    { "id": "P-010", "type": "laisser_en_clair", "libelle": "Régulateurs, banques et assureurs de la place",
+      "termes": ["Bank Al-Maghrib", "ACAPS", "AMMC", "Attijariwafa bank", "Banque Populaire", "Bank of Africa", "CIH Bank", "Crédit du Maroc", "Société Générale", "Crédit Agricole", "Al Barid Bank", "Wafa Assurance", "RMA", "AXA", "Sanlam", "AtlantaSanad", "MAMDA"] },
+    { "id": "P-011", "type": "laisser_en_clair", "libelle": "Vocabulaire des contrats",
+      "termes": ["tous risques", "responsabilité civile", "franchise", "prime", "bonus-malus", "sinistre", "avenant", "échéance"] }
+  ]
+}

@@ -5,7 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { DETECTEURS, PLANCHER, CATEGORIES } from "../lib/catalogue.js";
+import { DETECTEURS, PLANCHER, CATEGORIES, PACKS } from "../lib/catalogue.js";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ENGINE = new URL("../../mcp-anonymiseur/server/engine.js", import.meta.url);
 
@@ -30,4 +32,11 @@ test("chaque catégorie de règle a son préfixe de code dans le moteur (US-5)",
   assert.ok(bloc, "CATEGORY_TYPES introuvable dans engine.js");
   const prefixes = new Set([...bloc[1].matchAll(/prefix:\s*"([A-Z]+)"/g)].map((m) => m[1]));
   for (const [cat, p] of Object.entries(CATEGORIES)) assert.ok(prefixes.has(p), `${cat} → ${p}`);
+});
+
+test("le catalogue des packs reprend exactement les packs livrés avec le connecteur (id, nom)", () => {
+  const dossier = fileURLToPath(new URL("../../mcp-anonymiseur/packs/", import.meta.url));
+  const livres = fs.readdirSync(dossier).filter((n) => n.endsWith(".json")).map((n) => JSON.parse(fs.readFileSync(path.join(dossier, n), "utf8")));
+  assert.deepEqual(Object.keys(PACKS).sort(), livres.map((p) => p.id).sort());
+  for (const p of livres) assert.equal(PACKS[p.id].nom, p.nom, p.id);
 });

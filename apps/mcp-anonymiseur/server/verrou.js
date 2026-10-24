@@ -75,6 +75,7 @@ ad hoc ad litem ad nutum lato sensu stricto sensu infra supra idem ibid op cit s
 covid télétravail visio visioconférence mailing e-commerce ecommerce fintech legaltech open source
 anonymisation anonymiser anonymisé anonymisée anonymiseur anonymiseurs pseudonymisation pseudonymiser
 dé-anonymiser nanomizer ai4x hidden hidden-tokens hiddentokens tokens token appli ocr scan scans mcp
+imei imsi iccid msisdn puk pin sim esim mac siret siren rcs rg parquet pourvoi police sinistre chèque cheque bic swift
 memo mémo mémos courriel courriels pv cr janv fevr fev avr juil oct nov
 d l s n j m t c qu jusqu lorsqu puisqu quoiqu presqu quelqu aujourd prud n°
 rg rcs siret siren nic naf ape cass civ crim soc bull jcp gaz pal rtd jorf bo ass plén plen ch mixte réun

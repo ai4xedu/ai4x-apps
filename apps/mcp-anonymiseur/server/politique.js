@@ -38,6 +38,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { PREFIX_LABEL } from "./engine.js";
 import { normaliser, creerReconnaisseur, PREFIXE_EMPREINTE, MAX_MOTS, PREFIXE_RX, prefixesReserves, validerRegles } from "./regles.js";
+import { developperPacks } from "./packs.js";
 /* Le contrat des empreintes vit dans regles.js depuis la v2.18 (les règles du
    dossier s'en servent aussi) ; réexporté pour les tests et les anciens imports. */
 export { normaliser, creerReconnaisseur, PREFIXE_EMPREINTE, MAX_MOTS };
@@ -103,6 +104,7 @@ export function validerPolitique(p, cabinetId) {
   if (!Array.isArray(p.perimetre?.surfaces)) e.push("surfaces absentes");
   const equipes = new Set((p.equipes || []).map((x) => x.id));
   const ids = new Set();
+  if (p.packs !== undefined && (!Array.isArray(p.packs) || p.packs.some((x) => typeof x !== "string"))) e.push("packs : liste d'identifiants attendue");
   if (!Array.isArray(p.regles)) return [...e, "règles absentes"];
   for (const r of p.regles) {
     const ou = r?.id || "règle sans id";
@@ -293,7 +295,10 @@ export function creerPolitiquePoste({ enrolement, etatDir, now = () => new Date(
     if (!c || !c.politique || c.bloque || !c.politique.perimetre.surfaces.includes(SURFACE)) return { regles: [], erreurs: [] };
     const brutes = c.politique.regles.filter((r) => (r.type === "motif" || r.type === "laisser_en_clair") && viseUtilisateur(r, c.politique, c.utilisateur));
     const v = validerRegles(brutes, { niveau: "organisation" });
-    return { regles: v.regles, erreurs: v.erreurs.map((m) => `politique du cabinet, ${m}`) };
+    // Les packs métier de la politique (SPEC-PACKS-METIER §3) : développés ici,
+    // depuis les fichiers de CE connecteur ; un pack inconnu bloque (fail closed).
+    const d = developperPacks(c.politique.packs);
+    return { regles: [...v.regles, ...d.regles], erreurs: [...v.erreurs, ...d.erreurs].map((m) => `politique du cabinet, ${m}`) };
   }
   function typesOrganisation(c) {
     if (!c || !c.politique || c.bloque) return [];
