@@ -27,6 +27,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { TYPES, CATEGORY_TYPES, classifyLoose, registerCustomTypes } from "./engine.js";
 import { FICHIER_REGLAGES } from "./chiffres.js";
+import { developperPacks, lirePack } from "./packs.js";
 
 /* ------------------------------------------------------- empreintes (contrat) */
 
@@ -89,6 +90,26 @@ export function creerReconnaisseur(sel, empreintes) {
 /* ------------------------------------------------------------------ format */
 
 export const TYPES_REGLE = ["toujours_coder", "laisser_en_clair", "motif"];
+
+/* Clés de contrôle qu'un motif de PACK peut exiger (SPEC-PACKS-METIER §1) :
+   un passage qui correspond au motif mais rate le contrôle n'est pas codé
+   par cette règle. Réservé aux packs : une règle d'un client n'en a pas. */
+function luhn(texte) {
+  const d = String(texte).replace(/\D/g, "");
+  if (d.length < 2) return false;
+  let somme = 0, alt = false;
+  for (let i = d.length - 1; i >= 0; i--) { let x = +d[i]; if (alt) { x *= 2; if (x > 9) x -= 9; } somme += x; alt = !alt; }
+  return somme % 10 === 0;
+}
+function iban(texte) {
+  const t = String(texte).replace(/[\s.-]/g, "").toUpperCase();
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(t)) return false;
+  const r = (t.slice(4) + t.slice(0, 4)).replace(/[A-Z]/g, (c) => String(c.charCodeAt(0) - 55));
+  let m = 0;
+  for (const ch of r) m = (m * 10 + Number(ch)) % 97;
+  return m === 1;
+}
+export const CONTROLES = { luhn, iban };
 export const PREFIXE_RX = /^[A-Z][A-Z0-9]{1,9}$/;
 export const LIMITES = { regles: 200, termes: 500, termeMin: MIN_CARACTERES, termeMax: 80, motif: 200, libelle: 80 };
 /* Préfixes qui ne sont pas des détecteurs mais apparaissent dans ce qui sort
@@ -168,8 +189,9 @@ export function validerRegles(liste, { niveau = "dossier", verifierIdentifiants 
   if (liste.length > LIMITES.regles) { erreurs.push(`plus de ${LIMITES.regles} règles : seules les ${LIMITES.regles} premières sont lues`); liste = liste.slice(0, LIMITES.regles); }
   const reserves = prefixesReserves();
   const ids = new Set();
-  const idRx = niveau === "dossier" ? /^D-\d{3,}$/ : /^R-\d{3,}$/;
-  const forme = niveau === "dossier" ? "D-001" : "R-001";
+  const pack = niveau === "pack";
+  const idRx = niveau === "dossier" ? /^D-\d{3,}$/ : pack ? /^P-\d{3,}$/ : /^R-\d{3,}$/;
+  const forme = niveau === "dossier" ? "D-001" : pack ? "P-001" : "R-001";
   liste.forEach((r, i) => {
     const ou = r && typeof r.id === "string" && r.id.trim() ? r.id.trim() : `règle n°${i + 1}`;
     const ko = (m) => { erreurs.push(`${ou} : ${m}`); };
@@ -184,7 +206,8 @@ export function validerRegles(liste, { niveau = "dossier", verifierIdentifiants 
     if (r.type !== "laisser_en_clair") {
       const p = String(r.prefixe ?? "").trim().toUpperCase();
       if (!PREFIXE_RX.test(p)) return ko("préfixe : 2 à 10 lettres majuscules ou chiffres, commençant par une lettre (ex. AFFAIRE)");
-      if (reserves.has(p)) return ko(`préfixe « ${p} » réservé au moteur, choisissez-en un autre`);
+      // Un pack peut étendre un détecteur du moteur (TEL, RIB) : même compteur, même code.
+      if (reserves.has(p) && !(pack && TYPES.some((t) => t.prefix === p))) return ko(`préfixe « ${p} » réservé au moteur, choisissez-en un autre`);
       out.prefixe = p;
     }
     if (r.type === "motif") {
@@ -195,6 +218,13 @@ export function validerRegles(liste, { niveau = "dossier", verifierIdentifiants 
       if (!new RegExp(r.motif, "iu").test(ex)) return ko("le motif ne reconnaît pas son exemple");
       out.motif = String(r.motif);
       out.exemple = ex;
+      if (r.controle !== undefined) {
+        if (!pack) return ko("« controle » est réservé aux packs métier");
+        if (!CONTROLES[r.controle]) return ko(`contrôle inconnu (attendu : ${Object.keys(CONTROLES).join(", ")})`);
+        const trouve = ex.match(new RegExp(r.motif, "iu"));
+        if (!trouve || !CONTROLES[r.controle](trouve[0])) return ko("l'exemple ne passe pas le contrôle");
+        out.controle = r.controle;
+      }
     } else {
       const termes = validerTermes(r.termes, ko, { clair: r.type === "laisser_en_clair" && verifierIdentifiants });
       if (!termes) return;
@@ -223,6 +253,12 @@ export function lireReglesDossier(outdir) {
   try {
     const r = JSON.parse(fs.readFileSync(f, "utf8"));
     val = validerRegles(r && typeof r === "object" ? r.regles : undefined, { niveau: "dossier" });
+    // Les packs métier du dossier (SPEC-PACKS-METIER §3) : par référence.
+    const packs = r && typeof r === "object" ? r.packs : undefined;
+    if (packs !== undefined) {
+      const d = developperPacks(packs);
+      val = { regles: [...val.regles, ...d.regles], erreurs: [...val.erreurs, ...d.erreurs], packs: Array.isArray(packs) ? packs.map(String) : [] };
+    }
   } catch {
     val = { regles: [], erreurs: [`${FICHIER_REGLAGES} illisible : aucune règle du dossier appliquée`] };
   }
@@ -256,7 +292,15 @@ const pluriel = (n, s, p = s + "s") => `${n} ${n > 1 ? p : s}`;
 export function compilerRegles({ dossier = [], organisation = [], noms = null, typesSupplementaires = [], erreurs = [] } = {}) {
   const types = new Map();
   for (const t of typesSupplementaires) if (!types.has(t.prefix)) types.set(t.prefix, { id: t.id, prefix: t.prefix, label: t.label });
+  const parPack = new Map();   // id de pack → comptes, pour le plan
+  const noterPack = (r, champ, n = 1) => {
+    if (!r.pack) return;
+    if (!parPack.has(r.pack)) parPack.set(r.pack, { motifs: 0, termes: 0, clair: 0 });
+    parPack.get(r.pack)[champ] += n;
+  };
   const typeFor = (r, niveau) => {
+    const moteur = TYPES.find((t) => t.prefix === r.prefixe);
+    if (moteur) return moteur.id;   // un pack qui étend un détecteur natif
     const id = "regle_" + r.prefixe;
     if (!types.has(r.prefixe)) types.set(r.prefixe, { id, prefix: r.prefixe, label: `${r.libelle} (${NIVEAU[niveau]})` });
     return types.get(r.prefixe).id;
@@ -269,16 +313,19 @@ export function compilerRegles({ dossier = [], organisation = [], noms = null, t
     for (const r of liste) {
       if (r.type === "toujours_coder") {
         const t = typeFor(r, niveau);
-        comptes[niveau].coder++;
-        comptes[niveau].termes += r.termes.length;
+        if (!r.pack) { comptes[niveau].coder++; comptes[niveau].termes += r.termes.length; }
+        noterPack(r, "termes", r.termes.length);
         for (const x of r.termes) { const h = empreinte(SEL_LOCAL, x); if (!parEmpreinte.has(h)) parEmpreinte.set(h, t); }
       } else if (r.type === "motif") {
         const t = typeFor(r, niveau);
         const src = r.motif;
-        comptes[niveau].motifs++;
-        coders.push({ niveau, trouver: (s) => [...String(s ?? "").matchAll(new RegExp(src, "giu"))].map((m) => ({ value: m[0], type: t })) });
+        const controle = r.controle ? CONTROLES[r.controle] : null;
+        if (!r.pack) comptes[niveau].motifs++;
+        noterPack(r, "motifs");
+        coders.push({ niveau, trouver: (s) => [...String(s ?? "").matchAll(new RegExp(src, "giu"))].filter((m) => !controle || controle(m[0])).map((m) => ({ value: m[0], type: t })) });
       } else if (r.type === "laisser_en_clair") {
-        comptes[niveau].clair += r.termes.length;
+        if (!r.pack) comptes[niveau].clair += r.termes.length;
+        noterPack(r, "clair", r.termes.length);
         for (const x of r.termes) clairs.push({ niveau, terme: x });
       }
     }
@@ -335,6 +382,14 @@ export function compilerRegles({ dossier = [], organisation = [], noms = null, t
       return bouts.length ? `${niveau} — ${bouts.join(", ")}` : "";
     };
     const bouts = [part("organisation"), part("dossier")].filter(Boolean);
+    for (const [id, c] of parPack) {
+      const p = lirePack(id);
+      const d = [];
+      if (c.motifs) d.push(pluriel(c.motifs, "motif"));
+      if (c.termes) d.push(`${pluriel(c.termes, "terme")} à coder`);
+      if (c.clair) d.push(`${pluriel(c.clair, "terme")} en clair`);
+      bouts.push(`pack ${p ? p.nom : id} : ${d.join(", ")}`);
+    }
     const notes = [];
     if (ignorees) notes.push(`${pluriel(ignorees, "exclusion")} ignorée${ignorees > 1 ? "s" : ""} (un terme laissé en clair est aussi visé par une règle qui code : coder l'emporte)`);
     if (erreurs.length) notes.push(`${pluriel(erreurs.length, "règle du dossier", "règles du dossier")} écartée${erreurs.length > 1 ? "s" : ""} : ${erreurs.join(" ; ")}`);

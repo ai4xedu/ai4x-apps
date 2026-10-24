@@ -1,0 +1,25 @@
+{
+  "format": "hidden-tokens.pack/1",
+  "id": "telecom-ma",
+  "nom": "Télécom — opérateur marocain",
+  "version": "1.0.0",
+  "description": "Identifiants d'abonné et d'équipement (IMSI, IMEI, ICCID, MSISDN international, adresse MAC, codes PUK/PIN annoncés) codés sous leur nom ; opérateurs, marques et vocabulaire des offres laissés en clair pour que l'IA travaille sur une transcription de centre d'appels.",
+  "regles": [
+    { "id": "P-001", "type": "motif", "libelle": "IMSI (identité d'abonné sur la SIM)", "prefixe": "IMSI",
+      "motif": "(?<!\\d)604\\d{12}(?!\\d)", "exemple": "604010123456789" },
+    { "id": "P-002", "type": "motif", "libelle": "IMEI (identité du terminal)", "prefixe": "IMEI",
+      "motif": "(?<![\\dA-Za-z])(?!604)\\d{2}(?:[ -]?\\d){13}(?![\\dA-Za-z])", "exemple": "35 123456 789012 4", "controle": "luhn" },
+    { "id": "P-003", "type": "motif", "libelle": "ICCID (numéro de la carte SIM)", "prefixe": "ICCID",
+      "motif": "(?<!\\d)89212\\d{13,15}(?!\\d)", "exemple": "8921201234567890125", "controle": "luhn" },
+    { "id": "P-004", "type": "motif", "libelle": "MSISDN en forme internationale (+212 / 00212)", "prefixe": "TEL",
+      "motif": "(?<!\\d)(?:\\+|00)212[ .-]?[5-7](?:[ .-]?\\d){8}(?!\\d)", "exemple": "+212 6 12 34 56 78" },
+    { "id": "P-005", "type": "motif", "libelle": "Adresse MAC d'un équipement", "prefixe": "MAC",
+      "motif": "(?<![0-9A-Fa-f:-])[0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2}[:-][0-9A-Fa-f]{2}(?![0-9A-Fa-f:-])", "exemple": "A4:5E:60:1B:2C:3D" },
+    { "id": "P-006", "type": "motif", "libelle": "Code PUK ou PIN annoncé", "prefixe": "PUK",
+      "motif": "(?<=\\bP(?:UK|IN)\\s?[12]?\\s*[:=]?\\s*)\\d{4,8}(?!\\d)", "exemple": "PUK : 12345678" },
+    { "id": "P-010", "type": "laisser_en_clair", "libelle": "Opérateurs et marques du secteur",
+      "termes": ["Maroc Telecom", "IAM", "Orange Maroc", "inwi", "Jawal", "Pass Internet", "Pass Jawal"] },
+    { "id": "P-011", "type": "laisser_en_clair", "libelle": "Vocabulaire des offres et du service",
+      "termes": ["forfait", "hors forfait", "recharge", "fibre", "roaming", "carte SIM", "eSIM", "service client", "box", "portabilité", "résiliation", "facture détaillée"] }
+  ]
+}
