@@ -755,7 +755,7 @@ export function anonymizeDocument(ws, book, extra, opts) {
 }
 
 /* Remplace les codes d'une clé dans un texte (insensible à la casse).
-   map : CODE (majuscules) -> valeur réelle. Depuis la v2.19, la table peut
+   map : CODE (majuscules) -> valeur réelle. Depuis la v2.23, la table peut
    aussi porter des PSEUDONYMES (rendu lisible, cf. pseudonymes.js) : des mots
    avec accents, d'où les frontières Unicode plutôt que \b (qui ne connaît
    que l'ASCII : « \bÉric\b » ne trouvait pas « Éric »). Un pseudonyme n'est

@@ -1,5 +1,5 @@
 // ============================================================================
-// PSEUDONYMES — le rendu « lisible » (v2.19).
+// PSEUDONYMES — le rendu « lisible » (v2.23).
 //
 // Jusqu'ici une personne devenait NOM-001, une société SOCIETE-003, une date
 // de naissance NAISS-002. Sûr, réversible — mais l'IA raisonne moins bien sur

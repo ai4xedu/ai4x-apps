@@ -32,6 +32,19 @@ export const DETECTEURS = {
   CODE: "Autre donnée sensible",
 };
 
+/* Packs métier livrés avec le connecteur (apps/mcp-anonymiseur/packs/*.json,
+   SPEC-PACKS-METIER). La console n'en connaît que l'identité : le poste
+   développe depuis ses propres fichiers. test/catalogue.test.js échoue si la
+   liste diverge des fichiers livrés. */
+export const PACKS = {
+  "telecom-ma": { nom: "Télécom — opérateur marocain", depuis: "2.21.0", description: "IMSI, IMEI, ICCID, MSISDN international, adresse MAC, PUK/PIN annoncés ; opérateurs et vocabulaire des offres en clair." },
+  "juridique-fr": { nom: "Juridique — cabinet d'avocats, France", depuis: "2.21.0", description: "SIRET, SIREN annoncé, n° RG, n° de parquet annoncé, n° de pourvoi ; juridictions, codes et sources de droit en clair." },
+  "banque-assurance": { nom: "Banque et assurance", depuis: "2.21.0", description: "IBAN tous pays (clé vérifiée, code RIB), BIC, n° de police, de sinistre et de chèque annoncés ; régulateurs, banques, assureurs et vocabulaire des contrats en clair." },
+  "sante": { nom: "Santé — soins, laboratoires, assurance maladie", depuis: "2.22.0", description: "N° de dossier patient, d'assuré (AMO, CNOPS, sécurité sociale), de praticien (INPE, RPPS, ADELI), de lot ; spécialités, examens, médicaments courants et organismes en clair." },
+  "expertise-comptable": { nom: "Expertise comptable — Maroc et France", depuis: "2.22.0", description: "N° de facture, de pièce, TVA intracommunautaire, déclarations DGI ; plan comptable, impôts, administrations et logiciels en clair ; montants selon le réglage Nombres." },
+  "rh-paie": { nom: "RH et paie", depuis: "2.22.0", description: "Matricule, badge, contrat de travail ; postes, droit du travail, éléments de paie et organismes en clair ; salaires selon le réglage Nombres." },
+};
+
 /* Plancher éditeur (invariant 6) : toujours actifs, l'admin ne peut pas les
    retirer — seulement en ajouter d'autres. */
 export const PLANCHER = new Set(["PRENOM", "NOM", "PERSONNE", "EMAIL", "TEL", "ADRESSE"]);

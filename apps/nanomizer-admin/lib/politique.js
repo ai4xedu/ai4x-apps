@@ -21,7 +21,7 @@ import crypto from "node:crypto";
 import { canonique } from "./canonique.js";
 import { normaliser, empreinte, contientEnMots, MAX_MOTS, MIN_CARACTERES } from "./empreinte.js";
 import {
-  DETECTEURS, PLANCHER, CATEGORIES, TYPES_REGLE, ALERTES_REGLE, SURFACES, CANAUX, prefixesReserves,
+  DETECTEURS, PLANCHER, CATEGORIES, TYPES_REGLE, ALERTES_REGLE, SURFACES, CANAUX, prefixesReserves, PACKS,
 } from "./catalogue.js";
 import { PREFIXE_RX, LIMITES, verifierMotif, ressembleAUnIdentifiant } from "./regles.js";
 
@@ -45,7 +45,7 @@ const HEURE_RX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const CLES_SOURCE = new Set([
   "format", "emise_par", "expiration_jours", "perimetre", "equipes", "regles",
-  "alertes", "journal", "notice_salaries",
+  "alertes", "journal", "notice_salaries", "packs",
 ]);
 const CLES_REGLE = {
   toujours_pseudonymiser: new Set(["id", "type", "libelle", "portee", "categorie", "prefixe", "noms"]),
@@ -253,6 +253,17 @@ export function compilerPolitique(source, { cabinet, sel, version, maintenant = 
     reglesCompilees.push(out);
   });
 
+  // Packs métier (par référence : le poste les développe depuis ses fichiers).
+  let packs;
+  if (source.packs !== undefined) {
+    if (!Array.isArray(source.packs) || !source.packs.every((x) => typeof x === "string")) err.push("packs : liste d'identifiants attendue (ex. [\"telecom-ma\"])");
+    else {
+      for (const id of source.packs) if (!(id in PACKS)) err.push(`packs : « ${id} » inconnu (${Object.keys(PACKS).join(", ")})`);
+      packs = [...new Set(source.packs)];
+      if (!packs.length) packs = undefined;
+    }
+  }
+
   // Alertes
   const al = source.alertes;
   let alertes;
@@ -312,6 +323,7 @@ export function compilerPolitique(source, { cabinet, sel, version, maintenant = 
     perimetre: { surfaces: [...new Set(surfaces)].sort(), en_cas_erreur: enCasErreur },
     equipes,
     regles: reglesCompilees,
+    ...(packs ? { packs } : {}),
     alertes,
     journal: { retention_mois: retention },
     notice_salaries: notice,

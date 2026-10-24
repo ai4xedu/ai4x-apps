@@ -58,7 +58,7 @@ test("essai : signée par le poste seul, intégrité prouvée, identité non cer
   const dir = tmp();
   const id = posteIdentity(dir);
   assert.equal(id.cert, null);
-  // Droits POSIX : pas de sens sous Windows (NTFS répond 0o666), comme dans word.test.js.
+  // Droits POSIX : Windows n'a pas de bits de mode (NTFS : ACL), le fichier y est protégé par le profil.
   if (process.platform !== "win32") assert.equal((fs.statSync(path.join(dir, POSTE_KEY_FILE)).mode & 0o777), 0o600);
   const { html, certifie } = attestHtml(id, PAGE, { ...A, comptes: { echanges: 3, fuites: 2 } });
   assert.equal(certifie, false);

@@ -193,3 +193,15 @@ test("règles de l'organisation : ce que la console refuse", () => {
     assert.ok(!e.includes("contact@") && !e.includes("Quelqu'un"), `valeur citée pour ${regle.id}`);
   }
 });
+
+test("packs métier : la source les cite par identifiant, la politique signée les porte, un pack inconnu est refusé", async () => {
+  const { compilerPolitique } = await import("../lib/politique.js");
+  const { cabinet, ouvert } = cabinetDeTest();
+  const src = sourceDeTest();
+  src.packs = ["telecom-ma", "juridique-fr", "telecom-ma"];
+  const r = compilerPolitique(src, { cabinet, sel: ouvert.sel, version: 1, maintenant: MAINTENANT });
+  assert.deepEqual(r.erreurs || [], []);
+  assert.deepEqual(r.politique.packs, ["telecom-ma", "juridique-fr"]);
+  src.packs = ["sante-animale"];
+  assert.throws(() => compilerPolitique(src, { cabinet, sel: ouvert.sel, version: 1, maintenant: MAINTENANT }), /packs : « sante-animale » inconnu/);
+});

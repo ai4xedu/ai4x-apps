@@ -1,5 +1,5 @@
 {
- "_licence": "Listes composées à la main pour Hidden Tokens (v2.19) : prénoms et patronymes courants de trois aires culturelles, amorces de raisons sociales, villes par taille. Aucune donnée personnelle : des noms fréquents, portés par des milliers de personnes. Un pseudonyme n'est jamais un mot du dictionnaire (filtré au chargement, cf. server/pseudonymes.js).",
+ "_licence": "Listes composées à la main pour Hidden Tokens (v2.23) : prénoms et patronymes courants de trois aires culturelles, amorces de raisons sociales, villes par taille. Aucune donnée personnelle : des noms fréquents, portés par des milliers de personnes. Un pseudonyme n'est jamais un mot du dictionnaire (filtré au chargement, cf. server/pseudonymes.js).",
  "prenoms": {
   "fr": {
    "f": [

@@ -84,7 +84,7 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | Outil | Rôle |
 |---|---|
 | `lister_fichiers` | Liste les fichiers traitables (Excel, CSV, Word .docx, PDF, .md/.txt, scans ; et les copies Word codées, pour `decoder_word`) — noms propres masqués (•••), repère stable `[F-XXXXX]` |
-| `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) ; modes TABLEAU (colonnes entières), DOCUMENT (facture → codage intra-cellule, dictionnaire marocain), WORD (copie .docx codée, mise en forme conservée) et TEXTE/PDF ; le verrou passe ENSUITE partout (colonnes lisibles et en-têtes compris). `onglet` par numéro. `rendu: "lisible"` (v2.19) : pseudonymes plausibles à la place des codes de personnes, sociétés, villes et dates de naissance. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
+| `anonymiser_fichier` | Deux temps (plan sans `confirmer`, exécution avec) ; modes TABLEAU (colonnes entières), DOCUMENT (facture → codage intra-cellule, dictionnaire marocain), WORD (copie .docx codée, mise en forme conservée) et TEXTE/PDF ; le verrou passe ENSUITE partout (colonnes lisibles et en-têtes compris). `onglet` par numéro. `rendu: "lisible"` (v2.23) : pseudonymes plausibles à la place des codes de personnes, sociétés, villes et dates de naissance. Garde-fou : un document forcé en tableau (>40 % de cellules codées) est refusé |
 | `anonymiser_dossier` | LOT : tous les fichiers (ou filtrés par `motif`), toutes les feuilles, UNE clé, plan→confirmer, compte rendu en comptes seuls + rapport `rapport-lot-*.md` (noms de fichiers codés) ; `rendu` comme `anonymiser_fichier` |
 | `lire_scan` | OCR LOCAL d'un scan — le texte reconnu n'entre JAMAIS dans la conversation : il est écrit en `…-ocr-A-RELIRE.md` (nom codé), l'utilisateur le relit, PUIS on anonymise ce fichier |
 | `caviarder_image` | Bandeaux noirs sur une capture ou un scan : OCR local, même moteur et même verrou qu'un texte, mot mal lu et inconnu noirci d'office, bandeaux GRAVÉS dans un nouveau PNG. Trois temps : plan → image écrite sur le poste (l'utilisateur la regarde) → `envoyer: true` seulement après sa validation |
@@ -94,10 +94,10 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `verifier_confinement` | Audit hors ligne : autres extensions / serveurs MCP / Cowork qui voient le dossier, pilotage navigateur, synchronisation cloud, droits de la clé |
 | `rapport_couverture` | Page locale pour le DPO : par poste, fichiers protégés, plans non confirmés, décodages, montants en clair, valeurs retrouvées, portes ouvertes, dernière activité. Que des comptes ; en équipe, chaque poste dépose les siens dans le dossier d'équipe |
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
-| `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.19) : le texte ressort avec des pseudonymes à la place des codes de personnes |
+| `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
-v2.19.0 (les pseudonymes sémantiquement cohérents, 23/10/2026). Nouveau
+v2.23.0 (les pseudonymes sémantiquement cohérents, 24/10/2026). Nouveau
 **rendu « lisible »**, optionnel et réversible (`server/pseudonymes.js`,
 `lexique/pseudonymes.json`). Un code reçoit un PSEUDONYME plausible et stable :
 prénom du même genre et de la même aire culturelle (dictionnaires FR / MA / EN),
@@ -127,8 +127,9 @@ que l'IA a vu) ; les RÈGLES jointes aux données gagnent un point « 1 bis »
 (recopier les pseudonymes tels quels). Réglage par dossier à côté de
 `chiffres` dans `Hidden-Tokens/reglages.json` (`"rendu": "lisible"`), variable
 `ANX_RENDU`, ou option `rendu` de `anonymiser_fichier`, `anonymiser_dossier`
-et `coder_texte` ; défaut « codes », inchangé. Limites : en clé d'équipe, les
-pseudonymes sont ceux du poste (la graine n'est pas partagée) ; l'extension
+et `coder_texte` ; défaut « codes », inchangé. Limites : en clé d'équipe ou
+au registre de l'organisation (v2.20), les pseudonymes sont ceux du poste (la
+graine n'est pas partagée et le registre ne porte que code/valeur/type) ; l'extension
 navigateur (sentinelle) ne retraduit encore que les codes ; l'appli n'expose
 pas encore le réglage (second PR, dépôt Nanomizer).
 v2.18.0 (les règles de l'organisation, 23/10/2026). L'entreprise configure ses
@@ -513,6 +514,16 @@ redémarrage de Claude Desktop (l'env d'un process ne change pas en vol).
 La clé vit dans `<dossier de travail>/Hidden-Tokens/` : `cle-de-session.json`
 (état) + `cle-correspondance-NE-JAMAIS-PARTAGER.xlsx` (export humain/compatible web).
 
+## Le registre de l'organisation (v2.20)
+
+`server/registre.js` + `server/enveloppe.js` : une clé de codes pour toute
+l'organisation, entrées chiffrées sur le dossier partagé, registre signé par
+la console admin (`apps/nanomizer-admin/lib/registre.js`, `sequestre.js`,
+`feuille.js`). Le connecteur ne l'utilise que lancé par la sentinelle
+(`ANX_REGISTRE_DIR`, `ANX_POSTE_ID`, secrets par `ANX_POSTE_SECRETS_FD`) ; il
+remplace alors la clé d'équipe. Spec : `SPEC-REGISTRE-ORGANISATION.md` du dépôt
+nanomizer. Tests : `test/registre.test.js`, `test/registre-e2e.test.js`.
+
 ## Dev
 
 ```bash
@@ -606,4 +617,16 @@ La campagne de validation (`node test/campagne-mvp.mjs`, 44 contrôles) émet
 elle-même une licence d'un jour avec la clé privée du poste — sans quoi elle ne
 testerait que l'écran de blocage. Elle exige la VRAIE clé (elle teste
 l'artefact, qui ne connaît que la clé de production) et vérifie que la clé de
-test n'y est ni embarquée ni honorée (C3).
+test n'y est ni embarquée ni honorée (C3).## Les packs métier (v2.21–2.22)
+
+`packs/<id>.json` : des règles livrées avec le connecteur (motifs avec clé de
+contrôle `luhn`/`iban`, préfixes du moteur autorisés, termes en clair, et
+depuis la 2.22 des `entetes` : en mode tableau, un en-tête reconnu force la
+colonne sous le préfixe), activées par référence — `"packs": [...]` dans
+`Hidden-Tokens/reglages.json` (appli) ou dans la politique signée (console).
+`server/packs.js` les développe à chaque compilation des règles ; un pack
+inconnu bloque l'anonymisation. Six packs : `telecom-ma`, `juridique-fr`,
+`banque-assurance`, `sante`, `expertise-comptable`, `rh-paie`. Spec :
+`SPEC-PACKS-METIER.md` (dépôt nanomizer). Tests : `test/packs.test.js`.
+
+

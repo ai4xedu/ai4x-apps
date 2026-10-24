@@ -9,6 +9,17 @@
 //   nanomizer-admin signer --source politique-source.json --dossier-partage /Volumes/NAS/nanomizer [--jours 90]
 //   nanomizer-admin verifier --enrolement enrolement-pst_xxxx.nanomizer --dossier-partage /Volumes/NAS/nanomizer
 //
+// Le registre de pseudonymes de l'organisation (SPEC-REGISTRE-ORGANISATION) :
+//   nanomizer-admin registre-creer --dossier-partage … [--depuis-equipe /Volumes/NAS/equipe]
+//   nanomizer-admin registre-etat --dossier-partage …
+//   nanomizer-admin poste-certifier --dossier-partage … --poste pst_xxxxxxxx     (compare l'empreinte avec le collaborateur)
+//   nanomizer-admin poste-retirer --dossier-partage … --poste pst_xxxxxxxx
+//   nanomizer-admin sequestre-creer --dossier-partage … --gardien "Me A" --gardien "Me B" [--gardien …] [--quorum 2]
+//   nanomizer-admin sequestre-ouvrir --dossier-partage … --poste pst_xxxxxxxx [--console]
+//   nanomizer-admin feuille-secours --dossier-partage … [--sortie feuille.html]
+//   nanomizer-admin restaurer --dossier-partage … --poste pst_xxxxxxxx [--console]     (recopie la feuille)
+//   nanomizer-admin registre-fusionner --dossier-partage … --garde NOM-48291374 --alias NOM-001
+//
 // Le dossier du cabinet est ~/.nanomizer-admin (ou NANOMIZER_ADMIN_DIR).
 // La phrase de passe est demandée sans écho (ou lue dans NANOMIZER_PHRASE,
 // pour les scripts). Rien ne part sur le réseau.
@@ -24,9 +35,40 @@ import { creerEnrolement, ecrireEnrolement, importerEnrolement, verifierSignatur
 import {
   publierPolitique, modeleSource, PolitiqueInvalide, FICHIER_POLITIQUE, FICHIER_SIGNATURE,
 } from "../lib/politique.js";
+import {
+  FICHIER_ADMIN, creerAdmin, ouvrirAdmin, lireAdmin, ecrireAdmin, creerRegistre, lireRegistre, certifierPoste, retirerPoste,
+  attacherSequestre, restaurerSecrets, secretsAdmin, secretsSequestre, ajouterEntreesAdmin, fusionnerDoublon, etatRegistre,
+  lireFiche, lireEquipeV23,
+} from "../lib/registre.js";
+import { FICHIER_SEQUESTRE, creerSequestre, ouvrirSequestre } from "../lib/sequestre.js";
+import { groupes, lireGroupes, pageFeuille } from "../lib/feuille.js";
 
 const DOSSIER = process.env.NANOMIZER_ADMIN_DIR || path.join(os.homedir(), ".nanomizer-admin");
 const FICHIER = path.join(DOSSIER, FICHIER_CABINET);
+const FICHIER_REGISTRE_ADMIN = path.join(DOSSIER, FICHIER_ADMIN);
+
+function args(nom) {
+  const out = [];
+  process.argv.forEach((a, i) => { if (a === "--" + nom && process.argv[i + 1] !== undefined) out.push(process.argv[i + 1]); });
+  return out;
+}
+
+/* La console ouverte sur le registre : cabinet, clé privée, clé de réception. */
+async function consoleRegistre({ sansAdmin = false } = {}) {
+  const cabinet = lireCabinet(FICHIER);
+  const p = await phrase();
+  const ouvert = ouvrirCabinet(cabinet, p);
+  const partage = obligatoire("dossier-partage");
+  if (sansAdmin) return { cabinet, ouvert, partage, phraseCabinet: p };
+  const admin = lireAdmin(FICHIER_REGISTRE_ADMIN);
+  return { cabinet, ouvert, partage, phraseCabinet: p, admin, adminPrivee: ouvrirAdmin(admin, cabinet, p) };
+}
+
+async function phraseGardien(nom) {
+  const v = process.env[`NANOMIZER_PHRASE_${nom}`];
+  if (v) return v;
+  return demander(`Phrase du gardien ${nom} (≥ 12 caractères, tapée par lui) : `, { cache: true });
+}
 
 function arg(nom, defaut) {
   const i = process.argv.indexOf("--" + nom);
@@ -123,6 +165,120 @@ const commandes = {
     console.log(`Politique v${r.version} signée (clé ${cabinet.cle.id}), valable jusqu'au ${r.politique.expire_le.slice(0, 10)}.`);
     console.log(`Publiée : ${r.fichier}`);
     console.log(`${r.politique.regles.length} règle(s). Les noms n'y figurent qu'en empreintes.`);
+  },
+
+  /* ---------------------------------------------------- le registre de l'organisation */
+
+  async "registre-creer"() {
+    const cabinet = lireCabinet(FICHIER);
+    const p = await phrase();
+    const ouvert = ouvrirCabinet(cabinet, p);
+    const partage = obligatoire("dossier-partage");
+    let admin;
+    if (fs.existsSync(FICHIER_REGISTRE_ADMIN)) admin = lireAdmin(FICHIER_REGISTRE_ADMIN);
+    else { admin = creerAdmin(cabinet, p); ecrireAdmin(FICHIER_REGISTRE_ADMIN, admin); }
+    let kCodes = null, importes = null;
+    const equipe = arg("depuis-equipe");
+    if (equipe) { importes = lireEquipeV23(equipe); kCodes = importes.secret; }
+    const reg = creerRegistre({ cabinet, ouvert, admin, partage, kCodes });
+    console.log(`Registre ${reg.id} créé pour ${cabinet.nom} dans ${path.join(partage, "registre")}.`);
+    if (importes) {
+      const n = ajouterEntreesAdmin(reg, secretsAdmin(reg, ouvrirAdmin(admin, cabinet, p)), partage, importes.entries);
+      console.log(`Clé d'équipe reprise : même secret de codes, ${n} correspondance(s) importée(s) chiffrées.`);
+      if (importes.fichiers.length) console.log(`Supprimez maintenant les fichiers en clair : ${importes.fichiers.join(", ")}`);
+    }
+    console.log("\nÉtapes suivantes : « sequestre-creer » (continuité), « feuille-secours » (au coffre), puis « poste-certifier » pour chaque poste qui a importé son enrôlement.");
+  },
+
+  async "registre-etat"() {
+    const cabinet = fs.existsSync(FICHIER) ? lireCabinet(FICHIER) : null;
+    const e = etatRegistre(obligatoire("dossier-partage"), cabinet);
+    console.log(`Registre ${e.id} · organisation ${e.organisation} · génération ${e.generation} · créé le ${e.cree_le.slice(0, 10)}${cabinet ? (e.signee_par_ce_cabinet ? " · signé par ce cabinet" : " · ⚠️ PAS signé par ce cabinet") : ""}`);
+    console.log(`Séquestre : ${e.sequestre || "AUCUN — créez-le (sequestre-creer)"} · console : ${e.console ? "oui" : "non"} · journal : ${e.journal} événement(s)`);
+    console.log(`Postes certifiés (${e.certifies.length}) :`); for (const p of e.certifies) console.log(`  ${p.poste}  ${p.utilisateur}  depuis le ${p.ajoute_le.slice(0, 10)}`);
+    console.log(`En attente de certification (${e.en_attente.length}) :`); for (const p of e.en_attente) console.log(`  ${p.poste}  ${p.utilisateur}  empreinte ${p.empreinte}`);
+    if (e.retires.length) console.log(`Retirés : ${e.retires.join(", ")}`);
+  },
+
+  async "poste-certifier"() {
+    const c = await consoleRegistre();
+    const posteId = obligatoire("poste");
+    const fiche = lireFiche(c.partage, posteId);
+    console.log(`Poste ${posteId} — ${fiche.utilisateur}
+Empreinte : ${fiche.empreinte}`);
+    console.log("Demandez au collaborateur de lire l'empreinte affichée dans son appli (menu Hidden Tokens → Registre). Elle doit être IDENTIQUE.");
+    const ok = process.env.NANOMIZER_CONFIRMER === "oui" || /^o/i.test(await demander("Identique ? (oui/non) : "));
+    if (!ok) { console.log("Certification annulée. Si les empreintes diffèrent, la fiche sur le partage n'est pas celle du collaborateur : prévenez-le."); process.exitCode = 2; return; }
+    certifierPoste({ ...c, posteId });
+    console.log(`Poste ${posteId} certifié : il reçoit le registre à son prochain démarrage (ou dans la minute).`);
+  },
+
+  async "poste-retirer"() {
+    const c = await consoleRegistre();
+    const posteId = obligatoire("poste");
+    const reg = retirerPoste({ ...c, posteId });
+    console.log(`Poste ${posteId} retiré. Génération ${reg.generation} : les autres postes reçoivent la nouvelle clé automatiquement.`);
+    console.log("Ce poste ne lira plus rien de ce qui est codé désormais. Ce qu'il avait, il a pu le copier. Réimprimez la feuille de secours (feuille-secours).");
+  },
+
+  async "sequestre-creer"() {
+    const c = await consoleRegistre();
+    const noms = args("gardien");
+    if (!noms.length) throw new Error("il manque --gardien \"Nom\" (1 à 4 fois)");
+    const quorum = Number(arg("quorum", noms.length >= 2 ? 2 : 1));
+    const gardiens = [];
+    for (let i = 0; i < noms.length; i++) gardiens.push({ id: `g${i + 1}`, nom: noms[i], phrase: await phraseGardien(`g${i + 1}`) });
+    const seq = creerSequestre({ organisation: c.cabinet.id, gardiens, quorum });
+    const f = path.join(c.partage, "registre", FICHIER_SEQUESTRE);
+    if (fs.existsSync(f)) throw new Error(`un séquestre existe déjà (${f}) : la rotation n'est pas dans cette version`);
+    fs.writeFileSync(f, JSON.stringify(seq, null, 2) + "\n", { flag: "wx" });
+    attacherSequestre({ ...c, cleId: seq.cle.id, publique: seq.cle.publique });
+    console.log(`Séquestre ${seq.cle.id} créé : ${gardiens.map((g) => g.nom).join(", ")}, ouverture à ${quorum}. Chaque gardien garde sa phrase pour lui ; aucune phrase ne se récupère.`);
+  },
+
+  async "sequestre-ouvrir"() {
+    const c = await consoleRegistre({ sansAdmin: true });
+    const posteId = arg("poste", null);
+    const pourConsole = process.argv.includes("--console");
+    if (!posteId && !pourConsole) throw new Error("il faut --poste pst_… et/ou --console");
+    const seq = JSON.parse(fs.readFileSync(path.join(c.partage, "registre", FICHIER_SEQUESTRE), "utf8"));
+    const phrases = {};
+    for (const g of seq.gardiens) { const ph = process.env[`NANOMIZER_PHRASE_${g.id}`] || (Object.keys(phrases).length < seq.quorum ? await demander(`Phrase de ${g.nom} (${g.id}) — Entrée pour passer : `, { cache: true }) : ""); if (ph) phrases[g.id] = ph; }
+    const { privee, gardiens } = ouvrirSequestre(seq, phrases);
+    const secrets = secretsSequestre(lireRegistre(c.partage), privee);
+    let adminPublique = null;
+    if (pourConsole) { const admin = fs.existsSync(FICHIER_REGISTRE_ADMIN) ? lireAdmin(FICHIER_REGISTRE_ADMIN) : (() => { const a = creerAdmin(c.cabinet, c.phraseCabinet); ecrireAdmin(FICHIER_REGISTRE_ADMIN, a); return a; })(); adminPublique = admin.reception.publique; }
+    restaurerSecrets({ ...c, secrets, posteId, adminPublique, origine: "sequestre", gardiens });
+    console.log(`Séquestre ouvert par ${gardiens.join(" + ")} ; secrets rescellés pour ${[posteId, pourConsole ? "la console" : null].filter(Boolean).join(" et ")}. Événement journalisé.`);
+  },
+
+  async "feuille-secours"() {
+    const c = await consoleRegistre();
+    const reg = lireRegistre(c.partage);
+    const secrets = secretsAdmin(reg, c.adminPrivee);
+    const html = pageFeuille(secrets, { organisation: c.cabinet.nom, registre: reg.id, generation: reg.generation });
+    const sortie = arg("sortie");
+    if (sortie) { fs.writeFileSync(sortie, html, { mode: 0o600, flag: "wx" }); console.log(`Feuille écrite : ${sortie} — imprimez-la, rangez-la au coffre, puis supprimez le fichier.`); }
+    else { console.log(groupes(secrets).join(" ")); }
+  },
+
+  async restaurer() {
+    const c = await consoleRegistre({ sansAdmin: true });
+    const posteId = arg("poste", null);
+    const pourConsole = process.argv.includes("--console");
+    if (!posteId && !pourConsole) throw new Error("il faut --poste pst_… et/ou --console");
+    const texte = process.env.NANOMIZER_FEUILLE || await demander("Recopiez les groupes de la feuille (HT1-…) : ");
+    const secrets = lireGroupes(texte);
+    let adminPublique = null;
+    if (pourConsole) { const a = creerAdmin(c.cabinet, c.phraseCabinet); ecrireAdmin(FICHIER_REGISTRE_ADMIN, a); adminPublique = a.reception.publique; }
+    restaurerSecrets({ ...c, secrets, posteId, adminPublique, origine: "feuille" });
+    console.log("Feuille acceptée : secrets rescellés. Événement journalisé.");
+  },
+
+  async "registre-fusionner"() {
+    const c = await consoleRegistre();
+    fusionnerDoublon({ ...c, garde: obligatoire("garde"), alias: obligatoire("alias") });
+    console.log(`${arg("alias")} devient un alias de ${arg("garde")} : les deux se décodent, seul ${arg("garde")} est attribué désormais.`);
   },
 
   /* Simule ce que fera le poste (contrôle de signature d'US-3), pour vérifier

@@ -428,7 +428,7 @@ test("coder_texte (verrou universel) : le texte collé ressort codé, rien de r�
   assert.ok(blocBis.text.includes(codeNom), "le même nom doit recevoir le même code");
 });
 
-test("rendu lisible (v2.19) : pseudonymes dans la réponse et le fichier, zéro valeur réelle, aller-retour exact", async () => {
+test("rendu lisible (v2.23) : pseudonymes dans la réponse et le fichier, zéro valeur réelle, aller-retour exact", async () => {
   const clair = "Me Hamid Chraïbi, né le 12/04/1981 à Fès, assiste Mme Odile Vasseur (née le 3 juillet 1975) contre Gharb Primeurs SARL. " +
     "Joindre hamid.chraibi@example.ma. Audience au TJ de Casablanca.";
   fs.writeFileSync(path.join(workdir, "note-lisible.md"), clair + "\n", "utf8");

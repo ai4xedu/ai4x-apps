@@ -75,6 +75,9 @@ ad hoc ad litem ad nutum lato sensu stricto sensu infra supra idem ibid op cit s
 covid télétravail visio visioconférence mailing e-commerce ecommerce fintech legaltech open source
 anonymisation anonymiser anonymisé anonymisée anonymiseur anonymiseurs pseudonymisation pseudonymiser
 dé-anonymiser nanomizer ai4x hidden hidden-tokens hiddentokens tokens token appli ocr scan scans mcp
+imei imsi iccid msisdn puk pin sim esim mac siret siren rcs rg parquet pourvoi police sinistre chèque cheque bic swift
+amo cnops ramed anam inpe rpps adeli ipp nip nda cim ccam ngap dci chu orl irm ald ansm oms cpam
+dgi simpl cgnc ifrs fec dgfip cimr smig smic cdi cdd rtt cse dpae matricule badge tva
 memo mémo mémos courriel courriels pv cr janv fevr fev avr juil oct nov
 d l s n j m t c qu jusqu lorsqu puisqu quoiqu presqu quelqu aujourd prud n°
 rg rcs siret siren nic naf ape cass civ crim soc bull jcp gaz pal rtd jorf bo ass plén plen ch mixte réun
@@ -685,17 +688,20 @@ export function strictCode(input, opts = {}) {
   const shelter = [];
   const excludes = (opts.excludes || []).map((v) => String(v).trim()).filter((v) => v.length >= 2)
     .sort((a, b) => b.length - a.length);
-  for (const v of excludes) {
-    const rx = new RegExp(`(?<![\\p{L}\\p{N}])${escRx(v)}(?![\\p{L}\\p{N}])`, "giu");
-    text = text.replace(rx, (m) => { shelter.push(m); return `${shelter.length - 1}`; });
-  }
-
-  // 1) Valeurs demandées explicitement (valeurs_a_coder).
+  // 1) Valeurs demandées explicitement (valeurs_a_coder) et règles « coder »,
+  //    AVANT les abris : coder l'emporte sur laisser en clair, même quand un
+  //    terme laissé en clair commence une valeur à coder (« DGI » dans
+  //    « DGI-2026-118877 », vu avec le pack expertise comptable).
   const extras = (opts.extra || []).filter((e) => e && String(e.value).trim().length >= 2)
     .sort((a, b) => String(b.value).length - String(a.value).length);
   for (const e of extras) {
     const rx = new RegExp(`(?<![\\p{L}\\p{N}])${escRx(e.value)}(?![\\p{L}\\p{N}])`, "giu");
     text = outsideCodes(text, (seg) => seg.replace(rx, () => emit(e.type || "autre", String(e.value).trim())));
+  }
+
+  for (const v of excludes) {
+    const rx = new RegExp(`(?<![\\p{L}\\p{N}])${escRx(v)}(?![\\p{L}\\p{N}])`, "giu");
+    text = outsideCodes(text, (seg) => seg.replace(rx, (m) => { shelter.push(m); return `${shelter.length - 1}`; }));
   }
 
   // 2a) Dictionnaire marocain du moteur (ICE, IF, RC, CNSS, patente, CIN
