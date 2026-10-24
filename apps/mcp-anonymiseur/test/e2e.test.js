@@ -447,7 +447,7 @@ test("rendu lisible (v2.23) : pseudonymes dans la réponse et le fichier, zéro 
   assert.ok(!/PRENOM-\d|NOM-\d|NAISS-\d|SOCIETE-\d/.test(apercu), `codes de personne dans l'aperçu : ${apercu}`);
   assert.match(apercu, /EMAIL-\d{3}/, "l'email reste un code");
   assert.ok(!apercu.includes("[MASQUÉ — fuite possible]"), "un pseudonyme ne doit pas être masqué par le contrôle d'aperçu");
-  assert.match(apercu, /Me \p{Lu}\p{L}+ \p{Lu}[\p{L} ]+, né le \d{2}\/\d{2}\/\d{4} à Fès/u);
+  assert.match(apercu, /Me \p{Lu}[\p{L}-]+ \p{Lu}[\p{L} ]+, né le \d{2}\/\d{2}\/\d{4} à Fès/u);
   // Le fichier écrit porte les mêmes pseudonymes ; la clé les garde (champ pseudo).
   const md = fs.readFileSync(path.join(workdir, "Hidden-Tokens", "note-lisible-anonymise.md"), "utf8");
   assert.ok(!md.includes("Chraïbi") && !/PRENOM-\d/.test(md));

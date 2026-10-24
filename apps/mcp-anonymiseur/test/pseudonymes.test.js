@@ -70,7 +70,8 @@ test("lisible : noms, société et dates deviennent des pseudonymes ; identifian
   assert.ok(!fold(soc.pseudo).includes("atlas"), "« Atlas » est la moitié du nom réel");
   // Le texte reste du français lisible autour.
   // (un patronyme fictif peut faire deux mots : « El Fassi »)
-  assert.match(r.text, /^Me \p{Lu}\p{L}+ \p{Lu}[\p{L} ]+, né le \d{2}\/\d{2}\/\d{4} à Fès, représente la société /u);
+  // (un prénom fictif peut être composé : « Fatima-Zahra »)
+  assert.match(r.text, /^Me \p{Lu}[\p{L}-]+ \p{Lu}[\p{L} ]+, né le \d{2}\/\d{2}\/\d{4} à Fès, représente la société /u);
 });
 
 test("genre et aire culturelle : un prénom féminin français reste féminin français, un marocain reste marocain", () => {
@@ -229,8 +230,9 @@ test("nom complet (colonne « Nom complet ») : prénom + patronyme, ordre et ca
   codeFor(book, "personne", "BENKIRANE Salma");
   const r = rendreLisible("PERSONNE-001 et PERSONNE-002", book);
   const [p1, p2] = book.entries.map((e) => e.pseudo);
-  assert.match(p1, /^\p{Lu}\p{Ll}+ \p{Lu}[\p{L} ]+$/u, `prénom puis nom : ${p1}`);
-  assert.match(p2, /^[\p{Lu} ]+ \p{Lu}\p{Ll}+$/u, `NOM en majuscules puis prénom : ${p2}`);
+  const PRENOM = "\\p{Lu}\\p{Ll}+(?:-\\p{Lu}\\p{Ll}+)?";   // « Mehdi », « Fatima-Zahra »
+  assert.match(p1, new RegExp(`^${PRENOM} \\p{Lu}[\\p{L} ]+$`, "u"), `prénom puis nom : ${p1}`);
+  assert.match(p2, new RegExp(`^[\\p{Lu} ]+ ${PRENOM}$`, "u"), `NOM en majuscules puis prénom : ${p2}`);
   assert.equal(r.text, `${p1} et ${p2}`);
   const map = tableDecodage(book);
   assert.equal(decodeText(r.text, map).text, "Yassine El Amrani et BENKIRANE Salma");
