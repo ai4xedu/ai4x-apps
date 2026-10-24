@@ -78,6 +78,7 @@ dé-anonymiser nanomizer ai4x hidden hidden-tokens hiddentokens tokens token app
 imei imsi iccid msisdn puk pin sim esim mac siret siren rcs rg parquet pourvoi police sinistre chèque cheque bic swift
 amo cnops ramed anam inpe rpps adeli ipp nip nda cim ccam ngap dci chu orl irm ald ansm oms cpam
 dgi simpl cgnc ifrs fec dgfip cimr smig smic cdi cdd rtt cse dpae matricule badge tva
+tf ancfcc tadbirnot adoul adouls adoulaire moulkia vefa tpi tnb cgi cdg réquisition requisition
 memo mémo mémos courriel courriels pv cr janv fevr fev avr juil oct nov
 d l s n j m t c qu jusqu lorsqu puisqu quoiqu presqu quelqu aujourd prud n°
 rg rcs siret siren nic naf ape cass civ crim soc bull jcp gaz pal rtd jorf bo ass plén plen ch mixte réun

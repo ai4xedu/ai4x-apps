@@ -1,6 +1,6 @@
 // LES PACKS MÉTIER (v2.21) — SPEC-PACKS-METIER §5 : validité de chaque pack
-// livré, transcription télécom, pièces juridique et banque, activation par
-// reglages.json, pack inconnu refusé.
+// livré, transcription télécom, pièces juridique et banque, actes notariés
+// marocains, activation par reglages.json, pack inconnu refusé.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -27,7 +27,7 @@ const codesDe = (t, prefixe) => [...t.matchAll(new RegExp(`(?<![A-Z])${prefixe}-
 
 test("chaque pack livré est valide : format, règles acceptées, exemples reconnus et contrôlés", () => {
   const fichiers = fs.readdirSync(PACKS).filter((n) => n.endsWith(".json"));
-  assert.deepEqual(fichiers.sort(), ["banque-assurance.json", "expertise-comptable.json", "juridique-fr.json", "rh-paie.json", "sante.json", "telecom-ma.json"]);
+  assert.deepEqual(fichiers.sort(), ["banque-assurance.json", "expertise-comptable.json", "juridique-fr.json", "notariat-ma.json", "rh-paie.json", "sante.json", "telecom-ma.json"]);
   for (const n of fichiers) {
     const pack = JSON.parse(fs.readFileSync(path.join(PACKS, n), "utf8"));
     assert.equal(pack.format, FORMAT_PACK);
@@ -44,7 +44,7 @@ test("chaque pack livré est valide : format, règles acceptées, exemples recon
     for (const e of pack.entetes || []) assert.ok(new RegExp(e.motif, "iu").test(e.exemple), `${n} en-tête ${e.prefixe} : l'exemple est reconnu`);
   }
   const l = listerPacks();
-  assert.equal(l.length, 6);
+  assert.equal(l.length, 7);
   assert.ok(l.every((p) => p.nom && p.version && p.description && p.motifs >= 3));
   assert.equal(lirePack("inconnu"), null);
 });
@@ -236,5 +236,118 @@ test("export CDR (mode tableau) : les colonnes des identifiants sont codées par
     for (const v of ["212612345678", "604010123456789", "351234567890124", "604010987654321"]) assert.ok(!r.includes(v), `« ${v} » a fui :\n${r}`);
     assert.ok(/TEL-\d+/.test(r) && /IMSI-\d+/.test(r) && /IMEI-\d+/.test(r), r);
     assert.ok(r.includes("voix sortant") && r.includes("184"), r);
+  } finally { await client.close(); fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+/* NOTARIAT (v2.24) : deux actes fictifs d'une étude marocaine. Chaque valeur
+   réelle est cherchée dans la sortie ; le vocabulaire de l'acte doit rester
+   lisible pour que l'IA puisse relire, résumer ou rédiger. Le prix relève du
+   réglage Nombres (mode tableau), pas du pack. */
+const VENTE_MA = [
+  "ACTE DE VENTE",
+  "L'an deux mille vingt-six, le quinze mars, par-devant Maître Karim Benjelloun, notaire à Casablanca, soussigné, minute n° 2026/0412, répertoire n° 8817.",
+  "ONT COMPARU : Monsieur Ahmed El Fassi, né le 12/04/1971 à Fès, titulaire de la CIN n° BE123456, demeurant 14 rue Ibn Battouta, Casablanca, ci-après « le vendeur » ;",
+  "Madame Salma Berrada, titulaire de la CIN n° BK789012, demeurant à Rabat, ci-après « l'acquéreur ».",
+  "DÉSIGNATION : la propriété dite « Villa Yasmine », objet du titre foncier n° 12345/63, sise à Bouskoura, d'une superficie de quatre cent cinquante mètres carrés, ainsi que la parcelle objet de la réquisition d'immatriculation n° 6789/63, et l'appartement objet du T.F. 1234/45. Ancien titre : TF n° 28.517/C.",
+  "Le bien est libre de toute hypothèque, à l'exception de l'inscription prise à la conservation foncière de Casablanca (ANCFCC).",
+  "PRIX : un million deux cent mille dirhams, payé par virement du RIB 230 780 0012345678901234 56.",
+  "Les droits d'enregistrement, la taxe notariale et les frais de conservation foncière sont à la charge de l'acquéreur. Une promesse de vente avait été signée ; le dossier est suivi sur Tadbirnot.",
+].join("\n");
+const SUCCESSION_MA = [
+  "ACTE DE PARTAGE SUCCESSORAL",
+  "Minute numéro 2026-0733 — répertoire général n° 15/2026. Par-devant Maître Nadia Tazi, notaire à Fès,",
+  "Feu Monsieur Driss Alaoui, de cujus, laissant pour lui succéder, selon l'acte d'hérédité (frida) dressé par deux adouls, acte adoulaire n° 345, page 210, du tribunal de première instance de Fès :",
+  "- Madame Fatima Zahra Alaoui, sa fille, héritière, CIN C456789 ;",
+  "- Monsieur Youness Alaoui, son fils, héritier, CIN CD112233.",
+  "Les héritiers sortent de l'indivision portant sur la propriété dite « Dar Al Amal », titre foncier n° 4521/F, et sur les titres fonciers n° 3310/F et 3311/F, ainsi que sur le terrain objet de la réquisition n° 18 220/F.",
+  "Mainlevée de l'hypothèque inscrite au profit de la banque, radiée par la conservation foncière. Les droits d'enregistrement et la taxe notariale sont réglés via Tadbirnot ; quitus fiscal délivré par la DGI ; acte adoulaire et Code de la famille.",
+].join("\n");
+const fuites = (t, valeurs) => valeurs.filter((v) => t.includes(v) || t.replace(/\s/g, "").includes(v.replace(/\s/g, "")));
+
+test("notariat : acte de vente — titres fonciers, réquisition, minute, répertoire et propriété codés ; aucune valeur réelle ; vocabulaire lisible", () => {
+  const { texte: t } = coder(VENTE_MA, ["notariat-ma"]);
+  assert.deepEqual(fuites(t, [
+    "Karim", "Benjelloun", "Ahmed", "Fassi", "Salma", "Berrada", "BE123456", "BK789012", "12/04/1971", "Ibn Battouta",
+    "Villa Yasmine", "12345/63", "6789/63", "1234/45", "28.517/C", "2026/0412", "8817", "0012345678901234",
+  ]), [], t);
+  assert.equal(codesDe(t, "TF").length, 3, "trois titres distincts\n" + t);
+  assert.equal(codesDe(t, "REQUISIT").length, 1, t);
+  assert.equal(codesDe(t, "MINUTE").length, 1, t);
+  assert.equal(codesDe(t, "REPERTOIRE").length, 1, t);
+  assert.equal(codesDe(t, "PROPRIETE").length, 1, t);
+  // Le libellé reste devant le code : l'IA sait de quoi il s'agit.
+  assert.match(t, /titre foncier n° TF-\d{3}/, t);
+  assert.match(t, /TF n° TF-\d{3}/, t);
+  assert.match(t, /T\.F\. TF-\d{3}/, "« T.F. » reste lisible : le lexique le sait\n" + t);
+  assert.match(t, /réquisition d'immatriculation n° REQUISIT-\d{3}/, t);
+  assert.match(t, /propriété dite « PROPRIETE-\d{3} »/, t);
+  for (const clair of ["ACTE DE VENTE", "notaire", "hypothèque", "conservation foncière", "ANCFCC", "droits d'enregistrement", "taxe notariale",
+    "frais de conservation foncière", "promesse de vente", "Tadbirnot", "le vendeur", "l'acquéreur", "superficie"]) assert.ok(t.includes(clair), `« ${clair} » devait rester en clair :\n${t}`);
+});
+
+test("notariat : partage successoral — énumération de titres, réquisition à séparateur, acte adoulaire codés ; héritiers au moteur ; vocabulaire lisible", () => {
+  const { texte: t } = coder(SUCCESSION_MA, ["notariat-ma"]);
+  assert.deepEqual(fuites(t, [
+    "Nadia", "Tazi", "Driss", "Alaoui", "Fatima", "Youness", "C456789", "CD112233",
+    "Dar Al Amal", "4521/F", "3310/F", "3311/F", "18 220/F", "220/F", "2026-0733", "15/2026", "page 210",
+  ]), [], t);
+  assert.equal(codesDe(t, "TF").length, 3, "4521/F, 3310/F et 3311/F, l'énumération comprise\n" + t);
+  assert.equal(codesDe(t, "REQUISIT").length, 1, t);
+  assert.equal(codesDe(t, "ADOUL").length, 1, t);
+  assert.equal(codesDe(t, "MINUTE").length, 1, t);
+  assert.equal(codesDe(t, "REPERTOIRE").length, 1, t);
+  for (const clair of ["ACTE DE PARTAGE SUCCESSORAL", "de cujus", "acte d'hérédité", "frida", "adouls", "acte adoulaire", "tribunal de première instance",
+    "héritière", "héritier", "indivision", "titres fonciers", "Mainlevée", "hypothèque", "conservation foncière", "droits d'enregistrement",
+    "taxe notariale", "Tadbirnot", "quitus fiscal", "DGI", "Code de la famille"]) assert.ok(t.includes(clair), `« ${clair} » devait rester en clair :\n${t}`);
+});
+
+test("notariat : pas de faux titre — dates, n° RG, fractions et numéros non annoncés restent au moteur", () => {
+  const texte = "Le 12/2026, RG n° 24/01234 ; trois quarts, soit 3/4 ; la minute du jour ; le répertoire des actes ; le titre foncier est délivré.";
+  const { texte: t } = coder(texte, ["notariat-ma"]);
+  for (const p of ["TF", "REQUISIT", "MINUTE", "REPERTOIRE", "ADOUL"]) assert.equal(codesDe(t, p).length, 0, `${p} :\n${t}`);
+  for (const v of ["12/2026", "3/4", "la minute du jour", "le répertoire des actes", "le titre foncier est délivré"]) assert.ok(t.includes(v), `« ${v} » :\n${t}`);
+  // « TF » nu, sans « n° », n'est pas pris pour un nom (lexique du verrou).
+  const { texte: t2 } = coder("Le lot est objet du TF 77123/63.", ["notariat-ma"]);
+  assert.match(t2, /du TF TF-\d{3}\./, t2);
+});
+
+test("notariat : en mode tableau, les colonnes TF, réquisition, minute et répertoire sont codées par le pack", () => {
+  const { regles, entetes } = developperPacks(["notariat-ma"]);
+  const c = compilerRegles({ dossier: regles, entetes });
+  assert.equal(c.typeColonne("N° TF"), "regle_TF");
+  assert.equal(c.typeColonne("Titre foncier"), "regle_TF");
+  assert.equal(c.typeColonne("Réquisition"), "regle_REQUISIT");
+  assert.equal(c.typeColonne("N° minute"), "regle_MINUTE");
+  assert.equal(c.typeColonne("Répertoire"), "regle_REPERTOIRE");
+  assert.equal(c.typeColonne("Superficie (m²)"), null);
+  assert.match(c.decrire(), /pack Notariat — étude de notaire, Maroc : 7 motifs/);
+});
+
+/* De bout en bout : l'acte de vente en .txt, pack activé dans reglages.json ;
+   ce que Claude lit (réponse et fichier codé) ne porte aucune valeur réelle. */
+test("notariat de bout en bout : acte de vente codé par le connecteur avec le pack activé dans reglages.json", async () => {
+  const { Client } = await import("@modelcontextprotocol/client");
+  const { StdioClientTransport } = await import("@modelcontextprotocol/client/stdio");
+  const { mint } = await import("./licence-test.mjs");
+  const root = tmp(), workdir = path.join(root, "dossier");
+  fs.mkdirSync(path.join(workdir, "Hidden-Tokens"), { recursive: true });
+  fs.writeFileSync(path.join(workdir, "Hidden-Tokens", "reglages.json"), JSON.stringify({ packs: ["notariat-ma"] }));
+  fs.writeFileSync(path.join(workdir, "acte.txt"), VENTE_MA + "\n");
+  const client = new Client({ name: "notariat", version: "1.0.0" });
+  await client.connect(new StdioClientTransport({
+    command: process.execPath, args: [path.join(here, "..", "server", "index.js")],
+    env: { ...process.env, ANX_WORKDIR: workdir, ANX_LICENCE: mint({ v: 1, org: "Étude Test", seats: 1, iat: "2026-10-20", exp: "9999-12-31", life: true }), ANX_TEAM_DIR: "", ANX_REGISTRE_DIR: "", ANX_ENROLEMENT: "", ANX_SENTINELLE: "non", NANOMIZER_SENTINELLE_DIR: path.join(root, ".absente") },
+  }));
+  try {
+    const plan = (await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "acte.txt" } })).content.map((c) => c.text || "").join("\n");
+    assert.match(plan, /pack Notariat — étude de notaire, Maroc/, plan);
+    const r = (await client.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "acte.txt", confirmer: true } })).content.map((c) => c.text || "").join("\n");
+    const code = fs.readFileSync(path.join(workdir, "Hidden-Tokens", "acte-anonymise.md"), "utf8");
+    for (const lu of [r, code]) {
+      assert.deepEqual(fuites(lu, ["Benjelloun", "Fassi", "Berrada", "BE123456", "BK789012", "Villa Yasmine", "12345/63", "6789/63", "1234/45", "28.517/C", "2026/0412", "8817", "0012345678901234"]), [], lu);
+    }
+    assert.match(code, /titre foncier n° TF-\d{3}/, code);
+    assert.match(code, /réquisition d'immatriculation n° REQUISIT-\d{3}/, code);
+    for (const clair of ["conservation foncière", "ANCFCC", "hypothèque", "droits d'enregistrement", "taxe notariale", "promesse de vente", "Tadbirnot"]) assert.ok(code.includes(clair), `« ${clair} » :\n${code}`);
   } finally { await client.close(); fs.rmSync(root, { recursive: true, force: true }); }
 });

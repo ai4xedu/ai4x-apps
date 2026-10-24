@@ -84,7 +84,10 @@ await client.connect(new StdioClientTransport({
   command: process.execPath,
   args: [path.join(root, "server", "index.js")],
   // --equipe : même banc avec la clé d'équipe (codes déterministes à 8 chiffres).
-  env: { ...process.env, ANX_WORKDIR: workdir, ANX_TEAM_DIR: TEAM_DIR,
+  // La vérité terrain compte les montants des tableurs comme sensibles : le
+  // banc les mesure en gabarit (le défaut du connecteur est « auto » depuis la
+  // v2.16 ; ANX_CHIFFRES=auto pour mesurer ce défaut).
+  env: { ...process.env, ANX_CHIFFRES: process.env.ANX_CHIFFRES || "gabarit", ANX_WORKDIR: workdir, ANX_TEAM_DIR: TEAM_DIR,
     ANX_LICENCE: mint({ v: 1, org: "Banc d'essai", seats: TEAM_DIR ? 20 : 1, iat: "2026-10-20", exp: "9999-12-31", life: true }) },
   stderr: "ignore",
 }));
