@@ -1,6 +1,7 @@
 {
  "banc": "HT-Bench",
  "version_jeu": "0.1.0",
+ "split": "dev",
  "jeu_sha256": "406f450d99863315c2d9099580565bea8c72db5fa2522d9e6bd1c1bce3787348",
  "version_moteur": "2.22.0",
  "chemin": "anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte",
@@ -3324,16 +3325,6 @@
    ]
   },
   {
-   "doc": "core/manuel/sms-darija",
-   "pack": "core",
-   "type": "MOT",
-   "variante": "darija",
-   "valeur": "inchallah",
-   "prefixes": [
-    "CODE"
-   ]
-  },
-  {
    "doc": "telecom-ma/ticket/002",
    "pack": "telecom-ma",
    "type": "PRODUIT",
@@ -3864,16 +3855,6 @@
    ]
   },
   {
-   "doc": "juridique-fr/manuel/leurres-seuls",
-   "pack": "juridique-fr",
-   "type": "ARTICLE",
-   "variante": "jurisprudence",
-   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
-   "prefixes": [
-    "POURVOI"
-   ]
-  },
-  {
    "doc": "banque-assurance/virement/010",
    "pack": "banque-assurance",
    "type": "MOT",
@@ -4181,26 +4162,6 @@
    "valeur": "insuline glargine",
    "prefixes": [
     "CODE"
-   ]
-  },
-  {
-   "doc": "sante/manuel/transmission-orale",
-   "pack": "sante",
-   "type": "PRODUIT",
-   "variante": "",
-   "valeur": "insuline glargine",
-   "prefixes": [
-    "CODE"
-   ]
-  },
-  {
-   "doc": "sante/manuel/transmission-orale",
-   "pack": "sante",
-   "type": "MESURE",
-   "variante": "",
-   "valeur": "12 UI",
-   "prefixes": [
-    "NOM"
    ]
   },
   {
@@ -4984,6 +4945,26 @@
    ]
   },
   {
+   "doc": "core/manuel/sms-darija",
+   "pack": "core",
+   "type": "MOT",
+   "variante": "darija",
+   "valeur": "inchallah",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "juridique-fr/manuel/leurres-seuls",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
    "doc": "rh-paie/manuel/leurres-paie",
    "pack": "rh-paie",
    "type": "SIGLE",
@@ -5011,6 +4992,26 @@
    "valeur": "190,97 MAD",
    "prefixes": [
     "SOCIETE"
+   ]
+  },
+  {
+   "doc": "sante/manuel/transmission-orale",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/manuel/transmission-orale",
+   "pack": "sante",
+   "type": "MESURE",
+   "variante": "",
+   "valeur": "12 UI",
+   "prefixes": [
+    "NOM"
    ]
   }
  ],

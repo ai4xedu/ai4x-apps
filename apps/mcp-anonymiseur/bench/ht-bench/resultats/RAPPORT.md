@@ -316,7 +316,6 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | Document | Leurre | Valeur | Préfixes |
 |---|---|---|---|
 | core/mailTransfert/010 | MOT | `Noël` | PRENOM |
-| core/manuel/sms-darija | MOT · darija | `inchallah` | CODE |
 | telecom-ma/ticket/002 | PRODUIT | `forfait 4G+ 20 Go` | NOM |
 | telecom-ma/ticket/005 | PRODUIT | `forfait 4G+ 20 Go` | NOM |
 | telecom-ma/ticket/009 | PRODUIT | `Fibre 100 Méga` | NOM |
@@ -370,7 +369,6 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | juridique-fr/noteDossier/006 | ARTICLE · code-fr | `article R. 4624-31` | REF |
 | juridique-fr/noteDossier/007 | ARTICLE · jurisprudence | `Soc., 27 septembre 2023, n° 21-24.782` | POURVOI |
 | juridique-fr/noteDossier/012 | ARTICLE · code-fr | `article R. 4624-31` | REF |
-| juridique-fr/manuel/leurres-seuls | ARTICLE · jurisprudence | `Soc., 27 septembre 2023, n° 21-24.782` | POURVOI |
 | banque-assurance/virement/010 | MOT | `Noël` | PRENOM |
 | sante/compteRendu/001 | PRODUIT | `ECG` | NOM |
 | sante/compteRendu/002 | PRODUIT | `HbA1c` | REF |
@@ -402,8 +400,6 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | sante/ordonnance/009 | PRODUIT | `insuline glargine` | CODE |
 | sante/ordonnance/010 | PRODUIT | `Doliprane 1000 mg` | NOM |
 | sante/ordonnance/012 | PRODUIT | `insuline glargine` | CODE |
-| sante/manuel/transmission-orale | PRODUIT | `insuline glargine` | CODE |
-| sante/manuel/transmission-orale | MESURE | `12 UI` | NOM |
 | expertise-comptable/grandLivre/002 | SIGLE | `PCGE` | NOM |
 | expertise-comptable/grandLivre/003 | SIGLE | `PCGE` | NOM |
 | expertise-comptable/grandLivre/006 | SIGLE | `PCGE` | NOM |
@@ -482,9 +478,13 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | rh-paie/bulletinFr/012 | SIGLE | `CSG` | SOCIETE |
 | rh-paie/bulletinFr/012 | MONTANT · centaines | `873 €` | SOCIETE |
 | rh-paie/attestation/009 | MOT | `Noël` | PRENOM |
+| core/manuel/sms-darija | MOT · darija | `inchallah` | CODE |
+| juridique-fr/manuel/leurres-seuls | ARTICLE · jurisprudence | `Soc., 27 septembre 2023, n° 21-24.782` | POURVOI |
 | rh-paie/manuel/leurres-paie | SIGLE | `AMO` | SOCIETE |
 | rh-paie/manuel/leurres-paie | MONTANT | `8 450,00 MAD` | SOCIETE |
 | rh-paie/manuel/leurres-paie | MONTANT | `190,97 MAD` | SOCIETE |
+| sante/manuel/transmission-orale | PRODUIT | `insuline glargine` | CODE |
+| sante/manuel/transmission-orale | MESURE | `12 UI` | NOM |
 
 ## Codé hors étiquette (413 passages, 51 distincts — 40 plus fréquents)
 

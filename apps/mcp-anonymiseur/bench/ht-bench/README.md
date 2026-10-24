@@ -7,15 +7,37 @@ Règle fixe : **aucune donnée réelle, aucun appel réseau.** Les noms viennent
 ## Lancer
 
 ```bash
-npm run bench:ht            # note le jeu → resultats/ht-bench.json + resultats/RAPPORT.md
+npm run bench:ht            # note le jeu dev → resultats/ht-bench.json + resultats/RAPPORT.md
 npm run bench:ht:controle   # idem, puis échec si le rappel sur les identifiants directs passe sous reference.json
-npm run bench:ht:generer    # régénère dataset/ depuis la graine (après un changement de gabarit ou de cas)
-node bench/ht-bench/evaluer.mjs --enregistrer-reference   # réécrit reference.json
+npm run bench:ht:test       # note le jeu de test (celui qu'on publie) → resultats/test/
+npm run bench:ht:comparer   # Hidden Tokens face à Presidio, jeu de test → resultats/test/comparaison.md
+npm run bench:ht:generer    # régénère dataset/ (dev et test) depuis les graines
+node bench/ht-bench/evaluer.mjs --enregistrer-reference   # réécrit reference.json (jeu dev)
 ```
 
-Le banc complet prend une dizaine de secondes. En CI, le job `ht-bench` (`.github/workflows/mcp-anonymiseur.yml`) fait deux choses : il vérifie que `dataset/` est bien celui que produit la graine, et il échoue si le rappel des identifiants directs baisse, que ce soit au global, pour un pack ou pour un type. Le rapport est joint à l'exécution. `test/ht-bench.test.js` couvre les pièces du banc qui n'ont pas besoin du moteur (balisage, réalignement, règle de score).
+Le banc complet prend une dizaine de secondes. En CI, le job `ht-bench` (`.github/workflows/mcp-anonymiseur.yml`) fait deux choses : il vérifie que `dataset/` (dev et test) est bien celui que produisent les graines, et il échoue si le rappel des identifiants directs baisse, que ce soit au global, pour un pack ou pour un type. Le rapport est joint à l'exécution. `test/ht-bench.test.js` couvre les pièces du banc qui n'ont pas besoin du moteur (balisage, réalignement, règle de score).
 
 `npm run bench` (le banc des fuites, `bench/run.mjs`) reste à part. Il pose une autre question : sur un petit corpus réaliste et tout le parcours MCP, une valeur se retrouve-t-elle quelque part dans ce que lit l'IA ?
+
+## Deux jeux : dev pour régler, test pour publier
+
+- **dev** (`dataset/ht-bench.jsonl`, graine `ht-bench-v0`, avec les cas écrits à la main) : c'est sur lui qu'on lit les manques et qu'on règle le moteur. La référence de la CI porte sur lui seul.
+- **test** (`dataset/test/ht-bench.jsonl`, graine `ht-bench-v0-test`) : mêmes gabarits, mais d'autres valeurs et d'autres tournures. **On ne règle rien dessus.** `--controle` et `--enregistrer-reference` refusent `--split test`.
+
+La règle : un chiffre publié (rapport « État de la confidentialité IA », site, argumentaire) vient **toujours** du jeu de test. Une règle écrite après avoir regardé un manque du jeu de test le contamine. Dans ce cas, on change la graine de test (`SPLITS.test.graine` dans `generer.mjs`), on monte `VERSION_JEU`, et on le dit dans la PR. Les noms viennent des mêmes listes dans les deux jeux, donc les prénoms et noms se recoupent. Les combinaisons et les identifiants, eux, sont tirés à part : `test/ht-bench.test.js` vérifie que moins de 1 % des identifiants se retrouvent dans les deux jeux.
+
+## Comparaison avec un outil américain (Presidio)
+
+`npm run bench:ht:comparer` passe le jeu de test dans Hidden Tokens et dans **Microsoft Presidio**, et note les deux avec les mêmes règles (`lib/score.mjs`). Une étendue rendue par Presidio compte comme un passage codé. La sortie est `resultats/test/comparaison.md` + `.json`.
+
+- **Configuration de Presidio.** Presidio est pris tel que livré : `AnalyzerEngine`, reconnaisseurs par défaut, modèles `en_core_web_lg` et `fr_core_news_lg`. Chaque document est analysé en anglais *et* en français, on garde l'union, sans seuil. C'est la configuration la plus favorable à son rappel.
+- **Un environnement Python à part**, qui n'entre ni dans les dépendances du connecteur ni dans la CI. Il s'installe une seule fois, et c'est la seule étape qui touche au réseau :
+  ```bash
+  cd bench/ht-bench/comparaison
+  uv venv -p 3.12 .venv && VIRTUAL_ENV=.venv uv pip install -r requirements.txt
+  ```
+  `HT_BENCH_PYTHON=/chemin/vers/python` permet d'utiliser un autre interpréteur.
+- **Aucun réseau pendant le score.** `comparaison/presidio_bench.py` coupe les sockets et la résolution DNS avant d'importer Presidio ou spaCy. Toute tentative de connexion arrête le script en code 3, sans résultat.
 
 ## Ce qui est mesuré
 
@@ -38,8 +60,11 @@ Chaque document passe par **`anonymiser_fichier` sur un `.md`**, c'est-à-dire `
 | `generer.mjs` | Génère `dataset/` à partir de la graine (`--verifier` en CI) |
 | `evaluer.mjs` | Fait passer le jeu dans le moteur, note, écrit `resultats/`, contrôle la référence |
 | `reference.json` | Rappel de référence sur les identifiants directs (global, par pack, par type) |
-| `dataset/ht-bench.jsonl` | Le jeu versionné : un document par ligne, `texte`, `etendues` (positifs), `leurres` |
-| `dataset/manifeste.json` | Version, graine, empreinte sha256, comptes par pack et par type |
+| `comparer.mjs`, `comparaison/` | Hidden Tokens face à Presidio (Python à part, hors ligne) |
+| `dataset/ht-bench.jsonl` | Le jeu dev versionné : un document par ligne, `texte`, `etendues` (positifs), `leurres` |
+| `dataset/test/` | Le jeu de test (graine à part, aucun cas manuel) |
+| `dataset/**/manifeste.json` | Version, jeu, graine, empreinte sha256, comptes par pack et par type |
+| `resultats/`, `resultats/test/` | Rapports versionnés (dev, test, comparaison) |
 | `lib/types.mjs` | Catalogue des types (préfixes attendus, direct ou non) et des leurres |
 | `lib/noms.mjs`, `lib/identifiants.mjs` | Valeurs synthétiques : noms, CIN, ICE, RIB, IBAN, NIR, téléphones… |
 | `lib/fabrique.mjs`, `lib/gabarits.mjs` | Gabarits de documents, par pack |
@@ -64,10 +89,11 @@ Les positions `debut` / `fin` sont des indices de caractères JavaScript (UTF-16
 
 Ensuite :
 
-1. `npm run bench:ht:generer` régénère `dataset/`. Si le jeu change de nature, montez `VERSION_JEU` dans `generer.mjs`.
+1. `npm run bench:ht:generer` régénère `dataset/`. Un nouveau gabarit ou une nouvelle variante change aussi le jeu de test, et c'est voulu : le test couvre les mêmes formats. Les cas manuels, eux, ne vont que dans dev. Si le jeu change de nature, montez `VERSION_JEU` dans `generer.mjs`.
 2. `npm run bench:ht` : relisez `resultats/RAPPORT.md`, en particulier les nouvelles valeurs manquées et les leurres codés. Une étiquette fausse fausse tout le banc.
 3. `node bench/ht-bench/evaluer.mjs --enregistrer-reference` : le jeu a changé, donc l'ancienne référence ne vaut plus (`--controle` le signale).
-4. Versionnez `dataset/`, `reference.json` et `resultats/`.
+4. `npm run bench:ht:test`, puis `npm run bench:ht:comparer` si l'environnement Presidio est installé : rafraîchissez les chiffres publiables.
+5. Versionnez `dataset/`, `reference.json` et `resultats/`.
 
 Toutes les valeurs restent **inventées** : jamais un vrai nom, un vrai numéro, ni un extrait d'un vrai dossier, même « anonymisé ».
 

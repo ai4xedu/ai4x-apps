@@ -1,0 +1,79 @@
+{
+  "nom": "HT-Bench",
+  "version": "0.1.0",
+  "split": "test",
+  "graine": "ht-bench-v0-test",
+  "synthetique": true,
+  "sha256": "f9475fbb8d05735152a72d32261b35cd8bfa816eff7ee985c3880c0cccae012a",
+  "documents": 258,
+  "positifs": 2429,
+  "leurres": 1916,
+  "par_pack": {
+    "core": {
+      "documents": 42,
+      "positifs": 378,
+      "leurres": 141
+    },
+    "telecom-ma": {
+      "documents": 36,
+      "positifs": 269,
+      "leurres": 158
+    },
+    "juridique-fr": {
+      "documents": 36,
+      "positifs": 420,
+      "leurres": 300
+    },
+    "banque-assurance": {
+      "documents": 36,
+      "positifs": 340,
+      "leurres": 280
+    },
+    "sante": {
+      "documents": 36,
+      "positifs": 324,
+      "leurres": 240
+    },
+    "expertise-comptable": {
+      "documents": 36,
+      "positifs": 386,
+      "leurres": 425
+    },
+    "rh-paie": {
+      "documents": 36,
+      "positifs": 312,
+      "leurres": 372
+    }
+  },
+  "par_type": {
+    "ADRESSE": 160,
+    "BIC": 24,
+    "CIN": 144,
+    "CNSS": 72,
+    "EMAIL": 164,
+    "FACTURE": 24,
+    "IBAN": 43,
+    "ICCID": 12,
+    "ICE": 68,
+    "IF": 41,
+    "IMEI": 24,
+    "IMSI": 19,
+    "MATRICULE": 24,
+    "NAISSANCE": 74,
+    "NIR": 40,
+    "PATENTE": 5,
+    "PATIENT": 24,
+    "PERSONNE": 727,
+    "POLICE": 12,
+    "PRATICIEN": 36,
+    "RC": 41,
+    "RG": 48,
+    "RIB": 49,
+    "SINISTRE": 12,
+    "SIREN": 24,
+    "SIRET": 31,
+    "SOCIETE": 150,
+    "TEL": 330,
+    "TVA": 7
+  }
+}

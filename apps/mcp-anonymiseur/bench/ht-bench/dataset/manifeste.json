@@ -1,6 +1,7 @@
 {
   "nom": "HT-Bench",
   "version": "0.1.0",
+  "split": "dev",
   "graine": "ht-bench-v0",
   "synthetique": true,
   "sha256": "406f450d99863315c2d9099580565bea8c72db5fa2522d9e6bd1c1bce3787348",
