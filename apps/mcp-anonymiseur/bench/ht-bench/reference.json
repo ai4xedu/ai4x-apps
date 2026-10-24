@@ -2,7 +2,7 @@
   "note": "Rappel sur les identifiants directs, mesuré par HT-Bench. La CI (bench:ht:controle) échoue s'il baisse. Réenregistrer : node bench/ht-bench/evaluer.mjs --enregistrer-reference",
   "version_jeu": "0.1.0",
   "jeu_sha256": "63117fe4d240262b3d4c503d4373d6f64e0a26480f8e1281aefb8b01bb216668",
-  "version_moteur": "2.22.0",
+  "version_moteur": "2.23.2",
   "global": {
     "n": 1853,
     "detectes": 1808,

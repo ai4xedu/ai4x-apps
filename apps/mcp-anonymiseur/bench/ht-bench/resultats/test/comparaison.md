@@ -1,6 +1,6 @@
 # HT-Bench 0.1.0 (jeu test) — Hidden Tokens face à Presidio
 
-Même jeu synthétique (`bd2f5ba27838f749…`, 258 documents), mêmes règles de score (`lib/score.mjs`). **Hidden Tokens v2.22.0** : anonymiser_fichier (.md), pack du document activé. **Presidio presidio-analyzer 2.2.358** : reconnaisseurs par défaut, en + fr (union), en_core_web_lg + fr_core_news_lg, sans seuil, en local, sans réseau. Une étendue rendue par Presidio compte comme un passage codé.
+Même jeu synthétique (`bd2f5ba27838f749…`, 258 documents), mêmes règles de score (`lib/score.mjs`). **Hidden Tokens v2.23.2** : anonymiser_fichier (.md), pack du document activé. **Presidio presidio-analyzer 2.2.358** : reconnaisseurs par défaut, en + fr (union), en_core_web_lg + fr_core_news_lg, sans seuil, en local, sans réseau. Une étendue rendue par Presidio compte comme un passage codé.
 
 Jeu de **test** : aucune règle du moteur n'est réglée dessus — ce sont les chiffres à publier.
 

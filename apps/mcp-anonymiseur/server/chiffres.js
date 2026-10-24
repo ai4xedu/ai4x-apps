@@ -203,7 +203,9 @@ export function protectNumbers(ws, XLSX, { mode = DEFAULT_NUMBER_MODE, headerRow
     const mean = indice.reduce((s, t) => s + Math.abs(ws[t.addr].v), 0) / indice.length;
     // Facteur arrondi, puis brouillé d'au plus ±20 % : « 100 = la moyenne »
     // exactement permettrait de retrouver la moyenne à partir d'un total.
-    const jitter = 0.8 + rand(0, 401) / 1000;
+    // En millièmes ENTIERS : 0.8 + 0.4 vaut 1.2000000000000002 en virgule
+    // flottante, juste au-dessus de la borne annoncée (vu en CI, 1 fois sur 401).
+    const jitter = (800 + rand(0, 401)) / 1000;
     out.factor = mean ? (100 / mean) * jitter : 1;
   }
   for (const { addr, m } of targets) {
