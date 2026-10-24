@@ -306,7 +306,14 @@ export function creerPolitiquePoste({ enrolement, etatDir, now = () => new Date(
       .map((r) => ({ id: "regle_" + r.prefixe, prefix: r.prefixe, label: `${r.libelle} (règle de l'organisation)` }));
   }
 
-  return { controler, interditsDetecteurs, analyserNoms, residuNoms, nbNoms, reglesOrganisation, typesOrganisation, bloquant: (c) => c.bloque || BLOQUANTS.has(c.etat) };
+  /* v2.25 — la politique choisit-elle les packs de CE poste ? (« packs »
+     présent, même vide, dans une politique qui vise cette surface.) Si oui,
+     aucun pack par défaut ne s'ajoute. */
+  function declarePacks(c) {
+    return !!(c && c.politique && !c.bloque && c.politique.perimetre.surfaces.includes(SURFACE) && c.politique.packs !== undefined);
+  }
+
+  return { controler, interditsDetecteurs, analyserNoms, residuNoms, nbNoms, reglesOrganisation, typesOrganisation, declarePacks, bloquant: (c) => c.bloque || BLOQUANTS.has(c.etat) };
 }
 
 /* Première règle « interdit » dont un détecteur a produit un code dans le

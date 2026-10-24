@@ -1,0 +1,140 @@
+{
+  "note": "Rappel sur les identifiants directs, mesuré par HT-Bench. La CI (bench:ht:controle) échoue s'il baisse. Réenregistrer : node bench/ht-bench/evaluer.mjs --enregistrer-reference",
+  "version_jeu": "0.2.0",
+  "jeu_sha256": "a21f6f11d5f7a115b22d1558bf70dbb260be72c59df5424d6ca7dd40e2267714",
+  "version_moteur": "2.23.2",
+  "global": {
+    "n": 2565,
+    "detectes": 2516,
+    "rappel": 0.980896686159844
+  },
+  "par_pack": {
+    "core": {
+      "n": 336,
+      "detectes": 328,
+      "rappel": 0.9761904761904762
+    },
+    "telecom-ma": {
+      "n": 249,
+      "detectes": 249,
+      "rappel": 1
+    },
+    "juridique-fr": {
+      "n": 276,
+      "detectes": 269,
+      "rappel": 0.9746376811594203
+    },
+    "banque-assurance": {
+      "n": 654,
+      "detectes": 646,
+      "rappel": 0.9877675840978594
+    },
+    "sante": {
+      "n": 207,
+      "detectes": 204,
+      "rappel": 0.9855072463768116
+    },
+    "expertise-comptable": {
+      "n": 615,
+      "detectes": 608,
+      "rappel": 0.9886178861788618
+    },
+    "rh-paie": {
+      "n": 228,
+      "detectes": 212,
+      "rappel": 0.9298245614035088
+    }
+  },
+  "par_type": {
+    "PERSONNE": {
+      "n": 975,
+      "detectes": 958,
+      "rappel": 0.9825641025641025
+    },
+    "CIN": {
+      "n": 187,
+      "detectes": 187,
+      "rappel": 1
+    },
+    "NIR": {
+      "n": 46,
+      "detectes": 29,
+      "rappel": 0.6304347826086957
+    },
+    "CNSS": {
+      "n": 74,
+      "detectes": 62,
+      "rappel": 0.8378378378378378
+    },
+    "ICE": {
+      "n": 164,
+      "detectes": 164,
+      "rappel": 1
+    },
+    "IF": {
+      "n": 64,
+      "detectes": 64,
+      "rappel": 1
+    },
+    "RC": {
+      "n": 57,
+      "detectes": 57,
+      "rappel": 1
+    },
+    "SIREN": {
+      "n": 24,
+      "detectes": 24,
+      "rappel": 1
+    },
+    "SIRET": {
+      "n": 28,
+      "detectes": 28,
+      "rappel": 1
+    },
+    "TEL": {
+      "n": 473,
+      "detectes": 473,
+      "rappel": 1
+    },
+    "EMAIL": {
+      "n": 201,
+      "detectes": 201,
+      "rappel": 1
+    },
+    "IBAN": {
+      "n": 53,
+      "detectes": 52,
+      "rappel": 0.9811320754716981
+    },
+    "RIB": {
+      "n": 114,
+      "detectes": 112,
+      "rappel": 0.9824561403508771
+    },
+    "IMEI": {
+      "n": 26,
+      "detectes": 26,
+      "rappel": 1
+    },
+    "IMSI": {
+      "n": 19,
+      "detectes": 19,
+      "rappel": 1
+    },
+    "CARTE": {
+      "n": 24,
+      "detectes": 24,
+      "rappel": 1
+    },
+    "CVV": {
+      "n": 12,
+      "detectes": 12,
+      "rappel": 1
+    },
+    "PASSEPORT": {
+      "n": 24,
+      "detectes": 24,
+      "rappel": 1
+    }
+  }
+}

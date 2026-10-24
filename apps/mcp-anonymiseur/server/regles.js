@@ -242,11 +242,14 @@ let cacheDossier = { cle: null, val: null };
 /* Les règles du dossier, relues à chaque appel (cache sur la date et la
    taille du fichier) : un changement dans l'appli vaut tout de suite. Un
    fichier absent = aucune règle ; un fichier illisible = aucune règle, et on
-   le dit dans le plan. */
+   le dit dans le plan. packsDeclares : le dossier a-t-il choisi ses packs
+   (« packs » présent, même vide) ? Sinon, les packs par défaut s'appliquent
+   (packs.js, v2.25). Un fichier illisible compte comme un choix : rien
+   d'office, l'erreur bloque déjà. */
 export function lireReglesDossier(outdir) {
   const f = path.join(outdir, FICHIER_REGLAGES);
   let st;
-  try { st = fs.statSync(f); } catch { return { regles: [], erreurs: [] }; }
+  try { st = fs.statSync(f); } catch { return { regles: [], erreurs: [], packsDeclares: false }; }
   const cle = `${st.mtimeMs}:${st.size}`;
   if (cacheDossier.cle === cle) return cacheDossier.val;
   let val;
@@ -259,8 +262,9 @@ export function lireReglesDossier(outdir) {
       const d = developperPacks(packs);
       val = { regles: [...val.regles, ...d.regles], entetes: d.entetes, erreurs: [...val.erreurs, ...d.erreurs], packs: Array.isArray(packs) ? packs.map(String) : [] };
     }
+    val.packsDeclares = packs !== undefined;
   } catch {
-    val = { regles: [], erreurs: [`${FICHIER_REGLAGES} illisible : aucune règle du dossier appliquée`] };
+    val = { regles: [], erreurs: [`${FICHIER_REGLAGES} illisible : aucune règle du dossier appliquée`], packsDeclares: true };
   }
   cacheDossier = { cle, val };
   return val;
@@ -282,14 +286,17 @@ const pluriel = (n, s, p = s + "s") => `${n} ${n > 1 ? p : s}`;
      ({ value, type }) ; type = regle_<PREFIXE>, enregistré dans le moteur ;
    - exclusions : les termes à laisser en clair qui n'ont pas été battus par
      une règle « coder » de niveau égal ou supérieur ;
+   - vocabulaire / termesVocabulaire : ceux qui ne viennent QUE d'un pack
+     (forme normalisée / telle quelle) — l'aperçu peut les montrer (v2.25) ;
    - masquer(texte) : pour le verrou de sortie, remplace par « ••• » tout
      passage qu'une règle « coder » reconnaît (un terme pas encore codé ne
      doit pas sortir par un nom de fichier) ;
    - decrire() : des comptes, pour le plan. Jamais un terme.
    noms : la reconnaissance des noms de la politique (empreintes), pour
    l'arbitrage des exclusions ; typesSupplementaires : les catégories maison
-   des règles « toujours_pseudonymiser » de la politique. */
-export function compilerRegles({ dossier = [], organisation = [], entetes = [], noms = null, typesSupplementaires = [], erreurs = [] } = {}) {
+   des règles « toujours_pseudonymiser » de la politique ; parDefaut : les
+   packs ajoutés d'office (packs.js), signalés comme tels dans le plan. */
+export function compilerRegles({ dossier = [], organisation = [], entetes = [], noms = null, typesSupplementaires = [], erreurs = [], parDefaut = [] } = {}) {
   const types = new Map();
   for (const t of typesSupplementaires) if (!types.has(t.prefix)) types.set(t.prefix, { id: t.id, prefix: t.prefix, label: t.label });
   const parPack = new Map();   // id de pack → comptes, pour le plan
@@ -326,7 +333,7 @@ export function compilerRegles({ dossier = [], organisation = [], entetes = [], 
       } else if (r.type === "laisser_en_clair") {
         if (!r.pack) comptes[niveau].clair += r.termes.length;
         noterPack(r, "clair", r.termes.length);
-        for (const x of r.termes) clairs.push({ niveau, terme: x });
+        for (const x of r.termes) clairs.push({ niveau, terme: x, pack: r.pack });
       }
     }
     if (parEmpreinte.size) {
@@ -349,6 +356,13 @@ export function compilerRegles({ dossier = [], organisation = [], entetes = [], 
     vues.add(n);
     exclusions.push(c.terme);
   }
+  // v2.25 — le vocabulaire des packs (« Cour de cassation », « EBITDA ») est
+  // relu par l'éditeur : l'aperçu peut le montrer. Un terme que le dossier ou
+  // l'organisation laisse aussi en clair peut être un nom : il reste masqué
+  // dans l'aperçu, comme une valeur exclue par l'utilisateur.
+  const horsPack = new Set(clairs.filter((c) => !c.pack).map((c) => normaliser(c.terme)));
+  const termesVocabulaire = [...new Set(clairs.filter((c) => c.pack && !horsPack.has(normaliser(c.terme)) && exclusions.includes(c.terme)).map((c) => c.terme))];
+  const vocabulaire = new Set(termesVocabulaire.map(normaliser));
 
   const liste = [...types.values()];
   // En-têtes de colonnes des packs (mode tableau) : l'en-tête qui correspond
@@ -409,12 +423,12 @@ export function compilerRegles({ dossier = [], organisation = [], entetes = [], 
       if (c.termes) d.push(`${pluriel(c.termes, "terme")} à coder`);
       if (c.clair) d.push(`${pluriel(c.clair, "terme")} en clair`);
       if (c.entetes) d.push(`${pluriel(c.entetes, "en-tête de colonne", "en-têtes de colonnes")}`);
-      bouts.push(`pack ${p ? p.nom : id} : ${d.join(", ")}`);
+      bouts.push(`pack ${p ? p.nom : id}${parDefaut.includes(id) ? " (par défaut)" : ""} : ${d.join(", ")}`);
     }
     const notes = [];
     if (ignorees) notes.push(`${pluriel(ignorees, "exclusion")} ignorée${ignorees > 1 ? "s" : ""} (un terme laissé en clair est aussi visé par une règle qui code : coder l'emporte)`);
     if (erreurs.length) notes.push(`${pluriel(erreurs.length, "règle du dossier", "règles du dossier")} écartée${erreurs.length > 1 ? "s" : ""} : ${erreurs.join(" ; ")}`);
     return `📏 Règles de l'organisation : ${bouts.join(" ; ") || "aucune règle valide"}.${notes.length ? " " + notes.join(". ") + "." : ""}`;
   };
-  return { types: liste, trouver, exclusions, ignorees, erreurs, vide, masquer, decrire, comptes, typeColonne };
+  return { types: liste, trouver, exclusions, vocabulaire, termesVocabulaire, ignorees, erreurs, vide, masquer, decrire, comptes, typeColonne };
 }

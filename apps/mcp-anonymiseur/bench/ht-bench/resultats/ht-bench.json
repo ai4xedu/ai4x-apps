@@ -1,0 +1,5987 @@
+{
+ "banc": "HT-Bench",
+ "version_jeu": "0.2.0",
+ "split": "dev",
+ "jeu_sha256": "a21f6f11d5f7a115b22d1558bf70dbb260be72c59df5424d6ca7dd40e2267714",
+ "version_moteur": "2.23.2",
+ "chemin": "anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte",
+ "documents": 376,
+ "global": {
+  "direct": {
+   "n": 2565,
+   "detectes": 2516,
+   "partiels": 36,
+   "manques": 13,
+   "rappel": 0.980896686159844
+  },
+  "tous": {
+   "n": 3463,
+   "detectes": 3378,
+   "partiels": 36,
+   "manques": 49,
+   "rappel": 0.9754548079699682
+  },
+  "precision": 0.8743126472898665,
+  "passages": 5092,
+  "leurres": {
+   "n": 3064,
+   "codes": 190,
+   "taux_faux_positifs": 0.06201044386422976
+  }
+ },
+ "par_type": {
+  "PERSONNE": {
+   "libelle": "Nom de personne",
+   "direct": true,
+   "n": 975,
+   "detectes": 958,
+   "partiels": 16,
+   "manques": 1,
+   "rappel": 0.9825641025641025,
+   "passages": 2285,
+   "passages_justes": 1839,
+   "precision": 0.8048140043763676,
+   "f1": 0.8848506612791637,
+   "bien_etiquetes": 944
+  },
+  "CIN": {
+   "libelle": "CIN marocaine",
+   "direct": true,
+   "n": 187,
+   "detectes": 187,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 200,
+   "passages_justes": 136,
+   "precision": 0.68,
+   "f1": 0.8095238095238095,
+   "bien_etiquetes": 136
+  },
+  "NIR": {
+   "libelle": "NIR (sécurité sociale, France)",
+   "direct": true,
+   "n": 46,
+   "detectes": 29,
+   "partiels": 17,
+   "manques": 0,
+   "rappel": 0.6304347826086957,
+   "passages": 0,
+   "passages_justes": 0,
+   "precision": null,
+   "f1": null,
+   "bien_etiquetes": 29
+  },
+  "CNSS": {
+   "libelle": "N° CNSS",
+   "direct": true,
+   "n": 74,
+   "detectes": 62,
+   "partiels": 0,
+   "manques": 12,
+   "rappel": 0.8378378378378378,
+   "passages": 50,
+   "passages_justes": 50,
+   "precision": 1,
+   "f1": 0.911764705882353,
+   "bien_etiquetes": 50
+  },
+  "ICE": {
+   "libelle": "ICE",
+   "direct": true,
+   "n": 164,
+   "detectes": 164,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 165,
+   "passages_justes": 164,
+   "precision": 0.9939393939393939,
+   "f1": 0.9969604863221885,
+   "bien_etiquetes": 164
+  },
+  "IF": {
+   "libelle": "Identifiant fiscal (IF)",
+   "direct": true,
+   "n": 64,
+   "detectes": 64,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 36,
+   "passages_justes": 36,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 36
+  },
+  "RC": {
+   "libelle": "Registre de commerce (RC)",
+   "direct": true,
+   "n": 57,
+   "detectes": 57,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 57,
+   "passages_justes": 57,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 57
+  },
+  "SIREN": {
+   "libelle": "SIREN",
+   "direct": true,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 208,
+   "passages_justes": 24,
+   "precision": 0.11538461538461539,
+   "f1": 0.20689655172413793,
+   "bien_etiquetes": 24
+  },
+  "SIRET": {
+   "libelle": "SIRET",
+   "direct": true,
+   "n": 28,
+   "detectes": 28,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 0,
+   "passages_justes": 0,
+   "precision": null,
+   "f1": null,
+   "bien_etiquetes": 12
+  },
+  "TEL": {
+   "libelle": "Téléphone",
+   "direct": true,
+   "n": 473,
+   "detectes": 473,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 439,
+   "passages_justes": 439,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 439
+  },
+  "EMAIL": {
+   "libelle": "E-mail",
+   "direct": true,
+   "n": 201,
+   "detectes": 201,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 201,
+   "passages_justes": 201,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 201
+  },
+  "IBAN": {
+   "libelle": "IBAN",
+   "direct": true,
+   "n": 53,
+   "detectes": 52,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9811320754716981,
+   "passages": 164,
+   "passages_justes": 52,
+   "precision": 0.3170731707317073,
+   "f1": 0.4792626728110599,
+   "bien_etiquetes": 52
+  },
+  "RIB": {
+   "libelle": "RIB",
+   "direct": true,
+   "n": 114,
+   "detectes": 112,
+   "partiels": 2,
+   "manques": 0,
+   "rappel": 0.9824561403508771,
+   "passages": 0,
+   "passages_justes": 0,
+   "precision": null,
+   "f1": null,
+   "bien_etiquetes": 112
+  },
+  "IMEI": {
+   "libelle": "IMEI",
+   "direct": true,
+   "n": 26,
+   "detectes": 26,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 25,
+   "passages_justes": 25,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 25
+  },
+  "IMSI": {
+   "libelle": "IMSI",
+   "direct": true,
+   "n": 19,
+   "detectes": 19,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 19,
+   "passages_justes": 19,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 19
+  },
+  "CARTE": {
+   "libelle": "Numéro de carte bancaire",
+   "direct": true,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 45,
+   "passages_justes": 24,
+   "precision": 0.5333333333333333,
+   "f1": 0.6956521739130436,
+   "bien_etiquetes": 24
+  },
+  "CVV": {
+   "libelle": "Cryptogramme (CVV / CVC)",
+   "direct": true,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 12,
+   "passages_justes": 12,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 12
+  },
+  "PASSEPORT": {
+   "libelle": "Passeport, titre de séjour, permis",
+   "direct": true,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 12,
+   "passages_justes": 12,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 24
+  },
+  "BIC": {
+   "libelle": "BIC / SWIFT",
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 0,
+   "passages_justes": 0,
+   "precision": null,
+   "f1": null,
+   "bien_etiquetes": 0
+  },
+  "ICCID": {
+   "libelle": "ICCID (carte SIM)",
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 12,
+   "passages_justes": 12,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 12
+  },
+  "ADRESSE": {
+   "libelle": "Adresse postale",
+   "direct": false,
+   "n": 185,
+   "detectes": 178,
+   "partiels": 0,
+   "manques": 7,
+   "rappel": 0.9621621621621622,
+   "passages": 184,
+   "passages_justes": 183,
+   "precision": 0.9945652173913043,
+   "f1": 0.9780953953788641,
+   "bien_etiquetes": 159
+  },
+  "SOCIETE": {
+   "libelle": "Société",
+   "direct": false,
+   "n": 279,
+   "detectes": 279,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 433,
+   "passages_justes": 279,
+   "precision": 0.6443418013856813,
+   "f1": 0.7837078651685394,
+   "bien_etiquetes": 279
+  },
+  "NAISSANCE": {
+   "libelle": "Date de naissance",
+   "direct": false,
+   "n": 86,
+   "detectes": 68,
+   "partiels": 0,
+   "manques": 18,
+   "rappel": 0.7906976744186046,
+   "passages": 68,
+   "passages_justes": 68,
+   "precision": 1,
+   "f1": 0.8831168831168831,
+   "bien_etiquetes": 68
+  },
+  "PATENTE": {
+   "libelle": "N° de patente",
+   "direct": false,
+   "n": 9,
+   "detectes": 9,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 9,
+   "passages_justes": 9,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 9
+  },
+  "TVA": {
+   "libelle": "N° de TVA intracommunautaire",
+   "direct": false,
+   "n": 4,
+   "detectes": 4,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 4,
+   "passages_justes": 4,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 4
+  },
+  "MATRICULE": {
+   "libelle": "Matricule salarié",
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 24,
+   "passages_justes": 24,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 24
+  },
+  "PATIENT": {
+   "libelle": "N° de dossier patient / IPP",
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 33,
+   "passages_justes": 24,
+   "precision": 0.7272727272727273,
+   "f1": 0.8421052631578948,
+   "bien_etiquetes": 24
+  },
+  "PRATICIEN": {
+   "libelle": "Identifiant praticien (INPE, RPPS)",
+   "direct": false,
+   "n": 36,
+   "detectes": 36,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 36,
+   "passages_justes": 36,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 36
+  },
+  "POLICE": {
+   "libelle": "N° de police d'assurance",
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 11,
+   "passages_justes": 11,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 11
+  },
+  "SINISTRE": {
+   "libelle": "N° de sinistre",
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 12,
+   "passages_justes": 12,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 12
+  },
+  "FACTURE": {
+   "libelle": "N° de facture / pièce",
+   "direct": false,
+   "n": 48,
+   "detectes": 48,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 24,
+   "passages_justes": 24,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 24
+  },
+  "RG": {
+   "libelle": "N° RG / parquet",
+   "direct": false,
+   "n": 48,
+   "detectes": 48,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 36,
+   "passages_justes": 36,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 36
+  },
+  "IMMAT": {
+   "libelle": "Immatriculation (véhicule)",
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 24,
+   "passages_justes": 24,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 24
+  },
+  "EFFET": {
+   "libelle": "N° de chèque ou de LCN",
+   "direct": false,
+   "n": 47,
+   "detectes": 36,
+   "partiels": 0,
+   "manques": 11,
+   "rappel": 0.7659574468085106,
+   "passages": 36,
+   "passages_justes": 36,
+   "precision": 1,
+   "f1": 0.8674698795180723,
+   "bien_etiquetes": 36
+  },
+  "CONTRAT": {
+   "libelle": "N° de contrat ou de dossier de crédit",
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 0,
+   "passages_justes": 0,
+   "precision": null,
+   "f1": null,
+   "bien_etiquetes": 24
+  }
+ },
+ "par_pack": {
+  "core": {
+   "documents": 46,
+   "direct": {
+    "n": 336,
+    "detectes": 328,
+    "partiels": 8,
+    "manques": 0,
+    "rappel": 0.9761904761904762
+   },
+   "tous": {
+    "n": 393,
+    "detectes": 379,
+    "partiels": 8,
+    "manques": 6,
+    "rappel": 0.9643765903307888
+   },
+   "precision": 0.9327102803738317,
+   "f1": 0.9482791471950901,
+   "passages": 535,
+   "passages_leurres": 2,
+   "passages_hors_etiquette": 34,
+   "leurres": {
+    "n": 146,
+    "codes": 2,
+    "taux_faux_positifs": 0.0136986301369863
+   },
+   "direct_par_type": {
+    "CIN": {
+     "n": 19,
+     "detectes": 19,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "CNSS": {
+     "n": 1,
+     "detectes": 1,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "EMAIL": {
+     "n": 57,
+     "detectes": 57,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "NIR": {
+     "n": 10,
+     "detectes": 4,
+     "partiels": 6,
+     "manques": 0,
+     "rappel": 0.4
+    },
+    "PERSONNE": {
+     "n": 145,
+     "detectes": 143,
+     "partiels": 2,
+     "manques": 0,
+     "rappel": 0.9862068965517241
+    },
+    "TEL": {
+     "n": 104,
+     "detectes": 104,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    }
+   }
+  },
+  "telecom-ma": {
+   "documents": 37,
+   "direct": {
+    "n": 249,
+    "detectes": 249,
+    "partiels": 0,
+    "manques": 0,
+    "rappel": 1
+   },
+   "tous": {
+    "n": 278,
+    "detectes": 278,
+    "partiels": 0,
+    "manques": 0,
+    "rappel": 1
+   },
+   "precision": 0.8188405797101449,
+   "f1": 0.900398406374502,
+   "passages": 414,
+   "passages_leurres": 18,
+   "passages_hors_etiquette": 57,
+   "leurres": {
+    "n": 158,
+    "codes": 18,
+    "taux_faux_positifs": 0.11392405063291139
+   },
+   "direct_par_type": {
+    "CIN": {
+     "n": 36,
+     "detectes": 36,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "EMAIL": {
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "ICE": {
+     "n": 5,
+     "detectes": 5,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "IMEI": {
+     "n": 26,
+     "detectes": 26,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "IMSI": {
+     "n": 19,
+     "detectes": 19,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "PERSONNE": {
+     "n": 72,
+     "detectes": 72,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "TEL": {
+     "n": 67,
+     "detectes": 67,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    }
+   }
+  },
+  "juridique-fr": {
+   "documents": 37,
+   "direct": {
+    "n": 276,
+    "detectes": 269,
+    "partiels": 6,
+    "manques": 1,
+    "rappel": 0.9746376811594203
+   },
+   "tous": {
+    "n": 420,
+    "detectes": 411,
+    "partiels": 6,
+    "manques": 3,
+    "rappel": 0.9785714285714285
+   },
+   "precision": 0.8666666666666667,
+   "f1": 0.9192258064516129,
+   "passages": 660,
+   "passages_leurres": 36,
+   "passages_hors_etiquette": 52,
+   "leurres": {
+    "n": 308,
+    "codes": 36,
+    "taux_faux_positifs": 0.11688311688311688
+   },
+   "direct_par_type": {
+    "CIN": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "EMAIL": {
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "NIR": {
+     "n": 12,
+     "detectes": 7,
+     "partiels": 5,
+     "manques": 0,
+     "rappel": 0.5833333333333334
+    },
+    "PERSONNE": {
+     "n": 144,
+     "detectes": 142,
+     "partiels": 1,
+     "manques": 1,
+     "rappel": 0.9861111111111112
+    },
+    "SIREN": {
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "SIRET": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "TEL": {
+     "n": 48,
+     "detectes": 48,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    }
+   }
+  },
+  "banque-assurance": {
+   "documents": 97,
+   "direct": {
+    "n": 654,
+    "detectes": 646,
+    "partiels": 8,
+    "manques": 0,
+    "rappel": 0.9877675840978594
+   },
+   "tous": {
+    "n": 875,
+    "detectes": 867,
+    "partiels": 8,
+    "manques": 0,
+    "rappel": 0.9908571428571429
+   },
+   "precision": 0.8278972935461485,
+   "f1": 0.9020766415113757,
+   "passages": 1441,
+   "passages_leurres": 25,
+   "passages_hors_etiquette": 223,
+   "leurres": {
+    "n": 673,
+    "codes": 25,
+    "taux_faux_positifs": 0.03714710252600297
+   },
+   "direct_par_type": {
+    "CARTE": {
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "CIN": {
+     "n": 72,
+     "detectes": 72,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "CVV": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "EMAIL": {
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "IBAN": {
+     "n": 37,
+     "detectes": 37,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "ICE": {
+     "n": 17,
+     "detectes": 17,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "IF": {
+     "n": 7,
+     "detectes": 7,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "PASSEPORT": {
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "PERSONNE": {
+     "n": 259,
+     "detectes": 251,
+     "partiels": 8,
+     "manques": 0,
+     "rappel": 0.9691119691119691
+    },
+    "RIB": {
+     "n": 82,
+     "detectes": 82,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "TEL": {
+     "n": 96,
+     "detectes": 96,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    }
+   }
+  },
+  "sante": {
+   "documents": 37,
+   "direct": {
+    "n": 207,
+    "detectes": 204,
+    "partiels": 3,
+    "manques": 0,
+    "rappel": 0.9855072463768116
+   },
+   "tous": {
+    "n": 327,
+    "detectes": 309,
+    "partiels": 3,
+    "manques": 15,
+    "rappel": 0.944954128440367
+   },
+   "precision": 0.8101503759398496,
+   "f1": 0.8723753377548514,
+   "passages": 532,
+   "passages_leurres": 32,
+   "passages_hors_etiquette": 69,
+   "leurres": {
+    "n": 244,
+    "codes": 32,
+    "taux_faux_positifs": 0.13114754098360656
+   },
+   "direct_par_type": {
+    "CIN": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "CNSS": {
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "EMAIL": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "NIR": {
+     "n": 12,
+     "detectes": 9,
+     "partiels": 3,
+     "manques": 0,
+     "rappel": 0.75
+    },
+    "PERSONNE": {
+     "n": 98,
+     "detectes": 98,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "TEL": {
+     "n": 49,
+     "detectes": 49,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    }
+   }
+  },
+  "expertise-comptable": {
+   "documents": 85,
+   "direct": {
+    "n": 615,
+    "detectes": 608,
+    "partiels": 7,
+    "manques": 0,
+    "rappel": 0.9886178861788618
+   },
+   "tous": {
+    "n": 858,
+    "detectes": 840,
+    "partiels": 7,
+    "manques": 11,
+    "rappel": 0.9790209790209791
+   },
+   "precision": 0.9558160504959423,
+   "f1": 0.9672793638378309,
+   "passages": 1109,
+   "passages_leurres": 1,
+   "passages_hors_etiquette": 48,
+   "leurres": {
+    "n": 1152,
+    "codes": 1,
+    "taux_faux_positifs": 0.0008680555555555555
+   },
+   "direct_par_type": {
+    "CIN": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "CNSS": {
+     "n": 13,
+     "detectes": 13,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "EMAIL": {
+     "n": 48,
+     "detectes": 48,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "IBAN": {
+     "n": 4,
+     "detectes": 4,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "ICE": {
+     "n": 118,
+     "detectes": 118,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "IF": {
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "PERSONNE": {
+     "n": 209,
+     "detectes": 204,
+     "partiels": 5,
+     "manques": 0,
+     "rappel": 0.9760765550239234
+    },
+    "RC": {
+     "n": 45,
+     "detectes": 45,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "RIB": {
+     "n": 20,
+     "detectes": 18,
+     "partiels": 2,
+     "manques": 0,
+     "rappel": 0.9
+    },
+    "SIRET": {
+     "n": 4,
+     "detectes": 4,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "TEL": {
+     "n": 97,
+     "detectes": 97,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    }
+   }
+  },
+  "rh-paie": {
+   "documents": 37,
+   "direct": {
+    "n": 228,
+    "detectes": 212,
+    "partiels": 4,
+    "manques": 12,
+    "rappel": 0.9298245614035088
+   },
+   "tous": {
+    "n": 312,
+    "detectes": 294,
+    "partiels": 4,
+    "manques": 14,
+    "rappel": 0.9423076923076923
+   },
+   "precision": 0.8927680798004988,
+   "f1": 0.9168692016202797,
+   "passages": 401,
+   "passages_leurres": 38,
+   "passages_hors_etiquette": 5,
+   "leurres": {
+    "n": 383,
+    "codes": 76,
+    "taux_faux_positifs": 0.19843342036553524
+   },
+   "direct_par_type": {
+    "CIN": {
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "CNSS": {
+     "n": 36,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 12,
+     "rappel": 0.6666666666666666
+    },
+    "EMAIL": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "IBAN": {
+     "n": 12,
+     "detectes": 11,
+     "partiels": 1,
+     "manques": 0,
+     "rappel": 0.9166666666666666
+    },
+    "ICE": {
+     "n": 24,
+     "detectes": 24,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "IF": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "NIR": {
+     "n": 12,
+     "detectes": 9,
+     "partiels": 3,
+     "manques": 0,
+     "rappel": 0.75
+    },
+    "PERSONNE": {
+     "n": 48,
+     "detectes": 48,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "RC": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "RIB": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "SIRET": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    },
+    "TEL": {
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
+    }
+   }
+  }
+ },
+ "par_variante": {
+  "ADRESSE · fr-batiment": {
+   "direct": false,
+   "n": 22,
+   "detectes": 19,
+   "partiels": 0,
+   "manques": 3,
+   "rappel": 0.8636363636363636
+  },
+  "ADRESSE · fr-bis": {
+   "direct": false,
+   "n": 24,
+   "detectes": 23,
+   "partiels": 0,
+   "manques": 1,
+   "rappel": 0.9583333333333334
+  },
+  "ADRESSE · fr-rue": {
+   "direct": false,
+   "n": 28,
+   "detectes": 25,
+   "partiels": 0,
+   "manques": 3,
+   "rappel": 0.8928571428571429
+  },
+  "ADRESSE · ma-douar-hay": {
+   "direct": false,
+   "n": 30,
+   "detectes": 30,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "ADRESSE · ma-lotissement": {
+   "direct": false,
+   "n": 27,
+   "detectes": 27,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "ADRESSE · ma-residence": {
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "ADRESSE · ma-rue": {
+   "direct": false,
+   "n": 30,
+   "detectes": 30,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "BIC · bic-11": {
+   "direct": false,
+   "n": 11,
+   "detectes": 11,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "BIC · bic-8": {
+   "direct": false,
+   "n": 13,
+   "detectes": 13,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CARTE · carte-collee": {
+   "direct": true,
+   "n": 6,
+   "detectes": 6,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CARTE · carte-groupes": {
+   "direct": true,
+   "n": 6,
+   "detectes": 6,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CARTE · carte-masquee": {
+   "direct": true,
+   "n": 2,
+   "detectes": 2,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CARTE · carte-tirets": {
+   "direct": true,
+   "n": 10,
+   "detectes": 10,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CIN · cin-colle": {
+   "direct": true,
+   "n": 84,
+   "detectes": 84,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CIN · cin-espace": {
+   "direct": true,
+   "n": 52,
+   "detectes": 52,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CIN · cin-tiret": {
+   "direct": true,
+   "n": 51,
+   "detectes": 51,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CNSS · cnss-affiliation-7": {
+   "direct": true,
+   "n": 25,
+   "detectes": 13,
+   "partiels": 0,
+   "manques": 12,
+   "rappel": 0.52
+  },
+  "CNSS · cnss-assure-9": {
+   "direct": true,
+   "n": 49,
+   "detectes": 49,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CONTRAT · credit-numerique": {
+   "direct": false,
+   "n": 13,
+   "detectes": 13,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CONTRAT · credit-prefixe": {
+   "direct": false,
+   "n": 11,
+   "detectes": 11,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CVV · cvv-3": {
+   "direct": true,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "EFFET · cheque-7": {
+   "direct": false,
+   "n": 35,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 11,
+   "rappel": 0.6857142857142857
+  },
+  "EFFET · lcn-7": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "EMAIL · generique": {
+   "direct": true,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "EMAIL · initiale.nom": {
+   "direct": true,
+   "n": 38,
+   "detectes": 38,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "EMAIL · majuscules": {
+   "direct": true,
+   "n": 38,
+   "detectes": 38,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "EMAIL · nom_prenom": {
+   "direct": true,
+   "n": 36,
+   "detectes": 36,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "EMAIL · prenom.nom": {
+   "direct": true,
+   "n": 45,
+   "detectes": 45,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "EMAIL · prenomnom-chiffres": {
+   "direct": true,
+   "n": 32,
+   "detectes": 32,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "FACTURE · declaration": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "FACTURE · lot": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "FACTURE · —": {
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IBAN · iban-fr-colle": {
+   "direct": true,
+   "n": 16,
+   "detectes": 16,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IBAN · iban-fr-par-4": {
+   "direct": true,
+   "n": 12,
+   "detectes": 11,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9166666666666666
+  },
+  "IBAN · iban-ma-colle": {
+   "direct": true,
+   "n": 13,
+   "detectes": 13,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IBAN · iban-ma-par-4": {
+   "direct": true,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "ICCID · iccid-colle": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "ICE · ice-colle": {
+   "direct": true,
+   "n": 112,
+   "detectes": 112,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "ICE · ice-par-3": {
+   "direct": true,
+   "n": 52,
+   "detectes": 52,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IF · if-nombre": {
+   "direct": true,
+   "n": 64,
+   "detectes": 64,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IMEI · imei-colle": {
+   "direct": true,
+   "n": 7,
+   "detectes": 7,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IMEI · imei-groupes": {
+   "direct": true,
+   "n": 7,
+   "detectes": 7,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IMEI · imei-tirets": {
+   "direct": true,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IMMAT · plaque-ma-barres": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IMMAT · plaque-ma-slash": {
+   "direct": false,
+   "n": 5,
+   "detectes": 5,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IMMAT · plaque-ma-tirets": {
+   "direct": false,
+   "n": 7,
+   "detectes": 7,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "IMSI · imsi-colle": {
+   "direct": true,
+   "n": 19,
+   "detectes": 19,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "MATRICULE · —": {
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "NAISSANCE · jj-mm-aaaa": {
+   "direct": false,
+   "n": 43,
+   "detectes": 34,
+   "partiels": 0,
+   "manques": 9,
+   "rappel": 0.7906976744186046
+  },
+  "NAISSANCE · lettres": {
+   "direct": false,
+   "n": 43,
+   "detectes": 34,
+   "partiels": 0,
+   "manques": 9,
+   "rappel": 0.7906976744186046
+  },
+  "NIR · nir-cle-tiret": {
+   "direct": true,
+   "n": 17,
+   "detectes": 0,
+   "partiels": 17,
+   "manques": 0,
+   "rappel": 0
+  },
+  "NIR · nir-colle": {
+   "direct": true,
+   "n": 10,
+   "detectes": 10,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "NIR · nir-groupes": {
+   "direct": true,
+   "n": 19,
+   "detectes": 19,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PASSEPORT · passeport-ma": {
+   "direct": true,
+   "n": 6,
+   "detectes": 6,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PASSEPORT · permis": {
+   "direct": true,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PASSEPORT · titre-sejour": {
+   "direct": true,
+   "n": 6,
+   "detectes": 6,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PATENTE · patente": {
+   "direct": false,
+   "n": 9,
+   "detectes": 9,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PATIENT · —": {
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · fr-nom-mot-courant": {
+   "direct": true,
+   "n": 38,
+   "detectes": 38,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · fr-particule": {
+   "direct": true,
+   "n": 39,
+   "detectes": 36,
+   "partiels": 2,
+   "manques": 1,
+   "rappel": 0.9230769230769231
+  },
+  "PERSONNE · fr-simple": {
+   "direct": true,
+   "n": 189,
+   "detectes": 189,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-ait-apostrophe": {
+   "direct": true,
+   "n": 18,
+   "detectes": 18,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-ait-espace": {
+   "direct": true,
+   "n": 33,
+   "detectes": 31,
+   "partiels": 2,
+   "manques": 0,
+   "rappel": 0.9393939393939394
+  },
+  "PERSONNE · mag-ait-tiret": {
+   "direct": true,
+   "n": 34,
+   "detectes": 32,
+   "partiels": 2,
+   "manques": 0,
+   "rappel": 0.9411764705882353
+  },
+  "PERSONNE · mag-ait-trema": {
+   "direct": true,
+   "n": 23,
+   "detectes": 23,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-al-espace": {
+   "direct": true,
+   "n": 32,
+   "detectes": 32,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-ben-colle": {
+   "direct": true,
+   "n": 42,
+   "detectes": 41,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9761904761904762
+  },
+  "PERSONNE · mag-ben-espace": {
+   "direct": true,
+   "n": 53,
+   "detectes": 52,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9811320754716981
+  },
+  "PERSONNE · mag-ben-tiret": {
+   "direct": true,
+   "n": 34,
+   "detectes": 34,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-double": {
+   "direct": true,
+   "n": 87,
+   "detectes": 86,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9885057471264368
+  },
+  "PERSONNE · mag-el-colle": {
+   "direct": true,
+   "n": 20,
+   "detectes": 20,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-el-espace": {
+   "direct": true,
+   "n": 38,
+   "detectes": 36,
+   "partiels": 2,
+   "manques": 0,
+   "rappel": 0.9473684210526315
+  },
+  "PERSONNE · mag-el-tiret": {
+   "direct": true,
+   "n": 26,
+   "detectes": 26,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · mag-ould": {
+   "direct": true,
+   "n": 48,
+   "detectes": 44,
+   "partiels": 4,
+   "manques": 0,
+   "rappel": 0.9166666666666666
+  },
+  "PERSONNE · mag-simple": {
+   "direct": true,
+   "n": 221,
+   "detectes": 220,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.995475113122172
+  },
+  "POLICE · —": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PRATICIEN · —": {
+   "direct": false,
+   "n": 36,
+   "detectes": 36,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "RC · rc-nombre": {
+   "direct": true,
+   "n": 57,
+   "detectes": 57,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "RG · parquet": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "RG · pourvoi": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "RG · rg": {
+   "direct": false,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "RIB · rib-ma-colle": {
+   "direct": true,
+   "n": 30,
+   "detectes": 30,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "RIB · rib-ma-groupes": {
+   "direct": true,
+   "n": 30,
+   "detectes": 29,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9666666666666667
+  },
+  "RIB · rib-ma-par-4": {
+   "direct": true,
+   "n": 25,
+   "detectes": 24,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.96
+  },
+  "RIB · rib-ma-tirets": {
+   "direct": true,
+   "n": 29,
+   "detectes": 29,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "SINISTRE · —": {
+   "direct": false,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "SIREN · siren-colle": {
+   "direct": true,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "SIREN · siren-groupes": {
+   "direct": true,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "SIRET · siret-colle": {
+   "direct": true,
+   "n": 16,
+   "detectes": 16,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "SIRET · siret-groupes": {
+   "direct": true,
+   "n": 12,
+   "detectes": 12,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "SOCIETE · casse-titre": {
+   "direct": false,
+   "n": 88,
+   "detectes": 88,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "SOCIETE · majuscules": {
+   "direct": false,
+   "n": 91,
+   "detectes": 91,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "SOCIETE · societe-forme": {
+   "direct": false,
+   "n": 100,
+   "detectes": 100,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-fixe-0033": {
+   "direct": true,
+   "n": 5,
+   "detectes": 5,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-fixe-intl-colle": {
+   "direct": true,
+   "n": 10,
+   "detectes": 10,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-fixe-intl-espaces": {
+   "direct": true,
+   "n": 8,
+   "detectes": 8,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-fixe-intl-zero-parenthese": {
+   "direct": true,
+   "n": 9,
+   "detectes": 9,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-fixe-national-colle": {
+   "direct": true,
+   "n": 5,
+   "detectes": 5,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-fixe-national-espaces": {
+   "direct": true,
+   "n": 10,
+   "detectes": 10,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-fixe-national-points": {
+   "direct": true,
+   "n": 2,
+   "detectes": 2,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-fixe-national-tirets": {
+   "direct": true,
+   "n": 3,
+   "detectes": 3,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-mobile-0033": {
+   "direct": true,
+   "n": 4,
+   "detectes": 4,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-mobile-intl-colle": {
+   "direct": true,
+   "n": 6,
+   "detectes": 6,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-mobile-intl-espaces": {
+   "direct": true,
+   "n": 7,
+   "detectes": 7,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-mobile-intl-irregulier": {
+   "direct": true,
+   "n": 1,
+   "detectes": 1,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-mobile-intl-zero-parenthese": {
+   "direct": true,
+   "n": 11,
+   "detectes": 11,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-mobile-national-colle": {
+   "direct": true,
+   "n": 6,
+   "detectes": 6,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-mobile-national-espaces": {
+   "direct": true,
+   "n": 4,
+   "detectes": 4,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-mobile-national-points": {
+   "direct": true,
+   "n": 6,
+   "detectes": 6,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · fr-mobile-national-tirets": {
+   "direct": true,
+   "n": 5,
+   "detectes": 5,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-00212": {
+   "direct": true,
+   "n": 8,
+   "detectes": 8,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-intl-3-6": {
+   "direct": true,
+   "n": 8,
+   "detectes": 8,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-intl-colle": {
+   "direct": true,
+   "n": 11,
+   "detectes": 11,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-intl-espaces": {
+   "direct": true,
+   "n": 7,
+   "detectes": 7,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-intl-tirets": {
+   "direct": true,
+   "n": 7,
+   "detectes": 7,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-intl-zero-parenthese": {
+   "direct": true,
+   "n": 3,
+   "detectes": 3,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-msisdn-sans-plus": {
+   "direct": true,
+   "n": 5,
+   "detectes": 5,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-national-4-2-2-2": {
+   "direct": true,
+   "n": 11,
+   "detectes": 11,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-national-colle": {
+   "direct": true,
+   "n": 11,
+   "detectes": 11,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-national-espaces": {
+   "direct": true,
+   "n": 9,
+   "detectes": 9,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-national-points": {
+   "direct": true,
+   "n": 13,
+   "detectes": 13,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-fixe-national-tirets": {
+   "direct": true,
+   "n": 8,
+   "detectes": 8,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-00212": {
+   "direct": true,
+   "n": 25,
+   "detectes": 25,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-espaces-irreguliers": {
+   "direct": true,
+   "n": 1,
+   "detectes": 1,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-intl-3-6": {
+   "direct": true,
+   "n": 30,
+   "detectes": 30,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-intl-colle": {
+   "direct": true,
+   "n": 17,
+   "detectes": 17,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-intl-espaces": {
+   "direct": true,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-intl-tirets": {
+   "direct": true,
+   "n": 16,
+   "detectes": 16,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-intl-zero-parenthese": {
+   "direct": true,
+   "n": 21,
+   "detectes": 21,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-intl-zero-parenthese-colle": {
+   "direct": true,
+   "n": 1,
+   "detectes": 1,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-msisdn-sans-plus": {
+   "direct": true,
+   "n": 26,
+   "detectes": 26,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-national-4-2-2-2": {
+   "direct": true,
+   "n": 24,
+   "detectes": 24,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-national-colle": {
+   "direct": true,
+   "n": 20,
+   "detectes": 20,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-national-espaces": {
+   "direct": true,
+   "n": 26,
+   "detectes": 26,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-national-points": {
+   "direct": true,
+   "n": 18,
+   "detectes": 18,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-national-tirets": {
+   "direct": true,
+   "n": 20,
+   "detectes": 20,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TEL · ma-mobile-slash": {
+   "direct": true,
+   "n": 1,
+   "detectes": 1,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TVA · tva-fr-colle": {
+   "direct": false,
+   "n": 2,
+   "detectes": 2,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "TVA · tva-fr-groupes": {
+   "direct": false,
+   "n": 2,
+   "detectes": 2,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  }
+ },
+ "par_trait": {
+  "PERSONNE · minuscules": {
+   "n": 10,
+   "detectes": 10,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · nom-majuscules": {
+   "n": 123,
+   "detectes": 122,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.991869918699187
+  },
+  "PERSONNE · nom-majuscules-avant": {
+   "n": 177,
+   "detectes": 177,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · nom-seul": {
+   "n": 74,
+   "detectes": 73,
+   "partiels": 0,
+   "manques": 1,
+   "rappel": 0.9864864864864865
+  },
+  "PERSONNE · prenom-apostrophe": {
+   "n": 59,
+   "detectes": 52,
+   "partiels": 7,
+   "manques": 0,
+   "rappel": 0.8813559322033898
+  },
+  "PERSONNE · prenom-compose": {
+   "n": 125,
+   "detectes": 125,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "PERSONNE · prenom-seul": {
+   "n": 65,
+   "detectes": 64,
+   "partiels": 1,
+   "manques": 0,
+   "rappel": 0.9846153846153847
+  }
+ },
+ "par_leurre": {
+  "MONTANT": {
+   "libelle": "Montant",
+   "n": 1012,
+   "codes": 38,
+   "taux": 0.037549407114624504
+  },
+  "DATE": {
+   "libelle": "Date (hors naissance)",
+   "n": 785,
+   "codes": 10,
+   "taux": 0.012738853503184714
+  },
+  "ARTICLE": {
+   "libelle": "Article ou texte de loi",
+   "n": 88,
+   "codes": 35,
+   "taux": 0.3977272727272727
+  },
+  "SIGLE": {
+   "libelle": "Sigle ou terme du lexique",
+   "n": 462,
+   "codes": 61,
+   "taux": 0.13203463203463203
+  },
+  "MOT": {
+   "libelle": "Mot courant qui ressemble à un nom",
+   "n": 134,
+   "codes": 13,
+   "taux": 0.09701492537313433
+  },
+  "VILLE": {
+   "libelle": "Ville",
+   "n": 204,
+   "codes": 0,
+   "taux": 0
+  },
+  "PRODUIT": {
+   "libelle": "Offre, opérateur, médicament",
+   "n": 102,
+   "codes": 32,
+   "taux": 0.3137254901960784
+  },
+  "COMPTE": {
+   "libelle": "N° de compte comptable",
+   "n": 103,
+   "codes": 0,
+   "taux": 0
+  },
+  "MESURE": {
+   "libelle": "Durée, quantité, dosage",
+   "n": 174,
+   "codes": 1,
+   "taux": 0.005747126436781609
+  }
+ },
+ "manques": [
+  {
+   "doc": "core/courrier/003",
+   "pack": "core",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 68 07 94 443 898 - 83",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "83"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/courrier/010",
+   "pack": "core",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "2 75 09 2A 724 241 - 85",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "85"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/courrier/011",
+   "pack": "core",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 56 11 13 135 111 - 48",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "48"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/courrier/012",
+   "pack": "core",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 47 12 31 177 146 - 82",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "82"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/courrier/013",
+   "pack": "core",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 06 11 75 696 892 - 91",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "91"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/courrier/014",
+   "pack": "core",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "2 10 08 13 249 802 - 33",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "33"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/fiche/003",
+   "pack": "core",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "jj-mm-aaaa",
+   "traits": [],
+   "valeur": "12/05/2003",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "12",
+    "05",
+    "2003"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/fiche/004",
+   "pack": "core",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "jj-mm-aaaa",
+   "traits": [],
+   "valeur": "22/08/1962",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "22",
+    "08",
+    "1962"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/fiche/009",
+   "pack": "core",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "lettres",
+   "traits": [],
+   "valeur": "16 juin 1988",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "16",
+    "juin",
+    "1988"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/fiche/011",
+   "pack": "core",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "lettres",
+   "traits": [],
+   "valeur": "8 août 1997",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "8",
+    "août",
+    "1997"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/fiche/013",
+   "pack": "core",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "jj-mm-aaaa",
+   "traits": [],
+   "valeur": "10/07/1998",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "10",
+    "07",
+    "1998"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/fiche/014",
+   "pack": "core",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "jj-mm-aaaa",
+   "traits": [],
+   "valeur": "02/06/1973",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "02",
+    "06",
+    "1973"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/mailTransfert/013",
+   "pack": "core",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ait-espace",
+   "traits": [
+    "prenom-seul"
+   ],
+   "valeur": "R'kia",
+   "statut": "partiel",
+   "prefixes": [
+    "CODE"
+   ],
+   "en_clair": [
+    "R"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "core/mailTransfert/013",
+   "pack": "core",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ait-espace",
+   "traits": [
+    "prenom-apostrophe"
+   ],
+   "valeur": "R'kia Ait Taleb",
+   "statut": "partiel",
+   "prefixes": [
+    "CODE",
+    "NOM"
+   ],
+   "en_clair": [
+    "R"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "juridique-fr/conclusions/005",
+   "pack": "juridique-fr",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "fr-particule",
+   "traits": [],
+   "valeur": "Inès de La Fontaine",
+   "statut": "partiel",
+   "prefixes": [
+    "PRENOM"
+   ],
+   "en_clair": [
+    "Fontaine"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "juridique-fr/conclusions/005",
+   "pack": "juridique-fr",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "fr-particule",
+   "traits": [
+    "nom-seul"
+   ],
+   "valeur": "de La Fontaine",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "Fontaine"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "juridique-fr/conclusions/008",
+   "pack": "juridique-fr",
+   "type": "ADRESSE",
+   "direct": false,
+   "variante": "fr-rue",
+   "traits": [],
+   "valeur": "41 rue de la République",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "République"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "juridique-fr/conclusions/011",
+   "pack": "juridique-fr",
+   "type": "ADRESSE",
+   "direct": false,
+   "variante": "fr-batiment",
+   "traits": [],
+   "valeur": "Bâtiment C, 27 quai de la Fosse",
+   "statut": "manque",
+   "prefixes": [
+    "NOM",
+    "PRENOM"
+   ],
+   "en_clair": [
+    "Fosse"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "juridique-fr/assignation/003",
+   "pack": "juridique-fr",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 00 06 31 924 607 - 79",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "79"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "juridique-fr/assignation/004",
+   "pack": "juridique-fr",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "2 90 07 2B 561 069 - 42",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "42"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "juridique-fr/assignation/005",
+   "pack": "juridique-fr",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 25 03 31 794 881 - 07",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "07"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "juridique-fr/assignation/011",
+   "pack": "juridique-fr",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 65 02 2B 075 554 - 06",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "06"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "juridique-fr/assignation/012",
+   "pack": "juridique-fr",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "2 20 01 2A 954 424 - 31",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "31"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "banque-assurance/releve/003",
+   "pack": "banque-assurance",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ben-espace",
+   "traits": [
+    "prenom-apostrophe"
+   ],
+   "valeur": "Ma'ati Ben Chekroun",
+   "statut": "partiel",
+   "prefixes": [
+    "CODE",
+    "NOM"
+   ],
+   "en_clair": [
+    "Ma"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "banque-assurance/releve/006",
+   "pack": "banque-assurance",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ould",
+   "traits": [],
+   "valeur": "Nesrine Ould Bah",
+   "statut": "partiel",
+   "prefixes": [
+    "PRENOM"
+   ],
+   "en_clair": [
+    "Bah"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "banque-assurance/releve/011",
+   "pack": "banque-assurance",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-double",
+   "traits": [
+    "prenom-apostrophe",
+    "nom-majuscules"
+   ],
+   "valeur": "Ma'ati IDRISSI KAITOUNI",
+   "statut": "partiel",
+   "prefixes": [
+    "CODE",
+    "NOM"
+   ],
+   "en_clair": [
+    "Ma"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "banque-assurance/sinistre/001",
+   "pack": "banque-assurance",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-simple",
+   "traits": [],
+   "valeur": "Cheikh Saidi",
+   "statut": "partiel",
+   "prefixes": [
+    "NOM"
+   ],
+   "en_clair": [
+    "Cheikh"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "banque-assurance/kyc/008",
+   "pack": "banque-assurance",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-el-espace",
+   "traits": [],
+   "valeur": "Cheikh El Alaoui",
+   "statut": "partiel",
+   "prefixes": [
+    "NOM"
+   ],
+   "en_clair": [
+    "Cheikh"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "banque-assurance/effets/009",
+   "pack": "banque-assurance",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ait-tiret",
+   "traits": [
+    "prenom-apostrophe"
+   ],
+   "valeur": "R'kia Ait-Mbarek",
+   "statut": "partiel",
+   "prefixes": [
+    "CODE",
+    "NOM"
+   ],
+   "en_clair": [
+    "R"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "banque-assurance/effets/009",
+   "pack": "banque-assurance",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ait-tiret",
+   "traits": [
+    "prenom-apostrophe"
+   ],
+   "valeur": "R'kia Ait-Mbarek",
+   "statut": "partiel",
+   "prefixes": [
+    "CODE",
+    "NOM"
+   ],
+   "en_clair": [
+    "R"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "banque-assurance/sinistreAuto/004",
+   "pack": "banque-assurance",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ben-colle",
+   "traits": [
+    "prenom-apostrophe"
+   ],
+   "valeur": "R'kia Bensaid",
+   "statut": "partiel",
+   "prefixes": [
+    "CODE",
+    "NOM"
+   ],
+   "en_clair": [
+    "R"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/001",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "lettres",
+   "traits": [],
+   "valeur": "25 mai 2004",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "25",
+    "mai",
+    "2004"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/002",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "jj-mm-aaaa",
+   "traits": [],
+   "valeur": "03/03/1982",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "03",
+    "03",
+    "1982"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/003",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "lettres",
+   "traits": [],
+   "valeur": "27 août 1988",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "27",
+    "août",
+    "1988"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/004",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "jj-mm-aaaa",
+   "traits": [],
+   "valeur": "18/12/1967",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "18",
+    "12",
+    "1967"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/005",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "lettres",
+   "traits": [],
+   "valeur": "25 mars 1957",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "25",
+    "mars",
+    "1957"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/006",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "lettres",
+   "traits": [],
+   "valeur": "25 octobre 1957",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "25",
+    "octobre",
+    "1957"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/007",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "lettres",
+   "traits": [],
+   "valeur": "13 juin 1992",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "13",
+    "juin",
+    "1992"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/008",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "lettres",
+   "traits": [],
+   "valeur": "19 juin 1985",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "19",
+    "juin",
+    "1985"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/009",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "jj-mm-aaaa",
+   "traits": [],
+   "valeur": "16/11/1974",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "16",
+    "11",
+    "1974"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/010",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "jj-mm-aaaa",
+   "traits": [],
+   "valeur": "03/12/1981",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "03",
+    "12",
+    "1981"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/011",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "lettres",
+   "traits": [],
+   "valeur": "12 avril 1996",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "12",
+    "avril",
+    "1996"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/compteRendu/012",
+   "pack": "sante",
+   "type": "NAISSANCE",
+   "direct": false,
+   "variante": "jj-mm-aaaa",
+   "traits": [],
+   "valeur": "25/10/2000",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "25",
+    "10",
+    "2000"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/lettreLiaison/001",
+   "pack": "sante",
+   "type": "ADRESSE",
+   "direct": false,
+   "variante": "fr-bis",
+   "traits": [],
+   "valeur": "31 bis rue de la République",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "République"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/lettreLiaison/003",
+   "pack": "sante",
+   "type": "ADRESSE",
+   "direct": false,
+   "variante": "fr-rue",
+   "traits": [],
+   "valeur": "71 quai de la Fosse",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "Fosse"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/lettreLiaison/005",
+   "pack": "sante",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "2 14 12 99 789 906 - 93",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "93"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/lettreLiaison/006",
+   "pack": "sante",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "2 42 07 94 077 945 - 18",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "18"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/lettreLiaison/007",
+   "pack": "sante",
+   "type": "ADRESSE",
+   "direct": false,
+   "variante": "fr-batiment",
+   "traits": [],
+   "valeur": "Bâtiment C, 5 rue de la République",
+   "statut": "manque",
+   "prefixes": [
+    "NOM",
+    "PRENOM"
+   ],
+   "en_clair": [
+    "République"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "sante/lettreLiaison/009",
+   "pack": "sante",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "2 62 09 94 388 520 - 59",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "59"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/facture/010",
+   "pack": "expertise-comptable",
+   "type": "RIB",
+   "direct": true,
+   "variante": "rib-ma-par-4",
+   "traits": [],
+   "valeur": "0117 2663 0845 1886 7116 7673",
+   "statut": "partiel",
+   "prefixes": [
+    "CARTE"
+   ],
+   "en_clair": [
+    "7116",
+    "7673"
+   ],
+   "vu_par_ia": false
+  },
+  {
+   "doc": "expertise-comptable/grandLivre/001",
+   "pack": "expertise-comptable",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ould",
+   "traits": [],
+   "valeur": "Rachida Ould Bah",
+   "statut": "partiel",
+   "prefixes": [
+    "PRENOM"
+   ],
+   "en_clair": [
+    "Bah"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/grandLivre/002",
+   "pack": "expertise-comptable",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-el-espace",
+   "traits": [
+    "prenom-apostrophe"
+   ],
+   "valeur": "Ma'ati El Moussaoui",
+   "statut": "partiel",
+   "prefixes": [
+    "CODE",
+    "NOM"
+   ],
+   "en_clair": [
+    "Ma"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/grandLivre/007",
+   "pack": "expertise-comptable",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ould",
+   "traits": [],
+   "valeur": "Mehdi Ould Bah",
+   "statut": "partiel",
+   "prefixes": [
+    "PRENOM"
+   ],
+   "en_clair": [
+    "Bah"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/grandLivre/009",
+   "pack": "expertise-comptable",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "fr-particule",
+   "traits": [],
+   "valeur": "Sophie Le Roux",
+   "statut": "partiel",
+   "prefixes": [
+    "PRENOM"
+   ],
+   "en_clair": [
+    "Roux"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/001",
+   "pack": "expertise-comptable",
+   "type": "RIB",
+   "direct": true,
+   "variante": "rib-ma-groupes",
+   "traits": [],
+   "valeur": "013 134 9616370589708679 28",
+   "statut": "partiel",
+   "prefixes": [
+    "CARTE"
+   ],
+   "en_clair": [
+    "013",
+    "28"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/001",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "4237529",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "4237529"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/002",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "4457560",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "4457560"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/002",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "5347766",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "5347766"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/003",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "0537828",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "0537828"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/003",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "3159073",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "3159073"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/005",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "0744611",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "0744611"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/009",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "2449558",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "2449558"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/010",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "7339130",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "7339130"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/010",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "8691572",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "8691572"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/011",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "7691163",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "7691163"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/rapprochement/012",
+   "pack": "expertise-comptable",
+   "type": "EFFET",
+   "direct": false,
+   "variante": "cheque-7",
+   "traits": [],
+   "valeur": "5563453",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "5563453"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "expertise-comptable/reporting/001",
+   "pack": "expertise-comptable",
+   "type": "PERSONNE",
+   "direct": true,
+   "variante": "mag-ould",
+   "traits": [],
+   "valeur": "Abdelaziz Ould Cheikh",
+   "statut": "partiel",
+   "prefixes": [
+    "PRENOM"
+   ],
+   "en_clair": [
+    "Cheikh"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/001",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "7456193",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "7456193"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/002",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "1590991",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "1590991"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/003",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "8710871",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "8710871"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/004",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "9135145",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "9135145"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/005",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "2140584",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "2140584"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/006",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "8806146",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "8806146"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/007",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "5398685",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "5398685"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/008",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "1843021",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "1843021"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/009",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "1856059",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "1856059"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/010",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "4295445",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "4295445"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/011",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "7501593",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "7501593"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinMa/012",
+   "pack": "rh-paie",
+   "type": "CNSS",
+   "direct": true,
+   "variante": "cnss-affiliation-7",
+   "traits": [],
+   "valeur": "8109948",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "8109948"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinFr/001",
+   "pack": "rh-paie",
+   "type": "IBAN",
+   "direct": true,
+   "variante": "iban-fr-par-4",
+   "traits": [],
+   "valeur": "FR76 2245 1259 3502 5177 5787 675",
+   "statut": "partiel",
+   "prefixes": [
+    "REF",
+    "CARTE"
+   ],
+   "en_clair": [
+    "5787",
+    "675"
+   ],
+   "vu_par_ia": false
+  },
+  {
+   "doc": "rh-paie/bulletinFr/004",
+   "pack": "rh-paie",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 97 02 67 473 063 - 22",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "22"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinFr/005",
+   "pack": "rh-paie",
+   "type": "ADRESSE",
+   "direct": false,
+   "variante": "fr-rue",
+   "traits": [],
+   "valeur": "49 quai de la Fosse",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "Fosse"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinFr/009",
+   "pack": "rh-paie",
+   "type": "ADRESSE",
+   "direct": false,
+   "variante": "fr-batiment",
+   "traits": [],
+   "valeur": "Bâtiment B, 90 quai de la Fosse",
+   "statut": "manque",
+   "prefixes": [],
+   "en_clair": [
+    "Fosse"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinFr/010",
+   "pack": "rh-paie",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 75 07 67 244 439 - 11",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "11"
+   ],
+   "vu_par_ia": true
+  },
+  {
+   "doc": "rh-paie/bulletinFr/011",
+   "pack": "rh-paie",
+   "type": "NIR",
+   "direct": true,
+   "variante": "nir-cle-tiret",
+   "traits": [],
+   "valeur": "1 49 04 31 392 783 - 44",
+   "statut": "partiel",
+   "prefixes": [
+    "CIN"
+   ],
+   "en_clair": [
+    "44"
+   ],
+   "vu_par_ia": true
+  }
+ ],
+ "verrou_de_sortie": {
+  "manques_directs": 49,
+  "manques_directs_vus_par_ia": 47,
+  "masquages_par_pack": {
+   "core": 0,
+   "telecom-ma": 0,
+   "juridique-fr": 0,
+   "banque-assurance": 0,
+   "sante": 58,
+   "expertise-comptable": 0,
+   "rh-paie": 24
+  }
+ },
+ "faux_positifs": [
+  {
+   "doc": "core/mailTransfert/010",
+   "pack": "core",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/ticket/002",
+   "pack": "telecom-ma",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "forfait 4G+ 20 Go",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/ticket/005",
+   "pack": "telecom-ma",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "forfait 4G+ 20 Go",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/ticket/009",
+   "pack": "telecom-ma",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "Fibre 100 Méga",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/ticket/011",
+   "pack": "telecom-ma",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "Fibre 100 Méga",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/001",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/001",
+   "pack": "telecom-ma",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/002",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/003",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/004",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/004",
+   "pack": "telecom-ma",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/005",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/006",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/007",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/008",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/009",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/010",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/011",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "telecom-ma/portabilite/012",
+   "pack": "telecom-ma",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "ANRT",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/001",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/001",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/002",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/003",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/004",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/005",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/006",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/006",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/006",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/007",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/007",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/007",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/008",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/009",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/009",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/009",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/010",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/010",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/010",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/011",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/011",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/012",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/012",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/conclusions/012",
+   "pack": "juridique-fr",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "juridique-fr/assignation/006",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/assignation/009",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/assignation/011",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/noteDossier/001",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/noteDossier/003",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/noteDossier/004",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/noteDossier/004",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/noteDossier/005",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/noteDossier/006",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "juridique-fr/noteDossier/007",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "juridique-fr/noteDossier/012",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "code-fr",
+   "valeur": "article R. 4624-31",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "banque-assurance/virement/010",
+   "pack": "banque-assurance",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/001",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/002",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/003",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/004",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/005",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/006",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/007",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/008",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/009",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/010",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/011",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/kyc/012",
+   "pack": "banque-assurance",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "KYC",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/001",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "jj-mm-aaaa",
+   "valeur": "22/03/2023",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/002",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "iso",
+   "valeur": "2025-04-07",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/003",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "iso",
+   "valeur": "2021-11-16",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/004",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "iso",
+   "valeur": "2023-07-02",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/005",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "iso",
+   "valeur": "2026-03-07",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/006",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "jj-mm-aaaa",
+   "valeur": "15/06/2024",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/007",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "points",
+   "valeur": "28.04.2025",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/008",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "jj-mm-aaaa",
+   "valeur": "05/07/2019",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/011",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "iso",
+   "valeur": "2026-06-17",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/carte/012",
+   "pack": "banque-assurance",
+   "type": "DATE",
+   "variante": "points",
+   "valeur": "15.01.2020",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "banque-assurance/effets/002",
+   "pack": "banque-assurance",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "banque-assurance/effets/007",
+   "pack": "banque-assurance",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/001",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "ECG",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/002",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "HbA1c",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/002",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "Doliprane 1000 mg",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/003",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "HbA1c",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/004",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/006",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/006",
+   "pack": "sante",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/008",
+   "pack": "sante",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/009",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/010",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/compteRendu/012",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "NFS",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "sante/lettreLiaison/001",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "HbA1c",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "sante/lettreLiaison/002",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "amoxicilline 1 g",
+   "prefixes": [
+    "CODE-001"
+   ]
+  },
+  {
+   "doc": "sante/lettreLiaison/003",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/lettreLiaison/004",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "NFS",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "sante/lettreLiaison/006",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "amoxicilline 1 g",
+   "prefixes": [
+    "CODE-001"
+   ]
+  },
+  {
+   "doc": "sante/lettreLiaison/007",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "NFS",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "sante/lettreLiaison/008",
+   "pack": "sante",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "sante/lettreLiaison/009",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "HbA1c",
+   "prefixes": [
+    "REF"
+   ]
+  },
+  {
+   "doc": "sante/lettreLiaison/011",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "Doliprane 1000 mg",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/001",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "amoxicilline 1 g",
+   "prefixes": [
+    "CODE-001"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/002",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "amoxicilline 1 g",
+   "prefixes": [
+    "CODE-001"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/006",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/007",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "amoxicilline 1 g",
+   "prefixes": [
+    "CODE-001"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/007",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/008",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/009",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "Doliprane 1000 mg",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/009",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/010",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "Doliprane 1000 mg",
+   "prefixes": [
+    "NOM"
+   ]
+  },
+  {
+   "doc": "sante/ordonnance/012",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "expertise-comptable/lettreMission/010",
+   "pack": "expertise-comptable",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/001",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/001",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "47 076 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/001",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/001",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "56 405,37 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/002",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/002",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "30 267,48 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/002",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/002",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "20 050,55 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/003",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/003",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "centaines",
+   "valeur": "255 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/003",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/003",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "4.170.902,64 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/004",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/004",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "39 103,66 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/004",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/004",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "7.606.725 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/005",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/005",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "centaines",
+   "valeur": "861,50 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/005",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/005",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "centaines",
+   "valeur": "911 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/006",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/006",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "47 762,09 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/006",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/006",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "4 290 256,83 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/007",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/007",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "3 081 328,67 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/007",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/007",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "7 505 814 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/008",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/008",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "6 137 548,14 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/008",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/008",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "5 249 273 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/009",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/009",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "9 662 583 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/009",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/009",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "41 393,44 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/010",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/010",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "9.564.495,35 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/010",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/010",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "91 861 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/011",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/011",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "9 668 158,96 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/011",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/011",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "84.966,59 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/012",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/012",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "91 413,62 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/012",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "IR",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinMa/012",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "53.320,30 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/001",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CSG",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/001",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "900 068,22 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/002",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CSG",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/002",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "32 290,31 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/003",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CSG",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/003",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "44.825,08 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/004",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CRDS",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/004",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "14 098 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/005",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CSG",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/005",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "grand",
+   "valeur": "1 843 924 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/006",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CSG",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/006",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "17.464,33 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/007",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CRDS",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/007",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "centaines",
+   "valeur": "475 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/008",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CSG",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/008",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "4 692,59 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/009",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CSG",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/009",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "96 518 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/010",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CRDS",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/010",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "65 423,40 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/011",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CSG",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/011",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "milliers",
+   "valeur": "20.786 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/012",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "CSG",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/bulletinFr/012",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "centaines",
+   "valeur": "873 €",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/attestation/009",
+   "pack": "rh-paie",
+   "type": "MOT",
+   "variante": "",
+   "valeur": "Noël",
+   "prefixes": [
+    "PRENOM"
+   ]
+  },
+  {
+   "doc": "core/manuel/sms-darija",
+   "pack": "core",
+   "type": "MOT",
+   "variante": "darija",
+   "valeur": "inchallah",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "juridique-fr/manuel/leurres-seuls",
+   "pack": "juridique-fr",
+   "type": "ARTICLE",
+   "variante": "jurisprudence",
+   "valeur": "Soc., 27 septembre 2023, n° 21-24.782",
+   "prefixes": [
+    "POURVOI"
+   ]
+  },
+  {
+   "doc": "rh-paie/manuel/leurres-paie",
+   "pack": "rh-paie",
+   "type": "SIGLE",
+   "variante": "",
+   "valeur": "AMO",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/manuel/leurres-paie",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "",
+   "valeur": "8 450,00 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "rh-paie/manuel/leurres-paie",
+   "pack": "rh-paie",
+   "type": "MONTANT",
+   "variante": "",
+   "valeur": "190,97 MAD",
+   "prefixes": [
+    "SOCIETE"
+   ]
+  },
+  {
+   "doc": "sante/manuel/transmission-orale",
+   "pack": "sante",
+   "type": "PRODUIT",
+   "variante": "",
+   "valeur": "insuline glargine",
+   "prefixes": [
+    "CODE"
+   ]
+  },
+  {
+   "doc": "sante/manuel/transmission-orale",
+   "pack": "sante",
+   "type": "MESURE",
+   "variante": "",
+   "valeur": "12 UI",
+   "prefixes": [
+    "NOM"
+   ]
+  }
+ ],
+ "hors_etiquette": [
+  {
+   "passage": "CODE « joignable »",
+   "n": 48
+  },
+  {
+   "passage": "NOM « PRLV »",
+   "n": 18
+  },
+  {
+   "passage": "NOM « TR »",
+   "n": 14
+  },
+  {
+   "passage": "SOCIETE « FICHE CONTACT »",
+   "n": 14
+  },
+  {
+   "passage": "NOM « RECU »",
+   "n": 13
+  },
+  {
+   "passage": "NOM « VIR »",
+   "n": 13
+  },
+  {
+   "passage": "CODE « confraternellement »",
+   "n": 12
+  },
+  {
+   "passage": "CODE « requérante »",
+   "n": 12
+  },
+  {
+   "passage": "CODE « télédéclarations »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « AMIABLE »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « Bien »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « Co-emprunteur »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « CRÉDIT »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « DEVANT »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « DOSSIER »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « EMIS »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « EXTRAIT »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « INTERNE »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « LIAISON »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « RAS »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « SAV »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « Télédéclaration »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « TICKET »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « VIREMENT »",
+   "n": 12
+  },
+  {
+   "passage": "SOCIETE « DÉCLARATION DE SINISTRE »",
+   "n": 12
+  },
+  {
+   "passage": "SOCIETE « DEMANDE DE PORTABILITÉ DU NUMÉRO »",
+   "n": 12
+  },
+  {
+   "passage": "SOCIETE « LETTRE DE MISSION »",
+   "n": 12
+  },
+  {
+   "passage": "NOM « CHQ »",
+   "n": 11
+  },
+  {
+   "passage": "NOM « REMIS »",
+   "n": 11
+  },
+  {
+   "passage": "NOM « Reprise »",
+   "n": 11
+  },
+  {
+   "passage": "NOM « IMMOBILIER »",
+   "n": 7
+  },
+  {
+   "passage": "NOM « Inchallah »",
+   "n": 6
+  },
+  {
+   "passage": "SOCIETE « ORDRE DE VIREMENT PERMANENT »",
+   "n": 6
+  },
+  {
+   "passage": "CODE « choukran »",
+   "n": 5
+  },
+  {
+   "passage": "NOM « CONSOMMATION »",
+   "n": 5
+  },
+  {
+   "passage": "NOM « Enfant »",
+   "n": 5
+  },
+  {
+   "passage": "NOM « Salam »",
+   "n": 5
+  },
+  {
+   "passage": "NOM « Syntec »",
+   "n": 5
+  },
+  {
+   "passage": "PRENOM « À »",
+   "n": 5
+  },
+  {
+   "passage": "CODE « glycémique »",
+   "n": 4
+  },
+  {
+   "passage": "SOCIETE « ORDRE DE VIREMENT OCCASIONNEL »",
+   "n": 4
+  },
+  {
+   "passage": "SOCIETE « PLAISE AU CONSEIL »",
+   "n": 4
+  },
+  {
+   "passage": "NOM « GSM »",
+   "n": 3
+  },
+  {
+   "passage": "NOM « Mb »",
+   "n": 3
+  },
+  {
+   "passage": "NOM « BANCAIRE »",
+   "n": 2
+  },
+  {
+   "passage": "NOM « Carte »",
+   "n": 2
+  },
+  {
+   "passage": "NOM « CARTE »",
+   "n": 2
+  },
+  {
+   "passage": "NOM « Hamdoullah »",
+   "n": 2
+  },
+  {
+   "passage": "NOM « REMISE »",
+   "n": 2
+  },
+  {
+   "passage": "SOCIETE « ORDRE DE VIREMENT INTERNATIONAL »",
+   "n": 2
+  },
+  {
+   "passage": "CODE « slt »",
+   "n": 1
+  },
+  {
+   "passage": "CODE « stp »",
+   "n": 1
+  },
+  {
+   "passage": "NOM « Joignable »",
+   "n": 1
+  },
+  {
+   "passage": "NOM « Patient »",
+   "n": 1
+  }
+ ],
+ "plus_gros_ecarts": [
+  {
+   "cle": "NIR · nir-cle-tiret",
+   "direct": true,
+   "n": 17,
+   "detectes": 0,
+   "partiels": 17,
+   "manques": 0,
+   "rappel": 0,
+   "perdues": 17
+  },
+  {
+   "cle": "CNSS · cnss-affiliation-7",
+   "direct": true,
+   "n": 25,
+   "detectes": 13,
+   "partiels": 0,
+   "manques": 12,
+   "rappel": 0.52,
+   "perdues": 12
+  },
+  {
+   "cle": "PERSONNE · mag-ould",
+   "direct": true,
+   "n": 48,
+   "detectes": 44,
+   "partiels": 4,
+   "manques": 0,
+   "rappel": 0.9166666666666666,
+   "perdues": 4
+  },
+  {
+   "cle": "PERSONNE · fr-particule",
+   "direct": true,
+   "n": 39,
+   "detectes": 36,
+   "partiels": 2,
+   "manques": 1,
+   "rappel": 0.9230769230769231,
+   "perdues": 3
+  },
+  {
+   "cle": "PERSONNE · mag-ait-espace",
+   "direct": true,
+   "n": 33,
+   "detectes": 31,
+   "partiels": 2,
+   "manques": 0,
+   "rappel": 0.9393939393939394,
+   "perdues": 2
+  }
+ ],
+ "documents_imbriques": [
+  "sante/compteRendu/004",
+  "sante/compteRendu/007",
+  "sante/compteRendu/008",
+  "sante/compteRendu/012",
+  "sante/lettreLiaison/002",
+  "sante/lettreLiaison/006",
+  "sante/ordonnance/001",
+  "sante/ordonnance/002",
+  "sante/ordonnance/007"
+ ]
+}

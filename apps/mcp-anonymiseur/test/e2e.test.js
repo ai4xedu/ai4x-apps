@@ -476,6 +476,26 @@ test("rendu lisible (v2.23) : pseudonymes dans la réponse et le fichier, zéro 
   assert.ok(blocCodes.text.includes(hamid.code) && !blocCodes.text.includes(hamid.pseudo));
 });
 
+test("toutes les dates (v2.24) : aucune date réelle vue, et une réponse qui ne contient qu'un délai calculé se décode", async () => {
+  const w = fs.mkdtempSync(path.join(os.tmpdir(), "anx-toutes-"));
+  fs.mkdirSync(path.join(w, "Hidden-Tokens"));
+  fs.writeFileSync(path.join(w, "Hidden-Tokens", "reglages.json"), JSON.stringify({ rendu: "lisible", dates: "toutes" }));
+  fs.writeFileSync(path.join(w, "note.md"), "M. Hamid Chraïbi, né le 12/04/1981, a signé le 15/01/2026 avec Gharb Primeurs SARL.\n", "utf8");
+  const c = new Client({ name: "test-toutes", version: "1" });
+  await c.connect(new StdioClientTransport({ command: process.execPath, args: [serverPath], env: { ...process.env, ANX_WORKDIR: w, ANX_SENTINELLE: "non", ANX_LICENCE: testLicence() } }));
+  const out = resultText(await c.callTool({ name: "anonymiser_fichier", arguments: { nom_fichier: "note.md", confirmer: true } }));
+  for (const v of ["Chraïbi", "12/04/1981", "15/01/2026", "Gharb"]) assert.ok(!out.includes(v), `valeur réelle vue : ${v}`);
+  assert.match(out, /DATES — « toutes »/);
+  const sig = out.match(/a signé le (\d{2})\/(\d{2})\/(\d{4})/).slice(1).map(Number);
+  const lim = new Date(Date.UTC(sig[2], sig[1] - 1, sig[0]) + 15 * 864e5);
+  const p2 = (n) => String(n).padStart(2, "0");
+  const dec = resultText(await c.callTool({ name: "deanonymiser", arguments: { contenu: `Réponse avant le ${p2(lim.getUTCDate())}/${p2(lim.getUTCMonth() + 1)}/${lim.getUTCFullYear()}.`, nom_sortie: "delai" } }));
+  await c.close();
+  const m = dec.match(/Hidden-Tokens\/\S+\.md/);
+  assert.ok(m, dec);
+  assert.equal(fs.readFileSync(path.join(w, m[0]), "utf8"), "Réponse avant le 30/01/2026.");
+});
+
 test("etat_cle sur un dossier neuf : la ligne « Rendu » est là, clé vide comprise", async () => {
   const vide = fs.mkdtempSync(path.join(os.tmpdir(), "anx-vide-"));
   fs.mkdirSync(path.join(vide, "Hidden-Tokens"));

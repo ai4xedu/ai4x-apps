@@ -112,5 +112,20 @@ export function developperPacks(ids) {
   return { regles, entetes, erreurs };
 }
 
+/* Les packs actifs PAR DÉFAUT (v2.25) : ceux d'un dossier qui n'a rien
+   choisi, ni dans reglages.json ni par la politique signée du cabinet.
+   Choisis par la mesure (HT-Bench, bench/ht-bench/packs.mjs) : activés pour
+   TOUS les documents, ils font monter le rappel des identifiants directs sans
+   corrompre aucune sortie ni coder de leurres chez les autres métiers. Santé
+   n'y est pas : ses motifs corrompent encore des sorties. Un dossier qui
+   déclare « packs » — même [] — n'en reçoit aucun d'office. */
+export const PACKS_PAR_DEFAUT = Object.freeze(["telecom-ma", "juridique-fr", "rh-paie", "banque-assurance", "expertise-comptable"]);
+
+/* Les packs à ajouter d'office : seulement si personne n'a choisi. */
+export function packsParDefaut({ dossierDeclare = false, politiqueDeclare = false } = {}) {
+  if (dossierDeclare || politiqueDeclare) return { ids: [], regles: [], entetes: [], erreurs: [] };
+  return { ids: [...PACKS_PAR_DEFAUT], ...developperPacks(PACKS_PAR_DEFAUT) };
+}
+
 /* Pour les tests et la console : relire sans cache. */
 export function oublierCache() { cache = null; }

@@ -62,7 +62,7 @@ import { assessReidentification, generalize, describeReidentification } from "./
 import { guardResult, guardText, MASK } from "./sortie.js";
 import { protectNumbers, planNumbers, describeNumbers, readNumberSetting, NUMBER_MODES, COLUMN_MODES } from "./chiffres.js";
 import { mergeNumberMaps, restoreWorkbook } from "./remise.js";
-import { readRenderSetting, RENDER_MODES, rendreLisible, rendreFeuille, pseudoMap, codesDepuisPseudos, describeRendu } from "./pseudonymes.js";
+import { readRenderSetting, RENDER_MODES, rendreLisible, rendreFeuille, pseudoMap, codesDepuisPseudos, describeRendu, readDatesSetting, DATE_MODES, retourDates } from "./pseudonymes.js";
 import { codeDocx, decodeDocx, buildDocx, residue as docxResidue } from "./word.js";
 import { renderDashboard, CHART_TYPES, AGGREGATES } from "./tableau.js";
 import { createJournal, readJournal, auditJournal, renderReport, JOURNAL_DIRNAME, REPORT_NAME } from "./journal.js";
@@ -70,7 +70,8 @@ import { auditConfinement, cloudSync } from "./confinement.js";
 import { openTeam, readTeamEntries, writePosteEntries, TeamUnavailable } from "./equipe.js";
 import { lireSecretsPoste, ouvrirRegistre, lireEntrees as lireEntreesRegistre, ajouterEntrees as ajouterEntreesRegistre, doublons as doublonsRegistre, RegistreIndisponible } from "./registre.js";
 import { creerPolitiquePoste, regleInterditeTouchee, decrirePolitique, PolitiqueBloque, lireEnrolement } from "./politique.js";
-import { lireReglesDossier, compilerRegles } from "./regles.js";
+import { lireReglesDossier, compilerRegles, normaliser } from "./regles.js";
+import { packsParDefaut } from "./packs.js";
 import { posteStats, writePosteStats, readTeamStats, aggregate, renderCoverage, COVERAGE_NAME } from "./couverture.js";
 import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } from "./sentinelle.js";
 import { attestHtml, posteIdentity } from "./attestation.js";
@@ -151,9 +152,17 @@ const renduSchema = z.enum(RENDER_MODES).optional()
     "deviennent des PSEUDONYMES fictifs — même genre et même aire culturelle, même forme juridique, ville de taille " +
     "comparable, dates décalées d'un delta secret constant (écart entre dates de naissance juste ; un âge à une autre date peut varier d'un an) ; stables d'un fichier à l'autre, écrits dans " +
     "la clé, retraduits par deanonymiser comme les codes. Identifiants, adresses et références restent des codes.");
-function modeRendu(demande) {
-  if (demande && RENDER_MODES.includes(demande)) return { mode: demande, source: "demandé pour cet appel" };
-  return readRenderSetting(OUTDIR);
+/* v2.24 — les dates en rendu lisible : « naissance » (défaut) ou « toutes »
+   (cf. pseudonymes.js). Figé dans la clé au premier rendu lisible du dossier. */
+const datesSchema = z.enum(DATE_MODES).optional()
+  .describe("Rendu lisible seulement. « naissance » (défaut) : seules les dates de naissance sont décalées, les autres restent " +
+    "exactes (un âge peut varier d'un an). « toutes » : toutes les dates complètes du dossier sont décalées du même écart secret — " +
+    "âges et délais calculés exacts, et le décodage ramène toutes les dates de la réponse. Absent = réglage du dossier. " +
+    "Figé pour le dossier dès son premier rendu lisible.");
+function modeRendu(demande, dates) {
+  const r = demande && RENDER_MODES.includes(demande) ? { mode: demande, source: "demandé pour cet appel" } : readRenderSetting(OUTDIR);
+  r.dates = dates && DATE_MODES.includes(dates) ? dates : readDatesSetting(OUTDIR).mode;
+  return r;
 }
 
 /* ---------------------------------------------------------------- licence *
@@ -301,7 +310,7 @@ function nomsPolitique(textes) {
 let reglesCourantes = null;
 function regles() {
   const d = lireReglesDossier(OUTDIR);
-  let organisation = [], typesSupplementaires = [], noms = null;
+  let organisation = [], typesSupplementaires = [], noms = null, politiqueDeclare = false;
   const entetes = [...(d.entetes || [])];
   const erreurs = [...d.erreurs];
   if (POLITIQUE) {
@@ -313,9 +322,15 @@ function regles() {
       erreurs.push(...o.erreurs);
       typesSupplementaires = POLITIQUE.typesOrganisation(c);
       noms = (t) => POLITIQUE.analyserNoms(c, [t]).extras;
+      politiqueDeclare = POLITIQUE.declarePacks(c);
     }
   }
-  reglesCourantes = compilerRegles({ dossier: d.regles, organisation, entetes, noms, typesSupplementaires, erreurs });
+  // v2.25 : ni le dossier ni la politique n'ont choisi → les packs par défaut,
+  // au niveau du dossier (une règle de l'organisation l'emporte toujours).
+  const defaut = packsParDefaut({ dossierDeclare: d.packsDeclares, politiqueDeclare });
+  entetes.push(...defaut.entetes);
+  erreurs.push(...defaut.erreurs);
+  reglesCourantes = compilerRegles({ dossier: [...d.regles, ...defaut.regles], organisation, entetes, noms, typesSupplementaires, erreurs, parDefaut: defaut.ids });
   return reglesCourantes;
 }
 /* Mode tableau : un en-tête reconnu par un pack (« MSISDN », « IMSI »…) force
@@ -757,7 +772,9 @@ function rulesBlock(book, lisible = null) {
     // v2.23 — rendu lisible : ce que l'IA prend pour des noms sont des
     // pseudonymes ; la consigne de recopie vaut pour eux aussi.
     ...(lisible && lisible.rendus ? [
-      "1 bis. RENDU LISIBLE : les prénoms, noms, sociétés, villes et dates de naissance que tu lis ici sont des PSEUDONYMES fictifs posés par Hidden Tokens (même personne = même pseudonyme). Recopie-les EXACTEMENT tels quels, ne les traduis pas, ne les abrège pas, n'en déduis rien sur les personnes réelles ; deanonymiser les retraduit comme les codes. Les dates de naissance sont décalées d'un écart secret (les autres dates sont exactes) : un âge calculé à une date du dossier peut être faux d'un an — si la réponse dépend d'un seuil d'âge (majorité, retraite…), dis-le et demande la vraie réponse à l'utilisateur.",
+      "1 bis. RENDU LISIBLE : les prénoms, noms, sociétés, villes et dates de naissance que tu lis ici sont des PSEUDONYMES fictifs posés par Hidden Tokens (même personne = même pseudonyme). Recopie-les EXACTEMENT tels quels, ne les traduis pas, ne les abrège pas, n'en déduis rien sur les personnes réelles ; deanonymiser les retraduit comme les codes. " + (lisible.dates === "toutes"
+        ? "Toutes les dates du dossier sont décalées d'un même écart secret : calcule âges et délais normalement sur ces dates (ils sont exacts) et recopie-les telles quelles. Écris TOUJOURS une date complète (jour, mois et année), jamais une année seule ni un jour-mois seul, y compris dans tes calculs : c'est ce qui permet de les retraduire. Ne t'appuie pas sur le jour de la semaine ni sur une date réelle extérieure au dossier (loi, jour férié), et n'évoque pas ce décalage dans ta réponse sauf si on te le demande."
+        : "Les dates de naissance sont décalées d'un écart secret (les autres dates sont exactes) : un âge calculé à une date du dossier peut être faux d'un an — si la réponse dépend d'un seuil d'âge (majorité, retraite…), dis-le et demande la vraie réponse à l'utilisateur."),
     ] : []),
     "2. N'essaie pas de deviner les identités réelles ; n'invente aucun nom, email ou numéro.",
     "3. Dans les tableaux ou documents produits, garde les codes dans les mêmes colonnes.",
@@ -780,11 +797,16 @@ function previewUnsafe(s, opts = {}) {
   if (!t.trim()) return false;
   if (classifyLoose(t).length > 0) return true;
   if (opts.document && isSuspectName(t)) return true;
+  // Le vocabulaire des packs n'est pas une valeur exclue : il reste lisible.
+  const vocabulaire = reglesCourantes ? reglesCourantes.vocabulaire : null;
   if ((opts.excludes || []).some((v) => {
     const e = String(v).trim();
+    if (vocabulaire && vocabulaire.has(normaliser(e))) return false;
     return e.length >= 2 && new RegExp(`(?<![\\p{L}\\p{N}])${e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}])`, "iu").test(t);
   })) return true;
-  return strictCode(t, { mask: true }).replaced > 0;
+  // Un sigle de pack (« LCN », « EBITDA ») est hors lexique : sans lui, le
+  // verrou le prendrait pour un nom et masquerait la ligne entière.
+  return strictCode(t, { mask: true, excludes: reglesCourantes ? reglesCourantes.termesVocabulaire : [] }).replaced > 0;
 }
 
 function maskPreviewLines(codedText, opts = {}) {
@@ -1095,7 +1117,10 @@ function codeFreeText(raw, book, extras, excludes, { generaliser = false, rendu 
   // écrits dans la clé (l'appelant enregistre le carnet ensuite).
   let lisible = null;
   if (rendu && rendu.mode === "lisible") {
-    const r = rendreLisible(text, book);
+    // Un texte venu du navigateur (coder_texte avec une source) ne décale pas les
+    // dates : l'extension ne sait retraduire que les faux noms et les dates de
+    // naissance, pas une date calculée par l'IA dans le calendrier décalé.
+    const r = rendreLisible(text, book, null, { dates: rendu.sansDates ? "naissance" : rendu.dates, sansDecalage: !!rendu.sansDates });
     text = r.text;
     lisible = { mode: rendu.mode, source: rendu.source, ...r };
   }
@@ -1109,7 +1134,7 @@ function mergeLisible(a, b) {
   if (!a) return { ...b, parType: { ...b.parType } };
   const parType = { ...a.parType };
   for (const k of Object.keys(b.parType || {})) parType[k] = (parType[k] || 0) + b.parType[k];
-  return { ...a, rendus: a.rendus + b.rendus, restes: (a.restes || 0) + (b.restes || 0), renouveles: Math.max(a.renouveles || 0, b.renouveles || 0), parType };
+  return { ...a, rendus: a.rendus + b.rendus, restes: (a.restes || 0) + (b.restes || 0), renouveles: Math.max(a.renouveles || 0, b.renouveles || 0), datesDecalees: (a.datesDecalees || 0) + (b.datesDecalees || 0), parType };
 }
 
 const generaliserSchema = z.boolean().optional()
@@ -1137,7 +1162,7 @@ function freeTextPlan(kind, name, raw, extras, excludes, extra = [], { generalis
       "inconnu(s) codés par le VERROU (tout ce qui n'est pas un mot courant du dictionnaire est codé — leurs valeurs ne sont jamais citées ici).",
     "Les montants, quantités, dates et libellés courants ne sont JAMAIS codés.",
     describeReidentification(probe.reid, { generalized: probe.generalized }),
-    rendu ? describeRendu(rendu.mode, rendu.source) : "",
+    rendu ? describeRendu(rendu.mode, rendu.source, probe.lisible) : "",
     languageWarning(raw, probe.text),
     confinementAlert(),
     "Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true.",
@@ -1295,7 +1320,7 @@ async function handleDocx(file, rel, { valeurs_a_coder = [], valeurs_a_exclure =
         "inconnu(s) codés par le VERROU (leurs valeurs ne sont jamais citées ici).",
       describeRemovals(probe.removed),
       describeReidentification(probe.reid, { generalized: probe.generalized }),
-      rendu ? describeRendu(rendu.mode, rendu.source) : "",
+      rendu ? describeRendu(rendu.mode, rendu.source, probe.lisible) : "",
       "Les montants, quantités, dates et libellés courants ne sont JAMAIS codés.",
       languageWarning(probe.lines.join("\n"), probe.text),
       confinementAlert(),
@@ -1400,17 +1425,18 @@ tool(
       chiffres: chiffresSchema,
       chiffres_par_colonne: chiffresParColonneSchema,
       rendu: renduSchema,
+      dates: datesSchema,
       generaliser: generaliserSchema,
       confirmer: z.boolean().optional()
         .describe("false/absent = renvoyer le PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], chiffres, chiffres_par_colonne = {}, rendu, generaliser = false, confirmer = false }) => {
+  async ({ nom_fichier, onglet, mode, colonnes_a_coder = [], colonnes_a_exclure = [], valeurs_a_coder = [], valeurs_a_exclure = [], chiffres, chiffres_par_colonne = {}, rendu, dates, generaliser = false, confirmer = false }) => {
     const bloque = requireLicence() || requireTeam() || requirePolitique();
     if (bloque) return bloque;
     valeurs_a_exclure = exclusions(valeurs_a_exclure);
     const { mode: modeNombres, source: sourceNombres } = modeChiffres(chiffres);
-    const leRendu = modeRendu(rendu);
+    const leRendu = modeRendu(rendu, dates);
     const lisibleDemande = leRendu.mode === "lisible";
     if (!fs.existsSync(WORKDIR)) return workdirMissing();
     let file;
@@ -1479,7 +1505,7 @@ tool(
         const planNums = planNumbers(ws, XLSX, { mode: modeNombres, headerRow: null, source: sourceNombres });
         const nums = protectNumbers(res.ws, XLSX, { headerRow: null, plan: planNums });
         // v2.23 — rendu lisible : en dernier, sur la feuille codée.
-        const lisible = lisibleDemande ? { ...leRendu, ...rendreFeuille(res.ws, book) } : null;
+        const lisible = lisibleDemande ? { ...leRendu, ...rendreFeuille(res.ws, book, undefined, { dates: leRendu.dates }) } : null;
         return { ws: res.ws, nums, lisible, stats: { ...mergeStats(res.stats, strict), autoNames: res.stats.autoNames } };
       };
 
@@ -1570,7 +1596,7 @@ tool(
       const planNums = planNumbers(ws, XLSX, { mode: modeNombres, headerRow: range.s.r, parColonne: chiffres_par_colonne, libelle: maskName, source: sourceNombres });
       const nums = protectNumbers(res.ws, XLSX, { headerRow: range.s.r, plan: planNums });
       // v2.23 — rendu lisible : en dernier, sur la feuille codée (en-têtes compris).
-      const lisible = lisibleDemande ? { ...leRendu, ...rendreFeuille(res.ws, book) } : null;
+      const lisible = lisibleDemande ? { ...leRendu, ...rendreFeuille(res.ws, book, undefined, { dates: leRendu.dates }) } : null;
       return { ws: res.ws, nums, lisible, base: res.stats, strict: mergeStats(strictData, strictHead) };
     };
 
@@ -1736,7 +1762,7 @@ function anonymizeWorkbook(wb, book, extras, docOpts, numberMode = "auto", numbe
     const planNums = planNumbers(ws, XLSX, { mode: numberMode, headerRow, parColonne, libelle: maskName, source: numberSource });
     const nums = protectNumbers(outWs, XLSX, { headerRow, plan: planNums });
     numbers[outName] = nums;
-    const lisible = rendu && rendu.mode === "lisible" ? { ...rendu, ...rendreFeuille(outWs, book) } : null;
+    const lisible = rendu && rendu.mode === "lisible" ? { ...rendu, ...rendreFeuille(outWs, book, undefined, { dates: rendu.dates }) } : null;
     XLSX.utils.book_append_sheet(outWb, outWs, outName);
     perSheet.push({ name: sn, mode: layout, replaced: merged.replaced, byType: merged.byType, nums, lisible });
   }
@@ -1766,14 +1792,15 @@ tool(
       chiffres: chiffresSchema,
       chiffres_par_colonne: chiffresParColonneSchema,
       rendu: renduSchema,
+      dates: datesSchema,
       generaliser: generaliserSchema,
       confirmer: z.boolean().optional()
         .describe("false/absent = PLAN sans rien écrire ; true = exécuter (après accord de l'utilisateur)"),
     }),
   },
-  async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], chiffres, chiffres_par_colonne = {}, rendu, generaliser = false, confirmer = false }) => {
+  async ({ motif, valeurs_a_coder = [], valeurs_a_exclure = [], chiffres, chiffres_par_colonne = {}, rendu, dates, generaliser = false, confirmer = false }) => {
     const { mode: modeNombres, source: sourceNombres } = modeChiffres(chiffres);
-    const leRendu = modeRendu(rendu);
+    const leRendu = modeRendu(rendu, dates);
     let lisibleLot = null;   // les comptes de rendu de tout le lot
     const bloque = requireLicence() || requireTeam() || requirePolitique();
     if (bloque) return bloque;
@@ -2264,15 +2291,17 @@ tool(
       contenu: z.string().min(1).max(MAX_TEXTE).describe("Le texte en clair à coder (un message, un courrier, des notes)"),
       source: z.string().max(80).optional().describe("D'où vient le texte (« chatgpt.com », « claude.ai »…) — pour le journal seulement"),
       rendu: renduSchema,
+      dates: datesSchema,
       generaliser: generaliserSchema,
     }),
   },
-  async ({ contenu, source, rendu, generaliser = false }) => {
+  async ({ contenu, source, rendu, dates, generaliser = false }) => {
     const blocked = requireLicence();
     if (blocked) return blocked;
     if (!contenu.trim()) return err("Le texte est vide.");
     const book = loadBook();
-    const res = codeFreeText(contenu, book, [], [], { generaliser, rendu: modeRendu(rendu) });
+    // Venu du navigateur (la sentinelle passe une source) : pas de décalage de toutes les dates, sauf demande expresse.
+    const res = codeFreeText(contenu, book, [], [], { generaliser, rendu: { ...modeRendu(rendu, dates), sansDates: !!source && !dates } });
     gardeInterdit(res.text);   // politique du cabinet : un nom interdit → PolitiqueBloque, rien ne part
     // La clé est écrite s'il y a un code neuf — ou un pseudonyme neuf (v2.18) :
     // il doit survivre à l'appel pour que le même nom le garde demain.
@@ -2319,7 +2348,11 @@ tool(
       return err("Aucune clé de session — anonymise d'abord un fichier avec anonymiser_fichier.");
     }
     const map = decodeMap(book);
-    const res = decodeText(contenu, map);
+    // v2.24 — dossier en « toutes les dates » : les dates de la réponse sont ramenées d'abord.
+    // Une réponse qui ne contient QUE des dates (un délai calculé) se décode aussi.
+    const ramene = retourDates(book)(contenu);
+    const res = decodeText(ramene, map);
+    if (ramene !== String(contenu)) res.replaced += 1;
     const conflicts = Object.keys(res.usedCodes || {}).filter((c) => book.conflicts && book.conflicts.has(c)).length;
     if (!res.replaced) {
       return err(`Aucun code de la clé trouvé dans ce contenu (clé : ${book.entries.length} codes). Vérifie que les codes sont recopiés tels quels.`);
@@ -2429,7 +2462,13 @@ function decodeMap(book) {
 
 function codeDecoder(book) {
   const map = decodeMap(book);
-  return (t) => decodeText(t, map);
+  const dates = retourDates(book);
+  return (t) => {
+    const ramene = dates(t);
+    const r = decodeText(ramene, map);
+    if (ramene !== String(t)) r.replaced += 1;   // des dates ramenées comptent comme un remplacement
+    return r;
+  };
 }
 
 function loadNumberMaps() {
@@ -2641,8 +2680,12 @@ tool(
     // Le rendu du dossier, dit AUSSI sur une clé vide : c'est sur un dossier
     // neuf qu'on vérifie le réglage (recette M2, 24/10/2026).
     const rendu = readRenderSetting(OUTDIR);
+    const fige = book.pseudonymes && book.pseudonymes.dates;
+    const datesLine = rendu.mode === "lisible" || fige
+      ? `Dates (rendu lisible) : « ${fige || readDatesSetting(OUTDIR).mode} »${fige ? " — figé pour ce dossier" : ` (${readDatesSetting(OUTDIR).source})`}.`
+      : "";
     if (!book.entries.length) {
-      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, sortieLine, `Rendu : « ${rendu.mode} » (${rendu.source}).`, licLine, teamLine, politiqueLine, auditLine].filter(Boolean).join("\n"));
+      return text([`Clé de session vide. Dossier de travail : ${shown(WORKDIR)}. Les sorties iront dans ${shown(OUTDIR)}.`, sortieLine, `Rendu : « ${rendu.mode} » (${rendu.source}).`, datesLine, licLine, teamLine, politiqueLine, auditLine].filter(Boolean).join("\n"));
     }
     const byPrefix = {};
     for (const e of book.entries) {
@@ -2658,6 +2701,7 @@ tool(
         `Clé de session : ${book.entries.length} codes (${detail}).`,
         sortieLine,
         renduLine,
+        datesLine,
         licLine,
         teamLine,
         politiqueLine,
