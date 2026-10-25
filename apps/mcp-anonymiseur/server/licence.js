@@ -224,16 +224,21 @@ export function blockedMessage(status) {
      là mais fausse ou tronquée). Confondre les deux dernières fait perdre une
      demi-heure à quelqu'un qui a déjà payé. */
   const head = [];
+  // Le geste exact pour coller une clé : à la fin de l'essai, c'est LE moment
+  // où un client qui vient de payer le cherche (v2.26.1 — campagne C1).
+  const coller = [
+    "Si vous en avez une : réglages de Claude Desktop → Extensions → Hidden Tokens →",
+    "champ « Clé de licence » → collez la clé (elle commence par NANO1.) → REDÉMARREZ Claude Desktop",
+    "(la clé est lue au démarrage du connecteur, un changement à chaud n'est pas vu).",
+  ];
   if (status.reason === "essai terminé") {
     head.push(`🔒 Votre essai gratuit de ${TRIAL_DAYS} jours est terminé.`);
     if (status.refused) head.push(`La clé configurée a été refusée : ${status.refused}. Vérifiez qu'elle a été collée en entier, puis redémarrez Claude Desktop.`);
+    else head.push("Aucune clé de licence n'est configurée.", ...coller);
   } else if (status.reason === "licence expirée") {
     head.push(`🔒 Votre licence a expiré le ${status.expiresAt}.`);
   } else if (!status.reason || status.reason === "absente") {
-    head.push("🔒 Aucune clé de licence n'est configurée.");
-    head.push("Si vous en avez une : réglages de Claude Desktop → Extensions → Hidden Tokens →");
-    head.push("champ « Clé de licence » → collez la clé (elle commence par NANO1.) → REDÉMARREZ Claude Desktop");
-    head.push("(la clé est lue au démarrage du connecteur, un changement à chaud n'est pas vu).");
+    head.push("🔒 Aucune clé de licence n'est configurée.", ...coller);
   } else {
     head.push(`🔒 La clé configurée a été refusée : ${status.reason}.`);
     head.push("Vérifiez qu'elle a été collée EN ENTIER (elle commence par NANO1. et fait plusieurs lignes),");
