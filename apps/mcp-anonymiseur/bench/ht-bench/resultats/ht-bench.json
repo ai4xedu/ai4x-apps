@@ -2,47 +2,47 @@
  "banc": "HT-Bench",
  "version_jeu": "0.2.0",
  "split": "dev",
- "jeu_sha256": "a21f6f11d5f7a115b22d1558bf70dbb260be72c59df5424d6ca7dd40e2267714",
- "version_moteur": "2.26.0",
+ "jeu_sha256": "50932d2282937e5f9a95160997e6aa2a17ac93a4563839743661de96231bca0b",
+ "version_moteur": "2.28.0",
  "chemin": "anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte",
- "documents": 376,
+ "documents": 383,
  "global": {
   "direct": {
-   "n": 2565,
-   "detectes": 2516,
-   "partiels": 36,
-   "manques": 13,
-   "rappel": 0.980896686159844
+   "n": 2583,
+   "detectes": 2583,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
   },
   "tous": {
-   "n": 3463,
-   "detectes": 3378,
-   "partiels": 36,
-   "manques": 49,
-   "rappel": 0.9754548079699682
+   "n": 3483,
+   "detectes": 3447,
+   "partiels": 0,
+   "manques": 36,
+   "rappel": 0.9896640826873385
   },
-  "precision": 0.8743126472898665,
-  "passages": 5092,
+  "precision": 0.8757569837858957,
+  "passages": 5119,
   "leurres": {
-   "n": 3064,
-   "codes": 190,
-   "taux_faux_positifs": 0.06201044386422976
+   "n": 3082,
+   "codes": 185,
+   "taux_faux_positifs": 0.060025957170668394
   }
  },
  "par_type": {
   "PERSONNE": {
    "libelle": "Nom de personne",
    "direct": true,
-   "n": 975,
-   "detectes": 958,
-   "partiels": 16,
-   "manques": 1,
-   "rappel": 0.9825641025641025,
-   "passages": 2285,
-   "passages_justes": 1839,
-   "precision": 0.8048140043763676,
-   "f1": 0.8848506612791637,
-   "bien_etiquetes": 944
+   "n": 986,
+   "detectes": 986,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 2358,
+   "passages_justes": 1916,
+   "precision": 0.8125530110262935,
+   "f1": 0.8965839962564343,
+   "bien_etiquetes": 976
   },
   "CIN": {
    "libelle": "CIN marocaine",
@@ -52,39 +52,39 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 200,
+   "passages": 202,
    "passages_justes": 136,
-   "precision": 0.68,
-   "f1": 0.8095238095238095,
+   "precision": 0.6732673267326733,
+   "f1": 0.8047337278106509,
    "bien_etiquetes": 136
   },
   "NIR": {
    "libelle": "NIR (sécurité sociale, France)",
    "direct": true,
-   "n": 46,
-   "detectes": 29,
-   "partiels": 17,
+   "n": 48,
+   "detectes": 48,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.6304347826086957,
+   "rappel": 1,
    "passages": 0,
    "passages_justes": 0,
    "precision": null,
    "f1": null,
-   "bien_etiquetes": 29
+   "bien_etiquetes": 48
   },
   "CNSS": {
    "libelle": "N° CNSS",
    "direct": true,
-   "n": 74,
-   "detectes": 62,
+   "n": 77,
+   "detectes": 77,
    "partiels": 0,
-   "manques": 12,
-   "rappel": 0.8378378378378378,
-   "passages": 50,
-   "passages_justes": 50,
+   "manques": 0,
+   "rappel": 1,
+   "passages": 77,
+   "passages_justes": 77,
    "precision": 1,
-   "f1": 0.911764705882353,
-   "bien_etiquetes": 50
+   "f1": 1,
+   "bien_etiquetes": 77
   },
   "ICE": {
    "libelle": "ICE",
@@ -136,10 +136,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 208,
+   "passages": 190,
    "passages_justes": 24,
-   "precision": 0.11538461538461539,
-   "f1": 0.20689655172413793,
+   "precision": 0.12631578947368421,
+   "f1": 0.22429906542056077,
    "bien_etiquetes": 24
   },
   "SIRET": {
@@ -187,30 +187,30 @@
   "IBAN": {
    "libelle": "IBAN",
    "direct": true,
-   "n": 53,
-   "detectes": 52,
-   "partiels": 1,
+   "n": 54,
+   "detectes": 54,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9811320754716981,
-   "passages": 164,
-   "passages_justes": 52,
-   "precision": 0.3170731707317073,
-   "f1": 0.4792626728110599,
-   "bien_etiquetes": 52
+   "rappel": 1,
+   "passages": 169,
+   "passages_justes": 54,
+   "precision": 0.31952662721893493,
+   "f1": 0.484304932735426,
+   "bien_etiquetes": 54
   },
   "RIB": {
    "libelle": "RIB",
    "direct": true,
-   "n": 114,
-   "detectes": 112,
-   "partiels": 2,
+   "n": 115,
+   "detectes": 115,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9824561403508771,
+   "rappel": 1,
    "passages": 0,
    "passages_justes": 0,
    "precision": null,
    "f1": null,
-   "bien_etiquetes": 112
+   "bien_etiquetes": 115
   },
   "IMEI": {
    "libelle": "IMEI",
@@ -248,10 +248,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 45,
+   "passages": 42,
    "passages_justes": 24,
-   "precision": 0.5333333333333333,
-   "f1": 0.6956521739130436,
+   "precision": 0.5714285714285714,
+   "f1": 0.7272727272727273,
    "bien_etiquetes": 24
   },
   "CVV": {
@@ -318,11 +318,11 @@
    "partiels": 0,
    "manques": 7,
    "rappel": 0.9621621621621622,
-   "passages": 184,
-   "passages_justes": 183,
-   "precision": 0.9945652173913043,
-   "f1": 0.9780953953788641,
-   "bien_etiquetes": 159
+   "passages": 187,
+   "passages_justes": 186,
+   "precision": 0.9946524064171123,
+   "f1": 0.9781375561333019,
+   "bien_etiquetes": 162
   },
   "SOCIETE": {
    "libelle": "Société",
@@ -397,16 +397,16 @@
   "PATIENT": {
    "libelle": "N° de dossier patient / IPP",
    "direct": false,
-   "n": 24,
-   "detectes": 24,
+   "n": 25,
+   "detectes": 25,
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 33,
-   "passages_justes": 24,
-   "precision": 0.7272727272727273,
-   "f1": 0.8421052631578948,
-   "bien_etiquetes": 24
+   "passages": 25,
+   "passages_justes": 25,
+   "precision": 1,
+   "f1": 1,
+   "bien_etiquetes": 25
   },
   "PRATICIEN": {
    "libelle": "Identifiant praticien (INPE, RPPS)",
@@ -509,8 +509,8 @@
   "CONTRAT": {
    "libelle": "N° de contrat ou de dossier de crédit",
    "direct": false,
-   "n": 24,
-   "detectes": 24,
+   "n": 25,
+   "detectes": 25,
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
@@ -523,30 +523,30 @@
  },
  "par_pack": {
   "core": {
-   "documents": 46,
+   "documents": 48,
    "direct": {
-    "n": 336,
-    "detectes": 328,
-    "partiels": 8,
+    "n": 342,
+    "detectes": 342,
+    "partiels": 0,
     "manques": 0,
-    "rappel": 0.9761904761904762
+    "rappel": 1
    },
    "tous": {
-    "n": 393,
-    "detectes": 379,
-    "partiels": 8,
+    "n": 399,
+    "detectes": 393,
+    "partiels": 0,
     "manques": 6,
-    "rappel": 0.9643765903307888
+    "rappel": 0.9849624060150376
    },
-   "precision": 0.9327102803738317,
-   "f1": 0.9482791471950901,
-   "passages": 535,
+   "precision": 0.9337016574585635,
+   "f1": 0.958647267688577,
+   "passages": 543,
    "passages_leurres": 2,
    "passages_hors_etiquette": 34,
    "leurres": {
-    "n": 146,
+    "n": 152,
     "codes": 2,
-    "taux_faux_positifs": 0.0136986301369863
+    "taux_faux_positifs": 0.013157894736842105
    },
    "direct_par_type": {
     "CIN": {
@@ -571,18 +571,18 @@
      "rappel": 1
     },
     "NIR": {
-     "n": 10,
-     "detectes": 4,
-     "partiels": 6,
+     "n": 12,
+     "detectes": 12,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.4
+     "rappel": 1
     },
     "PERSONNE": {
-     "n": 145,
-     "detectes": 143,
-     "partiels": 2,
+     "n": 149,
+     "detectes": 149,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.9862068965517241
+     "rappel": 1
     },
     "TEL": {
      "n": 104,
@@ -672,30 +672,30 @@
    }
   },
   "juridique-fr": {
-   "documents": 37,
+   "documents": 38,
    "direct": {
-    "n": 276,
-    "detectes": 269,
-    "partiels": 6,
-    "manques": 1,
-    "rappel": 0.9746376811594203
+    "n": 279,
+    "detectes": 279,
+    "partiels": 0,
+    "manques": 0,
+    "rappel": 1
    },
    "tous": {
-    "n": 420,
-    "detectes": 411,
-    "partiels": 6,
-    "manques": 3,
-    "rappel": 0.9785714285714285
+    "n": 423,
+    "detectes": 421,
+    "partiels": 0,
+    "manques": 2,
+    "rappel": 0.9952718676122931
    },
-   "precision": 0.8666666666666667,
-   "f1": 0.9192258064516129,
-   "passages": 660,
+   "precision": 0.8680659670164917,
+   "f1": 0.9273268863510131,
+   "passages": 667,
    "passages_leurres": 36,
    "passages_hors_etiquette": 52,
    "leurres": {
-    "n": 308,
+    "n": 309,
     "codes": 36,
-    "taux_faux_positifs": 0.11688311688311688
+    "taux_faux_positifs": 0.11650485436893204
    },
    "direct_par_type": {
     "CIN": {
@@ -714,17 +714,17 @@
     },
     "NIR": {
      "n": 12,
-     "detectes": 7,
-     "partiels": 5,
+     "detectes": 12,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.5833333333333334
+     "rappel": 1
     },
     "PERSONNE": {
-     "n": 144,
-     "detectes": 142,
-     "partiels": 1,
-     "manques": 1,
-     "rappel": 0.9861111111111112
+     "n": 147,
+     "detectes": 147,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
     },
     "SIREN": {
      "n": 24,
@@ -750,30 +750,30 @@
    }
   },
   "banque-assurance": {
-   "documents": 97,
+   "documents": 98,
    "direct": {
-    "n": 654,
-    "detectes": 646,
-    "partiels": 8,
+    "n": 657,
+    "detectes": 657,
+    "partiels": 0,
     "manques": 0,
-    "rappel": 0.9877675840978594
+    "rappel": 1
    },
    "tous": {
-    "n": 875,
-    "detectes": 867,
-    "partiels": 8,
+    "n": 878,
+    "detectes": 878,
+    "partiels": 0,
     "manques": 0,
-    "rappel": 0.9908571428571429
+    "rappel": 1
    },
-   "precision": 0.8278972935461485,
-   "f1": 0.9020766415113757,
-   "passages": 1441,
+   "precision": 0.8286109191430546,
+   "f1": 0.9062736205593349,
+   "passages": 1447,
    "passages_leurres": 25,
    "passages_hors_etiquette": 223,
    "leurres": {
-    "n": 673,
+    "n": 675,
     "codes": 25,
-    "taux_faux_positifs": 0.03714710252600297
+    "taux_faux_positifs": 0.037037037037037035
    },
    "direct_par_type": {
     "CARTE": {
@@ -833,11 +833,11 @@
      "rappel": 1
     },
     "PERSONNE": {
-     "n": 259,
-     "detectes": 251,
-     "partiels": 8,
+     "n": 262,
+     "detectes": 262,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.9691119691119691
+     "rappel": 1
     },
     "RIB": {
      "n": 82,
@@ -856,30 +856,30 @@
    }
   },
   "sante": {
-   "documents": 37,
+   "documents": 38,
    "direct": {
-    "n": 207,
-    "detectes": 204,
-    "partiels": 3,
+    "n": 209,
+    "detectes": 209,
+    "partiels": 0,
     "manques": 0,
-    "rappel": 0.9855072463768116
+    "rappel": 1
    },
    "tous": {
-    "n": 327,
-    "detectes": 309,
-    "partiels": 3,
+    "n": 331,
+    "detectes": 316,
+    "partiels": 0,
     "manques": 15,
-    "rappel": 0.944954128440367
+    "rappel": 0.9546827794561934
    },
-   "precision": 0.8101503759398496,
-   "f1": 0.8723753377548514,
-   "passages": 532,
-   "passages_leurres": 32,
-   "passages_hors_etiquette": 69,
+   "precision": 0.8159392789373814,
+   "f1": 0.8798751545997889,
+   "passages": 527,
+   "passages_leurres": 27,
+   "passages_hors_etiquette": 70,
    "leurres": {
-    "n": 244,
-    "codes": 32,
-    "taux_faux_positifs": 0.13114754098360656
+    "n": 248,
+    "codes": 27,
+    "taux_faux_positifs": 0.10887096774193548
    },
    "direct_par_type": {
     "CIN": {
@@ -890,8 +890,8 @@
      "rappel": 1
     },
     "CNSS": {
-     "n": 24,
-     "detectes": 24,
+     "n": 25,
+     "detectes": 25,
      "partiels": 0,
      "manques": 0,
      "rappel": 1
@@ -905,14 +905,14 @@
     },
     "NIR": {
      "n": 12,
-     "detectes": 9,
-     "partiels": 3,
+     "detectes": 12,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.75
+     "rappel": 1
     },
     "PERSONNE": {
-     "n": 98,
-     "detectes": 98,
+     "n": 99,
+     "detectes": 99,
      "partiels": 0,
      "manques": 0,
      "rappel": 1
@@ -927,30 +927,30 @@
    }
   },
   "expertise-comptable": {
-   "documents": 85,
+   "documents": 86,
    "direct": {
-    "n": 615,
-    "detectes": 608,
-    "partiels": 7,
+    "n": 617,
+    "detectes": 617,
+    "partiels": 0,
     "manques": 0,
-    "rappel": 0.9886178861788618
+    "rappel": 1
    },
    "tous": {
-    "n": 858,
-    "detectes": 840,
-    "partiels": 7,
+    "n": 860,
+    "detectes": 849,
+    "partiels": 0,
     "manques": 11,
-    "rappel": 0.9790209790209791
+    "rappel": 0.9872093023255814
    },
-   "precision": 0.9558160504959423,
-   "f1": 0.9672793638378309,
-   "passages": 1109,
+   "precision": 0.9559748427672956,
+   "f1": 0.971341043464516,
+   "passages": 1113,
    "passages_leurres": 1,
    "passages_hors_etiquette": 48,
    "leurres": {
-    "n": 1152,
+    "n": 1154,
     "codes": 1,
-    "taux_faux_positifs": 0.0008680555555555555
+    "taux_faux_positifs": 0.0008665511265164644
    },
    "direct_par_type": {
     "CIN": {
@@ -975,8 +975,8 @@
      "rappel": 1
     },
     "IBAN": {
-     "n": 4,
-     "detectes": 4,
+     "n": 5,
+     "detectes": 5,
      "partiels": 0,
      "manques": 0,
      "rappel": 1
@@ -997,10 +997,10 @@
     },
     "PERSONNE": {
      "n": 209,
-     "detectes": 204,
-     "partiels": 5,
+     "detectes": 209,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.9760765550239234
+     "rappel": 1
     },
     "RC": {
      "n": 45,
@@ -1010,11 +1010,11 @@
      "rappel": 1
     },
     "RIB": {
-     "n": 20,
-     "detectes": 18,
-     "partiels": 2,
+     "n": 21,
+     "detectes": 21,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.9
+     "rappel": 1
     },
     "SIRET": {
      "n": 4,
@@ -1033,30 +1033,30 @@
    }
   },
   "rh-paie": {
-   "documents": 37,
+   "documents": 38,
    "direct": {
-    "n": 228,
-    "detectes": 212,
-    "partiels": 4,
-    "manques": 12,
-    "rappel": 0.9298245614035088
+    "n": 230,
+    "detectes": 230,
+    "partiels": 0,
+    "manques": 0,
+    "rappel": 1
    },
    "tous": {
-    "n": 312,
-    "detectes": 294,
-    "partiels": 4,
-    "manques": 14,
-    "rappel": 0.9423076923076923
+    "n": 314,
+    "detectes": 312,
+    "partiels": 0,
+    "manques": 2,
+    "rappel": 0.9936305732484076
    },
-   "precision": 0.8927680798004988,
-   "f1": 0.9168692016202797,
-   "passages": 401,
+   "precision": 0.8946078431372549,
+   "f1": 0.9415227402379436,
+   "passages": 408,
    "passages_leurres": 38,
    "passages_hors_etiquette": 5,
    "leurres": {
-    "n": 383,
+    "n": 386,
     "codes": 76,
-    "taux_faux_positifs": 0.19843342036553524
+    "taux_faux_positifs": 0.19689119170984457
    },
    "direct_par_type": {
     "CIN": {
@@ -1067,11 +1067,11 @@
      "rappel": 1
     },
     "CNSS": {
-     "n": 36,
-     "detectes": 24,
+     "n": 38,
+     "detectes": 38,
      "partiels": 0,
-     "manques": 12,
-     "rappel": 0.6666666666666666
+     "manques": 0,
+     "rappel": 1
     },
     "EMAIL": {
      "n": 12,
@@ -1082,10 +1082,10 @@
     },
     "IBAN": {
      "n": 12,
-     "detectes": 11,
-     "partiels": 1,
+     "detectes": 12,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.9166666666666666
+     "rappel": 1
     },
     "ICE": {
      "n": 24,
@@ -1103,10 +1103,10 @@
     },
     "NIR": {
      "n": 12,
-     "detectes": 9,
-     "partiels": 3,
+     "detectes": 12,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.75
+     "rappel": 1
     },
     "PERSONNE": {
      "n": 48,
@@ -1277,16 +1277,16 @@
   },
   "CNSS · cnss-affiliation-7": {
    "direct": true,
-   "n": 25,
-   "detectes": 13,
+   "n": 27,
+   "detectes": 27,
    "partiels": 0,
-   "manques": 12,
-   "rappel": 0.52
+   "manques": 0,
+   "rappel": 1
   },
   "CNSS · cnss-assure-9": {
    "direct": true,
-   "n": 49,
-   "detectes": 49,
+   "n": 50,
+   "detectes": 50,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -1303,6 +1303,14 @@
    "direct": false,
    "n": 11,
    "detectes": 11,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
+  "CONTRAT · —": {
+   "direct": false,
+   "n": 1,
+   "detectes": 1,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -1413,11 +1421,11 @@
   },
   "IBAN · iban-fr-par-4": {
    "direct": true,
-   "n": 12,
-   "detectes": 11,
-   "partiels": 1,
+   "n": 13,
+   "detectes": 13,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9166666666666666
+   "rappel": 1
   },
   "IBAN · iban-ma-colle": {
    "direct": true,
@@ -1549,11 +1557,11 @@
   },
   "NIR · nir-cle-tiret": {
    "direct": true,
-   "n": 17,
-   "detectes": 0,
-   "partiels": 17,
+   "n": 19,
+   "detectes": 19,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0
+   "rappel": 1
   },
   "NIR · nir-colle": {
    "direct": true,
@@ -1605,8 +1613,8 @@
   },
   "PATIENT · —": {
    "direct": false,
-   "n": 24,
-   "detectes": 24,
+   "n": 25,
+   "detectes": 25,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -1621,16 +1629,16 @@
   },
   "PERSONNE · fr-particule": {
    "direct": true,
-   "n": 39,
-   "detectes": 36,
-   "partiels": 2,
-   "manques": 1,
-   "rappel": 0.9230769230769231
+   "n": 42,
+   "detectes": 42,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
   },
   "PERSONNE · fr-simple": {
    "direct": true,
-   "n": 189,
-   "detectes": 189,
+   "n": 190,
+   "detectes": 190,
    "partiels": 0,
    "manques": 0,
    "rappel": 1
@@ -1646,18 +1654,18 @@
   "PERSONNE · mag-ait-espace": {
    "direct": true,
    "n": 33,
-   "detectes": 31,
-   "partiels": 2,
+   "detectes": 33,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9393939393939394
+   "rappel": 1
   },
   "PERSONNE · mag-ait-tiret": {
    "direct": true,
    "n": 34,
-   "detectes": 32,
-   "partiels": 2,
+   "detectes": 34,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9411764705882353
+   "rappel": 1
   },
   "PERSONNE · mag-ait-trema": {
    "direct": true,
@@ -1678,18 +1686,18 @@
   "PERSONNE · mag-ben-colle": {
    "direct": true,
    "n": 42,
-   "detectes": 41,
-   "partiels": 1,
+   "detectes": 42,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9761904761904762
+   "rappel": 1
   },
   "PERSONNE · mag-ben-espace": {
    "direct": true,
    "n": 53,
-   "detectes": 52,
-   "partiels": 1,
+   "detectes": 53,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9811320754716981
+   "rappel": 1
   },
   "PERSONNE · mag-ben-tiret": {
    "direct": true,
@@ -1702,10 +1710,10 @@
   "PERSONNE · mag-double": {
    "direct": true,
    "n": 87,
-   "detectes": 86,
-   "partiels": 1,
+   "detectes": 87,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9885057471264368
+   "rappel": 1
   },
   "PERSONNE · mag-el-colle": {
    "direct": true,
@@ -1717,11 +1725,11 @@
   },
   "PERSONNE · mag-el-espace": {
    "direct": true,
-   "n": 38,
-   "detectes": 36,
-   "partiels": 2,
+   "n": 39,
+   "detectes": 39,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9473684210526315
+   "rappel": 1
   },
   "PERSONNE · mag-el-tiret": {
    "direct": true,
@@ -1733,19 +1741,19 @@
   },
   "PERSONNE · mag-ould": {
    "direct": true,
-   "n": 48,
-   "detectes": 44,
-   "partiels": 4,
+   "n": 49,
+   "detectes": 49,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9166666666666666
+   "rappel": 1
   },
   "PERSONNE · mag-simple": {
    "direct": true,
-   "n": 221,
-   "detectes": 220,
-   "partiels": 1,
+   "n": 226,
+   "detectes": 226,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.995475113122172
+   "rappel": 1
   },
   "POLICE · —": {
    "direct": false,
@@ -1806,18 +1814,18 @@
   "RIB · rib-ma-groupes": {
    "direct": true,
    "n": 30,
-   "detectes": 29,
-   "partiels": 1,
+   "detectes": 30,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9666666666666667
+   "rappel": 1
   },
   "RIB · rib-ma-par-4": {
    "direct": true,
-   "n": 25,
-   "detectes": 24,
-   "partiels": 1,
+   "n": 26,
+   "detectes": 26,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.96
+   "rappel": 1
   },
   "RIB · rib-ma-tirets": {
    "direct": true,
@@ -2261,6 +2269,13 @@
   }
  },
  "par_trait": {
+  "PERSONNE · cheikh-prenom": {
+   "n": 2,
+   "detectes": 2,
+   "partiels": 0,
+   "manques": 0,
+   "rappel": 1
+  },
   "PERSONNE · minuscules": {
    "n": 10,
    "detectes": 10,
@@ -2270,10 +2285,10 @@
   },
   "PERSONNE · nom-majuscules": {
    "n": 123,
-   "detectes": 122,
-   "partiels": 1,
+   "detectes": 123,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.991869918699187
+   "rappel": 1
   },
   "PERSONNE · nom-majuscules-avant": {
    "n": 177,
@@ -2283,18 +2298,18 @@
    "rappel": 1
   },
   "PERSONNE · nom-seul": {
-   "n": 74,
-   "detectes": 73,
+   "n": 75,
+   "detectes": 75,
    "partiels": 0,
-   "manques": 1,
-   "rappel": 0.9864864864864865
+   "manques": 0,
+   "rappel": 1
   },
   "PERSONNE · prenom-apostrophe": {
-   "n": 59,
-   "detectes": 52,
-   "partiels": 7,
+   "n": 62,
+   "detectes": 62,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.8813559322033898
+   "rappel": 1
   },
   "PERSONNE · prenom-compose": {
    "n": 125,
@@ -2304,25 +2319,25 @@
    "rappel": 1
   },
   "PERSONNE · prenom-seul": {
-   "n": 65,
-   "detectes": 64,
-   "partiels": 1,
+   "n": 66,
+   "detectes": 66,
+   "partiels": 0,
    "manques": 0,
-   "rappel": 0.9846153846153847
+   "rappel": 1
   }
  },
  "par_leurre": {
   "MONTANT": {
    "libelle": "Montant",
-   "n": 1012,
+   "n": 1017,
    "codes": 38,
-   "taux": 0.037549407114624504
+   "taux": 0.03736479842674533
   },
   "DATE": {
    "libelle": "Date (hors naissance)",
-   "n": 785,
+   "n": 787,
    "codes": 10,
-   "taux": 0.012738853503184714
+   "taux": 0.012706480304955527
   },
   "ARTICLE": {
    "libelle": "Article ou texte de loi",
@@ -2332,144 +2347,42 @@
   },
   "SIGLE": {
    "libelle": "Sigle ou terme du lexique",
-   "n": 462,
+   "n": 463,
    "codes": 61,
-   "taux": 0.13203463203463203
+   "taux": 0.13174946004319654
   },
   "MOT": {
    "libelle": "Mot courant qui ressemble à un nom",
-   "n": 134,
+   "n": 138,
    "codes": 13,
-   "taux": 0.09701492537313433
+   "taux": 0.09420289855072464
   },
   "VILLE": {
    "libelle": "Ville",
-   "n": 204,
+   "n": 205,
    "codes": 0,
    "taux": 0
   },
   "PRODUIT": {
    "libelle": "Offre, opérateur, médicament",
-   "n": 102,
-   "codes": 32,
-   "taux": 0.3137254901960784
+   "n": 103,
+   "codes": 27,
+   "taux": 0.2621359223300971
   },
   "COMPTE": {
    "libelle": "N° de compte comptable",
-   "n": 103,
+   "n": 104,
    "codes": 0,
    "taux": 0
   },
   "MESURE": {
    "libelle": "Durée, quantité, dosage",
-   "n": 174,
+   "n": 177,
    "codes": 1,
-   "taux": 0.005747126436781609
+   "taux": 0.005649717514124294
   }
  },
  "manques": [
-  {
-   "doc": "core/courrier/003",
-   "pack": "core",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 68 07 94 443 898 - 83",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "83"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "core/courrier/010",
-   "pack": "core",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "2 75 09 2A 724 241 - 85",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "85"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "core/courrier/011",
-   "pack": "core",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 56 11 13 135 111 - 48",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "48"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "core/courrier/012",
-   "pack": "core",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 47 12 31 177 146 - 82",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "82"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "core/courrier/013",
-   "pack": "core",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 06 11 75 696 892 - 91",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "91"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "core/courrier/014",
-   "pack": "core",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "2 10 08 13 249 802 - 33",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "33"
-   ],
-   "vu_par_ia": true
-  },
   {
    "doc": "core/fiche/003",
    "pack": "core",
@@ -2573,79 +2486,6 @@
    "vu_par_ia": true
   },
   {
-   "doc": "core/mailTransfert/013",
-   "pack": "core",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ait-espace",
-   "traits": [
-    "prenom-seul"
-   ],
-   "valeur": "R'kia",
-   "statut": "partiel",
-   "prefixes": [
-    "CODE"
-   ],
-   "en_clair": [
-    "R"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "core/mailTransfert/013",
-   "pack": "core",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ait-espace",
-   "traits": [
-    "prenom-apostrophe"
-   ],
-   "valeur": "R'kia Ait Taleb",
-   "statut": "partiel",
-   "prefixes": [
-    "CODE",
-    "NOM"
-   ],
-   "en_clair": [
-    "R"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/conclusions/005",
-   "pack": "juridique-fr",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "fr-particule",
-   "traits": [],
-   "valeur": "Inès de La Fontaine",
-   "statut": "partiel",
-   "prefixes": [
-    "PRENOM"
-   ],
-   "en_clair": [
-    "Fontaine"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/conclusions/005",
-   "pack": "juridique-fr",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "fr-particule",
-   "traits": [
-    "nom-seul"
-   ],
-   "valeur": "de La Fontaine",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "Fontaine"
-   ],
-   "vu_par_ia": true
-  },
-  {
    "doc": "juridique-fr/conclusions/008",
    "pack": "juridique-fr",
    "type": "ADRESSE",
@@ -2675,243 +2515,6 @@
    ],
    "en_clair": [
     "Fosse"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/assignation/003",
-   "pack": "juridique-fr",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 00 06 31 924 607 - 79",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "79"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/assignation/004",
-   "pack": "juridique-fr",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "2 90 07 2B 561 069 - 42",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "42"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/assignation/005",
-   "pack": "juridique-fr",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 25 03 31 794 881 - 07",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "07"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/assignation/011",
-   "pack": "juridique-fr",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 65 02 2B 075 554 - 06",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "06"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/assignation/012",
-   "pack": "juridique-fr",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "2 20 01 2A 954 424 - 31",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "31"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/releve/003",
-   "pack": "banque-assurance",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ben-espace",
-   "traits": [
-    "prenom-apostrophe"
-   ],
-   "valeur": "Ma'ati Ben Chekroun",
-   "statut": "partiel",
-   "prefixes": [
-    "CODE",
-    "NOM"
-   ],
-   "en_clair": [
-    "Ma"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/releve/006",
-   "pack": "banque-assurance",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ould",
-   "traits": [],
-   "valeur": "Nesrine Ould Bah",
-   "statut": "partiel",
-   "prefixes": [
-    "PRENOM"
-   ],
-   "en_clair": [
-    "Bah"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/releve/011",
-   "pack": "banque-assurance",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-double",
-   "traits": [
-    "prenom-apostrophe",
-    "nom-majuscules"
-   ],
-   "valeur": "Ma'ati IDRISSI KAITOUNI",
-   "statut": "partiel",
-   "prefixes": [
-    "CODE",
-    "NOM"
-   ],
-   "en_clair": [
-    "Ma"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistre/001",
-   "pack": "banque-assurance",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-simple",
-   "traits": [],
-   "valeur": "Cheikh Saidi",
-   "statut": "partiel",
-   "prefixes": [
-    "NOM"
-   ],
-   "en_clair": [
-    "Cheikh"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/kyc/008",
-   "pack": "banque-assurance",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-el-espace",
-   "traits": [],
-   "valeur": "Cheikh El Alaoui",
-   "statut": "partiel",
-   "prefixes": [
-    "NOM"
-   ],
-   "en_clair": [
-    "Cheikh"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/009",
-   "pack": "banque-assurance",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ait-tiret",
-   "traits": [
-    "prenom-apostrophe"
-   ],
-   "valeur": "R'kia Ait-Mbarek",
-   "statut": "partiel",
-   "prefixes": [
-    "CODE",
-    "NOM"
-   ],
-   "en_clair": [
-    "R"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/effets/009",
-   "pack": "banque-assurance",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ait-tiret",
-   "traits": [
-    "prenom-apostrophe"
-   ],
-   "valeur": "R'kia Ait-Mbarek",
-   "statut": "partiel",
-   "prefixes": [
-    "CODE",
-    "NOM"
-   ],
-   "en_clair": [
-    "R"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "banque-assurance/sinistreAuto/004",
-   "pack": "banque-assurance",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ben-colle",
-   "traits": [
-    "prenom-apostrophe"
-   ],
-   "valeur": "R'kia Bensaid",
-   "statut": "partiel",
-   "prefixes": [
-    "CODE",
-    "NOM"
-   ],
-   "en_clair": [
-    "R"
    ],
    "vu_par_ia": true
   },
@@ -3150,40 +2753,6 @@
    "vu_par_ia": true
   },
   {
-   "doc": "sante/lettreLiaison/005",
-   "pack": "sante",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "2 14 12 99 789 906 - 93",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "93"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "sante/lettreLiaison/006",
-   "pack": "sante",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "2 42 07 94 077 945 - 18",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "18"
-   ],
-   "vu_par_ia": true
-  },
-  {
    "doc": "sante/lettreLiaison/007",
    "pack": "sante",
    "type": "ADRESSE",
@@ -3198,130 +2767,6 @@
    ],
    "en_clair": [
     "République"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "sante/lettreLiaison/009",
-   "pack": "sante",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "2 62 09 94 388 520 - 59",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "59"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "expertise-comptable/facture/010",
-   "pack": "expertise-comptable",
-   "type": "RIB",
-   "direct": true,
-   "variante": "rib-ma-par-4",
-   "traits": [],
-   "valeur": "0117 2663 0845 1886 7116 7673",
-   "statut": "partiel",
-   "prefixes": [
-    "CARTE"
-   ],
-   "en_clair": [
-    "7116",
-    "7673"
-   ],
-   "vu_par_ia": false
-  },
-  {
-   "doc": "expertise-comptable/grandLivre/001",
-   "pack": "expertise-comptable",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ould",
-   "traits": [],
-   "valeur": "Rachida Ould Bah",
-   "statut": "partiel",
-   "prefixes": [
-    "PRENOM"
-   ],
-   "en_clair": [
-    "Bah"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "expertise-comptable/grandLivre/002",
-   "pack": "expertise-comptable",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-el-espace",
-   "traits": [
-    "prenom-apostrophe"
-   ],
-   "valeur": "Ma'ati El Moussaoui",
-   "statut": "partiel",
-   "prefixes": [
-    "CODE",
-    "NOM"
-   ],
-   "en_clair": [
-    "Ma"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "expertise-comptable/grandLivre/007",
-   "pack": "expertise-comptable",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ould",
-   "traits": [],
-   "valeur": "Mehdi Ould Bah",
-   "statut": "partiel",
-   "prefixes": [
-    "PRENOM"
-   ],
-   "en_clair": [
-    "Bah"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "expertise-comptable/grandLivre/009",
-   "pack": "expertise-comptable",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "fr-particule",
-   "traits": [],
-   "valeur": "Sophie Le Roux",
-   "statut": "partiel",
-   "prefixes": [
-    "PRENOM"
-   ],
-   "en_clair": [
-    "Roux"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "expertise-comptable/rapprochement/001",
-   "pack": "expertise-comptable",
-   "type": "RIB",
-   "direct": true,
-   "variante": "rib-ma-groupes",
-   "traits": [],
-   "valeur": "013 134 9616370589708679 28",
-   "statut": "partiel",
-   "prefixes": [
-    "CARTE"
-   ],
-   "en_clair": [
-    "013",
-    "28"
    ],
    "vu_par_ia": true
   },
@@ -3491,239 +2936,6 @@
    "vu_par_ia": true
   },
   {
-   "doc": "expertise-comptable/reporting/001",
-   "pack": "expertise-comptable",
-   "type": "PERSONNE",
-   "direct": true,
-   "variante": "mag-ould",
-   "traits": [],
-   "valeur": "Abdelaziz Ould Cheikh",
-   "statut": "partiel",
-   "prefixes": [
-    "PRENOM"
-   ],
-   "en_clair": [
-    "Cheikh"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/001",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "7456193",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "7456193"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/002",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "1590991",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "1590991"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/003",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "8710871",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "8710871"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/004",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "9135145",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "9135145"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/005",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "2140584",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "2140584"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/006",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "8806146",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "8806146"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/007",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "5398685",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "5398685"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/008",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "1843021",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "1843021"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/009",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "1856059",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "1856059"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/010",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "4295445",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "4295445"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/011",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "7501593",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "7501593"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinMa/012",
-   "pack": "rh-paie",
-   "type": "CNSS",
-   "direct": true,
-   "variante": "cnss-affiliation-7",
-   "traits": [],
-   "valeur": "8109948",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "8109948"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinFr/001",
-   "pack": "rh-paie",
-   "type": "IBAN",
-   "direct": true,
-   "variante": "iban-fr-par-4",
-   "traits": [],
-   "valeur": "FR76 2245 1259 3502 5177 5787 675",
-   "statut": "partiel",
-   "prefixes": [
-    "REF",
-    "CARTE"
-   ],
-   "en_clair": [
-    "5787",
-    "675"
-   ],
-   "vu_par_ia": false
-  },
-  {
-   "doc": "rh-paie/bulletinFr/004",
-   "pack": "rh-paie",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 97 02 67 473 063 - 22",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "22"
-   ],
-   "vu_par_ia": true
-  },
-  {
    "doc": "rh-paie/bulletinFr/005",
    "pack": "rh-paie",
    "type": "ADRESSE",
@@ -3752,51 +2964,17 @@
     "Fosse"
    ],
    "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinFr/010",
-   "pack": "rh-paie",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 75 07 67 244 439 - 11",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "11"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "rh-paie/bulletinFr/011",
-   "pack": "rh-paie",
-   "type": "NIR",
-   "direct": true,
-   "variante": "nir-cle-tiret",
-   "traits": [],
-   "valeur": "1 49 04 31 392 783 - 44",
-   "statut": "partiel",
-   "prefixes": [
-    "CIN"
-   ],
-   "en_clair": [
-    "44"
-   ],
-   "vu_par_ia": true
   }
  ],
  "verrou_de_sortie": {
-  "manques_directs": 49,
-  "manques_directs_vus_par_ia": 47,
+  "manques_directs": 0,
+  "manques_directs_vus_par_ia": 0,
   "masquages_par_pack": {
    "core": 0,
    "telecom-ma": 0,
    "juridique-fr": 0,
    "banque-assurance": 0,
-   "sante": 58,
+   "sante": 0,
    "expertise-comptable": 0,
    "rh-paie": 24
   }
@@ -4713,16 +3891,6 @@
    ]
   },
   {
-   "doc": "sante/lettreLiaison/002",
-   "pack": "sante",
-   "type": "PRODUIT",
-   "variante": "",
-   "valeur": "amoxicilline 1 g",
-   "prefixes": [
-    "CODE-001"
-   ]
-  },
-  {
    "doc": "sante/lettreLiaison/003",
    "pack": "sante",
    "type": "PRODUIT",
@@ -4740,16 +3908,6 @@
    "valeur": "NFS",
    "prefixes": [
     "NOM"
-   ]
-  },
-  {
-   "doc": "sante/lettreLiaison/006",
-   "pack": "sante",
-   "type": "PRODUIT",
-   "variante": "",
-   "valeur": "amoxicilline 1 g",
-   "prefixes": [
-    "CODE-001"
    ]
   },
   {
@@ -4793,26 +3951,6 @@
    ]
   },
   {
-   "doc": "sante/ordonnance/001",
-   "pack": "sante",
-   "type": "PRODUIT",
-   "variante": "",
-   "valeur": "amoxicilline 1 g",
-   "prefixes": [
-    "CODE-001"
-   ]
-  },
-  {
-   "doc": "sante/ordonnance/002",
-   "pack": "sante",
-   "type": "PRODUIT",
-   "variante": "",
-   "valeur": "amoxicilline 1 g",
-   "prefixes": [
-    "CODE-001"
-   ]
-  },
-  {
    "doc": "sante/ordonnance/006",
    "pack": "sante",
    "type": "PRODUIT",
@@ -4820,16 +3958,6 @@
    "valeur": "insuline glargine",
    "prefixes": [
     "CODE"
-   ]
-  },
-  {
-   "doc": "sante/ordonnance/007",
-   "pack": "sante",
-   "type": "PRODUIT",
-   "variante": "",
-   "valeur": "amoxicilline 1 g",
-   "prefixes": [
-    "CODE-001"
    ]
   },
   {
@@ -5785,6 +4913,10 @@
    "n": 12
   },
   {
+   "passage": "NOM « Reprise »",
+   "n": 12
+  },
+  {
    "passage": "NOM « SAV »",
    "n": 12
   },
@@ -5821,12 +4953,12 @@
    "n": 11
   },
   {
-   "passage": "NOM « Reprise »",
-   "n": 11
-  },
-  {
    "passage": "NOM « IMMOBILIER »",
    "n": 7
+  },
+  {
+   "passage": "NOM « Enfant »",
+   "n": 6
   },
   {
    "passage": "NOM « Inchallah »",
@@ -5842,10 +4974,6 @@
   },
   {
    "passage": "NOM « CONSOMMATION »",
-   "n": 5
-  },
-  {
-   "passage": "NOM « Enfant »",
    "n": 5
   },
   {
@@ -5915,73 +5043,9 @@
   {
    "passage": "NOM « Joignable »",
    "n": 1
-  },
-  {
-   "passage": "NOM « Patient »",
-   "n": 1
   }
  ],
- "plus_gros_ecarts": [
-  {
-   "cle": "NIR · nir-cle-tiret",
-   "direct": true,
-   "n": 17,
-   "detectes": 0,
-   "partiels": 17,
-   "manques": 0,
-   "rappel": 0,
-   "perdues": 17
-  },
-  {
-   "cle": "CNSS · cnss-affiliation-7",
-   "direct": true,
-   "n": 25,
-   "detectes": 13,
-   "partiels": 0,
-   "manques": 12,
-   "rappel": 0.52,
-   "perdues": 12
-  },
-  {
-   "cle": "PERSONNE · mag-ould",
-   "direct": true,
-   "n": 48,
-   "detectes": 44,
-   "partiels": 4,
-   "manques": 0,
-   "rappel": 0.9166666666666666,
-   "perdues": 4
-  },
-  {
-   "cle": "PERSONNE · fr-particule",
-   "direct": true,
-   "n": 39,
-   "detectes": 36,
-   "partiels": 2,
-   "manques": 1,
-   "rappel": 0.9230769230769231,
-   "perdues": 3
-  },
-  {
-   "cle": "PERSONNE · mag-ait-espace",
-   "direct": true,
-   "n": 33,
-   "detectes": 31,
-   "partiels": 2,
-   "manques": 0,
-   "rappel": 0.9393939393939394,
-   "perdues": 2
-  }
- ],
- "documents_imbriques": [
-  "sante/compteRendu/004",
-  "sante/compteRendu/007",
-  "sante/compteRendu/008",
-  "sante/compteRendu/012",
-  "sante/lettreLiaison/002",
-  "sante/lettreLiaison/006",
-  "sante/ordonnance/001",
-  "sante/ordonnance/002",
-  "sante/ordonnance/007"
- ]
+ "plus_gros_ecarts": [],
+ "documents_imbriques": [],
+ "documents_sans_aller_retour": []
 }

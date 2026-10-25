@@ -26,6 +26,10 @@ export function rapportMarkdown(r) {
     for (const id of r.documents_imbriques) { const p = id.split("/")[0]; parPack[p] = (parPack[p] || 0) + 1; }
     L.push(`**Sortie corrompue : ${r.documents_imbriques.length} document(s)** dont le texte codé n'est plus « l'origine + des codes » (codes imbriqués comme \`NOM-001-002\`, morceau de mot recodé) — ${Object.entries(parPack).map(([p, n]) => `${p} : ${n}`).join(", ")}. La valeur est protégée, mais le décodage ne rend pas le texte d'origine. Ces documents sont notés par plus longue sous-suite commune (cf. README).`, "");
   }
+  const sansAR = r.documents_sans_aller_retour || [];
+  L.push(sansAR.length
+    ? `**Aller-retour : ❌ ${sansAR.length} document(s)** ne se décodent pas en l'origine : ${sansAR.map((id) => `\`${id}\``).join(", ")}. La CI (\`bench:ht:controle\`) échoue.`
+    : `**Aller-retour : ✅** les ${r.documents} documents, décodés avec leur clé, rendent le texte d'origine (aucun code imbriqué, aucun morceau de mot recodé).`, "");
   L.push("## Les cinq plus gros écarts (identifiants directs)", "");
   L.push("| # | Type · écriture | Perdues | Rappel |", "|---:|---|---:|---:|");
   r.plus_gros_ecarts.forEach((e, i) => L.push(`| ${i + 1} | ${md(e.cle)} | ${e.perdues}/${e.n} (dont ${e.partiels} partielles) | ${pct(e.rappel)} |`));

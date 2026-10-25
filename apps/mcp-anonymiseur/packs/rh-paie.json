@@ -2,7 +2,7 @@
   "format": "hidden-tokens.pack/1",
   "id": "rh-paie",
   "nom": "RH et paie",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Matricules, numéros de badge et de contrat de travail annoncés ; CNSS, numéro de sécurité sociale, IBAN, dates de naissance sont reconnus par le moteur ; les salaires relèvent du réglage Nombres (finance d'une personne, protégée par défaut). Intitulés de postes, droit du travail, éléments de paie et organismes laissés en clair pour que l'IA travaille sur un contrat, un entretien annuel ou une procédure.",
   "regles": [
     {
@@ -10,7 +10,7 @@
       "type": "motif",
       "libelle": "Matricule salarié annoncé",
       "prefixe": "MATRICULE",
-      "motif": "(?<=\\bmatricule\\s*(?:salari[ée]|employ[ée])?\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9-]{2,12}(?![A-Z0-9-])",
+      "motif": "(?<=\\bmatricule(?:[ \\t]+(?:salari[ée]e?|employ[ée]e?))?(?!\\p{L})[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)[A-Z0-9][A-Z0-9-]{2,12}(?![A-Z0-9-])",
       "exemple": "matricule : EMP-04471"
     },
     {
@@ -18,7 +18,7 @@
       "type": "motif",
       "libelle": "Numéro de badge annoncé",
       "prefixe": "BADGE",
-      "motif": "(?<=\\bbadge\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9-]{2,12}(?![A-Z0-9-])",
+      "motif": "(?<=\\bbadge(?!\\p{L})[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)[A-Z0-9][A-Z0-9-]{2,12}(?![A-Z0-9-])",
       "exemple": "badge n° 00812"
     },
     {
@@ -26,7 +26,7 @@
       "type": "motif",
       "libelle": "Numéro de contrat de travail ou de dossier RH annoncé",
       "prefixe": "DOSSIERRH",
-      "motif": "(?<=\\b(?:contrat\\s*(?:de\\s*travail)?|dossier\\s*(?:RH|personnel)|DPAE)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{3,15}(?![A-Z0-9/-])",
+      "motif": "(?<=\\b(?:contrat(?:[ \\t]+de[ \\t]+travail)?|dossier[ \\t]+(?:RH|personnel)|DPAE)(?!\\p{L})[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)[A-Z0-9][A-Z0-9/-]{3,15}(?![A-Z0-9/-])",
       "exemple": "contrat de travail n° CT/2026/031"
     },
     {

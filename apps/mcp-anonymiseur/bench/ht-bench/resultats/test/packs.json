@@ -1,30 +1,30 @@
 {
  "split": "test",
- "version_moteur": "2.25.0",
+ "version_moteur": "2.28.0",
  "jeu_sha256": "4881c8d2bc9febe584e4dab351739c8bd00858a20eab834c15993fcace79e10b",
  "configs": {
   "aucun": {
    "global": {
     "direct": {
      "n": 2523,
-     "detectes": 2456,
-     "partiels": 40,
-     "manques": 27,
-     "rappel": 0.9734443123265953
+     "detectes": 2511,
+     "partiels": 0,
+     "manques": 12,
+     "rappel": 0.995243757431629
     },
     "tous": {
      "n": 3420,
-     "detectes": 3187,
-     "partiels": 63,
-     "manques": 170,
-     "rappel": 0.9318713450292397
+     "detectes": 3242,
+     "partiels": 23,
+     "manques": 155,
+     "rappel": 0.947953216374269
     },
-    "precision": 0.8151946818613486,
-    "passages": 5265,
+    "precision": 0.8128088179399467,
+    "passages": 5262,
     "leurres": {
      "n": 3029,
-     "codes": 378,
-     "taux_faux_positifs": 0.12479366127434798
+     "codes": 390,
+     "taux_faux_positifs": 0.12875536480686695
     }
    },
    "par_pack": {
@@ -32,20 +32,20 @@
      "documents": 42,
      "direct": {
       "n": 322,
-      "detectes": 321,
-      "partiels": 1,
+      "detectes": 322,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9968944099378882
+      "rappel": 1
      },
      "tous": {
       "n": 378,
-      "detectes": 371,
-      "partiels": 1,
+      "detectes": 372,
+      "partiels": 0,
       "manques": 6,
-      "rappel": 0.9814814814814815
+      "rappel": 0.9841269841269841
      },
      "precision": 0.9346153846153846,
-     "f1": 0.9574752806482789,
+     "f1": 0.9587323809220784,
      "passages": 520,
      "passages_leurres": 3,
      "passages_hors_etiquette": 31,
@@ -78,10 +78,10 @@
       },
       "PERSONNE": {
        "n": 140,
-       "detectes": 139,
-       "partiels": 1,
+       "detectes": 140,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9928571428571429
+       "rappel": 1
       },
       "TEL": {
        "n": 98,
@@ -174,27 +174,27 @@
      "documents": 36,
      "direct": {
       "n": 276,
-      "detectes": 265,
-      "partiels": 8,
-      "manques": 3,
-      "rappel": 0.9601449275362319
+      "detectes": 276,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
      "tous": {
       "n": 420,
-      "detectes": 375,
-      "partiels": 8,
-      "manques": 37,
-      "rappel": 0.8928571428571429
+      "detectes": 386,
+      "partiels": 0,
+      "manques": 34,
+      "rappel": 0.919047619047619
      },
-     "precision": 0.8901830282861897,
-     "f1": 0.8915180803199466,
-     "passages": 601,
-     "passages_leurres": 12,
+     "precision": 0.8743961352657005,
+     "f1": 0.8961660317338156,
+     "passages": 621,
+     "passages_leurres": 24,
      "passages_hors_etiquette": 54,
      "leurres": {
       "n": 300,
-      "codes": 12,
-      "taux_faux_positifs": 0.04
+      "codes": 24,
+      "taux_faux_positifs": 0.08
      },
      "direct_par_type": {
       "CIN": {
@@ -213,17 +213,17 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 9,
-       "partiels": 3,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.75
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 144,
-       "detectes": 136,
-       "partiels": 5,
-       "manques": 3,
-       "rappel": 0.9444444444444444
+       "detectes": 144,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
       },
       "SIREN": {
        "n": 24,
@@ -252,21 +252,21 @@
      "documents": 96,
      "direct": {
       "n": 652,
-      "detectes": 627,
-      "partiels": 13,
+      "detectes": 640,
+      "partiels": 0,
       "manques": 12,
-      "rappel": 0.9616564417177914
+      "rappel": 0.9815950920245399
      },
      "tous": {
       "n": 875,
-      "detectes": 779,
-      "partiels": 31,
+      "detectes": 792,
+      "partiels": 18,
       "manques": 65,
-      "rappel": 0.8902857142857142
+      "rappel": 0.9051428571428571
      },
-     "precision": 0.7566666666666667,
-     "f1": 0.8180558607529058,
-     "passages": 1500,
+     "precision": 0.7533783783783784,
+     "f1": 0.8223169451318452,
+     "passages": 1480,
      "passages_leurres": 101,
      "passages_hors_etiquette": 264,
      "leurres": {
@@ -305,10 +305,10 @@
       },
       "IBAN": {
        "n": 36,
-       "detectes": 35,
-       "partiels": 1,
+       "detectes": 36,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9722222222222222
+       "rappel": 1
       },
       "ICE": {
        "n": 19,
@@ -333,17 +333,17 @@
       },
       "PERSONNE": {
        "n": 260,
-       "detectes": 257,
-       "partiels": 3,
+       "detectes": 260,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9884615384615385
+       "rappel": 1
       },
       "RIB": {
        "n": 80,
-       "detectes": 71,
-       "partiels": 9,
+       "detectes": 80,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.8875
+       "rappel": 1
       },
       "TEL": {
        "n": 96,
@@ -358,21 +358,21 @@
      "documents": 36,
      "direct": {
       "n": 204,
-      "detectes": 196,
-      "partiels": 8,
+      "detectes": 204,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9607843137254902
+      "rappel": 1
      },
      "tous": {
       "n": 324,
-      "detectes": 294,
-      "partiels": 8,
+      "detectes": 302,
+      "partiels": 0,
       "manques": 22,
-      "rappel": 0.9074074074074074
+      "rappel": 0.9320987654320988
      },
-     "precision": 0.7398945518453427,
-     "f1": 0.8151338536007112,
-     "passages": 569,
+     "precision": 0.7385159010600707,
+     "f1": 0.8240916034521029,
+     "passages": 566,
      "passages_leurres": 60,
      "passages_hors_etiquette": 88,
      "leurres": {
@@ -404,17 +404,17 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 5,
-       "partiels": 7,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.4166666666666667
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 96,
-       "detectes": 95,
-       "partiels": 1,
+       "detectes": 96,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9895833333333334
+       "rappel": 1
       },
       "TEL": {
        "n": 48,
@@ -429,21 +429,21 @@
      "documents": 84,
      "direct": {
       "n": 599,
-      "detectes": 595,
-      "partiels": 4,
+      "detectes": 599,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.993322203672788
+      "rappel": 1
      },
      "tous": {
       "n": 842,
-      "detectes": 820,
-      "partiels": 9,
+      "detectes": 824,
+      "partiels": 5,
       "manques": 13,
-      "rappel": 0.9738717339667459
+      "rappel": 0.9786223277909739
      },
-     "precision": 0.8341384863123994,
-     "f1": 0.8986054226043394,
-     "passages": 1242,
+     "precision": 0.8337368845843423,
+     "f1": 0.9003883172671604,
+     "passages": 1239,
      "passages_leurres": 86,
      "passages_hors_etiquette": 120,
      "leurres": {
@@ -475,10 +475,10 @@
       },
       "IBAN": {
        "n": 7,
-       "detectes": 6,
-       "partiels": 1,
+       "detectes": 7,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.8571428571428571
+       "rappel": 1
       },
       "ICE": {
        "n": 113,
@@ -496,10 +496,10 @@
       },
       "PERSONNE": {
        "n": 205,
-       "detectes": 202,
-       "partiels": 3,
+       "detectes": 205,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9853658536585366
+       "rappel": 1
       },
       "RC": {
        "n": 41,
@@ -535,21 +535,21 @@
      "documents": 36,
      "direct": {
       "n": 228,
-      "detectes": 210,
-      "partiels": 6,
-      "manques": 12,
-      "rappel": 0.9210526315789473
+      "detectes": 228,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
      "tous": {
       "n": 312,
-      "detectes": 279,
-      "partiels": 6,
-      "manques": 27,
-      "rappel": 0.8942307692307693
+      "detectes": 297,
+      "partiels": 0,
+      "manques": 15,
+      "rappel": 0.9519230769230769
      },
-     "precision": 0.8369304556354916,
-     "f1": 0.8646323108275503,
-     "passages": 417,
+     "precision": 0.8380952380952381,
+     "f1": 0.891389983117614,
+     "passages": 420,
      "passages_leurres": 50,
      "passages_hors_etiquette": 18,
      "leurres": {
@@ -567,10 +567,10 @@
       },
       "CNSS": {
        "n": 36,
-       "detectes": 24,
+       "detectes": 36,
        "partiels": 0,
-       "manques": 12,
-       "rappel": 0.6666666666666666
+       "manques": 0,
+       "rappel": 1
       },
       "EMAIL": {
        "n": 12,
@@ -602,10 +602,10 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 8,
-       "partiels": 4,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.6666666666666666
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 48,
@@ -623,10 +623,10 @@
       },
       "RIB": {
        "n": 12,
-       "detectes": 10,
-       "partiels": 2,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.8333333333333334
+       "rappel": 1
       },
       "SIRET": {
        "n": 12,
@@ -650,15 +650,15 @@
      "libelle": "Nom de personne",
      "direct": true,
      "n": 965,
-     "detectes": 949,
-     "partiels": 13,
-     "manques": 3,
-     "rappel": 0.983419689119171,
-     "passages": 2634,
-     "passages_justes": 1836,
-     "precision": 0.6970387243735763,
-     "f1": 0.8158269197542917,
-     "bien_etiquetes": 943
+     "detectes": 965,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 2684,
+     "passages_justes": 1874,
+     "precision": 0.6982116244411326,
+     "f1": 0.8222904782799473,
+     "bien_etiquetes": 960
     },
     "CIN": {
      "libelle": "CIN marocaine",
@@ -678,29 +678,29 @@
      "libelle": "NIR (sécurité sociale, France)",
      "direct": true,
      "n": 40,
-     "detectes": 26,
-     "partiels": 14,
+     "detectes": 40,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.65,
+     "rappel": 1,
      "passages": 0,
      "passages_justes": 0,
      "precision": null,
      "f1": null,
-     "bien_etiquetes": 26
+     "bien_etiquetes": 40
     },
     "CNSS": {
      "libelle": "N° CNSS",
      "direct": true,
      "n": 72,
-     "detectes": 60,
+     "detectes": 72,
      "partiels": 0,
-     "manques": 12,
-     "rappel": 0.8333333333333334,
-     "passages": 24,
-     "passages_justes": 24,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 48,
+     "passages_justes": 48,
      "precision": 1,
-     "f1": 0.9090909090909091,
-     "bien_etiquetes": 24
+     "f1": 1,
+     "bien_etiquetes": 48
     },
     "ICE": {
      "libelle": "ICE",
@@ -752,10 +752,10 @@
      "partiels": 0,
      "manques": 0,
      "rappel": 1,
-     "passages": 363,
+     "passages": 323,
      "passages_justes": 24,
-     "precision": 0.06611570247933884,
-     "f1": 0.12403100775193798,
+     "precision": 0.07430340557275542,
+     "f1": 0.138328530259366,
      "bien_etiquetes": 24
     },
     "SIRET": {
@@ -804,29 +804,29 @@
      "libelle": "IBAN",
      "direct": true,
      "n": 55,
-     "detectes": 53,
-     "partiels": 2,
+     "detectes": 55,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.9636363636363636,
-     "passages": 153,
-     "passages_justes": 53,
-     "precision": 0.3464052287581699,
-     "f1": 0.5096153846153846,
-     "bien_etiquetes": 53
+     "rappel": 1,
+     "passages": 166,
+     "passages_justes": 55,
+     "precision": 0.3313253012048193,
+     "f1": 0.4977375565610859,
+     "bien_etiquetes": 55
     },
     "RIB": {
      "libelle": "RIB",
      "direct": true,
      "n": 109,
-     "detectes": 98,
-     "partiels": 11,
+     "detectes": 109,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.8990825688073395,
+     "rappel": 1,
      "passages": 0,
      "passages_justes": 0,
      "precision": null,
      "f1": null,
-     "bien_etiquetes": 98
+     "bien_etiquetes": 109
     },
     "IMEI": {
      "libelle": "IMEI",
@@ -864,10 +864,10 @@
      "partiels": 0,
      "manques": 0,
      "rappel": 1,
-     "passages": 80,
+     "passages": 67,
      "passages_justes": 24,
-     "precision": 0.3,
-     "f1": 0.4615384615384615,
+     "precision": 0.3582089552238806,
+     "f1": 0.5274725274725275,
      "bien_etiquetes": 24
     },
     "CVV": {
@@ -1143,24 +1143,24 @@
    "global": {
     "direct": {
      "n": 2523,
-     "detectes": 2478,
-     "partiels": 30,
-     "manques": 15,
-     "rappel": 0.9821640903686087
+     "detectes": 2523,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
     },
     "tous": {
      "n": 3420,
-     "detectes": 3331,
-     "partiels": 30,
-     "manques": 59,
-     "rappel": 0.9739766081871345
+     "detectes": 3376,
+     "partiels": 0,
+     "manques": 44,
+     "rappel": 0.9871345029239766
     },
-    "precision": 0.8719888512840932,
-    "passages": 5023,
+    "precision": 0.8734555599840574,
+    "passages": 5018,
     "leurres": {
      "n": 3029,
-     "codes": 183,
-     "taux_faux_positifs": 0.060415978870914495
+     "codes": 176,
+     "taux_faux_positifs": 0.05810498514361175
     }
    },
    "par_pack": {
@@ -1168,20 +1168,20 @@
      "documents": 42,
      "direct": {
       "n": 322,
-      "detectes": 321,
-      "partiels": 1,
+      "detectes": 322,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9968944099378882
+      "rappel": 1
      },
      "tous": {
       "n": 378,
-      "detectes": 371,
-      "partiels": 1,
+      "detectes": 372,
+      "partiels": 0,
       "manques": 6,
-      "rappel": 0.9814814814814815
+      "rappel": 0.9841269841269841
      },
      "precision": 0.9346153846153846,
-     "f1": 0.9574752806482789,
+     "f1": 0.9587323809220784,
      "passages": 520,
      "passages_leurres": 3,
      "passages_hors_etiquette": 31,
@@ -1214,10 +1214,10 @@
       },
       "PERSONNE": {
        "n": 140,
-       "detectes": 139,
-       "partiels": 1,
+       "detectes": 140,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9928571428571429
+       "rappel": 1
       },
       "TEL": {
        "n": 98,
@@ -1310,21 +1310,21 @@
      "documents": 36,
      "direct": {
       "n": 276,
-      "detectes": 265,
-      "partiels": 8,
-      "manques": 3,
-      "rappel": 0.9601449275362319
+      "detectes": 276,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
      "tous": {
       "n": 420,
-      "detectes": 399,
-      "partiels": 8,
-      "manques": 13,
-      "rappel": 0.95
+      "detectes": 410,
+      "partiels": 0,
+      "manques": 10,
+      "rappel": 0.9761904761904762
      },
-     "precision": 0.8707165109034268,
-     "f1": 0.9086320472238858,
-     "passages": 642,
+     "precision": 0.8723076923076923,
+     "f1": 0.9213300570703868,
+     "passages": 650,
      "passages_leurres": 29,
      "passages_hors_etiquette": 54,
      "leurres": {
@@ -1349,17 +1349,17 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 9,
-       "partiels": 3,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.75
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 144,
-       "detectes": 136,
-       "partiels": 5,
-       "manques": 3,
-       "rappel": 0.9444444444444444
+       "detectes": 144,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
       },
       "SIREN": {
        "n": 24,
@@ -1388,21 +1388,21 @@
      "documents": 96,
      "direct": {
       "n": 652,
-      "detectes": 649,
-      "partiels": 3,
+      "detectes": 652,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.995398773006135
+      "rappel": 1
      },
      "tous": {
       "n": 875,
-      "detectes": 872,
-      "partiels": 3,
+      "detectes": 875,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9965714285714286
+      "rappel": 1
      },
-     "precision": 0.8167358229598893,
-     "f1": 0.8977359850794604,
-     "passages": 1446,
+     "precision": 0.8166089965397924,
+     "f1": 0.899047619047619,
+     "passages": 1445,
      "passages_leurres": 25,
      "passages_hors_etiquette": 240,
      "leurres": {
@@ -1469,10 +1469,10 @@
       },
       "PERSONNE": {
        "n": 260,
-       "detectes": 257,
-       "partiels": 3,
+       "detectes": 260,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9884615384615385
+       "rappel": 1
       },
       "RIB": {
        "n": 80,
@@ -1494,27 +1494,27 @@
      "documents": 36,
      "direct": {
       "n": 204,
-      "detectes": 196,
-      "partiels": 8,
+      "detectes": 204,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9607843137254902
+      "rappel": 1
      },
      "tous": {
       "n": 324,
-      "detectes": 301,
-      "partiels": 8,
+      "detectes": 309,
+      "partiels": 0,
       "manques": 15,
-      "rappel": 0.9290123456790124
+      "rappel": 0.9537037037037037
      },
-     "precision": 0.8125,
-     "f1": 0.8668586619406293,
-     "passages": 528,
-     "passages_leurres": 34,
-     "passages_hors_etiquette": 65,
+     "precision": 0.8236434108527132,
+     "f1": 0.8839148695581939,
+     "passages": 516,
+     "passages_leurres": 27,
+     "passages_hors_etiquette": 64,
      "leurres": {
       "n": 240,
-      "codes": 34,
-      "taux_faux_positifs": 0.14166666666666666
+      "codes": 27,
+      "taux_faux_positifs": 0.1125
      },
      "direct_par_type": {
       "CIN": {
@@ -1540,17 +1540,17 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 5,
-       "partiels": 7,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.4166666666666667
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 96,
-       "detectes": 95,
-       "partiels": 1,
+       "detectes": 96,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9895833333333334
+       "rappel": 1
       },
       "TEL": {
        "n": 48,
@@ -1565,21 +1565,21 @@
      "documents": 84,
      "direct": {
       "n": 599,
-      "detectes": 595,
-      "partiels": 4,
+      "detectes": 599,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.993322203672788
+      "rappel": 1
      },
      "tous": {
       "n": 842,
-      "detectes": 825,
-      "partiels": 4,
+      "detectes": 829,
+      "partiels": 0,
       "manques": 13,
-      "rappel": 0.9798099762470309
+      "rappel": 0.9845605700712589
      },
-     "precision": 0.9546296296296296,
-     "f1": 0.9670559183037709,
-     "passages": 1080,
+     "precision": 0.9545032497678737,
+     "f1": 0.9692989514953574,
+     "passages": 1077,
      "passages_leurres": 1,
      "passages_hors_etiquette": 48,
      "leurres": {
@@ -1611,10 +1611,10 @@
       },
       "IBAN": {
        "n": 7,
-       "detectes": 6,
-       "partiels": 1,
+       "detectes": 7,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.8571428571428571
+       "rappel": 1
       },
       "ICE": {
        "n": 113,
@@ -1632,10 +1632,10 @@
       },
       "PERSONNE": {
        "n": 205,
-       "detectes": 202,
-       "partiels": 3,
+       "detectes": 205,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9853658536585366
+       "rappel": 1
       },
       "RC": {
        "n": 41,
@@ -1671,21 +1671,21 @@
      "documents": 36,
      "direct": {
       "n": 228,
-      "detectes": 210,
-      "partiels": 6,
-      "manques": 12,
-      "rappel": 0.9210526315789473
+      "detectes": 228,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
      "tous": {
       "n": 312,
-      "detectes": 294,
-      "partiels": 6,
-      "manques": 12,
-      "rappel": 0.9423076923076923
+      "detectes": 312,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
-     "precision": 0.8921568627450981,
-     "f1": 0.916546762589928,
-     "passages": 408,
+     "precision": 0.8929440389294404,
+     "f1": 0.9434447300771208,
+     "passages": 411,
      "passages_leurres": 38,
      "passages_hors_etiquette": 6,
      "leurres": {
@@ -1703,10 +1703,10 @@
       },
       "CNSS": {
        "n": 36,
-       "detectes": 24,
+       "detectes": 36,
        "partiels": 0,
-       "manques": 12,
-       "rappel": 0.6666666666666666
+       "manques": 0,
+       "rappel": 1
       },
       "EMAIL": {
        "n": 12,
@@ -1738,10 +1738,10 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 8,
-       "partiels": 4,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.6666666666666666
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 48,
@@ -1759,10 +1759,10 @@
       },
       "RIB": {
        "n": 12,
-       "detectes": 10,
-       "partiels": 2,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.8333333333333334
+       "rappel": 1
       },
       "SIRET": {
        "n": 12,
@@ -1786,15 +1786,15 @@
      "libelle": "Nom de personne",
      "direct": true,
      "n": 965,
-     "detectes": 949,
-     "partiels": 13,
-     "manques": 3,
-     "rappel": 0.983419689119171,
-     "passages": 2299,
-     "passages_justes": 1829,
-     "precision": 0.7955632883862549,
-     "f1": 0.8795728926383725,
-     "bien_etiquetes": 943
+     "detectes": 965,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 2342,
+     "passages_justes": 1874,
+     "precision": 0.8001707941929974,
+     "f1": 0.8889943074003795,
+     "bien_etiquetes": 960
     },
     "CIN": {
      "libelle": "CIN marocaine",
@@ -1814,29 +1814,29 @@
      "libelle": "NIR (sécurité sociale, France)",
      "direct": true,
      "n": 40,
-     "detectes": 26,
-     "partiels": 14,
+     "detectes": 40,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.65,
+     "rappel": 1,
      "passages": 0,
      "passages_justes": 0,
      "precision": null,
      "f1": null,
-     "bien_etiquetes": 26
+     "bien_etiquetes": 40
     },
     "CNSS": {
      "libelle": "N° CNSS",
      "direct": true,
      "n": 72,
-     "detectes": 60,
+     "detectes": 72,
      "partiels": 0,
-     "manques": 12,
-     "rappel": 0.8333333333333334,
-     "passages": 48,
-     "passages_justes": 48,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 72,
+     "passages_justes": 72,
      "precision": 1,
-     "f1": 0.9090909090909091,
-     "bien_etiquetes": 48
+     "f1": 1,
+     "bien_etiquetes": 72
     },
     "ICE": {
      "libelle": "ICE",
@@ -1888,10 +1888,10 @@
      "partiels": 0,
      "manques": 0,
      "rappel": 1,
-     "passages": 190,
+     "passages": 169,
      "passages_justes": 24,
-     "precision": 0.12631578947368421,
-     "f1": 0.22429906542056077,
+     "precision": 0.14201183431952663,
+     "f1": 0.24870466321243523,
      "bien_etiquetes": 24
     },
     "SIRET": {
@@ -1940,29 +1940,29 @@
      "libelle": "IBAN",
      "direct": true,
      "n": 55,
-     "detectes": 54,
-     "partiels": 1,
+     "detectes": 55,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.9818181818181818,
-     "passages": 161,
-     "passages_justes": 54,
-     "precision": 0.33540372670807456,
-     "f1": 0.5,
-     "bien_etiquetes": 54
+     "rappel": 1,
+     "passages": 164,
+     "passages_justes": 55,
+     "precision": 0.3353658536585366,
+     "f1": 0.502283105022831,
+     "bien_etiquetes": 55
     },
     "RIB": {
      "libelle": "RIB",
      "direct": true,
      "n": 109,
-     "detectes": 107,
-     "partiels": 2,
+     "detectes": 109,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.981651376146789,
+     "rappel": 1,
      "passages": 0,
      "passages_justes": 0,
      "precision": null,
      "f1": null,
-     "bien_etiquetes": 107
+     "bien_etiquetes": 109
     },
     "IMEI": {
      "libelle": "IMEI",
@@ -2000,10 +2000,10 @@
      "partiels": 0,
      "manques": 0,
      "rappel": 1,
-     "passages": 46,
+     "passages": 43,
      "passages_justes": 24,
-     "precision": 0.5217391304347826,
-     "f1": 0.6857142857142856,
+     "precision": 0.5581395348837209,
+     "f1": 0.7164179104477612,
      "bien_etiquetes": 24
     },
     "CVV": {
@@ -2070,11 +2070,11 @@
      "partiels": 0,
      "manques": 14,
      "rappel": 0.9239130434782609,
-     "passages": 172,
-     "passages_justes": 172,
+     "passages": 173,
+     "passages_justes": 173,
      "precision": 1,
      "f1": 0.96045197740113,
-     "bien_etiquetes": 153
+     "bien_etiquetes": 154
     },
     "SOCIETE": {
      "libelle": "Société",
@@ -2154,10 +2154,10 @@
      "partiels": 0,
      "manques": 0,
      "rappel": 1,
-     "passages": 30,
+     "passages": 24,
      "passages_justes": 24,
-     "precision": 0.8,
-     "f1": 0.888888888888889,
+     "precision": 1,
+     "f1": 1,
      "bien_etiquetes": 24
     },
     "PRATICIEN": {
@@ -2273,32 +2273,30 @@
      "bien_etiquetes": 24
     }
    },
-   "imbriques": {
-    "sante": 9
-   }
+   "imbriques": {}
   },
   "tous": {
    "global": {
     "direct": {
      "n": 2523,
-     "detectes": 2481,
-     "partiels": 27,
-     "manques": 15,
-     "rappel": 0.9833531510107015
+     "detectes": 2523,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
     },
     "tous": {
      "n": 3420,
-     "detectes": 3346,
-     "partiels": 27,
-     "manques": 47,
-     "rappel": 0.9783625730994152
+     "detectes": 3388,
+     "partiels": 0,
+     "manques": 32,
+     "rappel": 0.9906432748538012
     },
-    "precision": 0.8640661938534279,
-    "passages": 5076,
+    "precision": 0.8737574552683897,
+    "passages": 5030,
     "leurres": {
      "n": 3029,
-     "codes": 183,
-     "taux_faux_positifs": 0.060415978870914495
+     "codes": 176,
+     "taux_faux_positifs": 0.05810498514361175
     }
    },
    "par_pack": {
@@ -2306,23 +2304,23 @@
      "documents": 42,
      "direct": {
       "n": 322,
-      "detectes": 321,
-      "partiels": 1,
+      "detectes": 322,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9968944099378882
+      "rappel": 1
      },
      "tous": {
       "n": 378,
-      "detectes": 371,
-      "partiels": 1,
+      "detectes": 372,
+      "partiels": 0,
       "manques": 6,
-      "rappel": 0.9814814814814815
+      "rappel": 0.9841269841269841
      },
-     "precision": 0.8950276243093923,
-     "f1": 0.9362630172836814,
-     "passages": 543,
+     "precision": 0.9346153846153846,
+     "f1": 0.9587323809220784,
+     "passages": 520,
      "passages_leurres": 3,
-     "passages_hors_etiquette": 54,
+     "passages_hors_etiquette": 31,
      "leurres": {
       "n": 141,
       "codes": 3,
@@ -2352,10 +2350,10 @@
       },
       "PERSONNE": {
        "n": 140,
-       "detectes": 139,
-       "partiels": 1,
+       "detectes": 140,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9928571428571429
+       "rappel": 1
       },
       "TEL": {
        "n": 98,
@@ -2448,21 +2446,21 @@
      "documents": 36,
      "direct": {
       "n": 276,
-      "detectes": 265,
-      "partiels": 8,
-      "manques": 3,
-      "rappel": 0.9601449275362319
+      "detectes": 276,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
      "tous": {
       "n": 420,
-      "detectes": 399,
-      "partiels": 8,
-      "manques": 13,
-      "rappel": 0.95
+      "detectes": 410,
+      "partiels": 0,
+      "manques": 10,
+      "rappel": 0.9761904761904762
      },
-     "precision": 0.8711180124223602,
-     "f1": 0.908850613915416,
-     "passages": 644,
+     "precision": 0.8723076923076923,
+     "f1": 0.9213300570703868,
+     "passages": 650,
      "passages_leurres": 29,
      "passages_hors_etiquette": 54,
      "leurres": {
@@ -2487,17 +2485,17 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 9,
-       "partiels": 3,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.75
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 144,
-       "detectes": 136,
-       "partiels": 5,
-       "manques": 3,
-       "rappel": 0.9444444444444444
+       "detectes": 144,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
       },
       "SIREN": {
        "n": 24,
@@ -2526,21 +2524,21 @@
      "documents": 96,
      "direct": {
       "n": 652,
-      "detectes": 649,
-      "partiels": 3,
+      "detectes": 652,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.995398773006135
+      "rappel": 1
      },
      "tous": {
       "n": 875,
-      "detectes": 872,
-      "partiels": 3,
+      "detectes": 875,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9965714285714286
+      "rappel": 1
      },
-     "precision": 0.8168624740843123,
-     "f1": 0.897812488839451,
-     "passages": 1447,
+     "precision": 0.8166089965397924,
+     "f1": 0.899047619047619,
+     "passages": 1445,
      "passages_leurres": 25,
      "passages_hors_etiquette": 240,
      "leurres": {
@@ -2607,10 +2605,10 @@
       },
       "PERSONNE": {
        "n": 260,
-       "detectes": 257,
-       "partiels": 3,
+       "detectes": 260,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9884615384615385
+       "rappel": 1
       },
       "RIB": {
        "n": 80,
@@ -2632,27 +2630,27 @@
      "documents": 36,
      "direct": {
       "n": 204,
-      "detectes": 196,
-      "partiels": 8,
+      "detectes": 204,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9607843137254902
+      "rappel": 1
      },
      "tous": {
       "n": 324,
-      "detectes": 301,
-      "partiels": 8,
+      "detectes": 309,
+      "partiels": 0,
       "manques": 15,
-      "rappel": 0.9290123456790124
+      "rappel": 0.9537037037037037
      },
-     "precision": 0.8125,
-     "f1": 0.8668586619406293,
-     "passages": 528,
-     "passages_leurres": 34,
-     "passages_hors_etiquette": 65,
+     "precision": 0.8236434108527132,
+     "f1": 0.8839148695581939,
+     "passages": 516,
+     "passages_leurres": 27,
+     "passages_hors_etiquette": 64,
      "leurres": {
       "n": 240,
-      "codes": 34,
-      "taux_faux_positifs": 0.14166666666666666
+      "codes": 27,
+      "taux_faux_positifs": 0.1125
      },
      "direct_par_type": {
       "CIN": {
@@ -2678,17 +2676,17 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 5,
-       "partiels": 7,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.4166666666666667
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 96,
-       "detectes": 95,
-       "partiels": 1,
+       "detectes": 96,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9895833333333334
+       "rappel": 1
       },
       "TEL": {
        "n": 48,
@@ -2703,20 +2701,20 @@
      "documents": 84,
      "direct": {
       "n": 599,
-      "detectes": 596,
-      "partiels": 3,
+      "detectes": 599,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.994991652754591
+      "rappel": 1
      },
      "tous": {
       "n": 842,
-      "detectes": 838,
-      "partiels": 3,
+      "detectes": 841,
+      "partiels": 0,
       "manques": 1,
-      "rappel": 0.995249406175772
+      "rappel": 0.998812351543943
      },
      "precision": 0.9550045913682277,
-     "f1": 0.9747117592388587,
+     "f1": 0.9764173507657425,
      "passages": 1089,
      "passages_leurres": 1,
      "passages_hors_etiquette": 48,
@@ -2770,10 +2768,10 @@
       },
       "PERSONNE": {
        "n": 205,
-       "detectes": 202,
-       "partiels": 3,
+       "detectes": 205,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9853658536585366
+       "rappel": 1
       },
       "RC": {
        "n": 41,
@@ -2809,23 +2807,23 @@
      "documents": 36,
      "direct": {
       "n": 228,
-      "detectes": 212,
-      "partiels": 4,
-      "manques": 12,
-      "rappel": 0.9298245614035088
+      "detectes": 228,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
      "tous": {
       "n": 312,
-      "detectes": 296,
-      "partiels": 4,
-      "manques": 12,
-      "rappel": 0.9487179487179487
+      "detectes": 312,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
-     "precision": 0.8403755868544601,
-     "f1": 0.8912663167810523,
-     "passages": 426,
+     "precision": 0.8929440389294404,
+     "f1": 0.9434447300771208,
+     "passages": 411,
      "passages_leurres": 38,
-     "passages_hors_etiquette": 30,
+     "passages_hors_etiquette": 6,
      "leurres": {
       "n": 372,
       "codes": 74,
@@ -2841,10 +2839,10 @@
       },
       "CNSS": {
        "n": 36,
-       "detectes": 24,
+       "detectes": 36,
        "partiels": 0,
-       "manques": 12,
-       "rappel": 0.6666666666666666
+       "manques": 0,
+       "rappel": 1
       },
       "EMAIL": {
        "n": 12,
@@ -2876,10 +2874,10 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 8,
-       "partiels": 4,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.6666666666666666
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 48,
@@ -2924,15 +2922,15 @@
      "libelle": "Nom de personne",
      "direct": true,
      "n": 965,
-     "detectes": 949,
-     "partiels": 13,
-     "manques": 3,
-     "rappel": 0.983419689119171,
-     "passages": 2283,
-     "passages_justes": 1810,
-     "precision": 0.7928164695575997,
-     "f1": 0.8778915148329367,
-     "bien_etiquetes": 943
+     "detectes": 965,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 2342,
+     "passages_justes": 1874,
+     "precision": 0.8001707941929974,
+     "f1": 0.8889943074003795,
+     "bien_etiquetes": 960
     },
     "CIN": {
      "libelle": "CIN marocaine",
@@ -2952,29 +2950,29 @@
      "libelle": "NIR (sécurité sociale, France)",
      "direct": true,
      "n": 40,
-     "detectes": 26,
-     "partiels": 14,
+     "detectes": 40,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.65,
+     "rappel": 1,
      "passages": 0,
      "passages_justes": 0,
      "precision": null,
      "f1": null,
-     "bien_etiquetes": 26
+     "bien_etiquetes": 40
     },
     "CNSS": {
      "libelle": "N° CNSS",
      "direct": true,
      "n": 72,
-     "detectes": 60,
+     "detectes": 72,
      "partiels": 0,
-     "manques": 12,
-     "rappel": 0.8333333333333334,
-     "passages": 81,
-     "passages_justes": 48,
-     "precision": 0.5925925925925926,
-     "f1": 0.6926406926406925,
-     "bien_etiquetes": 48
+     "manques": 0,
+     "rappel": 1,
+     "passages": 72,
+     "passages_justes": 72,
+     "precision": 1,
+     "f1": 1,
+     "bien_etiquetes": 72
     },
     "ICE": {
      "libelle": "ICE",
@@ -3026,10 +3024,10 @@
      "partiels": 0,
      "manques": 0,
      "rappel": 1,
-     "passages": 189,
+     "passages": 177,
      "passages_justes": 24,
-     "precision": 0.12698412698412698,
-     "f1": 0.22535211267605632,
+     "precision": 0.13559322033898305,
+     "f1": 0.23880597014925373,
      "bien_etiquetes": 24
     },
     "SIRET": {
@@ -3208,11 +3206,11 @@
      "partiels": 0,
      "manques": 14,
      "rappel": 0.9239130434782609,
-     "passages": 169,
-     "passages_justes": 169,
+     "passages": 173,
+     "passages_justes": 173,
      "precision": 1,
      "f1": 0.96045197740113,
-     "bien_etiquetes": 150
+     "bien_etiquetes": 154
     },
     "SOCIETE": {
      "libelle": "Société",
@@ -3222,11 +3220,11 @@
      "partiels": 0,
      "manques": 0,
      "rappel": 1,
-     "passages": 420,
-     "passages_justes": 269,
-     "precision": 0.6404761904761904,
-     "f1": 0.7808417997097242,
-     "bien_etiquetes": 269
+     "passages": 430,
+     "passages_justes": 279,
+     "precision": 0.6488372093023256,
+     "f1": 0.7870239774330042,
+     "bien_etiquetes": 279
     },
     "NAISSANCE": {
      "libelle": "Date de naissance",
@@ -3292,10 +3290,10 @@
      "partiels": 0,
      "manques": 0,
      "rappel": 1,
-     "passages": 59,
+     "passages": 24,
      "passages_justes": 24,
-     "precision": 0.4067796610169492,
-     "f1": 0.5783132530120482,
+     "precision": 1,
+     "f1": 1,
      "bien_etiquetes": 24
     },
     "PRATICIEN": {
@@ -3411,31 +3409,26 @@
      "bien_etiquetes": 13
     }
    },
-   "imbriques": {
-    "juridique-fr": 3,
-    "banque-assurance": 1,
-    "sante": 9,
-    "expertise-comptable": 4
-   }
+   "imbriques": {}
   },
   "candidat": {
    "global": {
     "direct": {
      "n": 2523,
-     "detectes": 2481,
-     "partiels": 27,
-     "manques": 15,
-     "rappel": 0.9833531510107015
+     "detectes": 2523,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1
     },
     "tous": {
      "n": 3420,
-     "detectes": 3339,
-     "partiels": 27,
-     "manques": 54,
-     "rappel": 0.9763157894736842
+     "detectes": 3381,
+     "partiels": 0,
+     "manques": 39,
+     "rappel": 0.9885964912280701
     },
-    "precision": 0.8629191321499013,
-    "passages": 5070,
+    "precision": 0.8637795275590551,
+    "passages": 5080,
     "leurres": {
      "n": 3029,
      "codes": 209,
@@ -3447,23 +3440,23 @@
      "documents": 42,
      "direct": {
       "n": 322,
-      "detectes": 321,
-      "partiels": 1,
+      "detectes": 322,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9968944099378882
+      "rappel": 1
      },
      "tous": {
       "n": 378,
-      "detectes": 371,
-      "partiels": 1,
+      "detectes": 372,
+      "partiels": 0,
       "manques": 6,
-      "rappel": 0.9814814814814815
+      "rappel": 0.9841269841269841
      },
-     "precision": 0.9292543021032504,
-     "f1": 0.9546541148564757,
-     "passages": 523,
+     "precision": 0.9346153846153846,
+     "f1": 0.9587323809220784,
+     "passages": 520,
      "passages_leurres": 3,
-     "passages_hors_etiquette": 34,
+     "passages_hors_etiquette": 31,
      "leurres": {
       "n": 141,
       "codes": 3,
@@ -3493,10 +3486,10 @@
       },
       "PERSONNE": {
        "n": 140,
-       "detectes": 139,
-       "partiels": 1,
+       "detectes": 140,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9928571428571429
+       "rappel": 1
       },
       "TEL": {
        "n": 98,
@@ -3589,21 +3582,21 @@
      "documents": 36,
      "direct": {
       "n": 276,
-      "detectes": 265,
-      "partiels": 8,
-      "manques": 3,
-      "rappel": 0.9601449275362319
+      "detectes": 276,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
      "tous": {
       "n": 420,
-      "detectes": 399,
-      "partiels": 8,
-      "manques": 13,
-      "rappel": 0.95
+      "detectes": 410,
+      "partiels": 0,
+      "manques": 10,
+      "rappel": 0.9761904761904762
      },
-     "precision": 0.8707165109034268,
-     "f1": 0.9086320472238858,
-     "passages": 642,
+     "precision": 0.8723076923076923,
+     "f1": 0.9213300570703868,
+     "passages": 650,
      "passages_leurres": 29,
      "passages_hors_etiquette": 54,
      "leurres": {
@@ -3628,17 +3621,17 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 9,
-       "partiels": 3,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.75
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 144,
-       "detectes": 136,
-       "partiels": 5,
-       "manques": 3,
-       "rappel": 0.9444444444444444
+       "detectes": 144,
+       "partiels": 0,
+       "manques": 0,
+       "rappel": 1
       },
       "SIREN": {
        "n": 24,
@@ -3667,21 +3660,21 @@
      "documents": 96,
      "direct": {
       "n": 652,
-      "detectes": 649,
-      "partiels": 3,
+      "detectes": 652,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.995398773006135
+      "rappel": 1
      },
      "tous": {
       "n": 875,
-      "detectes": 872,
-      "partiels": 3,
+      "detectes": 875,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9965714285714286
+      "rappel": 1
      },
-     "precision": 0.8167358229598893,
-     "f1": 0.8977359850794604,
-     "passages": 1446,
+     "precision": 0.8166089965397924,
+     "f1": 0.899047619047619,
+     "passages": 1445,
      "passages_leurres": 25,
      "passages_hors_etiquette": 240,
      "leurres": {
@@ -3748,10 +3741,10 @@
       },
       "PERSONNE": {
        "n": 260,
-       "detectes": 257,
-       "partiels": 3,
+       "detectes": 260,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9884615384615385
+       "rappel": 1
       },
       "RIB": {
        "n": 80,
@@ -3773,21 +3766,21 @@
      "documents": 36,
      "direct": {
       "n": 204,
-      "detectes": 196,
-      "partiels": 8,
+      "detectes": 204,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.9607843137254902
+      "rappel": 1
      },
      "tous": {
       "n": 324,
-      "detectes": 294,
-      "partiels": 8,
+      "detectes": 302,
+      "partiels": 0,
       "manques": 22,
-      "rappel": 0.9074074074074074
+      "rappel": 0.9320987654320988
      },
-     "precision": 0.7398945518453427,
-     "f1": 0.8151338536007112,
-     "passages": 569,
+     "precision": 0.7385159010600707,
+     "f1": 0.8240916034521029,
+     "passages": 566,
      "passages_leurres": 60,
      "passages_hors_etiquette": 88,
      "leurres": {
@@ -3819,17 +3812,17 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 5,
-       "partiels": 7,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.4166666666666667
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 96,
-       "detectes": 95,
-       "partiels": 1,
+       "detectes": 96,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9895833333333334
+       "rappel": 1
       },
       "TEL": {
        "n": 48,
@@ -3844,20 +3837,20 @@
      "documents": 84,
      "direct": {
       "n": 599,
-      "detectes": 596,
-      "partiels": 3,
+      "detectes": 599,
+      "partiels": 0,
       "manques": 0,
-      "rappel": 0.994991652754591
+      "rappel": 1
      },
      "tous": {
       "n": 842,
-      "detectes": 838,
-      "partiels": 3,
+      "detectes": 841,
+      "partiels": 0,
       "manques": 1,
-      "rappel": 0.995249406175772
+      "rappel": 0.998812351543943
      },
      "precision": 0.9550045913682277,
-     "f1": 0.9747117592388587,
+     "f1": 0.9764173507657425,
      "passages": 1089,
      "passages_leurres": 1,
      "passages_hors_etiquette": 48,
@@ -3911,10 +3904,10 @@
       },
       "PERSONNE": {
        "n": 205,
-       "detectes": 202,
-       "partiels": 3,
+       "detectes": 205,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.9853658536585366
+       "rappel": 1
       },
       "RC": {
        "n": 41,
@@ -3950,21 +3943,21 @@
      "documents": 36,
      "direct": {
       "n": 228,
-      "detectes": 212,
-      "partiels": 4,
-      "manques": 12,
-      "rappel": 0.9298245614035088
+      "detectes": 228,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
      "tous": {
       "n": 312,
-      "detectes": 296,
-      "partiels": 4,
-      "manques": 12,
-      "rappel": 0.9487179487179487
+      "detectes": 312,
+      "partiels": 0,
+      "manques": 0,
+      "rappel": 1
      },
-     "precision": 0.8905472636815921,
-     "f1": 0.9187127202108476,
-     "passages": 402,
+     "precision": 0.8929440389294404,
+     "f1": 0.9434447300771208,
+     "passages": 411,
      "passages_leurres": 38,
      "passages_hors_etiquette": 6,
      "leurres": {
@@ -3982,10 +3975,10 @@
       },
       "CNSS": {
        "n": 36,
-       "detectes": 24,
+       "detectes": 36,
        "partiels": 0,
-       "manques": 12,
-       "rappel": 0.6666666666666666
+       "manques": 0,
+       "rappel": 1
       },
       "EMAIL": {
        "n": 12,
@@ -4017,10 +4010,10 @@
       },
       "NIR": {
        "n": 12,
-       "detectes": 8,
-       "partiels": 4,
+       "detectes": 12,
+       "partiels": 0,
        "manques": 0,
-       "rappel": 0.6666666666666666
+       "rappel": 1
       },
       "PERSONNE": {
        "n": 48,
@@ -4065,15 +4058,15 @@
      "libelle": "Nom de personne",
      "direct": true,
      "n": 965,
-     "detectes": 949,
-     "partiels": 13,
-     "manques": 3,
-     "rappel": 0.983419689119171,
-     "passages": 2328,
-     "passages_justes": 1836,
-     "precision": 0.788659793814433,
-     "f1": 0.8753372258109244,
-     "bien_etiquetes": 943
+     "detectes": 965,
+     "partiels": 0,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 2366,
+     "passages_justes": 1874,
+     "precision": 0.7920540997464074,
+     "f1": 0.8839622641509434,
+     "bien_etiquetes": 960
     },
     "CIN": {
      "libelle": "CIN marocaine",
@@ -4093,29 +4086,29 @@
      "libelle": "NIR (sécurité sociale, France)",
      "direct": true,
      "n": 40,
-     "detectes": 26,
-     "partiels": 14,
+     "detectes": 40,
+     "partiels": 0,
      "manques": 0,
-     "rappel": 0.65,
+     "rappel": 1,
      "passages": 0,
      "passages_justes": 0,
      "precision": null,
      "f1": null,
-     "bien_etiquetes": 26
+     "bien_etiquetes": 40
     },
     "CNSS": {
      "libelle": "N° CNSS",
      "direct": true,
      "n": 72,
-     "detectes": 60,
+     "detectes": 72,
      "partiels": 0,
-     "manques": 12,
-     "rappel": 0.8333333333333334,
-     "passages": 24,
-     "passages_justes": 24,
+     "manques": 0,
+     "rappel": 1,
+     "passages": 48,
+     "passages_justes": 48,
      "precision": 1,
-     "f1": 0.9090909090909091,
-     "bien_etiquetes": 24
+     "f1": 1,
+     "bien_etiquetes": 48
     },
     "ICE": {
      "libelle": "ICE",
@@ -4167,10 +4160,10 @@
      "partiels": 0,
      "manques": 0,
      "rappel": 1,
-     "passages": 266,
+     "passages": 254,
      "passages_justes": 24,
-     "precision": 0.09022556390977443,
-     "f1": 0.16551724137931034,
+     "precision": 0.09448818897637795,
+     "f1": 0.1726618705035971,
      "bien_etiquetes": 24
     },
     "SIRET": {

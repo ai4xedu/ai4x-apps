@@ -2,7 +2,7 @@
   "format": "hidden-tokens.pack/1",
   "id": "sante",
   "nom": "Santé — soins, laboratoires, assurance maladie",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Identifiants de patients (n° de dossier / IPP), d'assurés (AMO, CNOPS, CNSS, sécurité sociale) et de praticiens (INPE, RPPS, ADELI) annoncés, n° de lot ; le numéro de sécurité sociale français est déjà reconnu par le moteur. Spécialités, actes, examens, médicaments courants et organismes laissés en clair pour que l'IA travaille sur un compte rendu ou un courrier médical.",
   "regles": [
     {
@@ -10,7 +10,7 @@
       "type": "motif",
       "libelle": "Numéro de dossier patient / IPP annoncé",
       "prefixe": "PATIENT",
-      "motif": "(?<=\\b(?:dossier\\s*(?:patient|m[ée]dical)?|patient|IPP|NIP|NDA)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{3,15}(?![A-Z0-9/-])",
+      "motif": "(?<=\\b(?:dossier(?: patient| m[ée]dical)?|patient|IPP|NIP|NDA)(?!\\p{L})[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)(?![A-Z]{2,}-\\d{3,}(?![A-Z0-9-]))(?=[A-Z/-]*\\d)[A-Z0-9][A-Z0-9/-]{3,15}(?![A-Z0-9/-])",
       "exemple": "IPP : 2026-048812"
     },
     {
@@ -18,7 +18,7 @@
       "type": "motif",
       "libelle": "Numéro d'assuré annoncé (AMO, CNOPS, CNSS, mutuelle)",
       "prefixe": "ASSURE",
-      "motif": "(?<=\\b(?:AMO|CNOPS|CNSS|mutuelle|assur[ée]|immatriculation)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9/-]{5,15}(?![A-Z0-9/-])",
+      "motif": "(?<=\\b(?:AMO|CNOPS|CNSS|mutuelle|assur[ée]e?|immatriculation)(?!\\p{L})[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)(?![A-Z]{2,}-\\d{3,}(?![A-Z0-9-]))(?=[A-Z/-]*\\d)[A-Z0-9][A-Z0-9/-]{5,15}(?![A-Z0-9/-])",
       "exemple": "CNOPS n° 1234567890"
     },
     {
@@ -26,7 +26,7 @@
       "type": "motif",
       "libelle": "Identifiant de praticien annoncé (INPE, RPPS, ADELI)",
       "prefixe": "PRATICIEN",
-      "motif": "(?<=\\b(?:INPE|RPPS|ADELI)\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)\\d{8,11}(?!\\d)",
+      "motif": "(?<=\\b(?:INPE|RPPS|ADELI)(?!\\p{L})[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)\\d{8,11}(?!\\d)",
       "exemple": "RPPS 10001234567"
     },
     {
@@ -34,7 +34,7 @@
       "type": "motif",
       "libelle": "Numéro de lot (médicament, dispositif, prélèvement) annoncé",
       "prefixe": "LOT",
-      "motif": "(?<=\\blot\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)[A-Z0-9][A-Z0-9-]{3,15}(?![A-Z0-9-])",
+      "motif": "(?<=\\blots?(?!\\p{L})[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)(?![A-Z]{2,}-\\d{3,}(?![A-Z0-9-]))(?=[A-Z-]*\\d)[A-Z0-9][A-Z0-9-]{3,15}(?![A-Z0-9-])",
       "exemple": "lot n° B2026-0417"
     },
     {

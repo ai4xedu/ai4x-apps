@@ -82,4 +82,55 @@ Congés payés : {{MESURE:18 jours}} acquis au {{DATE:31/12/2025}}.`,
     note: "Pied de facture marocain : tous les identifiants d'entreprise collés par des tirets",
     texte: `[[SOCIETE|majuscules:ARGANE NÉGOCE SARL]] — Capital {{MONTANT:100 000,00 DH}} — RC Agadir [[RC|rc-nombre:48213]] — IF [[IF|if-nombre:40192837]] — ICE [[ICE|ice-colle:002184937000052]] — Patente [[PATENTE|patente:48120937]] — {{SIGLE:CNSS}} [[CNSS|cnss-affiliation-7:8421937]]`,
   },
+  // v2.28 — un cas par manque corrigé (moteur 2.28.0), avec ses leurres.
+  {
+    id: "core/manuel/nir-cle-tiret",
+    pack: "core",
+    note: "NIR dont la clé est écrite après un tiret (la clé restait en clair), Corse et né à l'étranger",
+    texte: `Assurée : [[PERSONNE|fr-simple:Claire Dumas]], NIR [[NIR|nir-cle-tiret:2 92 06 13 045 318 - 65]] ; conjoint né à l'étranger, NIR [[NIR|nir-cle-tiret:1 63 11 99 213 077 - 24]].
+Remboursement de {{MONTANT:45,00 €}} le {{DATE:12/03/2026}}, pour {{MESURE:12}} séances.`,
+  },
+  {
+    id: "rh-paie/manuel/cnss-employeur",
+    pack: "rh-paie",
+    note: "N° d'affiliation CNSS de l'employeur (7 chiffres) annoncé avec son rôle ou « sous le n° »",
+    texte: `L'employeur est affilié à la {{SIGLE:CNSS}} sous le n° [[CNSS|cnss-affiliation-7:5308817]] ; établissement de Fès : CNSS employeur [[CNSS|cnss-affiliation-7:2046613]].
+Cotisations patronales : {{MONTANT:3 214,60 MAD}} au {{DATE:31/10/2026}}.`,
+  },
+  {
+    id: "expertise-comptable/manuel/rib-par-quatre-luhn",
+    pack: "expertise-comptable",
+    note: "RIB et IBAN par quatre dont les seize premiers chiffres passent Luhn (pris pour une carte, la fin restait en clair)",
+    texte: `Virement fournisseur sur le RIB [[RIB|rib-ma-par-4:0224 5077 0000 0007 0168 4355]] ; filiale de Lyon : IBAN [[IBAN|iban-fr-par-4:FR18 2004 1310 0605 1234 5678 941]].
+Montant : {{MONTANT:18 400,00 MAD}}, compte {{COMPTE:4411}}.`,
+  },
+  {
+    id: "juridique-fr/manuel/noms-particules",
+    pack: "juridique-fr",
+    note: "Patronymes derrière une particule capitalisée (« Le », « de La ») qui sont aussi des mots",
+    texte: `Pour la société, son gérant M. [[PERSONNE|fr-particule|nom-seul:de La Croix]], assisté de Maître [[PERSONNE|fr-particule:Hélène Le Bon]].
+Le témoin, [[PERSONNE|fr-particule:Marc Le Blanc]], confirme ; {{MOT:le blanc}} du formulaire est resté vide.`,
+  },
+  {
+    id: "banque-assurance/manuel/ould-cheikh",
+    pack: "banque-assurance",
+    note: "Noms en Ould et « Cheikh » employé comme prénom ; le cheikh en titre reste lisible",
+    texte: `Bénéficiaire : [[PERSONNE|mag-ould:Brahim Ould Bah]] ; mandataire : [[PERSONNE|mag-el-espace|cheikh-prenom:Cheikh El Fassi]].
+Remise de chèque par [[PERSONNE|mag-simple|cheikh-prenom:Cheikh Diallo]], {{MONTANT:7 500 MAD}}, sur recommandation du {{MOT:cheikh}} de la zaouïa.`,
+  },
+  {
+    id: "sante/manuel/motifs-dans-les-mots",
+    pack: "sante",
+    note: "Les libellés AMO, lot, patient dans un mot (amoxicilline, lotissement) ou devant un nom : rien de recodé, sortie décodable",
+    texte: `Patient : [[PERSONNE|mag-simple:Karim Tahiri]] — IPP [[PATIENT:2026-118204]] — AMO n° [[CNSS|cnss-assure-9:162048813]]
+Traitement : {{PRODUIT:amoxicilline}} {{MESURE:1 g}}, pendant {{MESURE:7 jours}}. Il vit dans un {{MOT:lotissement}} récent.
+Lot n° [[CONTRAT:B2026-0417]] du vaccin.`,
+  },
+  {
+    id: "core/manuel/prenoms-apostrophe",
+    pack: "core",
+    note: "Prénoms à apostrophe (M'hamed, Ma'ati, R'kia) ; les élisions autour restent lisibles",
+    texte: `Reçu de [[PERSONNE|mag-simple|prenom-apostrophe:M'hamed Tazi]] et de [[PERSONNE|mag-simple|prenom-apostrophe:Ma'ati Lahlou]] la somme de {{MONTANT:300 DH}}.
+{{MOT:Aujourd'hui}}, l'avocat d'{{VILLE:Agadir}} a écrit à [[PERSONNE|mag-simple|prenom-apostrophe,prenom-seul:R'kia]].`,
+  },
 ];
