@@ -1276,8 +1276,15 @@ export function strictCode(input, opts = {}) {
         // (« Selon Pierre ») — sauf si c'est lui-même un prénom ou un patronyme.
         // (« Horizon Immobilier », lui, est aspiré en entier : « Horizon » n'est pas un mot d'amorce.)
         const Pj = PW[j];
+        // v2.28.x — et, devant un PRÉNOM, tout mot du dictionnaire en tête de
+        // phrase : « Relance Pierre Durand », « Appelle Karim », « Envoie Salma
+        // le contrat » — un prénom ouvre le nom d'une personne, le mot qui le
+        // précède en tête de phrase est un verbe ou une amorce, pas un patronyme
+        // (vu au premier essai du verrou universel, 23/10/2026 : « Relance »
+        // codé NOM-012, l'IA ne comprenait plus la demande).
         if (dir === -1 && initial[j] && isKnownWord(tj, Pj.en) && !Pj.N.nomColl.has(f[j]) && !Pj.N.prenoms.has(f[j]) &&
-            (Pj.starters.has(f[j]) || COMMON_START.has(f[j]) || Pj.func.has(f[j]) || capSafeOf(Pj, f[j]))) continue;
+            (Pj.starters.has(f[j]) || COMMON_START.has(f[j]) || Pj.func.has(f[j]) || capSafeOf(Pj, f[j]) ||
+             verdict[wi] === "prenom")) continue;
         if (glueable(j, dir === 1 && verdict[wi] === "prenom")) {
           verdict[j] = verdict[wi] === "societe" ? "societe" : "nom";
           changed = true;

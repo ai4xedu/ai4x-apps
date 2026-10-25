@@ -376,3 +376,25 @@ test("les mots de bureau d'un nom de fichier ne sont pas des noms", () => {
   assert.equal(nom("pv-reunion"), "pv-reunion");
   assert.doesNotMatch(nom("memo-benali"), /benali/);
 });
+
+/* Verrou universel, 23/10/2026 : « Relance Pierre Durand… » envoyé à ChatGPT
+   devenait « NOM-012 PRENOM-003 NOM-013 » — le verbe en tête de phrase était
+   aspiré dans le nom, et l'IA ne comprenait plus la demande. Devant un PRÉNOM,
+   un mot du dictionnaire en tête de phrase reste lisible ; le nom, lui, est
+   toujours codé, et une société sans prénom reste aspirée en entier. */
+test("un verbe en tête de phrase devant un prénom n'est pas un patronyme", () => {
+  const cas = [
+    ["Relance Pierre Durand pour la facture.", "Relance", ["Pierre", "Durand"]],
+    ["Appelle Karim Benali demain.", "Appelle", ["Karim", "Benali"]],
+    ["Envoie Salma le contrat.", "Envoie", ["Salma"]],
+    ["Rappelle Leila Paris ce soir.", "Rappelle", ["Leila", "Paris"]],
+  ];
+  for (const [phrase, verbe, noms] of cas) {
+    const out = strictCode(phrase, {}).text;
+    assert.ok(out.startsWith(verbe + " "), `${phrase} → ${out}`);
+    for (const n of noms) assert.ok(!out.includes(n), `${n} en clair : ${out}`);
+  }
+  // Inchangé : une société sans prénom reste un seul nom, un nom avant le prénom reste codé.
+  assert.ok(!strictCode("Horizon Immobilier a signé.", {}).text.includes("Horizon"));
+  assert.ok(!strictCode("Durand Pierre est absent.", {}).text.includes("Durand"));
+});
