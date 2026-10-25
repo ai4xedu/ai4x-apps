@@ -215,3 +215,27 @@ test("une licence à vie falsifiée (drapeau ajouté à une clé datée) est ref
   assert.equal(st.valid, false);
   assert.match(st.reason, /signature invalide/);
 });
+
+/* v2.27 — la caisse en ligne (Polar) : ses licences portent src « polar »,
+   et le renouvellement renvoie vers la page où l'on récupère la nouvelle clé. */
+test("licence vendue en ligne : source « polar », renouvellement par hiddentokens.com/activer", async () => {
+  const { mint } = await import("./licence-test.mjs");
+  const { ACTIVATION_URL, publicKeys } = await import("../server/licence.js");
+  const cle = mint({ v: 1, org: "Cabinet en ligne", seats: 3, iat: "2026-10-25", exp: "2027-10-25", id: "ab12cd34", src: "polar" });
+  const bientot = licenceStatus(cle, new Date("2027-10-10T10:00:00"));
+  assert.equal(bientot.valid, true);
+  assert.equal(bientot.source, "polar");
+  assert.equal(bientot.seats, 3);
+  assert.match(warningBanner(bientot), new RegExp(ACTIVATION_URL.replace(/[.]/g, "\\.")));
+  assert.match(warningBanner(bientot), /se renouvelle tout seul/);
+  const grace = licenceStatus(cle, new Date("2027-11-01T10:00:00"));
+  assert.match(warningBanner(grace), /^⏳ .*Votre abonnement en ligne se renouvelle tout seul/);
+  // Une licence émise à la main garde le renouvellement par commande.
+  const main = licenceStatus(mint({ v: 1, org: "X", seats: 1, iat: "2026-10-25", exp: "2027-10-25", id: "ef56ab78" }), new Date("2027-10-10T10:00:00"));
+  assert.equal(main.source, "");
+  assert.doesNotMatch(warningBanner(main), /se renouvelle tout seul/);
+  // La clé publique de la caisse fait partie des clés de confiance, à côté de la maîtresse.
+  const der = publicKeys().map((k) => k.export({ format: "der", type: "spki" }).toString("base64"));
+  assert.ok(der.includes("MCowBQYDK2VwAyEA6lNO1wNtFUg7ul6KmGbDoki50F6rJrtI+BHCEUfZ0cc="), "clé de caisse absente");
+  assert.ok(der.includes("MCowBQYDK2VwAyEA2ecQy6JVQUtn9e+yrbuzQf7I9dcplI8T6dr2fiWTovY="), "clé maîtresse absente");
+});

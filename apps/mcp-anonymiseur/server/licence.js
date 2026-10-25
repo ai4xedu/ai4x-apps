@@ -38,6 +38,18 @@ import { fileURLToPath } from "node:url";
    n'importe qui le peut. */
 const PUBLIC_KEY_B64 = "MCowBQYDK2VwAyEA2ecQy6JVQUtn9e+yrbuzQf7I9dcplI8T6dr2fiWTovY=";
 
+/* v2.27 — Clé publique de la CAISSE : celle qui signe les licences vendues EN
+   LIGNE (paiement Polar sur hiddentokens.com, fonction /api/licence). Sa
+   jumelle privée vit sur le serveur du site, pas sur le poste du fondateur :
+   c'est une clé DISTINCTE de la clé maîtresse pour qu'une fuite côté serveur
+   se répare en publiant un connecteur qui retire cette ligne, sans toucher
+   aux licences émises à la main. Les licences qu'elle signe portent
+   « src: "polar" ». */
+const CAISSE_PUBLIC_KEY_B64 = "MCowBQYDK2VwAyEA6lNO1wNtFUg7ul6KmGbDoki50F6rJrtI+BHCEUfZ0cc=";
+
+/* Où récupérer la clé d'un abonnement payé en ligne, après un renouvellement. */
+export const ACTIVATION_URL = "https://hiddentokens.com/activer";
+
 export const WARN_DAYS = 30;
 
 /* Offre en vigueur (décision du 21/10/2026, qui remplace la licence à vie du
@@ -115,7 +127,7 @@ let trusted;
    (sceau.js), avec une séparation de domaine. */
 export function publicKeys() {
   if (trusted) return trusted;
-  trusted = [spki(PUBLIC_KEY_B64)];
+  trusted = [spki(PUBLIC_KEY_B64), spki(CAISSE_PUBLIC_KEY_B64)];
   try { trusted.push(spki(fs.readFileSync(TEST_PUBLIC_KEY_FILE, "utf8").trim())); } catch {}
   return trusted;
 }
@@ -192,7 +204,17 @@ export function licenceStatus(raw, now = new Date()) {
     daysLeft: days,
     expiringSoon: days >= 0 && days <= WARN_DAYS,
     id: p.id || "",
+    // « polar » : abonnement payé en ligne, renouvelé automatiquement — la
+    // nouvelle clé se récupère sur ACTIVATION_URL, sans écrire à personne.
+    source: p.src === "polar" ? "polar" : "",
   };
+}
+
+/* La phrase de renouvellement, selon la façon dont l'abonnement a été payé. */
+function renouveler(status) {
+  return status.source === "polar"
+    ? `votre abonnement en ligne se renouvelle tout seul : récupérez la nouvelle clé sur ${ACTIVATION_URL}`
+    : `renouvelez l'abonnement (${OFFER.orderUrl}, ou WhatsApp ${OFFER.whatsappDisplay})`;
 }
 
 /* Où l'utilisateur peut poser sa clé :
@@ -264,11 +286,11 @@ export function warningBanner(status) {
   }
   if (status.valid && status.grace) {
     return `⏳ Licence ${status.holder} : échue le ${status.expiresAt}, délai de grâce de ${status.graceLeft} jour(s). ` +
-      `Renouvelez l'abonnement (${OFFER.orderUrl}) — ensuite, l'anonymisation s'arrêtera, mais la dé-anonymisation ` +
+      `${renouveler(status).replace(/^./, (c) => c.toUpperCase())} — ensuite, l'anonymisation s'arrêtera, mais la dé-anonymisation ` +
       "continuera de fonctionner.";
   }
   if (!status.valid || status.lifetime || !status.expiringSoon) return "";
   return `⏳ Licence ${status.holder} : ${status.daysLeft} jour(s) restant(s) (expire le ${status.expiresAt}). ` +
-    `Pensez au renouvellement de l'abonnement (${OFFER.orderUrl}, ou WhatsApp ${OFFER.whatsappDisplay}) — à ` +
+    `Pensez au renouvellement : ${renouveler(status)} — à ` +
     "l'échéance, l'anonymisation s'arrêtera, mais la dé-anonymisation continuera de fonctionner.";
 }
