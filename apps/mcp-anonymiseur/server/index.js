@@ -77,7 +77,7 @@ import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } fro
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.25.0";
+export const VERSION = "2.26.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -1144,8 +1144,8 @@ const generaliserSchema = z.boolean().optional()
 function languageWarning(original, coded) {
   const r = codedRatio(original, coded);
   return r > 0.35
-    ? `⚠️ ${Math.round(r * 100)} % des mots sont codés : ce texte n'est probablement pas en français courant (le verrou ` +
-      "code tout mot qu'il ne connaît pas). La protection reste entière, mais le texte codé sera peu exploitable."
+    ? `⚠️ ${Math.round(r * 100)} % des mots sont codés : ce texte n'est probablement ni en français ni en anglais courants (le ` +
+      "verrou code tout mot qu'il ne connaît pas). La protection reste entière, mais le texte codé sera peu exploitable."
     : "";
 }
 

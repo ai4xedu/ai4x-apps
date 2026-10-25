@@ -13,6 +13,18 @@
     c'est aussi un mot (Jacques, Marine, Aurore…).
   Régénération : `node scripts/generer-noms.mjs <dossier des fichiers INSEE>` (mode
   d'emploi en tête du script).
+- `en.json.gz` (v2.26, mode anglais du verrou) — régénération :
+  `node scripts/generer-anglais.mjs <scowl/final> <dossier du Census>` (mode
+  d'emploi en tête du script) :
+  - les 63 535 mots anglais courants de **SCOWL** 2020.12.07 (Kevin Atkinson),
+    tailles 10 à 50, listes english / american / british-words, minuscules
+    seulement (ni noms propres ni mots à majuscule), chacun avec sa taille —
+    licence permissive, cf. `LICENCE-scowl.txt` ;
+  - **U.S. Census Bureau**, domaine public : les patronymes du recensement 2010
+    portés par au moins 10 000 personnes ET qui sont des mots anglais ou
+    français (Smith, Baker, Carter… — 757 noms), et les prénoms du recensement
+    1990 portés par au moins 0,010 % de la population (1 555 prénoms : Mark,
+    Grace, Will…).
 - `pseudonymes.json` — listes composées à la main pour le rendu lisible
   (v2.23, `server/pseudonymes.js`) : prénoms par genre et aire culturelle
   (FR / MA / EN), patronymes par aire, amorces et suites de raisons sociales,

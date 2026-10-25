@@ -103,9 +103,15 @@ test("idempotence : un texte codé repassé au verrou n'a plus rien à coder (ba
   assert.equal(strictCode(once, { mask: true }).replaced, 0, once);
 });
 
-test("texte non français : codé presque entièrement, et on le mesure pour le dire", () => {
-  const s = "The Supplier shall indemnify the Customer against all losses arising from any breach.";
+test("texte ni français ni anglais : codé presque entièrement, et on le mesure pour le dire", () => {
+  const s = "Der Lieferant muss den Kunden gegen alle Verluste aus jeder Vertragsverletzung schadlos halten.";
   assert.ok(codedRatio(s, code(s)) > 0.35);
+});
+
+test("v2.26 — un texte anglais reste lisible : mots courants en clair, termes définis aussi", () => {
+  const s = "The Supplier shall indemnify the Customer against all losses arising from any breach.";
+  assert.equal(code(s), s);
+  assert.ok(codedRatio(s, code(s)) < 0.1);
 });
 
 test("mots inconnus en minuscules : codés (fail-closed)", () => {
