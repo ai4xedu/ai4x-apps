@@ -103,6 +103,11 @@ test("un texte français n'est pas touché par le mode anglais ; un paragraphe a
   for (const v of ["Dupont", "Karim", "Benali", "benali"]) assert.ok(!out.includes(v), out);
   // Un mot anglais dans une phrase française reste traité comme avant (inconnu : codé).
   assert.match(strictCode("Le livrable est prêt, mais le founder doit valider.", { book: newCodebook() }).text, /le (?:CODE|NOM)-\d{3} doit/);
+  // L'orthographe rectifiée (1990) : « plateforme » est un mot (vu le 25/10/2026,
+  // « la CODE-002 d'apprentissage »). OVH et Scaleway, des noms propres, restent codés.
+  const pf = strictCode("La plateforme d’apprentissage quitte OVH (Roubaix) pour Scaleway (Paris) ; les plateformes et le weekend aussi.", { book: newCodebook() }).text;
+  assert.match(pf, /^La plateforme d’apprentissage quitte [A-Z]+-\d{3} \(/, pf);
+  assert.ok(pf.includes("les plateformes et le weekend aussi") && !pf.includes("OVH") && !pf.includes("Scaleway"), pf);
   const mixte = "Le client a envoyé ce message, que nous devons traduire pour le dossier.\n\n" +
     "We are happy with the results and we will sign the renewal next week.";
   const m = strictCode(mixte, { book: newCodebook() }).text;

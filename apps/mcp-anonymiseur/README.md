@@ -116,6 +116,9 @@ tous des données sensibles. Un dossier numéroté d'un chemin (`1_MEMORY/30_WOR
 reste lisible quand c'est un mot (`30_BENALI` reste codé), et `MEMORY/30` n'est
 plus pris pour un n° de dossier. Une clé tenue avant la v2.26 n'impose plus,
 dans un texte anglais, les mots courants que l'ancien verrou y avait codés.
+En français, l'orthographe rectifiée de 1990 est reconnue : « plateforme »,
+« weekend », « portemonnaie » (le dictionnaire ne les avait qu'avec un trait
+d'union) ne sont plus codés comme des mots inconnus.
 Limites : un intitulé en Title Case (« Legal Entity And Brand ») garde ses
 mots capitalisés codés (fail-closed), et les cellules courtes d'un tableau,
 trop brèves pour qu'on juge de leur langue, restent traitées en français.

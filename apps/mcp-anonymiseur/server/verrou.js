@@ -390,6 +390,7 @@ ont mais ou par se sa son ses leur leurs ete etre avoir etait sera aussi tres
 /* ---------------------------------------------------------------- lexique - */
 
 let LEX = null;
+const SOLDER_STOP = new Set(words("je tu il elle on nous vous ils elles t moi toi lui le la les leur leurs y en ce"));
 let PROVIDED = null;
 
 /* Pour l'appli web (paquet navigateur, cf. scripts/build-web-verrou.mjs) : le
@@ -420,6 +421,24 @@ export function lexicon() {
   }
   const set = new Set();
   for (const w of raw.split("\n")) if (w) set.add(fold(w));
+  // v2.26 — l'orthographe rectifiée (1990) soude des composés que le
+  // dictionnaire n'a qu'avec un trait d'union : « plateforme » (plate-forme),
+  // « weekend », « portemonnaie ». Vu le 25/10/2026 : « la plateforme
+  // d'apprentissage » sortait « la CODE-002 d'apprentissage ». La forme soudée
+  // compte comme un mot — sauf un verbe suivi de son pronom (« a-t-elle »,
+  // « est-elle » ne donnent ni « atelle » ni « estelle »). Le pluriel soudé
+  // prend un s final (« plateformes », là où le dictionnaire dit « plates-formes »).
+  const joined = [];
+  for (const w of set) {
+    if (!w.includes("-")) continue;
+    const parts = w.split("-");
+    if (parts.every((p) => /^\p{L}+$/u.test(p)) && !parts.some((p) => SOLDER_STOP.has(p))) {
+      const j = parts.join("");
+      joined.push(j);
+      if (!/[sxz]$/.test(j)) joined.push(j + "s");
+    }
+  }
+  for (const w of joined) set.add(w);
   for (const w of EXTRA_SET) set.add(w);
   LEX = set;
   return LEX;
