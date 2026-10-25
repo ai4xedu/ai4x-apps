@@ -3,7 +3,7 @@
  "version_jeu": "0.2.0",
  "split": "dev",
  "jeu_sha256": "a21f6f11d5f7a115b22d1558bf70dbb260be72c59df5424d6ca7dd40e2267714",
- "version_moteur": "2.25.0",
+ "version_moteur": "2.26.0",
  "chemin": "anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte",
  "documents": 376,
  "global": {

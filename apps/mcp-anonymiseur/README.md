@@ -26,7 +26,8 @@ elle tient en trois verrous empilés, chacun suffisant pour ce qu'il couvre :
    aperçu que ce qui est PROUVÉ inoffensif — codes, nombres, mots du
    dictionnaire français courant (`lexique/fr.txt.gz`, 336 000 formes, MIT),
    liste blanche (institutions, pays, villes de juridiction, intitulés
-   d'actes). Tout le reste est codé : noms propres (même au fil d'une phrase,
+   d'actes) — et, dans un paragraphe en anglais (v2.26), les mots anglais
+   courants (`lexique/en.json.gz`, SCOWL). Tout le reste est codé : noms propres (même au fil d'une phrase,
    même derrière « Maître »), mots inconnus, références, identifiants. Les
    termes définis des contrats (« le Prestataire ») restent lisibles grâce au
    déterminant. Les noms qui sont AUSSI des mots (Moulin, Robin, Jacques,
@@ -96,6 +97,28 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v2.26.0 (le verrou lit l'anglais, 25/10/2026). Une note rédigée en anglais
+sortait en bouillie : le verrou ne connaissait que le français, si bien que
+« and », « the », « this », « legal », « Founder », « Morocco » étaient des
+mots inconnus, donc codés (mesuré sur le jumeau d'un coffre 4XOS : « In
+NOM-1056, CODE-837 CODE-1158 CODE-834… »), comme le dossier `30_WORK` d'un
+chemin. Désormais un paragraphe manifestement anglais (ses mots-outils le
+disent ; un texte français n'est pas touché) passe au verrou avec, en plus du
+français : 63 500 mots anglais courants (SCOWL), les patronymes américains qui
+sont aussi des mots (Smith, Baker, Brown — Census 2010) et les prénoms (Mark,
+Grace — Census 1990), les mots-outils, pays, langues, jours et mois anglais,
+et « Mr », « Dear », « our client », « From: ». Les règles ne changent pas :
+un nom derrière un titre ou un prénom, un mot capitalisé au fil d'une phrase,
+« the Smith account » restent codés ; un e-mail, un +212, un ICE, un RIB, une
+adresse aussi. Sur la note de test (fictive), 152 codes avant, 14 après —
+tous des données sensibles. Un dossier numéroté d'un chemin (`1_MEMORY/30_WORK`)
+reste lisible quand c'est un mot (`30_BENALI` reste codé), et `MEMORY/30` n'est
+plus pris pour un n° de dossier. Une clé tenue avant la v2.26 n'impose plus,
+dans un texte anglais, les mots courants que l'ancien verrou y avait codés.
+Limites : un intitulé en Title Case (« Legal Entity And Brand ») garde ses
+mots capitalisés codés (fail-closed), et les cellules courtes d'un tableau,
+trop brèves pour qu'on juge de leur langue, restent traitées en français.
 
 v2.25.0 (finance marocaine et packs par défaut, 24/10/2026). Un dossier qui n'a
 pas choisi ses packs reçoit d'office `telecom-ma`, `juridique-fr`, `rh-paie`,
@@ -546,8 +569,8 @@ illisible n'est plus jamais écrasée par une clé vierge (avant : JSON corrompu
 clé repartie de zéro, correspondances perdues) ; écriture atomique +
 sauvegarde `cle-de-session.sauvegarde.json` ; droits 600 sur la clé ; licence
 **à vie** (voir plus bas). Le dictionnaire pèse 0,8 Mo (bundle 24 Mo).
-Limite assumée : un texte qui n'est pas en français courant (anglais, arabe)
-est codé presque entièrement — la protection tient, l'utilité baisse, et le
+Limite assumée : un texte qui n'est pas en français courant (arabe ; l'anglais
+depuis la v2.26 est lu) est codé presque entièrement — la protection tient, l'utilité baisse, et le
 plan le DIT (« X % des mots sont codés »).
 
 v1.5.0 (OCR des scans) : Tesseract embarqué (`tessdata/fra.traineddata`,

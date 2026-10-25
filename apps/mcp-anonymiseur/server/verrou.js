@@ -34,6 +34,20 @@
 // Sur-coder est réversible et inoffensif ; sous-coder est une fuite
 // définitive. Dans le doute, on code.
 //
+// v2.26 — LE MODE ANGLAIS. Un verrou qui ne connaît que le français code
+// tout l'anglais : mesuré le 25/10/2026 sur le jumeau d'un coffre de notes
+// (4XOS), « and », « the », « this », « legal », « Founder », « Morocco »
+// devenaient des codes, et une note en anglais arrivait chez Claude en
+// bouillie. Un paragraphe (ou un texte) qui est manifestement de l'anglais —
+// ses mots-outils le disent, cf. englishBlocks() — passe au verrou avec, EN
+// PLUS du français : les mots anglais courants (SCOWL, lexique/en.json.gz),
+// les patronymes américains qui sont aussi des mots (Census 2010 : Smith,
+// Baker…) et les prénoms (Census 1990 : Mark, Grace…), et les mots-outils,
+// pays, langues, jours et mois anglais. Les mêmes règles s'appliquent : un
+// mot capitalisé au fil d'une phrase reste codé, un nom derrière « Mr » ou
+// un prénom aussi. Un texte français n'est pas touché : sans assez de
+// mots-outils anglais, rien ne change.
+//
 // Ce module ne décide PAS de ce qui sort vers le modèle : c'est le rôle de
 // sortie.js (le verrou de sortie, dernier filet sur chaque réponse d'outil).
 // ============================================================================
@@ -46,6 +60,7 @@ import { TYPES, codeFor, codeDocumentText, newCodebook, normFor, HEADING_WORDS, 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const LEXICON_FILE = path.join(here, "..", "lexique", "fr.txt.gz");
 export const NAMES_FILE = path.join(here, "..", "lexique", "noms.json.gz");
+export const ENGLISH_FILE = path.join(here, "..", "lexique", "en.json.gz");
 
 /* ---------------------------------------------------------------- listes -- */
 
@@ -274,6 +289,104 @@ export const LEGAL_FORMS_SRC =
   "S\\.?A\\.?R\\.?L\\.?(?:\\s*A\\.?U\\.?)?|SARLAU|SASU|S\\.A\\.S\\.?|SAS|SNC|GIE|SCI|SCP|SELARL|SELAS|EURL|" +
   "S\\.A\\.|SA|Inc\\.?|Ltd\\.?|LLC|GmbH|SpA|BV|NV|AG|PLC";
 
+/* ------------------------------------------------- listes anglaises (v2.26) */
+
+/* Mots-outils anglais : jamais des noms, même capitalisés au fil d'une phrase
+   (« Legal Entity And Brand »). Ni « will » ni « may » : ce sont aussi des
+   prénoms (Will, May), qui restent codés capitalisés. */
+const EN_FUNCTION_WORDS = new Set(words(`
+the a an and or nor of to in on at by for from with without within into onto upon over under about above below
+between among through throughout during before after since until till while as than then that this these those
+there here where when what which who whom whose why how if whether because although though unless whereas
+is are was were be been being am do does did done doing have has had having shall should would could can cannot
+might must ought not no yes it its itself they them their theirs themselves we us our ours ourselves you your
+yours yourself yourselves he him his himself she her hers herself i me my mine myself one some any all each every
+both either neither other another such own same more most much many few less least very too also just only even
+again already ever never always often per via so yet but however therefore thus hence
+`));
+
+/* Déterminants : « the Client », « our Founder » sont des termes, pas des
+   personnes — sauf un prénom ou un patronyme connu (« the Smith account »). */
+const EN_DETERMINERS = new Set(words(`
+the a an this that these those my your his her its our their each every any some no another other such either
+neither whose both all
+`));
+
+/* Mots anglais absents de SCOWL : morceaux de contractions (« isn't »,
+   « we'll »), abréviations du métier. */
+const EN_EXTRA = words(`
+isn aren wasn weren doesn didn hasn haven hadn couldn wouldn shouldn mustn needn ain shan mightn ll ve re d s t m o
+eg ie etc vs approx asap fyi aka faq diy hr pr qa ux ui seo okr okrs kpi kpis ceo cto cfo coo cmo cpo vp svp evp
+hq llc ltd inc corp plc co jr sr am pm uk us usa eu uae gdpr ai ml llm llms gpt saas api apis sdk url urls pdf
+csv md txt json yaml html faq faqs roi b2b b2c crm erp sme smes ngo ngos onboarding offboarding workflow workflows
+dataset datasets email emails e-mail ok
+`);
+
+/* Mots qui portent une majuscule en anglais sans être des noms de personne :
+   pays, nationalités, langues, villes, jours, mois, outils. Un « John
+   French » reste codé par le prénom. */
+const EN_CAP_SAFE = words(`
+morocco moroccan moroccans france french britain british england english scotland scottish wales welsh ireland
+irish europe european europeans america american americans canada canadian spain spanish italy italian germany
+german portugal portuguese belgium belgian switzerland swiss netherlands dutch africa african asia asian china
+chinese japan japanese india indian arab arabs arabic arabia saudi emirates qatar egypt egyptian tunisia
+tunisian algeria algerian senegal senegalese mauritania nigeria kenya brazil mexico russia russian turkey turkish
+ukraine lebanon latin hebrew amazigh berber darija tamazight
+london york brussels geneva lisbon madrid rome berlin amsterdam dubai doha riyadh cairo algiers lagos nairobi
+new monday tuesday wednesday thursday friday saturday sunday
+january february march july september october november december
+christmas easter ramadan eid
+government ministry parliament congress senate council commission court supreme university internet web
+google microsoft apple amazon openai anthropic linkedin whatsapp youtube excel powerpoint outlook gmail zoom
+slack notion github chatgpt iphone android windows macos markdown
+`);
+
+/* Mois qui sont aussi des prénoms : la règle du mois français (« Avril
+   2024 » en clair, « Avril » seul codé) vaut pour eux. */
+const EN_MONTHS = words("april may june august jan feb mar apr jun jul aug sep sept oct nov dec");
+
+/* Titres, rôles, libellés et déclencheurs anglais : mêmes règles que leurs
+   équivalents français (« Mr Carter », « our client Atlas », « From: … »). */
+const EN_HONORIFIC_WORDS = words("sir lord lady dame madam mister miss mrs ms prof");
+const EN_ROLE_TITLES = words(`
+director manager ceo cto cfo coo founder cofounder co-founder partner lawyer attorney solicitor barrister counsel
+judge notary accountant auditor consultant adviser advisor officer chairman chairwoman chairperson president
+secretary treasurer colleague client customer supplier vendor contractor employee intern engineer developer
+analyst broker banker doctor nurse professor student witness tenant landlord owner buyer seller investor
+shareholder
+`);
+const EN_PERSON_LABELS = words(`
+name names contact client customer to from cc bcc attn attention author owner founder director manager signed
+signatory witness tenant landlord buyer seller employee applicant candidate recipient sender
+`);
+const EN_COMPANY_TRIGGERS = words("company firm group bank agency studio laboratory clinic hotel restaurant foundation association holding holdings corporation");
+
+/* Mots qui ouvrent une phrase devant un nom sans en faire partie
+   (« Dear John », « Call John Carter ») : jamais aspirés par le nom. */
+const EN_STARTERS = words(`
+dear hi hello hey thanks thank regards cheers according regarding re subject see per with from to about after
+before since when while if call email mail ask meet tell send remind invite ping text contact follow check met
+spoke talked told called emailed sent asked invited introduce introduced update updated note notes yesterday
+today tomorrow
+`);
+
+const EN_EXTRA_SET = new Set(EN_EXTRA.map(fold));
+const EN_MODALS = new Set(words("will would may might can could shall should must"));
+
+const EN_ABBREV = words("mr mrs ms dr prof st jr sr inc ltd co corp vs etc eg ie approx no fig vol dept est");
+
+/* Repérage de la langue : des mots-outils sans ambiguïté (ni « on », ni
+   « a », ni « but », qui sont aussi français). */
+const EN_MARKERS = new Set(words(`
+the and of to is are was were that this with for from we you they it its our their have has had be been will
+would can could should not which who what there these those into about after before because than then them
+your his him she he if when where while been being does did
+`));
+const FR_MARKERS = new Set(words(`
+le la les des et est sont que qui pour dans une un du au aux sur pas avec ce cette il elle nous vous ils elles
+ont mais ou par se sa son ses leur leurs ete etre avoir etait sera aussi tres
+`));
+
 /* ---------------------------------------------------------------- lexique - */
 
 let LEX = null;
@@ -283,10 +396,14 @@ let PROVIDED = null;
    dictionnaire et les listes de noms arrivent DÉJÀ décompressés, embarqués
    dans le fichier de l'appli — pas de disque, pas de réseau. Le connecteur,
    lui, ne l'appelle jamais : il lit lexique/ sur le disque. */
-export function fournirLexique({ mots, noms }) {
-  PROVIDED = { mots: String(mots), noms: typeof noms === "string" ? JSON.parse(noms) : noms };
+export function fournirLexique({ mots, noms, anglais }) {
+  PROVIDED = { mots: String(mots), noms: typeof noms === "string" ? JSON.parse(noms) : noms,
+    anglais: anglais == null ? null : typeof anglais === "string" ? JSON.parse(anglais) : anglais };
   LEX = null;
   NAMES = null;
+  EN = undefined;
+  NAMES_EN = null;
+  PROFILES = null;
 }
 
 /* Chargé une fois (~130 ms). S'il manque, on REFUSE de travailler : un
@@ -313,13 +430,47 @@ export function lexiconSize() {
 }
 
 /* Mot du dictionnaire (insensible aux accents et à la casse). Un mot composé
-   est connu si toutes ses parties le sont (« sous-traitant », « a-t-il »). */
-export function isKnownWord(word) {
+   est connu si toutes ses parties le sont (« sous-traitant », « a-t-il »).
+   `en` : le dictionnaire anglais compte aussi (mode anglais, v2.26). */
+export function isKnownWord(word, en = false) {
   const L = lexicon();
+  const E = en ? english() : null;
+  const has = (p) => L.has(p) || (E !== null && E.level.has(p));
   const f = fold(word);
-  if (L.has(f)) return true;
-  if (f.includes("-")) return f.split("-").every((p) => p && (L.has(p) || /^\d+$/.test(p)));
+  if (has(f)) return true;
+  if (f.includes("-")) return f.split("-").every((p) => p && (has(p) || /^\d+$/.test(p)));
   return false;
+}
+
+/* v2.26 — dictionnaire anglais (lexique/en.json.gz, cf. SOURCES.md) : chaque
+   mot avec sa taille SCOWL (10 = parmi les mille plus courants … 50), plus
+   les listes de noms du Census. Contrairement au français, son absence ne
+   bloque rien : sans lui, l'anglais est traité comme avant (sur-codé, jamais
+   sous-codé). Renvoie null s'il manque. */
+let EN;
+export function english() {
+  if (EN !== undefined) return EN;
+  let data = null;
+  try {
+    data = PROVIDED ? PROVIDED.anglais : JSON.parse(zlib.gunzipSync(fs.readFileSync(ENGLISH_FILE)).toString("utf8"));
+  } catch { data = null; }
+  if (!data || !data.mots) { EN = null; return EN; }
+  const level = new Map();
+  for (const [t, list] of Object.entries(data.mots)) for (const w of String(list).split(" ")) if (w) level.set(w, +t);
+  for (const w of EN_EXTRA) if (!level.has(fold(w))) level.set(fold(w), 50);
+  for (const w of EN_FUNCTION_WORDS) level.set(w, 10);
+  EN = { level, prenoms: Object.keys(data.prenoms || {}), nomsCollisions: data.nomsCollisions || {} };
+  return EN;
+}
+
+/* Un mot anglais COURANT (SCOWL ≤ 35 : les ~40 000 mots les plus usuels) :
+   en minuscules, jamais pris pour un nom (« we will call », « John Carter
+   said »), même quand c'est aussi un prénom ou un patronyme. Un mot plus
+   rare (« john ») garde les règles du français. */
+function commonEnglish(x) {
+  const E = english();
+  const t = E && E.level.get(x);
+  return t !== undefined && t <= 35;
 }
 
 let NAMES = null;
@@ -349,6 +500,95 @@ export function names() {
   const prenomColl = new Set([...prenoms].filter((p) => L.has(p)));
   NAMES = { prenoms, prenomColl, nomColl, nomHigh, capSafe };
   return NAMES;
+}
+
+/* v2.26 — les listes du mode anglais : celles du français, PLUS les prénoms
+   et les patronymes-mots du Census. Un patronyme porté par ≥ 25 000
+   Américains est codé même en tête de phrase (« Smith called »), sauf s'il
+   est parmi les mots les plus courants de la langue (SCOWL 10 : « Brown »,
+   « Price », « Best regards ») — la règle de COMMON_START, en anglais.
+   null sans dictionnaire anglais. */
+let NAMES_EN = null;
+export function namesEn() {
+  if (NAMES_EN) return NAMES_EN;
+  const E = english();
+  if (!E) return null;
+  const F = names();
+  const prenoms = new Set([...F.prenoms, ...E.prenoms]);
+  const nomColl = new Set(F.nomColl);
+  const nomHigh = new Set(F.nomHigh);
+  for (const [k, n] of Object.entries(E.nomsCollisions)) {
+    nomColl.add(k);
+    if (n >= 25000 && (E.level.get(k) || 99) > 10) nomHigh.add(k);
+  }
+  const capSafe = new Set([...F.capSafe, ...EN_CAP_SAFE]);
+  for (const w of [...EN_FUNCTION_WORDS, ...EN_CAP_SAFE, ...EN_DETERMINERS, ...EN_HONORIFIC_WORDS, ...EN_ROLE_TITLES,
+    ...EN_STARTERS]) { prenoms.delete(w); nomColl.delete(w); nomHigh.delete(w); }
+  const L = lexicon();
+  const prenomColl = new Set([...prenoms].filter((p) => L.has(p) || E.level.has(p)));
+  NAMES_EN = { prenoms, prenomColl, nomColl, nomHigh, capSafe };
+  return NAMES_EN;
+}
+
+/* Les jeux de mots d'une langue, pour le mot à mot de strictCode : en mode
+   anglais, chaque liste française est complétée de son équivalent anglais. */
+const union = (a, b) => new Set([...a, ...b]);
+let PROFILES = null;
+function profile(en) {
+  if (!PROFILES) {
+    const fr = { en: false, N: names(), det: DETERMINERS, func: FUNCTION_WORDS, starters: STARTERS, months: MONTHS,
+      honorWords: HONORIFIC_WORDS, roles: ROLE_TITLES, labels: PERSON_LABELS, company: COMPANY_TRIGGERS, abbrev: ABBREV };
+    const NE = namesEn();
+    PROFILES = {
+      fr,
+      en: !NE ? fr : {
+        en: true, N: NE, det: union(DETERMINERS, EN_DETERMINERS), func: union(FUNCTION_WORDS, EN_FUNCTION_WORDS),
+        starters: union(STARTERS, EN_STARTERS), months: union(MONTHS, EN_MONTHS),
+        honorWords: union(HONORIFIC_WORDS, EN_HONORIFIC_WORDS), roles: union(ROLE_TITLES, EN_ROLE_TITLES),
+        labels: union(PERSON_LABELS, EN_PERSON_LABELS), company: union(COMPANY_TRIGGERS, EN_COMPANY_TRIGGERS),
+        abbrev: union(ABBREV, EN_ABBREV),
+      },
+    };
+  }
+  return en ? PROFILES.en : PROFILES.fr;
+}
+
+/* Le texte est-il de l'anglais ? On compte les mots-outils sans ambiguïté :
+   au moins trois anglais, et deux fois plus que de français. */
+function markerCounts(s) {
+  let en = 0, fr = 0;
+  for (const m of String(s).matchAll(/\p{L}+/gu)) {
+    const w = fold(m[0]);
+    if (EN_MARKERS.has(w)) en++;
+    else if (FR_MARKERS.has(w)) fr++;
+  }
+  return { en, fr };
+}
+const englishByCounts = ({ en, fr }) => en >= 3 && en >= 2 * fr;
+export function isEnglishText(s) {
+  return english() !== null && englishByCounts(markerCounts(s));
+}
+
+/* Langue de chaque paragraphe (blocs séparés par une ligne vide) : un
+   paragraphe assez long pour en juger (≥ 3 mots-outils) a la sienne ; un
+   titre, une ligne « Founder: … », prend celle du texte entier. Renvoie
+   (position) → vrai si anglais. */
+export function englishBlocks(text) {
+  if (english() === null) return () => false;
+  const whole = englishByCounts(markerCounts(text));
+  const blocks = [];
+  const rx = /\n[ \t]*\n/g;
+  let last = 0, m;
+  const push = (a, b) => {
+    const c = markerCounts(text.slice(a, b));
+    blocks.push({ a, b, en: c.en + c.fr >= 3 ? englishByCounts(c) : whole });
+  };
+  while ((m = rx.exec(text))) { push(last, m.index); last = m.index + m[0].length; }
+  push(last, text.length);
+  return (at) => {
+    for (const b of blocks) if (at < b.b || b === blocks[blocks.length - 1]) return b.en;
+    return whole;
+  };
 }
 
 /* --------------------------------------------------- motifs (pré-passe) -- */
@@ -437,7 +677,9 @@ export const PATTERNS = [
   // CIN, passeport, avec ou sans espace (« BE123456 », « AB 1234567 »).
   { type: "cin", rx: new RegExp(`(?<![\\p{L}\\p{N}])(?!CA\\b|HT\\b)[A-Z]{1,2}[ \\u00A0]?${D}{5,8}(?![\\p{L}\\p{N}])`, "gu") },
   // N° de facture, de dossier, de contrat : « FAC-2026-0142 », « DOS/24/118 ».
-  { type: "reference", rx: new RegExp(`(?<![\\p{L}\\p{N}-])[A-Z]{1,6}[-_/]${D}{2,}(?:[-_/.]${D}+)*(?![\\p{L}\\p{N}])`, "gu") },
+  // v2.26 — pas un chemin : dans « 1_MEMORY/30_WORK/x.md », « MEMORY/30 »
+  // est un dossier suivi du numéro du suivant (« 30_WORK »), pas un n° de dossier.
+  { type: "reference", rx: new RegExp(`(?<![\\p{L}\\p{N}-])[A-Z]{1,6}[-_/]${D}{2,}(?:[-_/.]${D}+)*(?![\\p{L}\\p{N}]|_\\p{L})`, "gu") },
   { type: "adresse", rx: new RegExp(ADDRESS_SRC, "gu") },
   { type: "societe", rx: new RegExp(
       "(?<![\\p{L}\\p{N}])(?:[\\p{Lu}][\\p{L}\\p{N}'’.\\-]*(?:[ \\u00A0]+(?:&|et|and)[ \\u00A0]+|[ \\u00A0]+)){0,5}" +
@@ -502,13 +744,34 @@ const MATCHERS = new WeakMap();
    L'index est construit une fois par carnet (byKey, qui contient aussi les
    ALIAS : « Transports Moreau & Fils » pour « … SAS »), puis tenu à jour par
    les seules nouvelles entrées — un lot de 10 000 cellules ne le reconstruit
-   pas 10 000 fois. */
+   pas 10 000 fois.
+   v2.26 — `{ en: true }` : l'index du MODE ANGLAIS. Un mot anglais y est un
+   mot (remplacé seulement capitalisé), et une clé tenue avant la v2.26 n'y
+   impose plus les mots courants que l'ancien verrou codait faute de les
+   connaître : « and » (CODE-…), « Founder » (NOM-…) — un mot anglais courant,
+   ni prénom ni patronyme, n'est pas une personne. Les autres valeurs gardent
+   leur code. */
+const STALE_PREFIX_RX = /^(?:NOM|PRENOM|CODE)-/;
+function staleEnglishWord(v, code) {
+  const s = String(v).trim();
+  if (!STALE_PREFIX_RX.test(code) || !/^\p{L}+$/u.test(s)) return false;
+  const x = fold(s);
+  const NE = namesEn();
+  if (!NE || NE.prenoms.has(x) || NE.nomColl.has(x)) return false;
+  // Codé en minuscules : un « mot inconnu » de l'ancien verrou. Capitalisé :
+  // seulement un mot courant (SCOWL ≤ 35), pas « Atlas ».
+  return s === s.toLowerCase() ? isKnownWord(s, true) : commonEnglish(x);
+}
 function indexValue(ix, v, code) {
   const k = foldKey(v);
   if (k.startsWith("#")) { if (k.length >= 7 && !ix.digitMap.has(k)) ix.digitMap.set(k, code); return; }
   if (String(v).trim().length < 3) return;
   const n = (String(v).match(MATCH_TOKEN_RX) || []).length;
-  if (n <= 1 && isKnownWord(v)) { if (!ix.capOnly.has(k)) ix.capOnly.set(k, code); return; }
+  if (n <= 1 && isKnownWord(v, ix.en)) {
+    if (ix.en && staleEnglishWord(v, code)) return;
+    if (!ix.capOnly.has(k)) ix.capOnly.set(k, code);
+    return;
+  }
   if (!ix.multi.has(k)) ix.multi.set(k, code);
   ix.maxWords = Math.max(ix.maxWords, Math.min(n, 12));
 }
@@ -518,22 +781,26 @@ function addAlias(book, typePrefix, value, code) {
   const ak = typePrefix + "||" + normFor(typePrefix, value);
   if (book.byKey[ak]) return;
   book.byKey[ak] = code;
-  const ix = MATCHERS.get(book);
-  if (ix) indexValue(ix, value, code);
+  for (const ix of Object.values(MATCHERS.get(book) || {})) indexValue(ix, value, code);
 }
 
-export function knownValueMatcher(book) {
+export function knownValueMatcher(book, { en = false } = {}) {
   if (!book || !book.byKey) return null;
-  let ix = MATCHERS.get(book);
+  en = !!en && namesEn() !== null;
+  const byLang = MATCHERS.get(book) || {};
+  MATCHERS.set(book, byLang);
+  const lang = en ? "en" : "fr";
+  let ix = byLang[lang];
   if (!ix) {
-    ix = { multi: new Map(), capOnly: new Map(), digitMap: new Map(), maxWords: 1, seen: 0 };
+    ix = { en, multi: new Map(), capOnly: new Map(), digitMap: new Map(), maxWords: 1, seen: 0 };
     for (const mk of Object.keys(book.byKey)) indexValue(ix, mk.slice(mk.indexOf("||") + 2), book.byKey[mk]);
     ix.seen = (book.entries || []).length;
-    MATCHERS.set(book, ix);
+    byLang[lang] = ix;
   } else if ((book.entries || []).length > ix.seen) {
     for (const e of book.entries.slice(ix.seen)) indexValue(ix, e.value, e.code);
     ix.seen = book.entries.length;
   }
+  const N = en ? namesEn() : names();
   if (!ix.multi.size && !ix.capOnly.size && !ix.digitMap.size) return null;
   const codeOnly = new RegExp(`^${codeSrc()}$`, "u");
   const NEXT_TO = /^[ \u00A0]{1,2}$/;
@@ -574,8 +841,8 @@ export function knownValueMatcher(book) {
           // Collé à un code : seulement un mot que l'INSEE connaît aussi comme
           // nom ou prénom (« roux », « blanc ») — pas n'importe quel mot
           // courant, sinon un texte très codé (anglais) s'effondre en cascade.
-          const forms = besideCode ? [cand.toLowerCase(), fold(cand)] : [];
-          const nameLike = forms.some((f) => names().nomColl.has(f) || names().prenomColl.has(f));
+          const forms = besideCode && !(en && commonEnglish(fold(cand))) ? [cand.toLowerCase(), fold(cand)] : [];
+          const nameLike = forms.some((f) => N.nomColl.has(f) || N.prenomColl.has(f));
           if (/^\p{Lu}/u.test(cand) || nameLike) code = ix.capOnly.get(k);
         }
         if (code) hit = { j, code };
@@ -670,8 +937,11 @@ export function strictCode(input, opts = {}) {
   let text = String(input == null ? "" : input);
   if (!text.trim()) return { text, ...stats };
   lexicon();
-  const N = names();
-  const capSafe = (x) => N.capSafe.has(x) || EXTRA_SET.has(x);
+  // v2.26 — la langue : `opts.langue` ("fr" | "en") l'impose ; sinon elle se
+  // lit dans le texte (un nom de fichier, trop court pour en juger, reste en
+  // français). `enDoc` vaut pour la clé ; le mot à mot juge par paragraphe.
+  const langue = opts.fileName ? "fr" : opts.langue;
+  const enDoc = english() !== null && (langue === "en" || (langue !== "fr" && isEnglishText(text)));
 
   const labelOf = (typeId) => typeById(typeId).label;
   const emit = (typeId, value) => {
@@ -755,11 +1025,12 @@ export function strictCode(input, opts = {}) {
   // 3) Ce que la clé connaît déjà garde SON code (même entité = même code,
   //    d'un fichier et d'une colonne à l'autre).
   if (book && !mask) {
-    const known = knownValueMatcher(book);
+    const known = knownValueMatcher(book, { en: enDoc });
     if (known) text = outsideCodes(text, (seg) => { const r = known(seg); stats.replaced += r.replaced; return r.text; });
   }
 
   // 4) Mot à mot.
+  const enAt = langue === "fr" || english() === null ? () => false : langue === "en" ? () => true : englishBlocks(text);
   const toks = tokenize(text);
   const W = [];                                   // indices des jetons non-séparateurs
   for (let i = 0; i < toks.length; i++) if (toks[i].k !== "sep") W.push(i);
@@ -771,6 +1042,14 @@ export function strictCode(input, opts = {}) {
   };
   const f = W.map((i) => fold(toks[i].s));
   const isWord = (wi) => wi >= 0 && wi < W.length && tok(wi).k === "word";
+  // Les listes de la langue de chaque mot (v2.26) : le français, ou le
+  // français + l'anglais dans un paragraphe en anglais.
+  const PW = W.map((i) => profile(enAt(toks[i].at)));
+  const capSafeOf = (P, x) => P.N.capSafe.has(x) || EXTRA_SET.has(x) || (P.en && EN_EXTRA_SET.has(x));
+  // Un mot anglais courant, en minuscules dans un paragraphe anglais, n'est
+  // jamais un morceau de nom (« John Carter said », « we will call »).
+  const lowerWord = (wi) => PW[wi].en && commonEnglish(f[wi]);
+  const modal = (wi) => PW[wi].en && EN_MODALS.has(f[wi]);
   const SPACE = /^[  ]{1,3}$/;
 
   // Une ligne entièrement en MAJUSCULES est un intitulé ; un mot en
@@ -793,7 +1072,7 @@ export function strictCode(input, opts = {}) {
     if (/[\n\t«“"(\[•:;|—–]/.test(sep) || /^\s*[-*]\s/.test(sep) || /[!?…]/.test(sep)) return true;
     if (/\.\s*$/.test(sep)) {
       const prev = tok(wi - 1);
-      return !(prev.k === "word" && (ABBREV.has(f[wi - 1]) || prev.s.length === 1));
+      return !(prev.k === "word" && (PW[wi - 1].abbrev.has(f[wi - 1]) || prev.s.length === 1));
     }
     return false;
   });
@@ -807,7 +1086,12 @@ export function strictCode(input, opts = {}) {
     if (t.k === "mixed") { if (!UNIT_RX.test(t.s) && !EXTRA_SET.has(f[wi])) verdict[wi] = "reference"; continue; }
     const w = t.s;
     const x = f[wi];
-    const known = isKnownWord(w);
+    const P = PW[wi];
+    const N = P.N;
+    const { det: DETERMINERS, func: FUNCTION_WORDS, months: MONTHS, roles: ROLE_TITLES, labels: PERSON_LABELS,
+      company: COMPANY_TRIGGERS, honorWords: HONORIFIC_WORDS } = P;
+    const capSafe = (y) => capSafeOf(P, y);
+    const known = isKnownWord(w, P.en);
     const sep = sepBefore(wi);
     const px = wi > 0 ? f[wi - 1] : "";
     const prevWord = isWord(wi - 1);
@@ -817,6 +1101,18 @@ export function strictCode(input, opts = {}) {
     // déterminant s'il est en minuscules ; « Nouvelle Vague Production », non.
     const det = prevWord && (DETERMINERS.has(px) || (PRE_NOUN.has(px) && !isCap(prevTok))) && (SPACE.test(sep) || /^['’]$/.test(sep));
     const detPlural = det && PLURAL_DET.has(px);
+    // « the Client » est un terme ; « the Smith account », un nom (v2.26).
+    const detName = det && P.en && (N.prenoms.has(x) || N.nomColl.has(x));
+
+    // v2.26 — un dossier numéroté d'un chemin (« 1_MEMORY/30_WORK ») : un mot
+    // du dictionnaire, français ou anglais, n'y est pas un nom. « 30_BENALI »
+    // reste codé, comme « 30_SMITH » (les listes de noms anglaises comptent
+    // aussi dans un texte français).
+    const NP = namesEn() || N;
+    if (wi > 0 && tok(wi - 1).k === "num" && sep === "_" && isKnownWord(w, english() !== null) &&
+        !NP.prenoms.has(x) && !NP.nomColl.has(x)) continue;
+    // Un mot-outil anglais capitalisé (« Legal Entity And Brand ») n'est pas un nom.
+    if (P.en && EN_FUNCTION_WORDS.has(x)) continue;
     const nameLike = (typeIfFirst) => (firstName ? typeIfFirst : "nom");
 
     // Chaîne d'un titre de loi : « loi Informatique et Libertés ».
@@ -869,7 +1165,7 @@ export function strictCode(input, opts = {}) {
       if (capSafe(x)) continue;
       // Nom de famille au pluriel : « chez les Rousseau », « les Bourgeois ».
       if (detPlural && (N.nomColl.has(x) || N.prenoms.has(x) || (!known && !/[sx]$/.test(x)))) { verdict[wi] = "nom"; continue; }
-      if (det) { if (!known) verdict[wi] = nameLike("prenom"); continue; }
+      if (det && !detName) { if (!known) verdict[wi] = nameLike("prenom"); continue; }
       if (firstName) { verdict[wi] = "prenom"; continue; }
       if (!known) { verdict[wi] = "nom"; continue; }
       // Mot d'en-tête de tableau ou d'intitulé (« Pièce Émetteur Date »,
@@ -884,7 +1180,7 @@ export function strictCode(input, opts = {}) {
       if (prevWord && verdict[wi - 1] === null && isCap(prevTok) && !initial[wi - 1] &&
           (SPACE.test(sep) || /^[  ]*(?:d['’]|de[  ]+)$/.test(sep))) continue;
       if (prevWord && (px === "d" || px === "de") && wi >= 2 && isWord(wi - 2) && verdict[wi - 2] === null &&
-          !initial[wi - 2] && isCap(tok(wi - 2).s) && isKnownWord(tok(wi - 2).s) && (/^['’]$/.test(sep) || SPACE.test(sep))) continue;
+          !initial[wi - 2] && isCap(tok(wi - 2).s) && isKnownWord(tok(wi - 2).s, P.en) && (/^['’]$/.test(sep) || SPACE.test(sep))) continue;
       verdict[wi] = "nom";
       continue;
     }
@@ -902,8 +1198,9 @@ export function strictCode(input, opts = {}) {
     // (« pierre rousseau », « marie blanc ») : codés ensemble.
     const nextLow = isWord(wi + 1) && SPACE.test(sepBefore(wi + 1)) && !isCap(tok(wi + 1).s) ? f[wi + 1] : "";
     const prevLow = prevWord && SPACE.test(sep) && !isCap(prevTok) ? px : "";
-    if (N.prenomColl.has(x) && (N.nomColl.has(nextLow) || (nextLow && !isKnownWord(tok(wi + 1).s)))) { verdict[wi] = "prenom"; continue; }
-    if (N.nomColl.has(x) && N.prenomColl.has(prevLow)) { verdict[wi] = "nom"; continue; }
+    //   En anglais, pas après un verbe modal : « we will call », « you may cook » (v2.26).
+    if (N.prenomColl.has(x) && !modal(wi) && (N.nomColl.has(nextLow) || (nextLow && !isKnownWord(tok(wi + 1).s, P.en)))) { verdict[wi] = "prenom"; continue; }
+    if (N.nomColl.has(x) && N.prenomColl.has(prevLow) && !modal(wi - 1)) { verdict[wi] = "nom"; continue; }
   }
 
   // 5) Un nom attire ses voisins capitalisés (« Jacques Moulin », « Karim
@@ -916,8 +1213,13 @@ export function strictCode(input, opts = {}) {
     if (!isWord(j) || verdict[j] !== null) return false;
     const w = tok(j).s;
     const x = f[j];
+    const P = PW[j];
+    const N = P.N;
+    const { det: DETERMINERS, func: FUNCTION_WORDS, roles: ROLE_TITLES, labels: PERSON_LABELS,
+      company: COMPANY_TRIGGERS, honorWords: HONORIFIC_WORDS } = P;
+    const capSafe = (y) => capSafeOf(P, y);
     // En minuscules, seuls un prénom ou un patronyme connus s'agrègent.
-    if (!isCap(w)) return N.prenoms.has(x) || N.nomColl.has(x);
+    if (!isCap(w)) return (N.prenoms.has(x) || N.nomColl.has(x)) && !lowerWord(j);
     // Juste APRÈS un prénom, un mot capitalisé est un patronyme, quel qu'il
     // soit (« Karim Avril », « Leila Paris », « Karim Juge »).
     if (fromFirstName && !FUNCTION_WORDS.has(x) && !DETERMINERS.has(x) && !PARTICLES.has(x) &&
@@ -954,8 +1256,9 @@ export function strictCode(input, opts = {}) {
         // À gauche, un mot du dictionnaire en tête de phrase n'est pas aspiré
         // (« Selon Pierre ») — sauf si c'est lui-même un prénom ou un patronyme.
         // (« Horizon Immobilier », lui, est aspiré en entier : « Horizon » n'est pas un mot d'amorce.)
-        if (dir === -1 && initial[j] && isKnownWord(tj) && !N.nomColl.has(f[j]) && !N.prenoms.has(f[j]) &&
-            (STARTERS.has(f[j]) || COMMON_START.has(f[j]) || FUNCTION_WORDS.has(f[j]) || capSafe(f[j]))) continue;
+        const Pj = PW[j];
+        if (dir === -1 && initial[j] && isKnownWord(tj, Pj.en) && !Pj.N.nomColl.has(f[j]) && !Pj.N.prenoms.has(f[j]) &&
+            (Pj.starters.has(f[j]) || COMMON_START.has(f[j]) || Pj.func.has(f[j]) || capSafeOf(Pj, f[j]))) continue;
         if (glueable(j, dir === 1 && verdict[wi] === "prenom")) {
           verdict[j] = verdict[wi] === "societe" ? "societe" : "nom";
           changed = true;
@@ -1031,7 +1334,7 @@ export function strictCode(input, opts = {}) {
   // 6b) Second passage : un nom codé plus loin dans le texte (« M. Moulin »)
   //     recode ses autres occurrences capitalisées (« Moulin a signé »).
   if (book && !mask && stats.names) {
-    const known = knownValueMatcher(book);
+    const known = knownValueMatcher(book, { en: enDoc });
     if (known) text = outsideCodes(text, (seg) => { const r = known(seg); stats.replaced += r.replaced; return r.text; });
   }
 

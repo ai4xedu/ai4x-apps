@@ -49,8 +49,9 @@ async function gunzip(b64) {
   return await new Response(stream).text();
 }
 const pret = (async () => {
-  const [mots, noms] = await Promise.all([gunzip(${JSON.stringify(b64("fr.txt.gz"))}), gunzip(${JSON.stringify(b64("noms.json.gz"))})]);
-  fournirLexique({ mots, noms });
+  const [mots, noms, anglais] = await Promise.all([gunzip(${JSON.stringify(b64("fr.txt.gz"))}), gunzip(${JSON.stringify(b64("noms.json.gz"))}),
+    gunzip(${JSON.stringify(b64("en.json.gz"))})]);
+  fournirLexique({ mots, noms, anglais });
   return lexiconSize();
 })();
 globalThis.NanomizerVerrou = { version: ${JSON.stringify(manifest.version)}, pret, strictCode, strictSheet, knownValueMatcher, codedRatio,
@@ -74,7 +75,7 @@ const res = await build({
 
 const code = res.outputFiles[0].text;
 const sha = crypto.createHash("sha256").update(code).digest("hex");
-const banner = `/*! Nanomizer — verrou v${manifest.version} pour l'appli web (paquet généré par ai4x-apps/apps/mcp-anonymiseur/scripts/build-web-verrou.mjs ; ne pas modifier à la main). sha256:${sha} — dictionnaire : an-array-of-french-words (MIT) ; noms : INSEE (Licence Ouverte). */\n`;
+const banner = `/*! Nanomizer — verrou v${manifest.version} pour l'appli web (paquet généré par ai4x-apps/apps/mcp-anonymiseur/scripts/build-web-verrou.mjs ; ne pas modifier à la main). sha256:${sha} — dictionnaire : an-array-of-french-words (MIT), SCOWL (Kevin Atkinson, cf. LICENCE-scowl.txt) ; noms : INSEE (Licence Ouverte), U.S. Census (domaine public). */\n`;
 fs.mkdirSync(path.join(root, "dist"), { recursive: true });
 const out = path.join(root, "dist", "nanomizer-verrou-web.js");
 fs.writeFileSync(out, banner + code);
