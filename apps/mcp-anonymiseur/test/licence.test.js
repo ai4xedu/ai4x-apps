@@ -8,7 +8,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { TEST_KEY, mint as mintTest } from "./licence-test.mjs";
-import { parseKey, licenceStatus, readLicence, blockedMessage, warningBanner, b64urlEncode, isUnsubstituted } from "../server/licence.js";
+import { parseKey, licenceStatus, readLicence, blockedMessage, warningBanner, b64urlEncode, isUnsubstituted, trialStatus } from "../server/licence.js";
 
 /* Les clés sont signées par la clé de TEST du dépôt (cf. licence-test.mjs) :
    la suite tourne sur tous les postes. La VRAIE clé privée, si elle est sur
@@ -109,6 +109,28 @@ test("le message de blocage vend, ne punit pas, et promet le décodage", () => {
   assert.match(msg, /ai4x\.academy\/nanomizer#plans/); // …commandée sur la page
   assert.match(msg, /wa\.me\/212680092567/);          // …ou sur WhatsApp
   assert.doesNotMatch(msg, /à vie/i);                    // plus vendue
+});
+
+test("essai terminé sans clé : le message donne le geste exact pour coller la clé (v2.26.1, campagne C1)", () => {
+  // Le jour 15, le client qui vient de payer cherche OÙ coller sa clé.
+  const debut = "2020-01-01T00:00:00Z";
+  for (const brut of ["", "${user_config.licence}"]) {   // champ vide, ou gabarit non substitué par Claude Desktop
+    // Comme readLicence : un gabarit non substitué compte pour « pas de clé ».
+    const st = trialStatus(licenceStatus(isUnsubstituted(brut) ? "" : brut), debut);
+    assert.equal(st.reason, "essai terminé");
+    const msg = blockedMessage(st);
+    assert.match(msg, /essai gratuit de 14 jours est terminé/);
+    assert.match(msg, /Aucune clé de licence n'est configurée/);
+    assert.match(msg, /champ « Clé de licence »/);
+    assert.match(msg, /REDÉMARREZ Claude Desktop/);
+    assert.doesNotMatch(msg, /format inconnu|refusée/);
+    assert.match(msg, /jamais prises en otage/);
+  }
+  // Une clé présente mais fausse : on parle de la clé, pas d'un champ vide.
+  const refusee = blockedMessage(trialStatus(licenceStatus("NANO1.nawak.nawak"), debut));
+  assert.match(refusee, /essai gratuit de 14 jours est terminé/);
+  assert.match(refusee, /La clé configurée a été refusée/);
+  assert.doesNotMatch(refusee, /Aucune clé de licence n'est configurée/);
 });
 
 test("clé absente ≠ clé refusée : deux messages, deux gestes à faire", () => {

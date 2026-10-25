@@ -98,6 +98,12 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.26.1 (fin d'essai, 25/10/2026). Quand l'essai de 14 jours est terminé et
+qu'aucune clé n'est configurée, le message dit maintenant où coller la clé
+(réglages de Claude Desktop → Extensions → Hidden Tokens → « Clé de licence »)
+et qu'il faut redémarrer Claude Desktop : c'est le moment où un client qui vient
+de payer le cherche. Contrôles C1a et C1b de `test/campagne-mvp.mjs`.
+
 v2.26.0 (le verrou lit l'anglais, 25/10/2026). Une note rédigée en anglais
 sortait en bouillie : le verrou ne connaissait que le français, si bien que
 « and », « the », « this », « legal », « Founder », « Morocco » étaient des
