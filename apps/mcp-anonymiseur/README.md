@@ -98,6 +98,37 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.29.0 (validation T01, le contrat en suivi de modifications, 25/10/2026).
+Le premier des dix vrais tests (Nanomizer, `docs/validation/T01-contrat`) : un
+avocat reçoit le contrat renvoyé par le confrère et demande ce qui a changé.
+Sur la 2.27.0 : une fuite, et l'IA ne pouvait pas répondre (4/10 contre 9/10
+en clair), parce que la copie Word retirait le suivi des modifications.
+- **Le suivi des modifications et les commentaires restent**, en texte dans la
+  copie codée : `[supprimé par AUTEUR : …]`, `[inséré par AUTEUR : …]`,
+  `[commentaire de AUTEUR : …]`. Ce texte passe par le même codage que le reste
+  (auteur, texte supprimé et commentaire codés avec la même clé) ; les attributs
+  d'auteur et de date et la partie `comments.xml` partent toujours, et le filet
+  final fouille toujours tout le paquet. `codeDocx(…, { suivi: "accepter" })`
+  garde l'ancien retrait.
+- **Adresse à deux articles** : « 29 rue de la République » restait en clair
+  (un seul article admis après le mot de voie). Les zones industrielles
+  (« ZI des Molina », « ZAC … ») sont des adresses.
+- **Fin du sur-codage relevé par T01** : un intitulé d'acte en majuscules fait
+  de mots du dictionnaire (« CONTRAT CADRE D'APPROVISIONNEMENT ») n'est plus
+  une société ; une référence d'article seule (« BRK-220 ») est codée en
+  référence, pas en société ; les diamètres (« Ø220 »), les nuances d'acier
+  (« S235 »), « C. com. », « INSEE » et « joignable » restent lisibles.
+- **Pack RH-paie 1.1.1** : un matricule, un badge ou un n° de contrat contient
+  un chiffre. « CONTRAT CADRE » codait « CADRE » en n° de dossier RH.
+- **Filet final** : les URI de schéma (`xmlns`, `http://schemas.microsoft.com/…`)
+  ne comptent plus. Un « com » de la clé y était partout et bloquait la copie.
+
+HT-Bench : identifiants directs 100 % (dev et test, inchangé) ; rappel de tout
+le jeu de test en hausse (juridique 87,2 → 88,9 %, banque 81,7 → 83,0 %,
+santé 82,4 → 84,8 %, comptable 95,5 → 96,5 %). Banc des fuites : 0 fuite,
+lisibilité 89,3 → 91,1 %. `test/validation-t01.test.js` garde chaque trouvaille ;
+`test/validation-t01.mjs` rejoue T01 sur le vrai serveur.
+
 v2.28.0 (HT-Bench ≥ 99 % par pack, 25/10/2026). Les manques que mesurait
 HT-Bench sur les identifiants directs sont comblés, et aucune sortie n'est
 plus corrompue. Le moteur prend maintenant en entier :

@@ -16,13 +16,13 @@
   },
   "tous": {
    "n": 3483,
-   "detectes": 3447,
+   "detectes": 3450,
    "partiels": 0,
-   "manques": 36,
-   "rappel": 0.9896640826873385
+   "manques": 33,
+   "rappel": 0.9905254091300603
   },
-  "precision": 0.8757569837858957,
-  "passages": 5119,
+  "precision": 0.8870872058532727,
+  "passages": 5057,
   "leurres": {
    "n": 3082,
    "codes": 185,
@@ -38,10 +38,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 2358,
+   "passages": 2353,
    "passages_justes": 1916,
-   "precision": 0.8125530110262935,
-   "f1": 0.8965839962564343,
+   "precision": 0.8142796430089247,
+   "f1": 0.8976341063480908,
    "bien_etiquetes": 976
   },
   "CIN": {
@@ -314,15 +314,15 @@
    "libelle": "Adresse postale",
    "direct": false,
    "n": 185,
-   "detectes": 178,
+   "detectes": 181,
    "partiels": 0,
-   "manques": 7,
-   "rappel": 0.9621621621621622,
-   "passages": 187,
-   "passages_justes": 186,
-   "precision": 0.9946524064171123,
-   "f1": 0.9781375561333019,
-   "bien_etiquetes": 162
+   "manques": 4,
+   "rappel": 0.9783783783783784,
+   "passages": 190,
+   "passages_justes": 189,
+   "precision": 0.9947368421052631,
+   "f1": 0.9864897988609329,
+   "bien_etiquetes": 165
   },
   "SOCIETE": {
    "libelle": "Société",
@@ -332,10 +332,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 433,
+   "passages": 421,
    "passages_justes": 279,
-   "precision": 0.6443418013856813,
-   "f1": 0.7837078651685394,
+   "precision": 0.66270783847981,
+   "f1": 0.7971428571428572,
    "bien_etiquetes": 279
   },
   "NAISSANCE": {
@@ -538,11 +538,11 @@
     "manques": 6,
     "rappel": 0.9849624060150376
    },
-   "precision": 0.9337016574585635,
-   "f1": 0.958647267688577,
-   "passages": 543,
+   "precision": 0.9354243542435424,
+   "f1": 0.9595544414987756,
+   "passages": 542,
    "passages_leurres": 2,
-   "passages_hors_etiquette": 34,
+   "passages_hors_etiquette": 33,
    "leurres": {
     "n": 152,
     "codes": 2,
@@ -682,16 +682,16 @@
    },
    "tous": {
     "n": 423,
-    "detectes": 421,
+    "detectes": 422,
     "partiels": 0,
-    "manques": 2,
-    "rappel": 0.9952718676122931
+    "manques": 1,
+    "rappel": 0.9976359338061466
    },
-   "precision": 0.8680659670164917,
-   "f1": 0.9273268863510131,
-   "passages": 667,
+   "precision": 0.8841463414634146,
+   "f1": 0.937468879985905,
+   "passages": 656,
    "passages_leurres": 36,
-   "passages_hors_etiquette": 52,
+   "passages_hors_etiquette": 40,
    "leurres": {
     "n": 309,
     "codes": 36,
@@ -765,11 +765,11 @@
     "manques": 0,
     "rappel": 1
    },
-   "precision": 0.8286109191430546,
-   "f1": 0.9062736205593349,
-   "passages": 1447,
+   "precision": 0.842586085734364,
+   "f1": 0.9145690312738368,
+   "passages": 1423,
    "passages_leurres": 25,
-   "passages_hors_etiquette": 223,
+   "passages_hors_etiquette": 199,
    "leurres": {
     "n": 675,
     "codes": 25,
@@ -866,16 +866,16 @@
    },
    "tous": {
     "n": 331,
-    "detectes": 316,
+    "detectes": 318,
     "partiels": 0,
-    "manques": 15,
-    "rappel": 0.9546827794561934
+    "manques": 13,
+    "rappel": 0.9607250755287009
    },
-   "precision": 0.8159392789373814,
-   "f1": 0.8798751545997889,
-   "passages": 527,
+   "precision": 0.8421052631578947,
+   "f1": 0.8975127888516492,
+   "passages": 513,
    "passages_leurres": 27,
-   "passages_hors_etiquette": 70,
+   "passages_hors_etiquette": 54,
    "leurres": {
     "n": 248,
     "codes": 27,
@@ -942,11 +942,11 @@
     "manques": 11,
     "rappel": 0.9872093023255814
    },
-   "precision": 0.9559748427672956,
-   "f1": 0.971341043464516,
-   "passages": 1113,
+   "precision": 0.9663941871026339,
+   "f1": 0.9766908550110309,
+   "passages": 1101,
    "passages_leurres": 1,
-   "passages_hors_etiquette": 48,
+   "passages_hors_etiquette": 36,
    "leurres": {
     "n": 1154,
     "codes": 1,
@@ -1150,26 +1150,26 @@
   "ADRESSE · fr-batiment": {
    "direct": false,
    "n": 22,
-   "detectes": 19,
+   "detectes": 20,
    "partiels": 0,
-   "manques": 3,
-   "rappel": 0.8636363636363636
+   "manques": 2,
+   "rappel": 0.9090909090909091
   },
   "ADRESSE · fr-bis": {
    "direct": false,
    "n": 24,
-   "detectes": 23,
+   "detectes": 24,
    "partiels": 0,
-   "manques": 1,
-   "rappel": 0.9583333333333334
+   "manques": 0,
+   "rappel": 1
   },
   "ADRESSE · fr-rue": {
    "direct": false,
    "n": 28,
-   "detectes": 25,
+   "detectes": 26,
    "partiels": 0,
-   "manques": 3,
-   "rappel": 0.8928571428571429
+   "manques": 2,
+   "rappel": 0.9285714285714286
   },
   "ADRESSE · ma-douar-hay": {
    "direct": false,
@@ -2486,21 +2486,6 @@
    "vu_par_ia": true
   },
   {
-   "doc": "juridique-fr/conclusions/008",
-   "pack": "juridique-fr",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-rue",
-   "traits": [],
-   "valeur": "41 rue de la République",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "République"
-   ],
-   "vu_par_ia": true
-  },
-  {
    "doc": "juridique-fr/conclusions/011",
    "pack": "juridique-fr",
    "type": "ADRESSE",
@@ -2723,21 +2708,6 @@
    "vu_par_ia": true
   },
   {
-   "doc": "sante/lettreLiaison/001",
-   "pack": "sante",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-bis",
-   "traits": [],
-   "valeur": "31 bis rue de la République",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "République"
-   ],
-   "vu_par_ia": true
-  },
-  {
    "doc": "sante/lettreLiaison/003",
    "pack": "sante",
    "type": "ADRESSE",
@@ -2749,24 +2719,6 @@
    "prefixes": [],
    "en_clair": [
     "Fosse"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "sante/lettreLiaison/007",
-   "pack": "sante",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-batiment",
-   "traits": [],
-   "valeur": "Bâtiment C, 5 rue de la République",
-   "statut": "manque",
-   "prefixes": [
-    "NOM",
-    "PRENOM"
-   ],
-   "en_clair": [
-    "République"
    ],
    "vu_par_ia": true
   },
@@ -4833,10 +4785,6 @@
  ],
  "hors_etiquette": [
   {
-   "passage": "CODE « joignable »",
-   "n": 48
-  },
-  {
    "passage": "NOM « PRLV »",
    "n": 18
   },
@@ -4941,10 +4889,6 @@
    "n": 12
   },
   {
-   "passage": "SOCIETE « LETTRE DE MISSION »",
-   "n": 12
-  },
-  {
    "passage": "NOM « CHQ »",
    "n": 11
   },
@@ -4955,10 +4899,6 @@
   {
    "passage": "NOM « IMMOBILIER »",
    "n": 7
-  },
-  {
-   "passage": "NOM « Enfant »",
-   "n": 6
   },
   {
    "passage": "NOM « Inchallah »",
@@ -5021,6 +4961,10 @@
    "n": 2
   },
   {
+   "passage": "NOM « Enfant »",
+   "n": 2
+  },
+  {
    "passage": "NOM « Hamdoullah »",
    "n": 2
   },
@@ -5038,10 +4982,6 @@
   },
   {
    "passage": "CODE « stp »",
-   "n": 1
-  },
-  {
-   "passage": "NOM « Joignable »",
    "n": 1
   }
  ],

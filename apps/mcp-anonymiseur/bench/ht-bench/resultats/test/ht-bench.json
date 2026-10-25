@@ -16,13 +16,13 @@
   },
   "tous": {
    "n": 3420,
-   "detectes": 3376,
+   "detectes": 3383,
    "partiels": 0,
-   "manques": 44,
-   "rappel": 0.9871345029239766
+   "manques": 37,
+   "rappel": 0.9891812865497076
   },
-  "precision": 0.8734555599840574,
-  "passages": 5018,
+  "precision": 0.8845456377191215,
+  "passages": 4963,
   "leurres": {
    "n": 3029,
    "codes": 176,
@@ -38,10 +38,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 2342,
+   "passages": 2340,
    "passages_justes": 1874,
-   "precision": 0.8001707941929974,
-   "f1": 0.8889943074003795,
+   "precision": 0.8008547008547009,
+   "f1": 0.8894162316089227,
    "bien_etiquetes": 960
   },
   "CIN": {
@@ -314,15 +314,15 @@
    "libelle": "Adresse postale",
    "direct": false,
    "n": 184,
-   "detectes": 170,
+   "detectes": 177,
    "partiels": 0,
-   "manques": 14,
-   "rappel": 0.9239130434782609,
-   "passages": 173,
-   "passages_justes": 173,
+   "manques": 7,
+   "rappel": 0.9619565217391305,
+   "passages": 180,
+   "passages_justes": 180,
    "precision": 1,
-   "f1": 0.96045197740113,
-   "bien_etiquetes": 154
+   "f1": 0.9806094182825486,
+   "bien_etiquetes": 161
   },
   "SOCIETE": {
    "libelle": "Société",
@@ -332,10 +332,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 430,
+   "passages": 418,
    "passages_justes": 279,
-   "precision": 0.6488372093023256,
-   "f1": 0.7870239774330042,
+   "precision": 0.6674641148325359,
+   "f1": 0.8005738880918222,
    "bien_etiquetes": 279
   },
   "NAISSANCE": {
@@ -675,16 +675,16 @@
    },
    "tous": {
     "n": 420,
-    "detectes": 410,
+    "detectes": 414,
     "partiels": 0,
-    "manques": 10,
-    "rappel": 0.9761904761904762
+    "manques": 6,
+    "rappel": 0.9857142857142858
    },
-   "precision": 0.8723076923076923,
-   "f1": 0.9213300570703868,
-   "passages": 650,
+   "precision": 0.8894080996884736,
+   "f1": 0.9350880524042342,
+   "passages": 642,
    "passages_leurres": 29,
-   "passages_hors_etiquette": 54,
+   "passages_hors_etiquette": 42,
    "leurres": {
     "n": 300,
     "codes": 29,
@@ -758,11 +758,11 @@
     "manques": 0,
     "rappel": 1
    },
-   "precision": 0.8166089965397924,
-   "f1": 0.899047619047619,
-   "passages": 1445,
+   "precision": 0.8304011259676284,
+   "f1": 0.9073433294886581,
+   "passages": 1421,
    "passages_leurres": 25,
-   "passages_hors_etiquette": 240,
+   "passages_hors_etiquette": 216,
    "leurres": {
     "n": 676,
     "codes": 25,
@@ -859,16 +859,16 @@
    },
    "tous": {
     "n": 324,
-    "detectes": 309,
+    "detectes": 312,
     "partiels": 0,
-    "manques": 15,
-    "rappel": 0.9537037037037037
+    "manques": 12,
+    "rappel": 0.9629629629629629
    },
-   "precision": 0.8236434108527132,
-   "f1": 0.8839148695581939,
-   "passages": 516,
+   "precision": 0.8475247524752475,
+   "f1": 0.9015636393097302,
+   "passages": 505,
    "passages_leurres": 27,
-   "passages_hors_etiquette": 64,
+   "passages_hors_etiquette": 50,
    "leurres": {
     "n": 240,
     "codes": 27,
@@ -935,11 +935,11 @@
     "manques": 13,
     "rappel": 0.9845605700712589
    },
-   "precision": 0.9545032497678737,
-   "f1": 0.9692989514953574,
-   "passages": 1077,
+   "precision": 0.9652582159624413,
+   "f1": 0.9748138505805963,
+   "passages": 1065,
    "passages_leurres": 1,
-   "passages_hors_etiquette": 48,
+   "passages_hors_etiquette": 36,
    "leurres": {
     "n": 1142,
     "codes": 1,
@@ -1143,26 +1143,26 @@
   "ADRESSE · fr-batiment": {
    "direct": false,
    "n": 25,
-   "detectes": 21,
+   "detectes": 24,
    "partiels": 0,
-   "manques": 4,
-   "rappel": 0.84
+   "manques": 1,
+   "rappel": 0.96
   },
   "ADRESSE · fr-bis": {
    "direct": false,
    "n": 25,
-   "detectes": 21,
+   "detectes": 24,
    "partiels": 0,
-   "manques": 4,
-   "rappel": 0.84
+   "manques": 1,
+   "rappel": 0.96
   },
   "ADRESSE · fr-rue": {
    "direct": false,
    "n": 21,
-   "detectes": 15,
+   "detectes": 16,
    "partiels": 0,
-   "manques": 6,
-   "rappel": 0.7142857142857143
+   "manques": 5,
+   "rappel": 0.7619047619047619
   },
   "ADRESSE · ma-douar-hay": {
    "direct": false,
@@ -2447,36 +2447,6 @@
    "vu_par_ia": true
   },
   {
-   "doc": "juridique-fr/conclusions/003",
-   "pack": "juridique-fr",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-bis",
-   "traits": [],
-   "valeur": "17 bis rue de la République",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "République"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/conclusions/004",
-   "pack": "juridique-fr",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-rue",
-   "traits": [],
-   "valeur": "63 rue de la République",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "République"
-   ],
-   "vu_par_ia": true
-  },
-  {
    "doc": "juridique-fr/conclusions/007",
    "pack": "juridique-fr",
    "type": "ADRESSE",
@@ -2536,42 +2506,6 @@
    "prefixes": [],
    "en_clair": [
     "Fosse"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/conclusions/012",
-   "pack": "juridique-fr",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-batiment",
-   "traits": [],
-   "valeur": "Bâtiment A, 16 rue de la République",
-   "statut": "manque",
-   "prefixes": [
-    "NOM",
-    "PRENOM"
-   ],
-   "en_clair": [
-    "République"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "juridique-fr/assignation/005",
-   "pack": "juridique-fr",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-batiment",
-   "traits": [],
-   "valeur": "Bâtiment C, 90 rue de la République",
-   "statut": "manque",
-   "prefixes": [
-    "NOM",
-    "PRENOM"
-   ],
-   "en_clair": [
-    "République"
    ],
    "vu_par_ia": true
   },
@@ -2791,54 +2725,6 @@
     "19",
     "04",
     "1973"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "sante/lettreLiaison/009",
-   "pack": "sante",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-bis",
-   "traits": [],
-   "valeur": "24 bis rue de la République",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "République"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "sante/lettreLiaison/011",
-   "pack": "sante",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-bis",
-   "traits": [],
-   "valeur": "3 bis rue de la République",
-   "statut": "manque",
-   "prefixes": [],
-   "en_clair": [
-    "République"
-   ],
-   "vu_par_ia": true
-  },
-  {
-   "doc": "sante/lettreLiaison/012",
-   "pack": "sante",
-   "type": "ADRESSE",
-   "direct": false,
-   "variante": "fr-batiment",
-   "traits": [],
-   "valeur": "Bâtiment B, 57 rue de la République",
-   "statut": "manque",
-   "prefixes": [
-    "NOM",
-    "PRENOM"
-   ],
-   "en_clair": [
-    "République"
    ],
    "vu_par_ia": true
   },
@@ -4815,10 +4701,6 @@
  ],
  "hors_etiquette": [
   {
-   "passage": "CODE « joignable »",
-   "n": 48
-  },
-  {
    "passage": "NOM « EMIS »",
    "n": 18
   },
@@ -4919,10 +4801,6 @@
    "n": 12
   },
   {
-   "passage": "SOCIETE « LETTRE DE MISSION »",
-   "n": 12
-  },
-  {
    "passage": "NOM « CHQ »",
    "n": 10
   },
@@ -5000,10 +4878,6 @@
   },
   {
    "passage": "NOM « CARTE »",
-   "n": 2
-  },
-  {
-   "passage": "NOM « Enfant »",
    "n": 2
   },
   {

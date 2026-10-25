@@ -57,7 +57,7 @@ import {
   decodeText, sheetToTsv, looksLikeTable, newCodebook,
   detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName, attachTeam, normFor,
 } from "./engine.js";
-import { strictCode, strictSheet, codedRatio, lexiconSize, knownValueMatcher, foldKey } from "./verrou.js";
+import { strictCode, strictSheet, codedRatio, lexiconSize, knownValueMatcher, foldKey, isKnownWord } from "./verrou.js";
 import { assessReidentification, generalize, describeReidentification } from "./reidentification.js";
 import { guardResult, guardText, MASK } from "./sortie.js";
 import { protectNumbers, planNumbers, describeNumbers, readNumberSetting, NUMBER_MODES, COLUMN_MODES } from "./chiffres.js";
@@ -77,7 +77,7 @@ import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } fro
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.28.0";
+export const VERSION = "2.29.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -1097,7 +1097,7 @@ function readWorkbook(file) {
    Renvoie { text, stats, reid, generalized }. */
 function codeFreeText(raw, book, extras, excludes, { generaliser = false, rendu = null } = {}) {
   extras = [...(extras || []), ...nomsPolitique([raw])];
-  const base = anonymizeText(raw, book, extras, { excludes });
+  const base = anonymizeText(raw, book, extras, { excludes, knownWord: (w) => isKnownWord(w) });
   const strict = strictCode(base.text, { book, extra: extras, excludes });
   const stats = { ...mergeStats(base.stats, strict), autoNames: base.stats.autoNames };
   let text = strict.text, generalized = null;
@@ -1279,14 +1279,23 @@ function codeWord(buf, book, extras, excludes, { generaliser = false, rendu = nu
 }
 
 function describeRemovals(r) {
+  // v2.29 — le suivi des modifications et les commentaires restent, en texte
+  // codé (word.js, « suivi visible ») ; seul le mode « accepter » les retire.
+  const visible = r.suivi !== "accepter";
+  const kept = visible ? [
+    r.revisions ? `${r.revisions} révision(s) du suivi des modifications, marquées [supprimé par …] / [inséré par …]` : "",
+    r.comments ? `${r.comments} commentaire(s), marqués [commentaire de …]` : "",
+  ].filter(Boolean) : [];
   const parts = [
-    r.comments || r.commentParts ? `${r.comments || r.commentParts} commentaire(s)` : "",
-    r.revisions ? `${r.revisions} révision(s) du suivi des modifications (texte supprimé retiré, insertions acceptées)` : "",
+    visible ? "" : r.comments || r.commentParts ? `${r.comments || r.commentParts} commentaire(s)` : "",
+    visible ? "" : r.revisions ? `${r.revisions} révision(s) du suivi des modifications (texte supprimé retiré, insertions acceptées)` : "",
     r.fields || r.links ? `${r.fields + r.links} champ(s) ou lien(s) — le texte affiché reste, la cible part` : "",
     r.images ? `${r.images} image(s)` : "",
     r.objects ? `${r.objects} objet(s) incorporé(s)` : "",
   ].filter(Boolean);
-  return "Retiré de la copie : métadonnées (auteur, société, titre…)" + (parts.length ? ", " + parts.join(", ") : "") + ".";
+  return (kept.length ? `Gardé dans la copie, en texte codé : ${kept.join(", ")} — auteurs et contenu codés comme le reste du document.\n` : "") +
+    "Retiré de la copie : métadonnées (auteur, société, titre…)" + (visible && (r.revisions || r.comments) ? ", attributs d'auteur et de date du suivi" : "") +
+    (parts.length ? ", " + parts.join(", ") : "") + ".";
 }
 
 /* Le détecteur du verrou de sortie, sur la clé moins les valeurs que
@@ -1401,8 +1410,9 @@ tool(
     description:
       "Pseudonymise un fichier du dossier de travail (Excel/CSV, Word .docx, PDF natif, texte .md/.txt) AVANT toute analyse. " +
       "Modes choisis automatiquement : TABLEAU (colonnes sensibles codées en entier), DOCUMENT (facture, document " +
-      "mis en page → codage à l'intérieur des cellules), WORD (copie .docx codée, mise en forme conservée, métadonnées et " +
-      "commentaires retirés) et PDF/TEXTE (contenu extrait, anonymisé, livré en .md). " +
+      "mis en page → codage à l'intérieur des cellules), WORD (copie .docx codée, mise en forme conservée, métadonnées " +
+      "retirées ; suivi des modifications et commentaires gardés en texte codé : [supprimé par …], [inséré par …], " +
+      "[commentaire de …]) et PDF/TEXTE (contenu extrait, anonymisé, livré en .md). " +
       "Dans tous les modes, le VERROU code en plus tout ce qui n'est pas prouvé inoffensif : noms propres, mots " +
       "inconnus du dictionnaire, références, identifiants (cartes bancaires et permis de conduire compris). Les NOMBRES d'un tableur sont " +
       "nombres : finance sensible (paie, CA…) protégée, le reste en clair, réglable colonne par colonne (chiffres, chiffres_par_colonne) ; dates et mots courants restent lisibles. " +

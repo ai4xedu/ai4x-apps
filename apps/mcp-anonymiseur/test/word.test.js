@@ -62,8 +62,8 @@ test("unitaire : un nom coupé entre deux runs est codé d'un bloc, la mise en f
   assert.match(doc, /<w:pStyle w:val="Titre1"\/>/, "les styles de paragraphe restent");
 });
 
-test("unitaire : métadonnées, commentaires, révisions, champs, liens, images, données cachées sont retirés", () => {
-  const { buf, removed } = codeDocx(trappedDocx(XLSX), fakeCode, XLSX);
+test("unitaire (suivi « accepter ») : métadonnées, commentaires, révisions, champs, liens, images, données cachées sont retirés", () => {
+  const { buf, removed } = codeDocx(trappedDocx(XLSX), fakeCode, XLSX, { suivi: "accepter" });
   const parts = allPartsText(buf, XLSX);
   const names = Object.keys(parts);
   for (const gone of ["word/comments.xml", "word/people.xml", "docProps/custom.xml", "docProps/thumbnail.jpeg", "customXml/item1.xml", "word/media/image1.png"]) {
@@ -93,6 +93,40 @@ test("unitaire : métadonnées, commentaires, révisions, champs, liens, images,
   assert.doesNotMatch(parts["[Content_Types].xml"], /comments|people|custom\.xml/);
   assert.doesNotMatch(parts["word/_rels/document.xml.rels"], /comments|people|image1|mailto|customXml/);
   assert.ok(removed.comments >= 1 && removed.revisions >= 2 && removed.images >= 1 && removed.links >= 1 && removed.fields >= 1);
+});
+
+// v2.29 — validation T01 (contrat renvoyé en suivi de modifications) : sans le
+// suivi, l'IA ne peut pas dire ce que l'autre partie a changé. Par défaut, il
+// reste en TEXTE, et ce texte passe par le codage comme le reste.
+const REV = { ...FAKE, Chraibi: "NOM-003", Omar: "PRENOM-002", Tazi: "NOM-004", Sara: "PRENOM-003" };
+const revCode = (t) => t.replace(/\b(Bennani|Lahlou|Karim|Chraibi|Omar|Tazi|Sara)\b/g, (m) => REV[m]);
+
+test("unitaire (suivi « visible », défaut) : révisions et commentaires restent en texte, codés ; auteurs et comments.xml partent", () => {
+  const { buf, removed, lines } = codeDocx(trappedDocx(XLSX), revCode, XLSX);
+  const parts = allPartsText(buf, XLSX);
+  const doc = parts["word/document.xml"];
+  assert.match(doc, /\[supprimé par PRENOM-003 NOM-004 : ancien client PRENOM-002 NOM-003\]/, "le texte supprimé reste, codé, avec son auteur codé");
+  assert.match(lines.join("\n"), /\[inséré par PRENOM-003 NOM-004 : Le demandeur sollicite le renvoi\.\]/, "l'insertion est marquée");
+  assert.match(doc, /\[commentaire de PRENOM-003 NOM-004 : Vérifier le RIB de NOM-002\]/, "le commentaire est dans le texte, codé");
+  assert.ok(!parts["word/comments.xml"], "la partie comments.xml part toujours");
+  const all = Object.values(parts).join("\n");
+  assert.doesNotMatch(all, /Chraibi|Tazi|Sara|Omar/, "rien du suivi ne reste en clair");
+  assert.doesNotMatch(all, /w:author=|w:initials=|<w:del\b|<w:ins\b|w:commentReference/, "plus aucune marque de révision ni attribut d'auteur");
+  assert.equal(removed.suivi, "visible");
+  assert.ok(removed.revisions >= 2 && removed.comments === 1);
+  assert.deepEqual(residue(buf, (t) => /Chraibi|Tazi/.test(t), XLSX), [], "le filet final ne trouve rien");
+});
+
+test("unitaire : le filet final ignore les URI de schéma (« com » de « C. com. » n'est pas dans schemas.microsoft.com)", () => {
+  const ns = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 wp14"';
+  const parts = (body) => ({
+    "[Content_Types].xml": '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>',
+    "_rels/.rels": '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.microsoft.com/office/2011/relationships/x" Target="word/document.xml"/></Relationships>',
+    "word/document.xml": `<w:document ${ns}><w:body><w:p><w:r><w:t>${body}</w:t></w:r></w:p></w:body></w:document>`,
+  });
+  const find = (t) => /\bcom\b/.test(t);
+  assert.deepEqual(residue(zipParts(parts("Voir L. 442-1 C. CODE-001."), XLSX), find, XLSX), [], "les URI ne comptent pas");
+  assert.deepEqual(residue(zipParts(parts("Voir L. 442-1 C. com."), XLSX), find, XLSX), ["word/document.xml"], "le texte, si");
 });
 
 test("unitaire : le filet final retrouve une valeur dans n'importe quelle partie (attributs compris)", () => {
@@ -198,7 +232,8 @@ test("E2E : anonymiser_dossier traite aussi les .docx, une clé pour tout le lot
 
 test("E2E : un vrai .docx (LibreOffice) — chasse aux fuites sur tout le paquet, mise en page gardée", async () => {
   const done = await call("anonymiser_fichier", { nom_fichier: "Assignation Bennani.docx", confirmer: true });
-  assert.match(done, /1 commentaire\(s\), 2 révision\(s\)/);
+  assert.match(done, /Gardé dans la copie, en texte codé : 2 révision\(s\) du suivi des modifications, marquées .*1 commentaire\(s\), marqués/);
+  assert.match(done, /\[supprimé par PRENOM-\d{3} NOM-\d{3} : ancien client PRENOM-\d{3} NOM-\d{3}\]/, "le vrai .docx : texte supprimé visible et codé");
   for (const s of SECRETS_WORD) assert.ok(!lower(done).includes(lower(s)), `« ${s} » dans la réponse`);
   const f = fs.readdirSync(outdir()).find((n) => /^Assignation NOM-\d{3}-anonymise\.docx$/.test(n));
   assert.ok(f, "copie au nom codé");
