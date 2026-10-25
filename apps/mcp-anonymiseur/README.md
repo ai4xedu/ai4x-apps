@@ -98,6 +98,17 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.27.0 (la caisse en ligne, 25/10/2026). Le connecteur fait confiance à une
+seconde clé de signature, la **clé de caisse** : elle signe les licences des
+abonnements payés en ligne (Polar, sur hiddentokens.com/activer), et vit sur
+le serveur du site, pas sur le poste du fondateur. Distincte de la clé
+maîtresse : si elle fuit, un connecteur qui retire `CAISSE_PUBLIC_KEY_B64`
+suffit, les licences émises à la main ne bougent pas. Ces licences portent
+`src: "polar"` ; à l'approche de l'échéance, le connecteur dit que
+l'abonnement se renouvelle tout seul et que la nouvelle clé se récupère sur
+hiddentokens.com/activer, au lieu de renvoyer vers WhatsApp. Le sceau client
+d'une telle licence est certifié par la même clé de caisse.
+
 v2.26.1 (fin d'essai, 25/10/2026). Quand l'essai de 14 jours est terminé et
 qu'aucune clé n'est configurée, le message dit maintenant où coller la clé
 (réglages de Claude Desktop → Extensions → Hidden Tokens → « Clé de licence »)
