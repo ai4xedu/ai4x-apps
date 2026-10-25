@@ -16,7 +16,7 @@ npm run bench:ht:generer    # régénère dataset/ (dev et test) depuis les grai
 node bench/ht-bench/evaluer.mjs --enregistrer-reference   # réécrit reference.json (jeu dev)
 ```
 
-Le banc complet prend une dizaine de secondes. En CI, le job `ht-bench` (`.github/workflows/mcp-anonymiseur.yml`) fait deux choses : il vérifie que `dataset/` (dev et test) est bien celui que produisent les graines, et il échoue si le rappel des identifiants directs baisse, que ce soit au global, pour un pack ou pour un type. Le rapport est joint à l'exécution. `test/ht-bench.test.js` couvre les pièces du banc qui n'ont pas besoin du moteur (balisage, réalignement, règle de score).
+Le banc complet prend une dizaine de secondes. En CI, le job `ht-bench` (`.github/workflows/mcp-anonymiseur.yml`) fait deux choses : il vérifie que `dataset/` (dev et test) est bien celui que produisent les graines, et il échoue si le rappel des identifiants directs baisse, que ce soit au global, pour un pack ou pour un type, ou si un seul document ne passe pas l'aller-retour (voir « Sortie corrompue » plus bas). Le rapport est joint à l'exécution. `test/ht-bench.test.js` couvre les pièces du banc qui n'ont pas besoin du moteur (balisage, réalignement, règle de score).
 
 `npm run bench` (le banc des fuites, `bench/run.mjs`) reste à part. Il pose une autre question : sur un petit corpus réaliste et tout le parcours MCP, une valeur se retrouve-t-elle quelque part dans ce que lit l'IA ?
 
@@ -57,6 +57,7 @@ Chaque document passe par **`anonymiser_fichier` sur un `.md`**, c'est-à-dire `
 - **Identifiants directs** : noms, CIN, NIR, CNSS, ICE, IF, RC, SIREN, SIRET, téléphones, e-mails, IBAN, RIB, IMEI, IMSI, carte bancaire, cryptogramme (CVV), passeport / titre de séjour / permis. La cible est un rappel ≥ 99 % par pack, et c'est ce rappel que contrôle la CI. Les autres types (adresse, société, date de naissance, BIC, numéros de dossier…) sont mesurés mais pas contrôlés.
 - **Vu par l'IA** : pour chaque valeur manquée, le banc regarde si le morceau resté en clair apparaît encore dans la réponse de `coder_texte`, verrou de sortie compris, ou si ce dernier filet l'a rattrapé.
 - **Sortie corrompue** : il arrive que le texte codé ne soit plus « l'original + des codes », par exemple avec des codes imbriqués (`NOM-001-002`) ou un morceau de mot recodé. Le document est alors réaligné par plus longue sous-suite commune et signalé dans le rapport.
+- **Aller-retour** (v2.28) : le texte codé, décodé avec sa clé, doit rendre l'original. Chaque morceau en clair doit s'y retrouver tel quel, et chaque code doit recouvrir sa valeur, au plus écrite autrement (séparateurs, casse). Une sortie corrompue échoue, et un code posé sur autre chose que sa valeur aussi. `--controle` échoue dès qu'un document du jeu dev ne passe pas. `test/aller-retour.test.js` fait la même vérification, sans le banc, sur les pièges trouvés (« amoxicilline », « lotissement », « Patient : Karim »…).
 
 ## Arborescence
 

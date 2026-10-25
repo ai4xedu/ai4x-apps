@@ -36,6 +36,17 @@ test("alignement : une sortie imbriquée (« NOM-001-002 ») est signalée et no
   assert.ok(segments.every((s) => s.fin <= o.indexOf(" du ")), "la date reste en clair");
 });
 
+test("aller-retour (v2.28) : vrai si le décodage rend l'origine ; faux pour une sortie imbriquée ou un code posé sur autre chose que sa valeur", () => {
+  const o = "M. Mohamed Ben Ali, tél. 06 61 23 45 67.";
+  assert.equal(aligner(o, "M. PRENOM-001 Ben PRENOM-002, tél. TEL-001.", { "PRENOM-001": "Mohamed", "PRENOM-002": "Ali", "TEL-001": "0661234567" }).allerRetour, true);
+  assert.equal(aligner("FACTURE n° FAC-2025-3508", "NOM-001-002 n° FACTURE-001", { "NOM-001": "FACT", "FACTURE-001": "FAC-2025-3508" }).allerRetour, false);
+  // « amoxicilline » → « amoASSURE-001 » : le code ne recouvre pas « xicilline » tel que la clé le dit.
+  const r = aligner("1) amoxicilline 1 g", "1) amoASSURE-001 1 g", { "ASSURE-001": "xicilline 2" });
+  assert.equal(r.imbrique, false);
+  assert.equal(r.allerRetour, false);
+  assert.equal(aligner("rien à coder", "rien à coder", {}).allerRetour, true);
+});
+
 test("score : particules permises, morceau en clair = partielle, leurre codé = faux positif", () => {
   const doc = { ...analyser("[[PERSONNE:Mohamed Ben Ali]] et [[PERSONNE:Ma'ati Tazi]], {{MOT:Noël}}."), id: "t" };
   const seg = (v, p) => { const i = doc.texte.indexOf(v); return { debut: i, fin: i + v.length, code: `${p}-001`, prefixe: p }; };

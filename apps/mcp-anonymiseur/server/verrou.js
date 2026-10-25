@@ -206,6 +206,7 @@ selon pour par avec sans apres avant depuis lors suite vu attendu considerant co
 conformement enfin ainsi alors cependant toutefois neanmoins pourtant donc puis ensuite aussi encore deja hier
 demain aujourd cher chere chers cheres bonjour bonsoir merci dossier affaire objet re ref concerne note memo
 pieces piece rappel voir cf entre contre chez
+recu recue recus
 `));
 
 const ROMAN_RX = /^(?=[IVXLCDM]{1,7}$)M{0,3}(?:CM|CD|D?C{0,3})(?:XC|XL|L?X{0,3})(?:IX|IV|V?I{0,3})$/;
@@ -216,6 +217,8 @@ const HONORIFIC_WORDS = new Set(words(`
 monsieur madame mademoiselle messieurs mesdames maitre docteur professeur sieur dame veuve epoux epouse
 nee ne feu si sidi lalla moulay hajj hadj haj cheikh cheikha mister miss
 `));
+/* v2.28 — titres qui sont aussi des prénoms courants : codés devant un nom. */
+const NAME_TITLES = new Set(words("cheikh cheikha"));
 
 /* Rôles : un mot capitalisé qui suit est un nom (« le Président Robin »,
    « l'expert GERMAIN », « le juge Léger », « le client Moulin »). */
@@ -908,7 +911,7 @@ function tokenRx() {
     tokenCache = { version: v, rx: new RegExp(
       `(?<code>${codeSrc()})` +
       "|(?<mixed>[\\p{L}\\p{N}]*(?:\\p{L}\\p{N}|\\p{N}\\p{L})[\\p{L}\\p{N}]*)" +
-      "|(?<word>\\p{L}+(?:-\\p{L}+)*)" +
+      "|(?<word>\\p{L}+(?:(?:-|['’])\\p{L}+)*)" +
       "|(?<num>\\p{N}+)",
       "gu"
     ) };
@@ -917,6 +920,42 @@ function tokenRx() {
 }
 
 const UNIT_RX = /^(?:\d+(?:er|ère|ere|re|e|è|ème|eme|nd|nde|h|h\d{1,2}|min|mn|s|kg|g|mg|km|m|cm|mm|m2|m²|m3|l|ml|cl|ko|mo|go|to|kb|mb|gb|tb|ht|ttc|x|j|jrs|mois|an|ans|k|ke|k€|m€|dh|dhs|mad|eur|usd|€|pt|pts|px|dpi|g|v|w|kw|kwh|mw|hz|ghz|mhz)|[a-z]\d|[tqs][1-4]|\d[a-z]|mp[34]|b2[bc]|p2p|h24|covid-?19|iso\d{3,5}|[34]g|5g|v\d{1,2})$/i;
+
+/* v2.28 — l'apostrophe DANS un nom : « R'kia », « Ma'ati », « O'Brien »,
+   « M'hamed » sont un seul mot. Coupés à l'apostrophe, « R » (une initiale)
+   et « Ma » (un mot) restaient en clair à côté du code. L'apostrophe reste
+   une coupure pour l'élision (« l'avocat », « d'Agadir », « qu'il »), la
+   contraction anglaise (« don't », « John's ») et deux mots du dictionnaire
+   (« prud'hommes », « aujourd'hui ») : là, rien ne change. */
+const ELISIONS = new Set(words("l d j m n s t c qu jusqu lorsqu puisqu quoiqu presqu quelqu"));
+const EN_CONTRACTIONS = new Set(words("s t re ve ll d m"));
+function apostropheJoins(left, right) {
+  const L = fold(left.split("-").pop());
+  const R = right.split("-")[0];
+  if (EN_CONTRACTIONS.has(fold(R))) return false;
+  const en = english() !== null;
+  if (ELISIONS.has(L)) {
+    // « M'hamed », « M'barek » : une lettre capitale, puis un mot inconnu en
+    // minuscules — un prénom, pas « m'appelle ».
+    return /^\p{Lu}$/u.test(left.split("-").pop()) && /^\p{Ll}/u.test(R) && R.length >= 3 && !isKnownWord(R, en);
+  }
+  return !(isKnownWord(left.split("-").pop(), en) && isKnownWord(R, en));
+}
+function splitApostrophes(s, at, toks) {
+  const parts = s.split(/(['’])/);
+  let cur = parts[0];
+  let curAt = at;
+  for (let i = 1; i < parts.length; i += 2) {
+    const ap = parts[i];
+    const next = parts[i + 1];
+    if (apostropheJoins(cur, next)) { cur += ap + next; continue; }
+    toks.push({ k: "word", s: cur, at: curAt });
+    toks.push({ k: "sep", s: ap, at: curAt + cur.length });
+    curAt += cur.length + ap.length;
+    cur = next;
+  }
+  toks.push({ k: "word", s: cur, at: curAt });
+}
 
 function tokenize(text) {
   const toks = [];
@@ -927,7 +966,8 @@ function tokenize(text) {
   while ((m = TOKEN_RX.exec(text))) {
     if (m.index > last) toks.push({ k: "sep", s: text.slice(last, m.index), at: last });
     const g = m.groups;
-    toks.push({ k: g.code ? "code" : g.mixed ? "mixed" : g.word ? "word" : "num", s: m[0], at: m.index });
+    if (g.word && /['’]/.test(m[0])) splitApostrophes(m[0], m.index, toks);
+    else toks.push({ k: g.code ? "code" : g.mixed ? "mixed" : g.word ? "word" : "num", s: m[0], at: m.index });
     last = TOKEN_RX.lastIndex;
   }
   if (last < text.length) toks.push({ k: "sep", s: text.slice(last), at: last });
@@ -1099,6 +1139,41 @@ export function strictCode(input, opts = {}) {
   const verdict = new Array(W.length).fill(null); // null = en clair ; sinon type de code
   let lawChain = false;
 
+  // v2.28 — un patronyme derrière sa particule (cf. la règle dans la boucle).
+  // Un mot d'intitulé y compte (« Hélène Le Bon ») : la particule capitalisée
+  // juste après un nom suffit à dire que c'est un nom.
+  const surnameWord = (wi, P) => {
+    const x = f[wi];
+    const w = tok(wi).s;
+    return w.length > 1 && !P.func.has(x) && !P.det.has(x) && !PARTICLES.has(x) && !P.roles.has(x) &&
+      !P.labels.has(x) && !P.company.has(x) && !LAW_WORDS.has(x) && !ROMAN_RX.test(w) &&
+      (!P.honorWords.has(x) || NAME_TITLES.has(x));
+  };
+  // Une ou deux particules juste avant wi (« Le », « de La », « Ould »),
+  // précédées d'un nom déjà reconnu ou d'un titre : { cap, honor }, sinon null.
+  const PART_SEP = /^(?:[  ]{1,2}|['’])$/;
+  const particleChain = (wi) => {
+    let j = wi - 1;
+    let n = 0;
+    let cap = false;
+    while (n < 2 && isWord(j) && PARTICLES.has(f[j]) && PART_SEP.test(sepBefore(j + 1))) { cap = cap || isCap(tok(j).s); j--; n++; }
+    if (!n || !isWord(j)) return null;
+    const s = sepBefore(j + 1);
+    const abbr = HONORIFIC_ABBR.has(f[j]) && isCap(tok(j).s);
+    if (!(SPACE.test(s) || (abbr && /^\.[  ]{1,2}$/.test(s)))) return null;
+    const honor = abbr || PW[j].honorWords.has(f[j]);
+    if (!honor && verdict[j] !== "prenom" && verdict[j] !== "nom") return null;
+    return { cap, honor };
+  };
+  // Un nom capitalisé suit wi, éventuellement derrière une ou deux particules.
+  const nameFollows = (wi) => {
+    let j = wi + 1;
+    let n = 0;
+    while (n < 2 && isWord(j) && PARTICLES.has(f[j]) && SPACE.test(sepBefore(j))) { j++; n++; }
+    return isWord(j) && isCap(tok(j).s) && SPACE.test(sepBefore(j)) && !initial[j] && surnameWord(j, PW[j]) &&
+      !PW[j].honorWords.has(f[j]);
+  };
+
   for (let wi = 0; wi < W.length; wi++) {
     const t = tok(wi);
     if (t.k === "code" || t.k === "num") { lawChain = false; continue; }
@@ -1137,6 +1212,23 @@ export function strictCode(input, opts = {}) {
     // Chaîne d'un titre de loi : « loi Informatique et Libertés ».
     if (prevWord && LAW_WORDS.has(px) && SPACE.test(sep)) lawChain = true;
     else if (!(isCap(w) || (lawChain && /^(?:et|de|du|des|d|pour|sur|relative|relatif)$/.test(x)))) lawChain = false;
+
+    // v2.28 — après la particule d'un nom, le mot capitalisé est le
+    // patronyme, même s'il est aussi un mot : « Sophie Le Roux », « Inès de
+    // La Fontaine », « M. de La Fontaine », « Nesrine Ould Bah ». « Le » et
+    // « La » y passaient pour des articles (« le roux »), ou le patronyme pour
+    // la suite d'un titre de loi (« Règlement Mehdi Ould Bah »), et il restait
+    // en clair. Il faut un nom ou un titre juste avant la particule, et une
+    // particule capitalisée ou un titre : « Karim de Rabat » (un « de » seul)
+    // garde la règle d'avant.
+    if (isCap(w) && !initial[wi] && surnameWord(wi, P)) {
+      const c = particleChain(wi);
+      if (c && (c.cap || c.honor)) { verdict[wi] = "nom"; continue; }
+    }
+    // « Cheikh », « Cheikha » : un titre, mais aussi un prénom courant
+    // (« Cheikh El Alaoui », « Cheikh Saidi ») — codé quand un nom suit.
+    if (NAME_TITLES.has(x) && isCap(w) && nameFollows(wi)) { verdict[wi] = "prenom"; continue; }
+
     if (lawChain && isCap(w) && known && !N.nomColl.has(x) && !firstName) continue;
 
     // Particule capitalisée devant un nom (« El Amrani », « Ben Ali ») : en clair.

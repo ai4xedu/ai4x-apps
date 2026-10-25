@@ -86,19 +86,25 @@ function alignerParDiff(orig, code, rx) {
 }
 
 /* → { segments: [{ debut, fin, code, prefixe }] (positions du texte
-   d'origine), imbrique } */
+   d'origine), imbrique, allerRetour }
+   allerRetour (v2.28) : décoder le texte codé avec sa clé rend l'origine —
+   chaque morceau en clair s'y retrouve tel quel, chaque code remplace sa
+   valeur (au plus écrite autrement : séparateurs, casse). Faux pour un texte
+   imbriqué, ou quand un code ne recouvre pas sa valeur (le réalignement a dû
+   se rabattre sur le morceau en clair suivant). La CI l'exige partout. */
 export function aligner(orig, code, cle) {
   const codes = Object.keys(cle).sort((a, b) => b.length - a.length);
-  if (!codes.length) return { segments: orig === code ? [] : alignerParDiff(orig, code, /$^/g), imbrique: orig !== code };
+  if (!codes.length) return { segments: orig === code ? [] : alignerParDiff(orig, code, /$^/g), imbrique: orig !== code, allerRetour: orig === code };
   const rx = new RegExp(`(?<![A-Z0-9-])(?:${codes.map(esc).join("|")})(?![A-Za-z0-9])`, "g");
   try {
-    return { segments: alignerExact(orig, code, cle, rx), imbrique: false };
+    const r = alignerExact(orig, code, cle, rx);
+    return { segments: r.segments, imbrique: false, allerRetour: r.replis === 0 };
   } catch {
     // Une chaîne imbriquée (« NOM-002-TEL-002-REF-001-004 ») compte pour UN
     // code : ses chiffres ne doivent pas s'apparier à ceux de l'origine.
     const alt = codes.map(esc).join("|");
     const chaine = new RegExp(`(?<![A-Z0-9-])(?:${alt})(?:-(?:${alt}|\\d{3,}))*(?![A-Za-z0-9])`, "g");
-    return { segments: alignerParDiff(orig, code, chaine), imbrique: true };
+    return { segments: alignerParDiff(orig, code, chaine), imbrique: true, allerRetour: false };
   }
 }
 
@@ -114,6 +120,7 @@ function alignerExact(orig, code, cle, rx) {
 
   const segments = [];
   let p = 0;
+  let replis = 0;
   for (let k = 0; k < morceaux.length; k++) {
     const x = morceaux[k];
     if (x.clair !== undefined) {
@@ -131,10 +138,11 @@ function alignerExact(orig, code, cle, rx) {
       const j = suite ? orig.indexOf(suite, p + 1) : orig.length;
       if (j < 0) throw new Error(`code ${x.code} : passage d'origine introuvable à la position ${p}`);
       fin = j;
+      replis++;
     }
     segments.push({ debut: p, fin, code: x.code, prefixe: x.code.replace(/-\d+$/, "") });
     p = fin;
   }
   if (p !== orig.length) throw new Error(`réalignement incomplet (${p}/${orig.length})`);
-  return segments;
+  return { segments, replis };
 }

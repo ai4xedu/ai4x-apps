@@ -69,6 +69,9 @@ const sortie = {
   // Texte codé qui n'est plus « l'origine + des codes » (codes imbriqués,
   // morceau de mot recodé) : protégé, mais indécodable proprement.
   documents_imbriques: resultats.filter((r) => r.imbrique).map((r) => r.id),
+  // v2.28 — décoder le texte codé avec sa clé doit rendre l'origine (cf.
+  // lib/alignement.mjs). Un document qui échoue fait échouer --controle.
+  documents_sans_aller_retour: resultats.filter((r) => !r.allerRetour).map((r) => r.id),
 };
 fs.mkdirSync(SORTIE, { recursive: true });
 fs.writeFileSync(path.join(SORTIE, "ht-bench.json"), JSON.stringify(sortie, null, 1) + "\n");
@@ -81,7 +84,9 @@ for (const [p, v] of Object.entries(agg.par_pack)) {
   console.log(`  ${p.padEnd(22)} ${pct(v.direct.rappel).padStart(8)} (${v.direct.detectes}/${v.direct.n})`.padEnd(45) +
     `${pct(v.tous.rappel).padStart(8)}   ${pct(v.precision).padStart(8)}   ${pct(v.leurres.taux_faux_positifs).padStart(8)}`);
 }
-console.log(`\n  DIRECTS : ${pct(agg.global.direct.rappel)} (${agg.global.direct.detectes}/${agg.global.direct.n}) — cible ≥ 99 % par pack`);
+const sansAR = sortie.documents_sans_aller_retour;
+console.log(`\n  ALLER-RETOUR : ${sansAR.length ? `❌ ${sansAR.length} document(s) dont le décodage ne rend pas l'origine (${sansAR.slice(0, 5).join(", ")}${sansAR.length > 5 ? "…" : ""})` : `✅ les ${resultats.length} documents se décodent à l'identique`}`);
+console.log(`  DIRECTS : ${pct(agg.global.direct.rappel)} (${agg.global.direct.detectes}/${agg.global.direct.n}) — cible ≥ 99 % par pack`);
 console.log("  Plus gros écarts :");
 for (const e of sortie.plus_gros_ecarts) console.log(`   - ${e.cle} : ${e.perdues} perdue(s) sur ${e.n} (rappel ${pct(e.rappel)})`);
 console.log(`\n  → ${path.relative(process.cwd(), path.join(SORTIE, "RAPPORT.md"))}`);
@@ -118,9 +123,10 @@ if (CONTROLE) {
   comparer("global", ref.global, cur.global);
   for (const [p, a] of Object.entries(ref.par_pack)) comparer(`pack ${p}`, a, cur.par_pack[p]);
   for (const [t, a] of Object.entries(ref.par_type)) comparer(`type ${t}`, a, cur.par_type[t]);
+  if (sansAR.length) chutes.push(`aller-retour : ${sansAR.length} document(s) dont le texte codé ne se décode pas en l'origine (codes imbriqués, mot recodé) — ${sansAR.join(", ")}`);
   if (chutes.length) {
-    console.error(`\n❌ Rappel des identifiants directs sous la référence :\n  ${chutes.join("\n  ")}`);
+    console.error(`\n❌ Contrôle HT-Bench en échec :\n  ${chutes.join("\n  ")}`);
     process.exit(1);
   }
-  console.log(`\n✅ Rappel des identifiants directs ≥ référence (moteur v${ref.version_moteur}) sur ${Object.keys(ref.par_pack).length} packs et ${Object.keys(ref.par_type).length} types.`);
+  console.log(`\n✅ Rappel des identifiants directs ≥ référence (moteur v${ref.version_moteur}) sur ${Object.keys(ref.par_pack).length} packs et ${Object.keys(ref.par_type).length} types ; chaque document se décode à l'identique.`);
 }

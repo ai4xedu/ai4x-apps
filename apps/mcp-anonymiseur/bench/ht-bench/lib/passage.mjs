@@ -23,7 +23,7 @@ export async function noterHiddenTokens(docs) {
         let al;
         try { al = aligner(d.texte, code, cle); }
         catch (e) { erreurs.push(`${d.id} : ${e.message}`); continue; }
-        resultats.push({ id: d.id, pack: d.pack, code, imbrique: al.imbrique, ...evaluerDocument(d, al.segments, vu) });
+        resultats.push({ id: d.id, pack: d.pack, code, imbrique: al.imbrique, allerRetour: al.allerRetour, ...evaluerDocument(d, al.segments, vu) });
       }
     } finally { await moteur.fermer(); }
   }

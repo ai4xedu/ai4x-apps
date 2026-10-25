@@ -98,6 +98,34 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.28.0 (HT-Bench ≥ 99 % par pack, 25/10/2026). Les manques que mesurait
+HT-Bench sur les identifiants directs sont comblés, et aucune sortie n'est
+plus corrompue. Le moteur prend maintenant en entier :
+- le NIR dont la clé est écrite après un tiret (`1 84 05 75 112 345 - 78`),
+  si la clé est juste ;
+- le n° d'affiliation CNSS de l'employeur annoncé avec son rôle
+  (« CNSS employeur 7456193 », « affiliée à la CNSS sous le n° … ») ;
+- le RIB marocain et l'IBAN écrits par groupes de quatre. Les seize premiers
+  chiffres passaient Luhn une fois sur dix : ils étaient codés CARTE, et la
+  fin restait en clair. La clé mod 97 du compte est maintenant vérifiée
+  avant la carte.
+
+Le verrou code le patronyme qui suit une particule capitalisée (« Sophie Le
+Roux », « M. de La Fontaine », « Nesrine Ould Bah »). Il lit un prénom à
+apostrophe comme un seul mot (« R'kia », « Ma'ati », « M'hamed ») : l'élision
+ne change pas (« l'avocat d'Agadir », « prud'hommes »). Il code « Cheikh »
+comme prénom quand un nom le suit. Côté packs (santé 1.1.0, RH-paie 1.1.0,
+juridique 1.1.0, banque 1.2.0), les libellés des motifs ne se déclenchent
+plus dans un mot (« AMO » dans « amoxicilline », « lot » dans
+« lotissement ») ni d'une ligne à l'autre. Un n° de patient ou de lot doit
+contenir un chiffre (« Patient : Karim » n'est plus un n° de patient). Le
+moteur ne remplace plus une valeur trouvée par un pack qu'en mot entier, et
+jamais dans un code qu'il vient de poser : c'est ce qui fabriquait des codes
+imbriqués indécodables. HT-Bench vérifie enfin l'aller-retour : chaque texte
+codé, décodé avec sa clé, doit rendre l'original, sinon la CI échoue.
+Identifiants directs : jeu dev 97,7 % → 100 %, jeu de test (jamais réglé)
+98,2 % → 100 %, sorties corrompues 9 → 0, leurres codés en baisse.
+
 v2.27.0 (la caisse en ligne, 25/10/2026). Le connecteur fait confiance à une
 seconde clé de signature, la **clé de caisse** : elle signe les licences des
 abonnements payés en ligne (Polar, sur hiddentokens.com/activer), et vit sur

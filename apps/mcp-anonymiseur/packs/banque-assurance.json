@@ -2,7 +2,7 @@
   "format": "hidden-tokens.pack/1",
   "id": "banque-assurance",
   "nom": "Banque et assurance",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "IBAN de tous pays (clé mod 97) et RIB marocain codés RIB, BIC/SWIFT, carte : cryptogramme (CVV), n° de police, de sinistre, de chèque et de LCN annoncés, plaques marocaines ; régulateurs, banques, assureurs, sigles de la conformité et vocabulaire des contrats laissés en clair.",
   "regles": [
     {"id": "P-001", "type": "motif", "libelle": "IBAN (tous pays, clé vérifiée)", "prefixe": "RIB",
@@ -14,7 +14,7 @@
     {"id": "P-004", "type": "motif", "libelle": "Numéro de sinistre annoncé", "prefixe": "SINISTRE",
       "motif": "(?<=\\bsinistre[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)(?![A-Z]{2,}-(?:\\d{3}|\\d{8})(?![A-Z0-9-]))(?=[A-Z/-]*\\d)[A-Z0-9][A-Z0-9/-]{5,19}(?![A-Z0-9/-])", "exemple": "sinistre n° SIN-26-00871"},
     {"id": "P-005", "type": "motif", "libelle": "Numéro de chèque annoncé", "prefixe": "CHEQUE",
-      "motif": "(?<=\\bch[èe]que\\s*(?:n[°o]\\.?)?\\s*[:=]?\\s*)\\d{7}(?!\\d)", "exemple": "chèque n° 1234567"},
+      "motif": "(?<=\\bch[èe]ques?(?!\\p{L})[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)\\d{7}(?!\\d)", "exemple": "chèque n° 1234567"},
     {"id": "P-006", "type": "motif", "libelle": "Numéro de LCN (lettre de change normalisée) annoncé", "prefixe": "LCN",
       "motif": "(?<=\\bLCN[ \\t]*(?:n[°o]\\.?)?[ \\t]*[:=]?[ \\t]*)\\d{7}(?!\\d)", "exemple": "LCN n° 1234567"},
     {"id": "P-007", "type": "motif", "libelle": "Cryptogramme de carte (CVV / CVC) annoncé", "prefixe": "CVV",

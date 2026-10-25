@@ -177,6 +177,34 @@ export function isCardNumber(s) {
   return luhnOk(d);
 }
 
+/* v2.28 — clés mod 97 (HT-Bench) : de quoi reconnaître un numéro EN ENTIER
+   avant qu'un morceau ne passe pour autre chose.
+   - IBAN (ISO 13616) : les quatre premiers caractères à la fin, les lettres
+     en nombres, le tout ≡ 1 mod 97 ;
+   - RIB marocain (24 chiffres) : le RIB entier ≡ 0 mod 97 ;
+   - NIR : clé = 97 − (13 premiers chiffres mod 97), 2A → 19, 2B → 18. */
+const mod97 = (digits) => {
+  let r = 0;
+  for (const ch of digits) r = (r * 10 + (ch.charCodeAt(0) - 48)) % 97;
+  return r;
+};
+export function ibanOk(s) {
+  const t = String(s).replace(/[\s.\-]/g, "").toUpperCase();
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(t)) return false;
+  const n = (t.slice(4) + t.slice(0, 4)).replace(/[A-Z]/g, (c) => String(c.charCodeAt(0) - 55));
+  return mod97(n) === 1;
+}
+export function ribMarocOk(s) {
+  const d = String(s).replace(/[\s.\-]/g, "");
+  return /^\d{24}$/.test(d) && mod97(d) === 0;
+}
+export function nirCleOk(s) {
+  const t = String(s).replace(/[\s.\- ‐-―−]/g, "").toUpperCase();
+  if (!/^[12]\d{4}(?:\d{2}|2[AB])\d{6}\d{2}$/.test(t)) return false;
+  const corps = t.slice(0, 13).replace("2A", "19").replace("2B", "18");
+  return 97 - mod97(corps) === Number(t.slice(13));
+}
+
 /* PERMIS DE CONDUIRE marocain : « 15/284731 » — le code de la province, une
    barre, six chiffres. Une date (06/10/2026) n'a jamais six chiffres d'un
    bloc après la barre. */
@@ -423,6 +451,11 @@ const DOC_PATTERNS = [
   // téléphones : « 2 85 07 75 123 456 78 » sortait en « 2 85 TEL-001 78 »
   // (sexe, année de naissance et clé en clair). Codé en entier, comme une
   // pièce d'identité — le verrou le classe de même.
+  // v2.28 — la clé écrite après un tiret (« 1 84 05 75 112 345 - 67 »)
+  // restait en clair : le NIR est pris avec elle quand elle est juste.
+  { type: "cin",
+    rx: /(?<![\d.\-])[12][ .]?\d{2}[ .]?(?:0[1-9]|1[0-2])[ .]?(?:\d{2}|2[AB])[ .]?\d{3}[ .]?\d{3}[ \u00A0]?[-\u2010-\u2015\u2212][ \u00A0]?\d{2}(?!\d)/g,
+    check: nirCleOk },
   { type: "cin",
     rx: /(?<![\d.\-])[12][ .]?\d{2}[ .]?(?:0[1-9]|1[0-2])[ .]?(?:\d{2}|2[AB])[ .]?\d{3}[ .]?\d{3}(?:[ .]?\d{2})?(?![\d])/g },
   { type: "tel",
@@ -436,7 +469,10 @@ const DOC_PATTERNS = [
   // sortait en clair). Ville optionnelle, 1 à 3 mots capitalisés ou déjà
   // codés (NOM-012), puis au plus « sous le n° » avant le numéro.
   { type: "rc",      rx: /\b(?:RC|R\.C\.?)(?:[^0-9A-Za-z\n]{1,6}(?:d[eu]\s+)?(?:\p{Lu}[\p{L}'’]+|[A-Z]+-\d{3})(?:[\s-]{1,3}(?:\p{Lu}[\p{L}'’]+|[A-Z]+-\d{3})){0,2}(?:\s+sous\s+le)?)?[^0-9A-Za-z\n]{0,6}(?:n[°º.]\s*)?(\d{3,7})\b/gu },
-  { type: "cnss",    rx: /\bCNSS[^0-9A-Za-z\n]{0,6}(\d{6,9})\b/gi },
+  // v2.28 — le numéro d'affiliation de l'employeur (7 chiffres) se cite avec
+  // son rôle : « CNSS employeur 7456193 », « CNSS d'affiliation n° … » ; le
+  // mot du milieu le laissait en clair.
+  { type: "cnss",    rx: /\bCNSS(?:[ \t]+(?:employeur|patronale?|salari[ée]e?|assur[ée]e?|d['’][ \t]?affiliation|affiliation|immatriculation))?(?:[ \t]+sous[ \t]+le)?[^0-9A-Za-z\n]{0,6}(?:n[°º.o]?[ \t]*)?(\d{6,9})\b/gi },
   { type: "patente", rx: /\bpatente[^0-9A-Za-z\n]{0,6}(\d{5,9})\b/gi },
   { type: "cin",     rx: /\b(?:CIN|C\.I\.N\.?)[^0-9A-Za-z\n]{0,4}([A-Za-z]{1,2}\d{3,8})\b/gi },
   // v2.1 — permis de conduire (libellé ou nu) et carte bancaire (Luhn), AVANT
@@ -445,6 +481,12 @@ const DOC_PATTERNS = [
   // carte : rien ne peut suivre les 19 premiers.
   { type: "permis",  rx: /\bpermis(?:\s+de\s+conduire)?[^0-9A-Za-z\n]{0,8}(\d{1,2}\s?\/\s?\d{6})(?![\d/])/gi },
   { type: "permis",  rx: /(?<![\d/])\d{1,2}\/\d{6}(?![\d/])/g },
+  // v2.28 — un compte se prend EN ENTIER avant le contrôle de carte : dans
+  // « 0117 2663 0845 1886 7116 7673 » (RIB par quatre) ou un IBAN par quatre,
+  // les seize premiers chiffres passent Luhn une fois sur dix, partaient en
+  // CARTE et laissaient la fin en clair. La clé mod 97 tranche.
+  { type: "rib",     rx: /(?<![A-Za-z0-9])[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{4}){2,7}(?:[ ]?[A-Z0-9]{1,4})?(?![A-Za-z0-9])/g, check: ibanOk },
+  { type: "rib",     rx: /(?<![\dA-Za-z-])\d(?:[ .\-]?\d){23}(?![\dA-Za-z]|[ .\-]\d)/g, check: ribMarocOk },
   { type: "carte",   rx: /(?<![\dA-Za-z-])\d(?:[ .\-]?\d){12,18}(?![\dA-Za-z])/g, check: isCardNumber },
   { type: "carte",   rx: /(?<![\dA-Za-z*])\d{4,6}(?:[ .\-]*[*xX•·]){4,12}[ .\-]*\d{4}(?![\dA-Za-z])/g },
   // Longues suites de chiffres sans libellé : 15 = ICE, 16-26 = RIB/IBAN.
@@ -735,6 +777,12 @@ export function isSuspectName(text) {
   return allCapsName(noCodes.trim());
 }
 
+/* Marque provisoire d'un code (cf. codeDocumentText, étape 1) : U+E000 puis
+   un caractère du plan d'usage privé A, qui porte le rang du code. */
+const MARK = "\uE000";
+const MARK_BASE = 0xF0000;
+const MARK_RX = /\uE000([\u{F0000}-\u{FFFFD}])/gu;
+
 /* Code les données sensibles D'UN TEXTE (une cellule). `extra` : valeurs
    exactes supplémentaires à coder (noms propres fournis par l'utilisateur),
    chacune { value, type }. Renvoie { text, replaced, newCodes, byType }. */
@@ -752,17 +800,27 @@ export function codeDocumentText(input, book, extra) {
 
   // 1) Les valeurs fournies explicitement (les plus longues d'abord, pour que
   //    « Sophatel S.A » passe avant « Sophatel »).
+  //    v2.28 — en mots entiers, et jamais dans un code posé par une valeur
+  //    précédente : une valeur trouvée par le motif d'un pack (« xicilline »
+  //    derrière « AMO ») était remplacée au milieu d'« amoxicilline », puis le
+  //    reste du mot recodé — des codes imbriqués que la clé ne sait plus
+  //    décoder (HT-Bench). Chaque remplacement pose d'abord une marque (deux
+  //    caractères d'usage privé, ni lettre ni chiffre), les codes ne sont
+  //    écrits qu'à la fin.
   const extras = (extra || []).filter((e) => e && String(e.value).trim().length >= 2)
     .sort((a, b) => String(b.value).length - String(a.value).length);
+  const placed = [];
   for (const e of extras) {
     const esc = String(e.value).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const rx = new RegExp(esc, "gi");
+    const rx = new RegExp(`(?<![\\p{L}\\p{N}])${esc}(?![\\p{L}\\p{N}])`, "giu");
     text = text.replace(rx, () => {
       const { code, isNew } = e.aliasOf ? aliasFor(book, e) : codeFor(book, e.type || "autre", String(e.value).trim());
       bump(e.type || "autre", isNew);
-      return code;
+      placed.push(code);
+      return MARK + String.fromCodePoint(MARK_BASE + placed.length - 1);
     });
   }
+  if (placed.length) text = text.replace(MARK_RX, (_, ch) => placed[ch.codePointAt(0) - MARK_BASE]);
 
   // 2) Le dictionnaire de motifs.
   for (const p of DOC_PATTERNS) {

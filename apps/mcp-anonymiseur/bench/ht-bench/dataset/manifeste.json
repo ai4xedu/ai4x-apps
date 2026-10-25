@@ -4,15 +4,15 @@
   "split": "dev",
   "graine": "ht-bench-v0",
   "synthetique": true,
-  "sha256": "a21f6f11d5f7a115b22d1558bf70dbb260be72c59df5424d6ca7dd40e2267714",
-  "documents": 376,
-  "positifs": 3463,
-  "leurres": 3064,
+  "sha256": "50932d2282937e5f9a95160997e6aa2a17ac93a4563839743661de96231bca0b",
+  "documents": 383,
+  "positifs": 3483,
+  "leurres": 3082,
   "par_pack": {
     "core": {
-      "documents": 46,
-      "positifs": 393,
-      "leurres": 146
+      "documents": 48,
+      "positifs": 399,
+      "leurres": 152
     },
     "telecom-ma": {
       "documents": 37,
@@ -20,29 +20,29 @@
       "leurres": 158
     },
     "juridique-fr": {
-      "documents": 37,
-      "positifs": 420,
-      "leurres": 308
+      "documents": 38,
+      "positifs": 423,
+      "leurres": 309
     },
     "banque-assurance": {
-      "documents": 97,
-      "positifs": 875,
-      "leurres": 673
+      "documents": 98,
+      "positifs": 878,
+      "leurres": 675
     },
     "sante": {
-      "documents": 37,
-      "positifs": 327,
-      "leurres": 244
+      "documents": 38,
+      "positifs": 331,
+      "leurres": 248
     },
     "expertise-comptable": {
-      "documents": 85,
-      "positifs": 858,
-      "leurres": 1152
+      "documents": 86,
+      "positifs": 860,
+      "leurres": 1154
     },
     "rh-paie": {
-      "documents": 37,
-      "positifs": 312,
-      "leurres": 383
+      "documents": 38,
+      "positifs": 314,
+      "leurres": 386
     }
   },
   "par_type": {
@@ -50,13 +50,13 @@
     "BIC": 24,
     "CARTE": 24,
     "CIN": 187,
-    "CNSS": 74,
-    "CONTRAT": 24,
+    "CNSS": 77,
+    "CONTRAT": 25,
     "CVV": 12,
     "EFFET": 47,
     "EMAIL": 201,
     "FACTURE": 48,
-    "IBAN": 53,
+    "IBAN": 54,
     "ICCID": 12,
     "ICE": 164,
     "IF": 64,
@@ -65,16 +65,16 @@
     "IMSI": 19,
     "MATRICULE": 24,
     "NAISSANCE": 86,
-    "NIR": 46,
+    "NIR": 48,
     "PASSEPORT": 24,
     "PATENTE": 9,
-    "PATIENT": 24,
-    "PERSONNE": 975,
+    "PATIENT": 25,
+    "PERSONNE": 986,
     "POLICE": 12,
     "PRATICIEN": 36,
     "RC": 57,
     "RG": 48,
-    "RIB": 114,
+    "RIB": 115,
     "SINISTRE": 12,
     "SIREN": 24,
     "SIRET": 28,

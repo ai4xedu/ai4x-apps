@@ -1,18 +1,18 @@
 {
   "note": "Rappel sur les identifiants directs, mesuré par HT-Bench. La CI (bench:ht:controle) échoue s'il baisse. Réenregistrer : node bench/ht-bench/evaluer.mjs --enregistrer-reference",
   "version_jeu": "0.2.0",
-  "jeu_sha256": "a21f6f11d5f7a115b22d1558bf70dbb260be72c59df5424d6ca7dd40e2267714",
-  "version_moteur": "2.25.0",
+  "jeu_sha256": "50932d2282937e5f9a95160997e6aa2a17ac93a4563839743661de96231bca0b",
+  "version_moteur": "2.28.0",
   "global": {
-    "n": 2565,
-    "detectes": 2516,
-    "rappel": 0.980896686159844
+    "n": 2583,
+    "detectes": 2583,
+    "rappel": 1
   },
   "par_pack": {
     "core": {
-      "n": 336,
-      "detectes": 328,
-      "rappel": 0.9761904761904762
+      "n": 342,
+      "detectes": 342,
+      "rappel": 1
     },
     "telecom-ma": {
       "n": 249,
@@ -20,36 +20,36 @@
       "rappel": 1
     },
     "juridique-fr": {
-      "n": 276,
-      "detectes": 269,
-      "rappel": 0.9746376811594203
+      "n": 279,
+      "detectes": 279,
+      "rappel": 1
     },
     "banque-assurance": {
-      "n": 654,
-      "detectes": 646,
-      "rappel": 0.9877675840978594
+      "n": 657,
+      "detectes": 657,
+      "rappel": 1
     },
     "sante": {
-      "n": 207,
-      "detectes": 204,
-      "rappel": 0.9855072463768116
+      "n": 209,
+      "detectes": 209,
+      "rappel": 1
     },
     "expertise-comptable": {
-      "n": 615,
-      "detectes": 608,
-      "rappel": 0.9886178861788618
+      "n": 617,
+      "detectes": 617,
+      "rappel": 1
     },
     "rh-paie": {
-      "n": 228,
-      "detectes": 212,
-      "rappel": 0.9298245614035088
+      "n": 230,
+      "detectes": 230,
+      "rappel": 1
     }
   },
   "par_type": {
     "PERSONNE": {
-      "n": 975,
-      "detectes": 958,
-      "rappel": 0.9825641025641025
+      "n": 986,
+      "detectes": 986,
+      "rappel": 1
     },
     "CIN": {
       "n": 187,
@@ -57,14 +57,14 @@
       "rappel": 1
     },
     "NIR": {
-      "n": 46,
-      "detectes": 29,
-      "rappel": 0.6304347826086957
+      "n": 48,
+      "detectes": 48,
+      "rappel": 1
     },
     "CNSS": {
-      "n": 74,
-      "detectes": 62,
-      "rappel": 0.8378378378378378
+      "n": 77,
+      "detectes": 77,
+      "rappel": 1
     },
     "ICE": {
       "n": 164,
@@ -102,14 +102,14 @@
       "rappel": 1
     },
     "IBAN": {
-      "n": 53,
-      "detectes": 52,
-      "rappel": 0.9811320754716981
+      "n": 54,
+      "detectes": 54,
+      "rappel": 1
     },
     "RIB": {
-      "n": 114,
-      "detectes": 112,
-      "rappel": 0.9824561403508771
+      "n": 115,
+      "detectes": 115,
+      "rappel": 1
     },
     "IMEI": {
       "n": 26,
