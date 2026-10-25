@@ -1,6 +1,6 @@
 {
-  "version": "2.10.0",
-  "date": "2026-10-21",
+  "version": "2.28.0",
+  "date": "2026-10-25",
   "documents": 15,
   "sorties_lues": 49,
   "valeurs_sensibles": 201,
@@ -93,16 +93,20 @@
   },
   "lisibilite": {
     "total": 56,
-    "gardees": 52,
-    "taux": "92.9",
+    "gardees": 51,
+    "taux": "91.1",
     "perdues": [
       {
-        "document": "Conclusions prud'hommes - Garnier c. Vectura.md",
-        "valeur": "Conseil de prud'hommes"
+        "document": "Bordereau de pieces - affaire Benjelloun.xlsx",
+        "valeur": "Bulletins de paie"
       },
       {
-        "document": "Assignation bail commercial Moulin.md",
-        "valeur": "Tribunal judiciaire"
+        "document": "Bordereau de pieces - affaire Benjelloun.xlsx",
+        "valeur": "Lettre de licenciement"
+      },
+      {
+        "document": "Bordereau de pieces - affaire Benjelloun.xlsx",
+        "valeur": "Arrêt de travail"
       },
       {
         "document": "Flotte vehicules - permis chauffeurs.xlsx",
@@ -116,34 +120,32 @@
   },
   "mots_courants": {
     "total": 634,
-    "gardes": 544,
-    "taux": "85.8",
+    "gardes": 561,
+    "taux": "88.5",
     "par_document": [
       {
         "document": "Conclusions prud'hommes - Garnier c. Vectura.md",
         "sortie": true,
         "mots": 112,
-        "gardes": 105,
+        "gardes": 104,
         "codes_a_tort": [
+          "encadrement",
+          "mars",
           "villeurbanne",
           "logistique",
           "sas",
           "avenue",
           "tony",
-          "plaise",
-          "courriels"
+          "plaise"
         ],
-        "taux": "93.8"
+        "taux": "92.9"
       },
       {
         "document": "Assignation bail commercial Moulin.md",
         "sortie": true,
         "mots": 80,
-        "gardes": 68,
+        "gardes": 71,
         "codes_a_tort": [
-          "devant",
-          "tribunal",
-          "judiciaire",
           "deux",
           "mille",
           "vingt",
@@ -154,7 +156,7 @@
           "donne",
           "sarl"
         ],
-        "taux": "85.0"
+        "taux": "88.8"
       },
       {
         "document": "Notes RDV client - divorce.md",
@@ -171,69 +173,56 @@
         "document": "Mise en demeure Atlantis.pdf",
         "sortie": true,
         "mots": 51,
-        "gardes": 43,
+        "gardes": 48,
         "codes_a_tort": [
           "cabinet",
           "associes",
-          "avocats",
-          "lettre",
-          "recommandee",
-          "avec",
-          "accuse",
-          "reception"
+          "avocats"
         ],
-        "taux": "84.3"
+        "taux": "94.1"
       },
       {
         "document": "Attestation temoin.md",
         "sortie": true,
         "mots": 50,
-        "gardes": 46,
+        "gardes": 45,
         "codes_a_tort": [
+          "avril",
           "demeurant",
           "titulaire",
           "passeport",
           "kerlouan"
         ],
-        "taux": "92.0"
+        "taux": "90.0"
       },
       {
         "document": "Bordereau de pieces - affaire Benjelloun.xlsx",
         "sortie": true,
         "mots": 15,
-        "gardes": 14,
+        "gardes": 5,
         "codes_a_tort": [
-          "courriel"
+          "contrat",
+          "travail",
+          "bulletins",
+          "paie",
+          "courriel",
+          "mme",
+          "mars",
+          "arret",
+          "lettre",
+          "licenciement"
         ],
-        "taux": "93.3"
+        "taux": "33.3"
       },
       {
         "document": "Client email - English.md",
         "sortie": true,
         "mots": 30,
-        "gardes": 11,
+        "gardes": 29,
         "codes_a_tort": [
-          "from",
-          "subject",
-          "share",
-          "purchase",
-          "ltd",
-          "dear",
-          "following",
-          "our",
-          "please",
-          "find",
-          "key",
-          "price",
-          "two",
-          "instalments",
-          "wants",
-          "warranty",
-          "before",
-          "friday",
-          "kind"
+          "ltd"
         ],
-        "taux": "36.7"
+        "taux": "96.7"
       },
       {
         "document": "Facture Atlas Distribution.xlsx",
@@ -272,27 +261,25 @@
         "document": "Contrat de pret - Fiduciaire.pdf",
         "sortie": true,
         "mots": 38,
-        "gardes": 36,
+        "gardes": 37,
         "codes_a_tort": [
-          "associes",
           "sarl"
         ],
-        "taux": "94.7"
+        "taux": "97.4"
       },
       {
         "document": "Note de synthese audit - darija.md",
         "sortie": true,
         "mots": 54,
-        "gardes": 48,
+        "gardes": 49,
         "codes_a_tort": [
-          "joignable",
           "hna",
           "khassna",
           "nchofo",
           "dyal",
           "qbel"
         ],
-        "taux": "88.9"
+        "taux": "90.7"
       },
       {
         "document": "Journal transactions TPE.xlsx",

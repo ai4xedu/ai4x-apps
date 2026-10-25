@@ -12,12 +12,12 @@ Verrou de sortie : sur 0 identifiant(s) direct(s) manqué(s) ou partiel(s) par l
 
 | Pack | Docs | Rappel direct | Cible | Rappel (tout) | Précision | F1 | Leurres codés | « ••• » en sortie |
 |---|---:|---:|:-:|---:|---:|---:|---:|---:|
-| core | 48 | 100.0 % (342/342) | ✅ | 98.5 % | 93.4 % | 95.9 % | 2/152 (1.3 %) | 0 |
+| core | 48 | 100.0 % (342/342) | ✅ | 98.5 % | 93.5 % | 96.0 % | 2/152 (1.3 %) | 0 |
 | telecom-ma | 37 | 100.0 % (249/249) | ✅ | 100.0 % | 81.9 % | 90.0 % | 18/158 (11.4 %) | 0 |
-| juridique-fr | 38 | 100.0 % (279/279) | ✅ | 99.5 % | 86.8 % | 92.7 % | 36/309 (11.7 %) | 0 |
-| banque-assurance | 98 | 100.0 % (657/657) | ✅ | 100.0 % | 82.9 % | 90.6 % | 25/675 (3.7 %) | 0 |
-| sante | 38 | 100.0 % (209/209) | ✅ | 95.5 % | 81.6 % | 88.0 % | 27/248 (10.9 %) | 0 |
-| expertise-comptable | 86 | 100.0 % (617/617) | ✅ | 98.7 % | 95.6 % | 97.1 % | 1/1154 (0.1 %) | 0 |
+| juridique-fr | 38 | 100.0 % (279/279) | ✅ | 99.8 % | 88.4 % | 93.7 % | 36/309 (11.7 %) | 0 |
+| banque-assurance | 98 | 100.0 % (657/657) | ✅ | 100.0 % | 84.3 % | 91.5 % | 25/675 (3.7 %) | 0 |
+| sante | 38 | 100.0 % (209/209) | ✅ | 96.1 % | 84.2 % | 89.8 % | 27/248 (10.9 %) | 0 |
+| expertise-comptable | 86 | 100.0 % (617/617) | ✅ | 98.7 % | 96.6 % | 97.7 % | 1/1154 (0.1 %) | 0 |
 | rh-paie | 38 | 100.0 % (230/230) | ✅ | 99.4 % | 89.5 % | 94.2 % | 76/386 (19.7 %) | 24 |
 
 Précision du pack = passages codés qui recouvrent une valeur étiquetée / tous les passages codés : le verrou code tout mot inconnu du lexique, un mot courant codé à tort la fait baisser (cf. « Codé hors étiquette »). « ••• » en sortie : passages masqués par le verrou de sortie dans la réponse de coder_texte (souvent un code déjà posé que le motif d'un pack reconnaît à nouveau : l'IA ne peut plus le citer).
@@ -33,7 +33,7 @@ Précision du pack = passages codés qui recouvrent une valeur étiquetée / tou
 
 | Type | Direct | Valeurs | Rappel | Partielles | Précision | F1 | Bon préfixe |
 |---|:-:|---:|---:|---:|---:|---:|---:|
-| PERSONNE — Nom de personne | oui | 986 | 100.0 % | 0 | 81.3 % (1916/2358) | 89.7 % | 976/986 |
+| PERSONNE — Nom de personne | oui | 986 | 100.0 % | 0 | 81.4 % (1916/2353) | 89.8 % | 976/986 |
 | CIN — CIN marocaine | oui | 187 | 100.0 % | 0 | 67.3 % (136/202) | 80.5 % | 136/187 |
 | NIR — NIR (sécurité sociale, France) | oui | 48 | 100.0 % | 0 | — (0/0) | — | 48/48 |
 | CNSS — N° CNSS | oui | 77 | 100.0 % | 0 | 100.0 % (77/77) | 100.0 % | 77/77 |
@@ -53,8 +53,8 @@ Précision du pack = passages codés qui recouvrent une valeur étiquetée / tou
 | PASSEPORT — Passeport, titre de séjour, permis | oui | 24 | 100.0 % | 0 | 100.0 % (12/12) | 100.0 % | 24/24 |
 | BIC — BIC / SWIFT |  | 24 | 100.0 % | 0 | — (0/0) | — | 0/24 |
 | ICCID — ICCID (carte SIM) |  | 12 | 100.0 % | 0 | 100.0 % (12/12) | 100.0 % | 12/12 |
-| ADRESSE — Adresse postale |  | 185 | 96.2 % | 0 | 99.5 % (186/187) | 97.8 % | 162/178 |
-| SOCIETE — Société |  | 279 | 100.0 % | 0 | 64.4 % (279/433) | 78.4 % | 279/279 |
+| ADRESSE — Adresse postale |  | 185 | 97.8 % | 0 | 99.5 % (189/190) | 98.6 % | 165/181 |
+| SOCIETE — Société |  | 279 | 100.0 % | 0 | 66.3 % (279/421) | 79.7 % | 279/279 |
 | NAISSANCE — Date de naissance |  | 86 | 79.1 % | 0 | 100.0 % (68/68) | 88.3 % | 68/68 |
 | PATENTE — N° de patente |  | 9 | 100.0 % | 0 | 100.0 % (9/9) | 100.0 % | 9/9 |
 | TVA — N° de TVA intracommunautaire |  | 4 | 100.0 % | 0 | 100.0 % (4/4) | 100.0 % | 4/4 |
@@ -87,9 +87,9 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 
 | Type · écriture | Direct | Valeurs | Rappel | Partielles |
 |---|:-:|---:|---:|---:|
-| ADRESSE · fr-batiment |  | 22 | 86.4 % | 0 |
-| ADRESSE · fr-bis |  | 24 | 95.8 % | 0 |
-| ADRESSE · fr-rue |  | 28 | 89.3 % | 0 |
+| ADRESSE · fr-batiment |  | 22 | 90.9 % | 0 |
+| ADRESSE · fr-bis |  | 24 | 100.0 % | 0 |
+| ADRESSE · fr-rue |  | 28 | 92.9 % | 0 |
 | ADRESSE · ma-douar-hay |  | 30 | 100.0 % | 0 |
 | ADRESSE · ma-lotissement |  | 27 | 100.0 % | 0 |
 | ADRESSE · ma-residence |  | 24 | 100.0 % | 0 |
@@ -255,17 +255,14 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | COMPTE — N° de compte comptable | 104 | 0 | 0.0 % |
 | MESURE — Durée, quantité, dosage | 177 | 1 | 0.6 % |
 
-## Valeurs manquées ou partielles (36)
+## Valeurs manquées ou partielles (33)
 
 | Document | Type | Écriture | Valeur (synthétique) | Statut | Resté en clair | Vu par l'IA | Préfixes posés |
 |---|---|---|---|---|---|:-:|---|
-| juridique-fr/conclusions/008 | ADRESSE (indirect) | fr-rue | `41 rue de la République` | manque | République | oui |  |
 | juridique-fr/conclusions/011 | ADRESSE (indirect) | fr-batiment | `Bâtiment C, 27 quai de la Fosse` | manque | Fosse | oui | NOM, PRENOM |
 | rh-paie/bulletinFr/005 | ADRESSE (indirect) | fr-rue | `49 quai de la Fosse` | manque | Fosse | oui |  |
 | rh-paie/bulletinFr/009 | ADRESSE (indirect) | fr-batiment | `Bâtiment B, 90 quai de la Fosse` | manque | Fosse | oui |  |
-| sante/lettreLiaison/001 | ADRESSE (indirect) | fr-bis | `31 bis rue de la République` | manque | République | oui |  |
 | sante/lettreLiaison/003 | ADRESSE (indirect) | fr-rue | `71 quai de la Fosse` | manque | Fosse | oui |  |
-| sante/lettreLiaison/007 | ADRESSE (indirect) | fr-batiment | `Bâtiment C, 5 rue de la République` | manque | République | oui | NOM, PRENOM |
 | expertise-comptable/rapprochement/001 | EFFET (indirect) | cheque-7 | `4237529` | manque | 4237529 | oui |  |
 | expertise-comptable/rapprochement/002 | EFFET (indirect) | cheque-7 | `4457560` | manque | 4457560 | oui |  |
 | expertise-comptable/rapprochement/002 | EFFET (indirect) | cheque-7 | `5347766` | manque | 5347766 | oui |  |
@@ -486,13 +483,12 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | sante/manuel/transmission-orale | PRODUIT | `insuline glargine` | CODE |
 | sante/manuel/transmission-orale | MESURE | `12 UI` | NOM |
 
-## Codé hors étiquette (489 passages, 53 distincts — 40 plus fréquents)
+## Codé hors étiquette (424 passages, 50 distincts — 40 plus fréquents)
 
 Ni une valeur étiquetée, ni un leurre : surtout des mots du gabarit que le verrou ne connaît pas. Sur-coder est sûr, mais rend le texte moins utile à l'IA.
 
 | Passage | Fois |
 |---|---:|
-| CODE « joignable » | 48 |
 | NOM « PRLV » | 18 |
 | NOM « TR » | 14 |
 | SOCIETE « FICHE CONTACT » | 14 |
@@ -519,11 +515,9 @@ Ni une valeur étiquetée, ni un leurre : surtout des mots du gabarit que le ver
 | NOM « VIREMENT » | 12 |
 | SOCIETE « DÉCLARATION DE SINISTRE » | 12 |
 | SOCIETE « DEMANDE DE PORTABILITÉ DU NUMÉRO » | 12 |
-| SOCIETE « LETTRE DE MISSION » | 12 |
 | NOM « CHQ » | 11 |
 | NOM « REMIS » | 11 |
 | NOM « IMMOBILIER » | 7 |
-| NOM « Enfant » | 6 |
 | NOM « Inchallah » | 6 |
 | SOCIETE « ORDRE DE VIREMENT PERMANENT » | 6 |
 | CODE « choukran » | 5 |
@@ -532,3 +526,6 @@ Ni une valeur étiquetée, ni un leurre : surtout des mots du gabarit que le ver
 | NOM « Syntec » | 5 |
 | PRENOM « À » | 5 |
 | CODE « glycémique » | 4 |
+| SOCIETE « ORDRE DE VIREMENT OCCASIONNEL » | 4 |
+| SOCIETE « PLAISE AU CONSEIL » | 4 |
+| NOM « GSM » | 3 |

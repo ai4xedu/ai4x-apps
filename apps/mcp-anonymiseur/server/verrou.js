@@ -97,6 +97,9 @@ tf ancfcc tadbirnot adoul adouls adoulaire moulkia vefa tpi tnb cgi cdg réquisi
 memo mémo mémos courriel courriels pv cr janv fevr fev avr juil oct nov
 d l s n j m t c qu jusqu lorsqu puisqu quoiqu presqu quelqu aujourd prud n°
 rg rcs siret siren nic naf ape cass civ crim soc bull jcp gaz pal rtd jorf bo ass plén plen ch mixte réun
+com pén pen trav consom proc cpc cpp assur urb rur mutualité
+insee dgccrf afnor bpi ademe inpi
+joignable joignables injoignable injoignables
 req adm const ord déc arr jur rép obs comm concl rapp trib gde inst sect ci-après ci-après dénommé
 export import data file files report draft final backup copy invoice new old test temp docs img image photo
 id ids tx txn ref refs num no nb qty qte
@@ -633,7 +636,7 @@ const digitsOf = (s) => asciiDigits(s).replace(/\D/g, "");
 
 const KW_ADDRESS = ["rue", "avenue", "av.", "bd", "boulevard", "allée", "allee", "impasse", "place", "chemin",
   "route", "résidence", "residence", "rés.", "res.", "lotissement", "lot.", "quartier", "hay", "derb", "immeuble",
-  "imm.", "appartement", "appt", "angle", "cité", "villa"];
+  "imm.", "appartement", "appt", "angle", "cité", "villa", "ZI", "ZAC"];
 
 function caseVariants(k) {
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -643,7 +646,9 @@ function caseVariants(k) {
 const ADDRESS_SRC =
   "(?:(?<![\\p{L}\\p{N}])\\p{Nd}{1,4}(?:\\s?(?:bis|ter|BIS|TER))?,?\\s+)?" +
   "(?<![\\p{L}\\p{N}])(?:" + KW_ADDRESS.flatMap(caseVariants).join("|") + ")" +
-  "\\s+(?:(?:de|du|des|d'|d’|la|le|l'|l’)\\s*)?(?=[\\p{Lu}\\p{N}])[^,\\n;()\\t]{1,60}?(?=$|[,\\n;()\\t]|\\.\\s|\\.$)";
+  // v2.29 — jusqu'à DEUX articles : « rue de la République » restait en clair
+  // (un seul article admis, puis une majuscule exigée) — fuite T01, pied de page.
+  "\\s+(?:(?:de|du|des|d'|d’|la|le|l'|l’)\\s*){0,2}(?=[\\p{Lu}\\p{N}])[^,\\n;()\\t]{1,60}?(?=$|[,\\n;()\\t]|\\.\\s|\\.$)";
 
 const DATE_RX = /^(?:\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}|\d{4}[/.\-]\d{1,2}[/.\-]\d{1,2}|\d{1,2}[/.\-]\d{4})$/;
 const isDate = (m) => DATE_RX.test(asciiDigits(m).replace(/\s/g, "").replace(/[‐-―−]/g, "-"));
@@ -919,7 +924,7 @@ function tokenRx() {
   return tokenCache.rx;
 }
 
-const UNIT_RX = /^(?:\d+(?:er|ère|ere|re|e|è|ème|eme|nd|nde|h|h\d{1,2}|min|mn|s|kg|g|mg|km|m|cm|mm|m2|m²|m3|l|ml|cl|ko|mo|go|to|kb|mb|gb|tb|ht|ttc|x|j|jrs|mois|an|ans|k|ke|k€|m€|dh|dhs|mad|eur|usd|€|pt|pts|px|dpi|g|v|w|kw|kwh|mw|hz|ghz|mhz)|[a-z]\d|[tqs][1-4]|\d[a-z]|mp[34]|b2[bc]|p2p|h24|covid-?19|iso\d{3,5}|[34]g|5g|v\d{1,2})$/i;
+const UNIT_RX = /^(?:\d+(?:er|ère|ere|re|e|è|ème|eme|nd|nde|h|h\d{1,2}|min|mn|s|kg|g|mg|km|m|cm|mm|m2|m²|m3|l|ml|cl|ko|mo|go|to|kb|mb|gb|tb|ht|ttc|x|j|jrs|mois|an|ans|k|ke|k€|m€|dh|dhs|mad|eur|usd|€|pt|pts|px|dpi|g|v|w|kw|kwh|mw|hz|ghz|mhz)|[a-z]\d|[tqs][1-4]|\d[a-z]|mp[34]|b2[bc]|p2p|h24|covid-?19|iso\d{3,5}|[34]g|5g|v\d{1,2}|[øØ⌀]\d+(?:[.,]\d+)?|s(?:235|275|355|420|460)(?:jr|j0|j2|k2|n|nl|m|ml)?)$/i;
 
 /* v2.28 — l'apostrophe DANS un nom : « R'kia », « Ma'ati », « O'Brien »,
    « M'hamed » sont un seul mot. Coupés à l'apostrophe, « R » (une initiale)

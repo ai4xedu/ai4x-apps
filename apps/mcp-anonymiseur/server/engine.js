@@ -621,11 +621,31 @@ const ZONE_LABELS = new Set([
   "EMETTEUR", "CLIENT", "DESTINATAIRE", "FOURNISSEUR", "ACHETEUR", "VENDEUR", "EXPEDITEUR",
 ]);
 
+/* v2.29 — deux faux noms de société (validation T01) :
+   - un TITRE de document : « CONTRAT CADRE D'APPROVISIONNEMENT » ; il commence
+     par un type d'acte et n'est fait que de mots du dictionnaire (knownWord,
+     fourni par l'appelant : le lexique est dans verrou.js) ;
+   - une RÉFÉRENCE seule : « BRK-220 » ; le verrou la code en REF, pas en
+     société (un faux nom d'entreprise à la place d'un n° d'article trompe l'IA). */
+const TITLE_HEADS = new Set(`
+contrat convention avenant protocole accord conditions bail attestation acte statuts pacte charte reglement
+cahier proces-verbal compromis promesse lettre mandat conclusions assignation requete memoire
+`.trim().split(/\s+/));
+const REFERENCE_ONLY_RX = /^[\p{Lu}]{1,6}[-_/.]?\d{2,}(?:[-_/.]?[\p{Lu}\d]+)*$/u;
+
+function isDocTitle(tokens, knownWord) {
+  if (!knownWord || !TITLE_HEADS.has(normToken(tokens[0]).toLowerCase())) return false;
+  return tokens.every((t) => t.replace(/[^\p{L}]/gu, "").length < 3 || HEADING_WORDS.has(normToken(t).toLowerCase()) ||
+    NAME_STOPLIST.has(normToken(t)) || knownWord(t.toLowerCase()));
+}
+
 /* Une cellule entièrement en MAJUSCULES hors lexique = nom probable. */
-function allCapsName(text) {
+function allCapsName(text, knownWord = null) {
   // ⚠️ le flag u est vital : sans lui \p{L} n'est pas une classe Unicode.
+  if (REFERENCE_ONLY_RX.test(String(text).trim())) return false;
   const tokens = String(text).split(/[^\p{L}\d]+/u).filter((t) => /\p{L}/u.test(t));
   if (!tokens.length) return false;
+  if (isDocTitle(tokens, knownWord)) return false;
   let signal = false;
   for (const t of tokens) {
     // Tester la casse sur le token BRUT (normToken met tout en majuscules).
@@ -709,7 +729,7 @@ export function nameCandidates(ws) {
    Chaque ligne joue le rôle d'une cellule : mêmes règles fortes (forme
    juridique, adresse, MAJUSCULES hors lexique), et le filet « zone » devient
    « les 1-2 lignes non vides qui suivent un libellé ÉMETTEUR / CLIENT / … ». */
-export function nameCandidatesFromText(fullText) {
+export function nameCandidatesFromText(fullText, { knownWord = null } = {}) {
   const lines = String(fullText || "").split(/\r?\n/).map((l) => l.trim());
   const seen = new Map();
   const add = (value, type) => {
@@ -729,7 +749,7 @@ export function nameCandidatesFromText(fullText) {
     // verrou y code l'adresse seule, le reste de la phrase reste lisible.
     const prose = line.length > 80 || /[.!?]\s+\p{L}/u.test(line);
     if (!prose && ADDRESS_RX.test(line) && !matchesDocPattern(line)) add(line, "adresse");
-    if (allCapsName(line) && !matchesDocPattern(line)) add(line, "societe");
+    if (allCapsName(line, knownWord) && !matchesDocPattern(line)) add(line, "societe");
   }
   // Passe 2 — zone : les lignes qui suivent un libellé ÉMETTEUR / CLIENT / …
   for (let i = 0; i < lines.length; i++) {
@@ -752,7 +772,7 @@ export function nameCandidatesFromText(fullText) {
 export function anonymizeText(fullText, book, extra, opts) {
   book = book || newCodebook();
   const excludes = new Set(((opts && opts.excludes) || []).map((v) => String(v).trim().toLowerCase()));
-  const auto = nameCandidatesFromText(fullText).filter((c) => !excludes.has(c.value.toLowerCase()));
+  const auto = nameCandidatesFromText(fullText, { knownWord: opts && opts.knownWord }).filter((c) => !excludes.has(c.value.toLowerCase()));
   const allExtra = [...(extra || []), ...withLegalAliases(auto).filter((c) => !excludes.has(c.value.toLowerCase()))];
   const res = codeDocumentText(fullText, book, allExtra);
   return {

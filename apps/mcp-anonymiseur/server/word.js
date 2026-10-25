@@ -16,8 +16,10 @@
 // ailleurs que dans le texte visible. La copie codée les RETIRE, toutes :
 //   - métadonnées (auteur, « modifié par », société, titre, mots-clés),
 //     propriétés personnalisées, miniature de la première page ;
-//   - commentaires et leurs auteurs ; suivi des modifications (le texte
-//     supprimé disparaît, le texte inséré est accepté) ;
+//   - les attributs du suivi des modifications et des commentaires (auteur,
+//     initiales, date) et la partie comments.xml. Depuis la v2.29, leur
+//     CONTENU reste, en texte codé : [supprimé par …], [inséré par …],
+//     [commentaire de …] (option suivi « accepter » : l'ancien retrait) ;
 //   - champs (HYPERLINK "mailto:…", REF, MERGEFIELD) et liens : le texte
 //     affiché reste, l'instruction et la cible partent ;
 //   - images, objets incorporés, données liées (customXml), variables du
@@ -102,10 +104,11 @@ const join = (tokens) => tokens.map((x) => x.raw).join("");
 
 /* Retire (drop) ou déballe (unwrap : on garde le contenu, pas la balise) des
    éléments ; remplace (replace) un élément entier par un fragment XML.
-   decide(token, ancestors, indice, jetons) → "drop" | "unwrap" | { replace: xml } | null. */
+   decide(token, ancestors, indice, jetons) → "drop" | "unwrap" | { replace: xml }
+   | { wrap: [avant, après] } (déballé, un fragment XML de chaque côté) | null. */
 function transform(tokens, decide) {
   const out = [];
-  const stack = [];   // { name, action }
+  const stack = [];   // { name, action, after }
   let dropDepth = 0;
   for (let i = 0; i < tokens.length; i++) {
     const tk = tokens[i];
@@ -116,10 +119,17 @@ function transform(tokens, decide) {
     }
     if (tk.t === "open" || tk.t === "self") {
       const d = decide(tk, stack, i, tokens);
-      const replaced = d !== null && typeof d === "object";
+      const wrapped = d !== null && typeof d === "object" && Array.isArray(d.wrap);
+      const replaced = d !== null && typeof d === "object" && !wrapped;
       if (d === "drop" || replaced) {
         if (replaced && d.replace) out.push({ t: "other", raw: d.replace });
         if (tk.t === "open") dropDepth = 1;
+        continue;
+      }
+      if (wrapped) {
+        out.push({ t: "other", raw: d.wrap[0] });
+        if (tk.t === "open") stack.push({ name: tk.name, action: "unwrap", after: d.wrap[1] });
+        else out.push({ t: "other", raw: d.wrap[1] });
         continue;
       }
       if (tk.t === "open") stack.push({ name: tk.name, action: d });
@@ -128,7 +138,7 @@ function transform(tokens, decide) {
     }
     if (tk.t === "close") {
       const top = stack.pop();
-      if (top && top.action === "unwrap") continue;
+      if (top && top.action === "unwrap") { if (top.after) out.push({ t: "other", raw: top.after }); continue; }
       out.push(tk);
       continue;
     }
@@ -316,9 +326,73 @@ const UNWRAP_ELEMENTS = new Set(["w:ins", "w:moveTo", "w:hyperlink", "w:fldSimpl
 const IMAGE_NOTE = '<w:t xml:space="preserve">[image retirée par Hidden Tokens]</w:t>';
 const PERSONAL_ATTR_RX = /\s(?:w:author|w:initials|w15:userId|w15:providerId|w:date)="[^"]*"/g;
 
-function sanitizeStory(tokens, removed) {
+/* ---------------------------------------------- suivi visible (v2.29) --- *
+ * Un avocat ne relit pas un contrat, il relit ce que l'autre partie a CHANGÉ.
+ * Retirer le suivi (texte supprimé jeté, insertions acceptées, commentaires
+ * retirés) rendait l'IA aveugle à la seule chose demandée (validation T01 :
+ * 4/10 contre 9/10 en clair). En mode « visible » (défaut), chaque révision
+ * et chaque commentaire devient du TEXTE dans la copie :
+ *     [supprimé par AUTEUR : …]  [inséré par AUTEUR : …]  [commentaire de AUTEUR : …]
+ * Ce texte passe ensuite par le même codage que le reste du document (moteur +
+ * verrou, une seule clé) : l'auteur, le texte supprimé et le commentaire sont
+ * codés comme le corps. Les attributs (w:author, w:date, w:initials) et la
+ * partie comments.xml partent toujours ; le filet final (residue) fouille
+ * toujours tout le paquet. « accepter » garde l'ancien comportement. */
+const attrOf = (raw, n) => unescapeXml((raw.match(new RegExp(`\\s${n}="([^"]*)"`)) || [])[1] || "").trim();
+const markRun = (s) => `<w:r><w:t xml:space="preserve">${escapeXml(s)}</w:t></w:r>`;
+const par = (a) => (a ? ` par ${a}` : "");
+/* Les conteneurs où un run peut s'insérer : ailleurs (w:rPr, w:trPr…), une
+   marque de révision ne porte pas de texte — elle part, comme avant. */
+const RUN_PARENTS = new Set(["w:p", "w:hyperlink", "w:sdtContent", "w:smartTag", "w:fldSimple", "w:customXml", "w:ins", "w:moveTo"]);
+
+function textOf(tokens) {
+  const out = [];
+  const stack = [];
+  for (const tk of tokens) {
+    if (tk.t === "open") stack.push(tk.name);
+    else if (tk.t === "close") { stack.pop(); if (tk.name === "w:p") out.push("\n"); }
+    else if (tk.t === "self" && tk.name === "w:tab") out.push(" ");
+    else if (tk.t === "text" && /^w:(t|delText)$/.test(stack[stack.length - 1] || "")) out.push(unescapeXml(tk.raw));
+  }
+  return out.join("").split("\n").map((s) => s.replace(/\s+/g, " ").trim()).filter(Boolean).join(" / ");
+}
+
+/* comments.xml → { id: { author, text } }. */
+function readComments(xml) {
+  const map = {};
+  if (!xml) return map;
+  const tokens = tokenize(xml);
+  for (let i = 0; i < tokens.length; i++) {
+    const tk = tokens[i];
+    if (tk.t !== "open" || tk.name !== "w:comment") continue;
+    map[attrOf(tk.raw, "w:id")] = { author: attrOf(tk.raw, "w:author"), text: textOf(subtree(tokens, i)) };
+  }
+  return map;
+}
+
+function sanitizeStory(tokens, removed, { suivi = "visible", comments = {} } = {}) {
   return transform(tokens, (tk, stack, i) => {
     const name = tk.name;
+    if (suivi === "visible") {
+      const parent = (stack[stack.length - 1] || {}).name;
+      const open = tk.t === "open";
+      if ((name === "w:del" || name === "w:moveFrom") && open && RUN_PARENTS.has(parent)) {
+        removed.revisions++;
+        const text = textOf(subtree(tokens, i));
+        const what = name === "w:del" ? "supprimé" : "déplacé (ancien emplacement)";
+        return { replace: text ? markRun(`[${what}${par(attrOf(tk.raw, "w:author"))} : ${text}]`) : "" };
+      }
+      if ((name === "w:ins" || name === "w:moveTo") && open && RUN_PARENTS.has(parent)) {
+        removed.revisions++;
+        const what = name === "w:ins" ? "inséré" : "déplacé (nouvel emplacement)";
+        return { wrap: [markRun(`[${what}${par(attrOf(tk.raw, "w:author"))} : `), markRun("]")] };
+      }
+      if (name === "w:commentReference") {
+        removed.comments++;
+        const c = comments[attrOf(tk.raw, "w:id")];
+        return { replace: c && c.text ? `<w:t xml:space="preserve">${escapeXml(` [commentaire de ${c.author || "?"} : ${c.text}]`)}</w:t>` : "" };
+      }
+    }
     if (DROP_ELEMENTS.has(name)) {
       if (name === "w:del" || name === "w:moveFrom") removed.revisions++;
       if (name === "w:commentReference") removed.comments++;
@@ -444,7 +518,13 @@ export function residue(buf, find, XLSX) {
   for (const p of z.names()) {
     if (!/\.(xml|rels)$/i.test(p)) continue;
     const xml = z.get(p) || "";
-    const plain = unescapeXml(xml.replace(/<[^>]*?(\s[^>]*)?>/g, (tag, attrs) => " " + (attrs || "").replace(/[\w:.-]+="([^"]*)"/g, " $1 ") + " "));
+    // Les espaces de noms et les URI de schéma (« http://schemas.microsoft.com/… »)
+    // ne portent jamais de donnée : sans ce tri, un mot de la clé comme « com »
+    // (« C. com. » codé) se retrouvait dans chaque partie et bloquait la copie.
+    const plain = unescapeXml(xml.replace(/<[^>]*?(\s[^>]*)?>/g, (tag, attrs) => " " + (attrs || "")
+      .replace(/\s(?:xmlns(?::[\w.-]+)?|mc:Ignorable|xsi:schemaLocation)="[^"]*"/g, " ")
+      .replace(/[\w:.-]+="((?:https?|urn):[^"]*)"/g, " ")
+      .replace(/[\w:.-]+="([^"]*)"/g, " $1 ") + " "));
     if (find(plain)) hits.push(p);
   }
   return hits;
@@ -466,13 +546,14 @@ function storyOrder(a, b) {
 
 /* Copie codée. code(texte) → texte codé (moteur + verrou, avec la clé).
    Renvoie { buf, lines, removed } ; lines = paragraphes codés (aperçu). */
-export function codeDocx(buf, code, XLSX) {
+export function codeDocx(buf, code, XLSX, { suivi = "visible" } = {}) {
   const z = openZip(buf, XLSX);
   if (!z.get("word/document.xml")) throw new Error("pas un document Word (.docx)");
-  const removed = { comments: 0, commentParts: 0, revisions: 0, fields: 0, links: 0, images: 0, objects: 0, metadata: 0 };
+  const removed = { suivi, comments: 0, commentParts: 0, revisions: 0, fields: 0, links: 0, images: 0, objects: 0, metadata: 0 };
+  const comments = suivi === "visible" ? readComments(z.get("word/comments.xml")) : {};
   const parts = [];
   for (const p of z.names().filter((x) => STORY_RX.test(x)).sort(storyOrder)) {
-    const tokens = sanitizeStory(tokenize(z.get(p)), removed);
+    const tokens = sanitizeStory(tokenize(z.get(p)), removed, { suivi, comments });
     parts.push({ p, tokens: tokenize(join(tokens)) });
   }
   const lines = mapParagraphs(parts, code);
