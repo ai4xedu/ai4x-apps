@@ -57,7 +57,7 @@ import {
   decodeText, sheetToTsv, looksLikeTable, newCodebook,
   detectLayout, anonymizeDocument, classifyLoose, cellText, anonymizeText, isSuspectName, attachTeam, normFor,
 } from "./engine.js";
-import { strictCode, strictSheet, codedRatio, lexiconSize, knownValueMatcher, foldKey, isKnownWord } from "./verrou.js";
+import { strictCode, strictSheet, codedRatio, lexiconSize, knownValueMatcher, foldKey, isKnownWord, outsideCodes, codeSrc } from "./verrou.js";
 import { assessReidentification, generalize, describeReidentification } from "./reidentification.js";
 import { guardResult, guardText, MASK } from "./sortie.js";
 import { protectNumbers, planNumbers, describeNumbers, readNumberSetting, NUMBER_MODES, COLUMN_MODES } from "./chiffres.js";
@@ -77,7 +77,7 @@ import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } fro
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.29.0";
+export const VERSION = "2.30.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -1097,7 +1097,7 @@ function readWorkbook(file) {
    Renvoie { text, stats, reid, generalized }. */
 function codeFreeText(raw, book, extras, excludes, { generaliser = false, rendu = null } = {}) {
   extras = [...(extras || []), ...nomsPolitique([raw])];
-  const base = anonymizeText(raw, book, extras, { excludes, knownWord: (w) => isKnownWord(w) });
+  const base = anonymizeText(raw, book, extras, { excludes, knownWord: (w) => isKnownWord(w), known: knownValueMatcher(book) });
   const strict = strictCode(base.text, { book, extra: extras, excludes });
   const stats = { ...mergeStats(base.stats, strict), autoNames: base.stats.autoNames };
   let text = strict.text, generalized = null;
@@ -1192,10 +1192,20 @@ function freeTextDone(kind, name, raw, coded, stats, book, outPath, extraLines =
   return textWithLicence(lines.join("\n"));
 }
 
+/* v2.30 (T08) — le texte d'un .md/.txt. Sur un scan relu (lire_scan), le
+   préambule que le connecteur a écrit lui-même (« # … À RELIRE AVANT USAGE »
+   et l'encadré de consignes) n'est pas une donnée : il part avant le codage
+   — ses mots en capitales finissaient dans la clé (« RELIRE », « USAGE »). */
+const PREAMBULE_OCR_RX = /^#[^\n]*À RELIRE AVANT USAGE[^\n]*\n+(?:>[^\n]*\n)*\n*/u;
+function texteBrut(file) {
+  const raw = fs.readFileSync(file, "utf8");
+  return /-ocr-A-RELIRE\.md$/i.test(path.basename(file)) ? raw.replace(PREAMBULE_OCR_RX, "") : raw;
+}
+
 /* Anonymise un fichier TEXTE (.md/.txt) — typiquement un scan relu. */
 function handlePlainText(file, rel, { valeurs_a_coder = [], valeurs_a_exclure = [], confirmer = false, generaliser = false, rendu = null }) {
   let raw;
-  try { raw = fs.readFileSync(file, "utf8"); } catch (e) { return err(`${fileLabel(rel)} : ${unexpected(e)}`); }
+  try { raw = texteBrut(file); } catch (e) { return err(`${fileLabel(rel)} : ${unexpected(e)}`); }
   if (!raw.trim()) return err(`${fileLabel(rel)} est vide.`);
   const extras = valeurs_a_coder.map((v) => ({ value: v, type: "autre" }));
   const reviewed = /-ocr-A-RELIRE\.md$/i.test(path.basename(file));
@@ -1697,20 +1707,28 @@ tool(
 
 const BATCH_MAX_FILES = 200;
 
+/* v2.30 (T08) — le lot couvre aussi les textes (.md, .txt), les images (des
+   scans : listées, à passer par lire_scan) et les scans relus qui attendent
+   dans la boîte de sortie (« …-ocr-A-RELIRE.md ») : un dossier de douze
+   pièces se traite en une approbation, puis une seconde pour les scans relus. */
+const BATCH_FILE_RX = /\.(xlsx|xls|csv|pdf|docx|md|txt|png|jpe?g|webp|bmp|tiff?)$/i;
 function listBatchFiles(motif) {
   const needle = String(motif || "").trim().toLowerCase();
   const out = [];
-  for (const n of fs.readdirSync(WORKDIR)) {
-    if (!/\.(xlsx|xls|csv|pdf|docx)$/i.test(n)) continue;
-    if (n.startsWith("~$") || n.startsWith(".")) continue;
-    if (/-anonymise\.(xlsx|md|docx)$/i.test(n) || FORBIDDEN_RX.test(n)) continue;
+  const considerer = (n, rel) => {
+    if (out.length >= BATCH_MAX_FILES || !BATCH_FILE_RX.test(n)) return;
+    if (n.startsWith("~$") || n.startsWith(".")) return;
+    if (/-anonymise\.(xlsx|md|docx)$/i.test(n) || FORBIDDEN_RX.test(n)) return;
     // Le filtre ne voit que ce que Claude voit (nom masqué, repère) : filtrer
     // sur le vrai nom permettrait de le deviner lettre à lettre (« lahlou » →
     // 1 fichier, « lahlox » → 0).
-    if (needle && maskName(n).toLowerCase().indexOf(needle) === -1 && handleOf(n).toLowerCase() !== needle) continue;
-    out.push(n);
-    if (out.length >= BATCH_MAX_FILES) break;
-  }
+    if (needle && maskName(n).toLowerCase().indexOf(needle) === -1 && handleOf(rel).toLowerCase() !== needle) return;
+    out.push(rel);
+  };
+  for (const n of fs.readdirSync(WORKDIR)) considerer(n, n);
+  let relus = [];
+  try { relus = fs.readdirSync(OUTDIR).filter((n) => /-ocr-A-RELIRE\.md$/i.test(n)); } catch {}
+  for (const n of relus) considerer(n, `${OUTDIR_NAME}/${n}`);
   out.sort();
   return out;
 }
@@ -1832,6 +1850,7 @@ tool(
       const lines = [`📋 PLAN DE LOT — ${files.length} fichier(s) dans ${shown(WORKDIR)}. RIEN n'a encore été écrit.`];
       let total = 0;
       let unreadable = 0;
+      let images = 0;
       let reidRisk = 0;
       const planNums = [];
       for (const name of files) {
@@ -1854,8 +1873,8 @@ tool(
             const pdf = await readPdfPages(path.join(WORKDIR, name));
             const fullText = pdfFullText(pdf.pages);
             if (pdfHasNoText(fullText)) {
-              lines.push(`— ${lbl} : PDF SANS TEXTE (scan) — sera ignoré ; passe-le par lire_scan`);
-              unreadable++;
+              lines.push(`— ${lbl} : PDF SANS TEXTE (scan) → à lire par lire_scan, puis anonymiser_dossier avec motif « RELIRE »`);
+              images++;
               continue;
             }
             const probe = codeFreeText(fullText, pb, extras, valeurs_a_exclure, { generaliser, rendu: leRendu });
@@ -1865,6 +1884,27 @@ tool(
               `réidentification : ${probe.reid.niveau}`);
           } catch {
             lines.push(`— ${lbl} : PDF ILLISIBLE (sera ignoré)`);
+            unreadable++;
+          }
+          continue;
+        }
+        if (isImageFile(name)) {
+          images++;
+          lines.push(`— ${lbl} : image (scan) → à lire par lire_scan (OCR sur le poste, texte « À RELIRE » que l'utilisateur corrige), ` +
+            "puis anonymiser_dossier avec motif « RELIRE » code les scans relus");
+          continue;
+        }
+        if (/\.(md|txt)$/i.test(name)) {
+          try {
+            const raw = texteBrut(path.join(WORKDIR, name));
+            if (!raw.trim()) throw new Error("vide");
+            const probe = codeFreeText(raw, pb, extras, valeurs_a_exclure, { generaliser, rendu: leRendu });
+            total += probe.stats.replaced;
+            if (probe.reid.niveau !== "anonyme") reidRisk++;
+            lines.push(`— ${lbl} : ${/-ocr-A-RELIRE\.md$/i.test(name) ? "scan relu" : "texte"}, ${probe.stats.replaced} valeur(s) (${fmt(probe.stats.byType)}) → sortie .md ; ` +
+              `réidentification : ${probe.reid.niveau}`);
+          } catch {
+            lines.push(`— ${lbl} : TEXTE ILLISIBLE OU VIDE (sera ignoré)`);
             unreadable++;
           }
           continue;
@@ -1896,7 +1936,9 @@ tool(
         confinementAlert(),
         "Présente ce plan à l'utilisateur, attends son accord, puis rappelle l'outil avec les mêmes options et confirmer: true."
       );
-      if (unreadable) lines.push(`⚠️ ${unreadable} fichier(s) illisible(s) ou scanné(s) seront ignorés.`);
+      if (images) lines.push(`📷 ${images} image(s) ou PDF scanné(s) : le lot ne les code pas lui-même. Après l'accord, appelle lire_scan sur chacun ` +
+        "(OCR sur le poste), fais relire les textes « À RELIRE » à l'utilisateur, puis anonymiser_dossier avec motif « RELIRE » : une seule approbation pour tous les scans relus.");
+      if (unreadable) lines.push(`⚠️ ${unreadable} fichier(s) illisible(s) seront ignorés.`);
       return textWithLicence(lines.filter(Boolean).join("\n"));
     }
 
@@ -1913,21 +1955,36 @@ tool(
     let done = 0;
     let totalReplaced = 0;
     let totalNew = 0;
-    const failed = [];
+    const failed = [];      // illisibles
+    const images = [];      // scans : à lire par lire_scan
+    const refuses = [];     // copies Word refusées par le contrôle final
     const writes = [];
+    // v2.30 (T08) — DEUX PASSES. Avant, chaque fichier était codé avec la clé
+    // telle qu'elle était à son tour, puis le filet final des copies Word
+    // vérifiait avec la clé FINIE : une valeur entrée dans la clé à la pièce
+    // 12 et restée en clair dans la pièce 1 faisait refuser la pièce 1, et le
+    // message disait « illisible ou scanné ». Désormais : passe 1, codage en
+    // codes ; passe 2, clé finie, chaque sortie est repassée par les valeurs
+    // connues (la même entité porte le même code dans TOUTES les pièces),
+    // puis rendue lisible s'il le faut ; enfin le contrôle final, qui dit ce
+    // qu'il refuse et pourquoi.
     for (const name of files) {
       const lbl = fileLabel(name);
+      const file = path.join(WORKDIR, name);
+      const before = book.entries.length;
+      if (isImageFile(name)) {
+        images.push(lbl);
+        report.push(`- 📷 [${handleOf(name)}] : image (scan) — à lire par lire_scan, puis anonymiser_dossier avec motif « RELIRE »`);
+        continue;
+      }
       if (/\.docx$/i.test(name)) {
-        const before = book.entries.length;
         try {
-          const res = codeWord(fs.readFileSync(path.join(WORKDIR, name)), book, extras, valeurs_a_exclure, { generaliser, rendu: leRendu });
-          lisibleLot = mergeLisible(lisibleLot, res.lisible);
+          const res = codeWord(fs.readFileSync(file), book, extras, valeurs_a_exclure, { generaliser, rendu: null });
           const base = codedBase(name, book, "document");
-          writes.push({ path: path.join(OUTDIR, `${base}-anonymise.docx`), docx: res.buf, md: `# ${base} — contenu anonymisé (extrait du document Word)\n\n${res.text}\n` });
+          writes.push({ kind: "docx", name, base, path: path.join(OUTDIR, `${base}-anonymise.docx`), buf: res.buf, lines: res.lines, stats: res.stats, reid: res.reid, paras: res.lines.length });
           done++;
           totalReplaced += res.stats.replaced;
           totalNew += book.entries.length - before;
-          report.push(`- ✅ ${base}.docx → ${base}-anonymise.docx (document Word, ${res.lines.length} paragraphe(s)) : ${res.stats.replaced} valeur(s) — ${fmt(res.stats.byType)} ; réidentification : ${res.reid.niveau}`);
         } catch {
           failed.push(lbl);
           report.push(`- ❌ [${handleOf(name)}] : document Word illisible, ignoré`);
@@ -1935,46 +1992,103 @@ tool(
         continue;
       }
       if (/\.pdf$/i.test(name)) {
-        const before = book.entries.length;
         try {
-          const pdf = await readPdfPages(path.join(WORKDIR, name));
+          const pdf = await readPdfPages(file);
           const fullText = pdfFullText(pdf.pages);
           if (pdfHasNoText(fullText)) {
-            failed.push(lbl);
-            report.push(`- ❌ [${handleOf(name)}] : PDF sans texte (scan — passer par lire_scan), ignoré`);
+            images.push(lbl);
+            report.push(`- 📷 [${handleOf(name)}] : PDF sans texte (scan) — à lire par lire_scan, puis anonymiser_dossier avec motif « RELIRE »`);
             continue;
           }
-          const res = codeFreeText(fullText, book, extras, valeurs_a_exclure, { generaliser, rendu: leRendu });
-          lisibleLot = mergeLisible(lisibleLot, res.lisible);
+          const res = codeFreeText(fullText, book, extras, valeurs_a_exclure, { generaliser, rendu: null });
           const base = codedBase(name, book, "document");
-          writes.push({ path: path.join(OUTDIR, `${base}-anonymise.md`), md: `# ${base} — contenu anonymisé (extrait du PDF)\n\n${res.text}\n` });
+          writes.push({ kind: "md", name, base, path: path.join(OUTDIR, `${base}-anonymise.md`), text: res.text, head: `# ${base} — contenu anonymisé (extrait du PDF)\n\n`,
+            stats: res.stats, reid: res.reid, what: `PDF natif, ${pdf.totalPages} page(s)` });
           done++;
           totalReplaced += res.stats.replaced;
           totalNew += book.entries.length - before;
-          report.push(`- ✅ ${base}.pdf → ${base}-anonymise.md (PDF natif, ${pdf.totalPages} page(s)) : ${res.stats.replaced} valeur(s) — ${fmt(res.stats.byType)} ; réidentification : ${res.reid.niveau}`);
         } catch {
           failed.push(lbl);
           report.push(`- ❌ [${handleOf(name)}] : PDF illisible, ignoré`);
         }
         continue;
       }
+      if (/\.(md|txt)$/i.test(name)) {
+        try {
+          const relu = /-ocr-A-RELIRE\.md$/i.test(name);
+          const raw = texteBrut(file);
+          if (!raw.trim()) throw new Error("vide");
+          const res = codeFreeText(raw, book, extras, valeurs_a_exclure, { generaliser, rendu: null });
+          const base = codedBase(path.basename(name), book, "texte");
+          writes.push({ kind: "md", name, base, path: path.join(OUTDIR, `${base}-anonymise.md`), text: res.text, head: "",
+            stats: res.stats, reid: res.reid, what: relu ? "scan relu" : "texte" });
+          done++;
+          totalReplaced += res.stats.replaced;
+          totalNew += book.entries.length - before;
+        } catch {
+          failed.push(lbl);
+          report.push(`- ❌ [${handleOf(name)}] : texte illisible ou vide, ignoré`);
+        }
+        continue;
+      }
       let wb;
-      try { wb = readWorkbook(path.join(WORKDIR, name)); }
+      try { wb = readWorkbook(file); }
       catch { failed.push(lbl); report.push(`- ❌ [${handleOf(name)}] : illisible, ignoré`); continue; }
-      const before = book.entries.length;
-      const { outWb, perSheet, numbers } = anonymizeWorkbook(wb, book, extras, docOpts, modeNombres, sourceNombres, chiffres_par_colonne, leRendu);
-      for (const sh of perSheet) lisibleLot = mergeLisible(lisibleLot, sh.lisible);
+      const { outWb, perSheet, numbers } = anonymizeWorkbook(wb, book, extras, docOpts, modeNombres, sourceNombres, chiffres_par_colonne, null);
       const base = codedBase(name, book, "fichier");
-      writes.push({ path: path.join(OUTDIR, `${base}-anonymise.xlsx`), wb: outWb, numbers });
+      writes.push({ kind: "xlsx", name, base, path: path.join(OUTDIR, `${base}-anonymise.xlsx`), wb: outWb, numbers, perSheet, ext: path.extname(name) });
       done++;
-      const fileReplaced = perSheet.reduce((s, x) => s + x.replaced, 0);
-      totalReplaced += fileReplaced;
+      totalReplaced += perSheet.reduce((s, x) => s + x.replaced, 0);
       totalNew += book.entries.length - before;
-      report.push(`- ✅ ${base}${path.extname(name)} → ${base}-anonymise.xlsx`);
-      perSheet.forEach((s, i) => {
-        report.push(`    - onglet ${i + 1} (${s.mode}) : ${s.replaced ? s.replaced + " valeur(s) — " + fmt(s.byType) : "aucun texte codé"}` +
-          (s.nums.cells ? `, ${s.nums.cells} nombre(s) protégé(s) (${chiffres})` : ""));
-      });
+    }
+    // Passe 2 — la clé est finie.
+    const known = knownValueMatcher(book);
+    const lisible = leRendu.mode === "lisible";
+    const finir = (t) => {
+      let x = String(t);
+      if (known) x = outsideCodes(x, (seg) => known(seg).text);
+      if (lisible) {
+        const r = rendreLisible(x, book, null, { dates: leRendu.dates });
+        lisibleLot = mergeLisible(lisibleLot, { mode: leRendu.mode, source: leRendu.source, ...r });
+        x = r.text;
+      }
+      return x;
+    };
+    for (const w of writes) {
+      if (w.kind === "docx") {
+        try { const r2 = codeDocx(w.buf, finir, XLSX); w.buf = r2.buf; w.lines = r2.lines; }
+        catch { w.skip = true; done--; failed.push(path.basename(w.path)); report.push(`- ❌ ${path.basename(w.path)} : copie Word illisible au second passage, non écrite`); continue; }
+        w.text = w.lines.join("\n");
+        w.md = `# ${w.base} — contenu anonymisé (extrait du document Word)\n\n${w.text}\n`;
+        report.push(`- ✅ ${w.base}.docx → ${w.base}-anonymise.docx (document Word, ${w.paras} paragraphe(s)) : ${w.stats.replaced} valeur(s) — ${fmt(w.stats.byType)} ; réidentification : ${w.reid.niveau}`);
+      } else if (w.kind === "md") {
+        w.text = finir(w.text);
+        w.md = `${w.head}${w.text}${w.text.endsWith("\n") ? "" : "\n"}`;
+        report.push(`- ✅ ${w.base}${path.extname(w.name)} → ${w.base}-anonymise.md (${w.what}) : ${w.stats.replaced} valeur(s) — ${fmt(w.stats.byType)} ; réidentification : ${w.reid.niveau}`);
+      } else {
+        for (const sn of w.wb.SheetNames) {
+          const ws = w.wb.Sheets[sn];
+          if (!ws || !ws["!ref"]) continue;
+          if (known) {
+            for (const addr of Object.keys(ws)) {
+              if (addr[0] === "!") continue;
+              const c = ws[addr];
+              if (!c || (c.t !== "s" && c.t !== "str") || typeof c.v !== "string") continue;
+              const r = outsideCodes(c.v, (seg) => known(seg).text);
+              if (r !== c.v) ws[addr] = { t: "s", v: r };
+            }
+          }
+          if (lisible) {
+            const r = rendreFeuille(ws, book, undefined, { dates: leRendu.dates });
+            lisibleLot = mergeLisible(lisibleLot, { mode: leRendu.mode, source: leRendu.source, ...r });
+          }
+        }
+        report.push(`- ✅ ${w.base}${w.ext} → ${w.base}-anonymise.xlsx`);
+        w.perSheet.forEach((sh, i) => {
+          report.push(`    - onglet ${i + 1} (${sh.mode}) : ${sh.replaced ? sh.replaced + " valeur(s) — " + fmt(sh.byType) : "aucun texte codé"}` +
+            (sh.nums.cells ? `, ${sh.nums.cells} nombre(s) protégé(s) (${chiffres})` : ""));
+        });
+      }
     }
     // La clé d'abord : si l'écriture d'une sortie échoue ensuite, les codes
     // déjà présents dans un fichier restent décodables.
@@ -1984,6 +2098,7 @@ tool(
     // pas écrite ; les autres fichiers du lot le sont.
     const bloquesPolitique = [];
     for (const w of writes) {
+      if (w.skip) continue;
       const lu = w.wb ? w.wb.SheetNames.map((n) => XLSX.utils.sheet_to_csv(w.wb.Sheets[n])).join("\n") : w.md;
       try { gardeInterdit(lu); } catch (e) {
         if (!(e instanceof PolitiqueBloque)) throw e;
@@ -1994,20 +2109,20 @@ tool(
       }
     }
     for (const w of writes) {
-      if (!w.docx || w.skip) continue;
-      const leaks = docxLeakCheck(w.docx, book, valeurs_a_exclure);
+      if (w.kind !== "docx" || w.skip) continue;
+      const leaks = docxLeakCheck(w.buf, book, valeurs_a_exclure);
       if (leaks.length) {
         w.skip = true;
         done--;
-        failed.push(path.basename(w.path));
-        report.push(`- 🚨 ${path.basename(w.path)} : contrôle final — une valeur de la clé reste dans ${leaks.length} partie(s) du paquet Word, copie NON écrite`);
+        refuses.push(path.basename(w.path));
+        report.push(`- 🚨 ${path.basename(w.path)} : contrôle final — une valeur de la clé reste dans ${leaks.length} partie(s) du paquet Word (${leaks.map((p) => p.replace(/^.*\//, "").replace(/\d*\.(xml|rels)$/, "")).join(", ")}), copie NON écrite`);
       }
     }
     saveBook(book);
     for (const w of writes) {
       if (w.skip) continue;
-      if (w.wb) { saveNumberMap(w.path, w.numbers); XLSX.writeFile(w.wb, w.path); }
-      else if (w.docx) { fs.writeFileSync(w.path, w.docx); fs.writeFileSync(w.path.replace(/\.docx$/, ".md"), w.md, "utf8"); }
+      if (w.kind === "xlsx") { saveNumberMap(w.path, w.numbers); XLSX.writeFile(w.wb, w.path); }
+      else if (w.kind === "docx") { fs.writeFileSync(w.path, w.buf); fs.writeFileSync(w.path.replace(/\.docx$/, ".md"), w.md, "utf8"); }
       else fs.writeFileSync(w.path, w.md, "utf8");
     }
     report.push(
@@ -2025,7 +2140,15 @@ tool(
       `Clé (JAMAIS à partager, restée sur le poste) : ${shown(KEY_XLSX)}`,
     ];
     if (lisibleLot) lines.push(describeRendu(lisibleLot.mode, lisibleLot.source, lisibleLot));
-    if (failed.length) lines.push(`⚠️ Ignorés (illisibles ou scannés) : ${failed.join(", ")}.`);
+    if (images.length) {
+      lines.push(`📷 ${images.length} scan(s) à lire : ${images.join(", ")}. Appelle lire_scan sur chacun (OCR sur le poste), fais relire ` +
+        "les textes « À RELIRE » à l'utilisateur, puis anonymiser_dossier avec motif « RELIRE » : une seule approbation pour tous les scans relus, même clé.");
+    }
+    if (refuses.length) {
+      lines.push(`🚨 Non écrits — CONTRÔLE FINAL : ${refuses.join(", ")}. Une valeur de la clé restait dans le paquet Word après codage ` +
+        "(un endroit que le codage n'atteint pas). Traite chacun avec anonymiser_fichier, ou propose de l'enregistrer en PDF ; signale le cas au support (sans la valeur).");
+    }
+    if (failed.length) lines.push(`⚠️ Ignorés (illisibles) : ${failed.join(", ")}.`);
     if (bloquesPolitique.length) {
       lines.push(`🛑 Non écrits, bloqués par la politique du cabinet : ${bloquesPolitique.join(", ")}. Dis-le à l'utilisateur : ` +
         "l'élément interdit doit être retiré du document source avant de relancer.");
@@ -2367,6 +2490,14 @@ tool(
     if (!res.replaced) {
       return err(`Aucun code de la clé trouvé dans ce contenu (clé : ${book.entries.length} codes). Vérifie que les codes sont recopiés tels quels.`);
     }
+    // v2.30 (T08) — ce qui reste après décodage : un code ou un pseudonyme de
+    // la clé que le décodage n'a pas retraduit (recopié en minuscules, tronqué).
+    // Un Word prêt à déposer n'en contient aucun : il n'est pas écrit.
+    const restes = restesApresDecodage(res.text, book);
+    if (format === "docx" && (restes.codes || restes.pseudos)) {
+      return err(`🚨 Décodage incomplet : ${restes.codes} code(s) et ${restes.pseudos} pseudonyme(s) de la clé restent dans le texte — le document Word n'est PAS écrit. ` +
+        "Vérifie que les codes et les pseudonymes sont recopiés tels quels (casse comprise), corrige le contenu, puis rappelle deanonymiser.");
+    }
     ensureOutdir();
     const stamp = new Date().toISOString().replace(/[:T]/g, "-").slice(0, 16);
     const base = String(nom_sortie || "resultat").replace(/\.(xlsx|xls|csv|txt|md)$/i, "")
@@ -2390,6 +2521,9 @@ tool(
       [
         `✅ ${res.replaced} code(s) remplacé(s) (${res.used} distincts sur les ${book.entries.length} de la clé).`,
         `Fichier décodé écrit sur le poste : ${shown(outPath)}`,
+        restes.codes || restes.pseudos
+          ? `⚠️ ${restes.codes} code(s) et ${restes.pseudos} pseudonyme(s) de la clé restent dans le fichier (recopiés autrement que tels quels) : dis-le à l'utilisateur.`
+          : "",
         conflicts
           ? `⚠️ ${conflicts} code(s) désignent deux valeurs différentes dans la clé d'équipe (deux postes les ont créés ` +
             "au même moment) : ils ne sont PAS décodés, le fichier les marque « [À VÉRIFIER : code] ». Dis à " +
@@ -2468,6 +2602,21 @@ function decodeMap(book) {
   Object.assign(map, pseudoMap(book));
   for (const c of book.conflicts || []) map[c] = `[À VÉRIFIER : ${c}]`;
   return map;
+}
+
+/* v2.30 (T08) — après décodage : codes de la clé et pseudonymes (courants ou
+   renouvelés) encore présents. Des comptes seulement. */
+function restesApresDecodage(texte, book) {
+  const s = String(texte);
+  const cles = new Set(Object.keys(decodeMap(book)).filter((k) => /^[A-Z][A-Z0-9]{1,9}-\d{3,}$/.test(k)));
+  const codes = (s.match(new RegExp(codeSrc(), "gu")) || []).filter((c) => cles.has(c.toUpperCase())).length;
+  const pseudos = Object.keys(pseudoMap(book)).filter((k) => k.length >= 4 && /\p{L}/u.test(k) && !/^\d/.test(k));
+  let n = 0;
+  if (pseudos.length) {
+    const rx = new RegExp(`(?<![\\p{L}\\p{N}])(?:${pseudos.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}\\p{N}])`, "giu");
+    n = (s.match(rx) || []).length;
+  }
+  return { codes, pseudos: n };
 }
 
 function codeDecoder(book) {

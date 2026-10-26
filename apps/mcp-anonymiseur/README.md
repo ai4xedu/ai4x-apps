@@ -98,6 +98,59 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
 
+v2.30.0 (validation T08, le dossier de contentieux, 26/10/2026). Le
+deuxième vrai test (Nanomizer, `docs/validation/T08-contentieux`) : douze
+pièces — Word, PDF, Excel, un fil de courriels .txt, deux scans — pour le
+tribunal de commerce de Casablanca. Sur la 2.29.0 : 5 fuites, 5,3/10 contre
+9/10 en clair, 9 actions au lieu de 3, sceau refusé. Sur la 2.30.0, rejoué
+avec `test/validation-t08.mjs` : 0 fuite, 0 terme lisible perdu, 12/12 pièces
+écrites en 3 actions, un code par entité, sceau délivré. Les onze points du
+compte rendu, chacun gardé par `test/validation-t08.test.js` :
+- **Une société, un code** : la dénomination en mots du dictionnaire
+  (« Société Marocaine de Distribution Alimentaire »), son sigle, son sigle à
+  points (« S.M.D.A. »), avec ou sans « SA », en capitales, derrière « Pour » ou
+  « Entre » : le même code (`codeForSociete`, moteur ; sigles entre parenthèses
+  et initiales d'office, verrou). « X SARL » et « X SNC » restent deux sociétés ;
+  « X SA et Y SA » aussi.
+- **RC marocain** en prose (« registre du commerce de Casablanca sous le n° »)
+  et coupé par une fin de ligne (« RC Agadir ⏎ 52907 »).
+- **Date de naissance à points** (`JJ.MM.AAAA`) derrière « Né le », même avec du
+  bruit d'OCR entre les deux.
+- **Variantes d'un patronyme** : une faute de frappe (distance 1) et l'initiale
+  « A. Ouazzani » rejoignent le code du nom ; « ATLAS CONSERVES IND » rejoint
+  la dénomination.
+- **Les mots courants ne sont plus des noms** : termes définis d'un contrat
+  (« le Distributeur », « les Produits »), rôles (« Directeur Général »),
+  en-têtes (« Exercice Objectif »), champs d'une pièce d'identité, en-têtes
+  d'actes en capitales (« ROYAUME DU MAROC », « CARTE NATIONALE D'IDENTITÉ »,
+  « TRIBUNAL DE COMMERCE DE CASABLANCA »), le bandeau d'un scan relu, « VIR
+  RECU », « TR: », « RE: », « (ii) », « Consœur », « et Associés », régions à
+  trait d'union, « Mme El Ouafi », « C ommissaire » (OCR).
+- **Le lot en deux passes** : chaque sortie est repassée avec la clé finie (la
+  même entité porte le même code dans toutes les pièces, y compris les copies
+  Word d'avant), puis rendue lisible ; une copie refusée l'est par le contrôle
+  final, qui le dit — plus jamais « illisible ou scanné ».
+- **Nombres** : « Solde », « CA », « Chiffre d'affaires », « Total » sont des
+  montants en clair ; « 2024 12 800 000 » n'est pas un téléphone (ni pour le
+  verrou de sortie).
+- **Pièces comptables lisibles** : n° de facture et d'avoir annoncés comme tels
+  (« FACTURE N° FA-… », « avoir AV-… ») ; un n° de dossier reste codé. Un suivi
+  postal (« RR…MA ») n'est pas un RIB ; Barid Al-Maghrib reste lisible.
+- **`anonymiser_dossier` couvre les .txt et .md**, liste les images et PDF
+  scannés avec `lire_scan` dans le même plan, et reprend les scans relus
+  (motif « RELIRE ») : un dossier entier, deux approbations.
+- **Décodage** : un pseudonyme renouvelé reste dans la clé (`anciensPseudos`) et
+  se décode encore ; `deanonymiser` refuse d'écrire un Word tant qu'un code ou
+  un pseudonyme de la clé reste dans le texte.
+- **Pack `juridique-ma`** (nouveau) : n° de dossier des tribunaux
+  (`NNNN/8202/AAAA`) et n° de PV codés sous leur nom, colonnes RC / ICE / IF /
+  patente / CNSS, juridictions, auxiliaires de justice, sources de droit et
+  institutions marocaines en clair. Les formats RC / ICE / IF / patente / CNSS
+  en texte libre restent ceux du moteur.
+
+HT-Bench : identifiants directs 100 % sur les 7 packs, chaque document se
+décode à l'identique. Tests : 343 passent (12 nouveaux).
+
 v2.29.0 (validation T01, le contrat en suivi de modifications, 25/10/2026).
 Le premier des dix vrais tests (Nanomizer, `docs/validation/T01-contrat`) : un
 avocat reçoit le contrat renvoyé par le confrère et demande ce qui a changé.

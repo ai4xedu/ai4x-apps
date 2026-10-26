@@ -105,7 +105,10 @@ test("auto est le défaut : paie protégée, taux en clair, dates intactes, le p
 
 test("classer un en-tête : finance sensible, montant ordinaire, taux, quantité, numéro", () => {
   const c = (h) => classifyNumericHeader(h).classe;
-  for (const h of ["Salaire brut", "Net à payer", "Chiffre d'affaires", "CA 2025", "Résultat net", "Patrimoine", "Solde", "Honoraires", "Cotisations", "Brut", "Rémunération"]) assert.equal(c(h), "sensible", h);
+  for (const h of ["Salaire brut", "Net à payer", "Résultat net", "Patrimoine", "Honoraires", "Cotisations", "Brut", "Rémunération"]) assert.equal(c(h), "sensible", h);
+  // v2.30 (T08) — « Solde », « CA », « Chiffre d'affaires » sont des montants :
+  // le relevé de compte d'un contentieux les porte, l'IA doit les calculer.
+  for (const h of ["Chiffre d'affaires", "CA 2025", "Solde", "CA HT Produits (DH)", "Solde dû"]) assert.equal(c(h), "montant", h);
   for (const h of ["Montant HT", "Total TTC", "Prix unitaire", "Acompte versé", "Créance", "Impayé", "Indemnité demandée", "Loyer"]) assert.equal(c(h), "montant", h);
   for (const h of ["Taux", "TVA %", "Coefficient", "Ratio"]) assert.equal(c(h), "taux", h);
   for (const h of ["Quantité", "Qté", "Nb heures", "Surface m2", "Délai (jours)", "Âge"]) assert.equal(c(h), "quantite", h);

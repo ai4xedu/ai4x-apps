@@ -55,7 +55,7 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
-import { TYPES, codeFor, codeDocumentText, newCodebook, normFor, HEADING_WORDS, isCardNumber, codePrefixes, typeById } from "./engine.js";
+import { TYPES, codeFor, codeForSociete, codeDocumentText, newCodebook, normFor, HEADING_WORDS, isCardNumber, codePrefixes, typeById } from "./engine.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const LEXICON_FILE = path.join(here, "..", "lexique", "fr.txt.gz");
@@ -67,7 +67,9 @@ export const ENGLISH_FILE = path.join(here, "..", "lexique", "en.json.gz");
 const words = (s) => s.split(/\s+/).filter(Boolean);
 
 export function fold(s) {
-  return String(s).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  // v2.30 (T08) — « œ » et « æ » ne se décomposent pas en NFD : « Consœur »
+  // n'était jamais le « consoeur » du dictionnaire, et partait en nom.
+  return String(s).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/œ/g, "oe").replace(/æ/g, "ae");
 }
 
 /* Mots courants absents du dictionnaire (abréviations, métier, latin
@@ -103,7 +105,13 @@ joignable joignables injoignable injoignables
 req adm const ord déc arr jur rép obs comm concl rapp trib gde inst sect ci-après ci-après dénommé
 export import data file files report draft final backup copy invoice new old test temp docs img image photo
 id ids tx txn ref refs num no nb qty qte
+facturable facturables scanné scannée scannés scannées demanderesse défenderesse requérant requérante concluant concluante
+vir prlv chq vrst acpt rem coop bank tr re fw fwd rfa lun mar jeu ven dim
 `);
+/* v2.30 (T08) — la ligne ci-dessus : le vocabulaire d'un dossier de contentieux
+   que le dictionnaire n'a pas (« facturable », « demanderesse », « scannée ») et
+   les abréviations d'un relevé bancaire (« VIR RECU », « ACPT », « PRLV ») ou
+   d'un courriel (« TR: », « RE: », « mar. 20 oct. »), qui partaient en noms. */
 const EXTRA_SET = new Set(EXTRA_WORDS.map(fold));
 
 /* Villes de juridiction (France, Maroc) : lisibles, l'IA en a besoin
@@ -155,7 +163,10 @@ egypte emirats arabie qatar chine japon europe afrique amerique asie
 lundi mardi mercredi jeudi vendredi samedi dimanche
 internet web chatgpt excel word google microsoft apple whatsapp linkedin facebook anthropic openai
 nanomizer hidden ai4x iphone android windows macos
+barid al-maghrib maghrib ompic anapec onee onep anrt cdg commissaire judiciaire
 `);
+/* v2.30 (T08) — institutions marocaines que l'IA doit pouvoir nommer : la
+   poste (« Barid Al-Maghrib », « Bank Al-Maghrib »), les offices. */
 
 /* Déterminants : « le Prestataire », « la Société », « les Parties » sont
    des termes définis, pas des personnes. */
@@ -233,7 +244,11 @@ prefet recteur doyen abbe pere frere soeur oncle tante mediateur mediatrice arbi
 administratrice mandataire temoin client cliente partie adversaire demandeur demanderesse defendeur
 defenderesse requerant requerante intime intimee appelant appelante salarie salariee employe employee
 confrere consoeur associe associee collaborateur collaboratrice stagiaire assistant assistante
+distributeur fournisseur prestataire preneur bailleur locataire cedant cessionnaire emprunteur preteur concedant
+franchiseur franchise acquereur vendeur acheteur souscripteur assureur assure donneur beneficiaire
 `));
+/* v2.30 (T08) — la dernière ligne : les parties d'un contrat (« l'exemplaire
+   Distributeur », « le Fournisseur confie ») : des rôles, pas des noms. */
 
 /* Libellés suivis d'un nom (« Client : Rousseau », « CONTRE : … »). */
 const PERSON_LABELS = new Set(words(`
@@ -259,6 +274,14 @@ sci sarl sas sasu sa snc eurl gie selarl selas scp sarlau
 const LEGAL_FORM_WORDS = new Set(words("sci sarl sas sasu sa snc eurl gie selarl selas scp sarlau"));
 /* Fin de raison sociale après « & » : « Fontaine & Associés », « Martin & Fils ». */
 const COMPANY_SUFFIX = new Set(words("associes associe associees fils freres soeurs cie compagnie partenaires partners co"));
+/* v2.30 (T08) — ce qui relie les mots d'une raison sociale : « Société
+   Marocaine DE Distribution Alimentaire », « Compagnie DES Travaux DU Nord »,
+   « Cabinet Belkadi ET Associés ». */
+const CONNECTORS = new Set(words("de du des d la le les l en et and"));
+/* Têtes de dénomination : derrière elles, même un mot « sûr » (Marocaine,
+   Générale, Nationale) est le début du nom. Derrière « agence », « banque »,
+   « cabinet », non : « agence Barid Al-Maghrib » reste lisible. */
+const DENOMINATION_HEADS = new Set(words("societe ste compagnie cie groupe group entreprise etablissements ets manufacture union federation caisse"));
 
 /* Instruments juridiques : les mots capitalisés qui suivent forment un titre
    (« loi Informatique et Libertés », « loi Travail »), pas un nom. */
@@ -278,7 +301,7 @@ karim youssef yassine mohamed mohammed ahmed hassan hicham rachid said samir nab
 zakaria ayoub younes othmane imane fatima fatiha khadija aicha zineb salma meryem nadia samira latifa malika
 najat hanane houda siham wafa ghita hind loubna asmae amal nour noura yasmine kenza rim dounia badr driss tarik
 adil anouar reda jalal kamal jamal mustapha abdelaziz abdellah abdelkader abdelhak brahim ibrahim ismail idriss
-soufiane ilyas walid hakim hamid aziz farid mounir claude
+soufiane ilyas walid hakim hamid aziz farid mounir claude btissam ikram oumaima
 `);
 const SURNAMES_EXTRA = words(`
 petit blanc roux fontaine rousseau moreau robert richard mercier boyer garnier chevalier legrand gauthier
@@ -636,7 +659,10 @@ const digitsOf = (s) => asciiDigits(s).replace(/\D/g, "");
 
 const KW_ADDRESS = ["rue", "avenue", "av.", "bd", "boulevard", "allée", "allee", "impasse", "place", "chemin",
   "route", "résidence", "residence", "rés.", "res.", "lotissement", "lot.", "quartier", "hay", "derb", "immeuble",
-  "imm.", "appartement", "appt", "angle", "cité", "villa", "ZI", "ZAC"];
+  "imm.", "appartement", "appt", "angle", "cité", "villa", "ZI", "ZAC",
+  // v2.30 (T08) — « Parc industriel Tassila », « zone industrielle Aïn Sebaâ » :
+  // sans ces mots de voie, le parc partait en patronyme et le reste en morceaux.
+  "parc industriel", "zone industrielle", "zone d'activités", "zone d'activité", "parc d'activités", "technopole"];
 
 function caseVariants(k) {
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -656,14 +682,55 @@ const isDate = (m) => DATE_RX.test(asciiDigits(m).replace(/\s/g, "").replace(/[�
 const BIRTH_MONTHS = "janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre";
 const BIRTH_LEAD = "(?<![\\p{L}])(?:n[ée]e?s?|date\\s+de\\s+naissance|naissance)";
 const BIRTH_RXS = [
-  new RegExp(`(${BIRTH_LEAD}[ \\u00A0]*(?::[ \\u00A0]*)?(?:(?:le|du)[ \\u00A0]+)?)` +
+  // v2.30 (T08) — sur un scan relu, du bruit d'OCR et un retour à la ligne
+  // peuvent séparer « Né le » de la date (« Né le a.\n27.07.1969 ») : jusqu'à
+  // huit caractères sans chiffre, puis au plus une ligne.
+  new RegExp(`(${BIRTH_LEAD}[ \\u00A0]*(?::[ \\u00A0]*)?(?:(?:le|du)[ \\u00A0]+)?(?:[^\\p{N}\\n]{0,8}\\n[ \\u00A0]*)?)` +
     `((?:1er|\\d{1,2})[ \\u00A0]+(?:${BIRTH_MONTHS})[ \\u00A0]+\\d{4}|\\d{1,2}[/.\\-]\\d{1,2}[/.\\-](?:\\d{4}|\\d{2}))(?![\\p{N}])`, "giu"),
   new RegExp(`((?<![\\p{L}])n[ée]e?s?[ \\u00A0]+en[ \\u00A0]+)(\\d{4})(?![\\p{N}])`, "giu"),
 ];
 
-/* Ordre = priorité. Chaque motif est cherché HORS des codes déjà posés. */
+/* v2.30 (T08) — un nombre à séparateurs de milliers n'est pas un numéro :
+   « 12 800 000 », « 2024 12 800 000 » (une ligne de tableau : l'année puis
+   l'objectif) partaient en TÉLÉPHONE. Un montant : des groupes de trois
+   chiffres, précédés d'au plus un groupe court ou d'une année ; jamais un
+   numéro qui commence par 0. */
+export function isAmountGroups(m) {
+  const t = asciiDigits(m).trim();
+  if (!/^\d{1,4}(?:[  ]\d{1,4})+$/.test(t)) return false;
+  const g = t.split(/[  ]/);
+  if (g[0].startsWith("0")) return false;
+  let i = 0;
+  if (g[0].length === 4 && /^(?:19|20)\d{2}$/.test(g[0]) && g.length >= 3) i = 1;
+  if (g[i].length > 3) return false;
+  const tail = g.slice(i + 1);
+  return tail.length >= 1 && tail.every((x) => x.length === 3);
+}
+
+/* v2.30 (T08) — ce qui doit rester LISIBLE bien qu'il ait la forme d'un
+   identifiant (mis à l'abri avant les motifs qui le coderaient) :
+   - un n° de facture ou d'avoir (FA-2025-1129, AV-2026-0016, F-2024-0001,
+     VIR-727363) : c'est une pièce comptable, l'IA en a besoin pour
+     rapprocher factures, avoirs et règlements — sauf derrière un libellé de
+     dossier (« Dossier FAC-2026-0142 » reste un n° de dossier, codé) ;
+   - un n° de suivi postal (UPU S10 : « RR674701456MA »), qui passait pour un RIB. */
+const ACCOUNTING_REF_RX = /(?<![\p{L}\p{N}-])(?:(?:FA|FAC|FACT|FC|F|AV|AVR|AVO|INV|VIR|PRLV|CHQ|BC|BL|CMD|DEV)[-_/]\p{Nd}{2,}(?:[-_/.]\p{Nd}+)+|(?:FAC|FACT|AVR|AVO|INV|VIR|PRLV|CHQ|CMD|DEV)[-_/]\p{Nd}{3,})(?![\p{L}\p{N}]|_\p{L})/gu;
+/* (un préfixe d'une ou deux lettres avec un seul groupe de chiffres — « BL-123456 »,
+   « F 58213 » — reste ce qu'il était : une CIN ou une référence, codée) */
+const DOSSIER_LABEL_RX = /(?:dossier|affaire|\brg|r[ée]f(?:[ée]rence)?|contrat|client|matricule|badge|police|sinistre|proc[ée]dure)\W{0,8}$/iu;
+export const S10_TRACKING_RX = /(?<![\p{L}\p{N}])[A-Z]{2}\p{Nd}{9}[A-Z]{2}(?![\p{L}\p{N}])/gu;
+
+/* v2.30 (T08) — une forme juridique suivie d'un connecteur sépare deux sociétés
+   (« X SA et Y SA ») : le groupe capturant garde le connecteur pour la réécriture. */
+const LEGAL_THEN_CONNECTOR_RX = new RegExp("(?<=" + "(?:" + LEGAL_FORMS_SRC + ")" + ")\\s+(&|et|and)\\s+(?=\\p{Lu})", "gu");
+
+/* Ordre = priorité. Chaque motif est cherché HORS des codes déjà posés.
+   `clair: true` : le passage est mis à l'abri (il reste lisible), `check`
+   reçoit le texte qui précède pour en juger. */
 export const PATTERNS = [
   { type: "lien", rx: /\b(?:https?:\/\/|www\.)[^\s<>"'()]+/gi },
+  { type: "clair", clair: true, rx: S10_TRACKING_RX },
+  { type: "clair", clair: true, rx: ACCOUNTING_REF_RX, check: (m, before) => !DOSSIER_LABEL_RX.test(before) },
   { type: "email", rx: /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.[\p{L}]{2,}/gu },
   { type: "email", rx: /[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]{2,}/gu },       // sans domaine : « pierre.moulin@orange »
   { type: "email", rx: /[\p{L}\p{N}._%+-]+\s?[[(](?:at|arobase|@)[\])]\s?[\p{L}\p{N}.-]+\s?(?:[[(](?:dot|point)[\])]|\.)\s?[\p{L}]{2,}/giu },
@@ -698,7 +765,7 @@ export const PATTERNS = [
   // Chiffres groupés (« 01 423 456 78 », « 06-12-34-56-78 ») : ≥ 4 groupes et
   // ≥ 8 chiffres, hors date → un numéro, pas un montant.
   { type: "tel", rx: new RegExp(`(?<![\\p{Nd}\\p{L}_\\-])${D}{1,4}(?:${SEP}${D}{1,4}){3,}(?!${D})`, "gu"),
-    check: (m) => digitsOf(m).length >= 8 && !isDate(m) },
+    check: (m) => digitsOf(m).length >= 8 && !isDate(m) && !isAmountGroups(m) },
   { type: "reference", rx: new RegExp(`(?<![\\p{Nd}/.\\-])${D}+(?:\\s?[/\\-\\u2010-\\u2015]\\s?${D}+){1,3}(?![\\p{Nd}/])`, "gu"),
     check: (m) => !isDate(m) && digitsOf(m).length >= 6 },
   // CIN, passeport, avec ou sans espace (« BE123456 », « AB 1234567 »).
@@ -708,6 +775,13 @@ export const PATTERNS = [
   // est un dossier suivi du numéro du suivant (« 30_WORK »), pas un n° de dossier.
   { type: "reference", rx: new RegExp(`(?<![\\p{L}\\p{N}-])[A-Z]{1,6}[-_/]${D}{2,}(?:[-_/.]${D}+)*(?![\\p{L}\\p{N}]|_\\p{L})`, "gu") },
   { type: "adresse", rx: new RegExp(ADDRESS_SRC, "gu") },
+  // v2.30 (T08) — « Lot 12 », « lot 210 » : le numéro de lot d'une adresse.
+  { type: "adresse", rx: /(?<![\p{L}\p{N}])[Ll]ot[  ]+(?:n[°º]\s*)?\p{Nd}{1,4}(?:[  ]?(?:bis|ter))?(?![\p{L}\p{N}])/gu },
+  // v2.30 (T08) — un sigle à points (« S.M.D.A. », « A.C.I. ») est une
+  // société : le verrou le laissait passer lettre à lettre (des initiales).
+  // La clé le range sous le même code que « SMDA » (normFor, engine.js).
+  { type: "societe", rx: /(?<![\p{L}\p{N}])(?:\p{Lu}\.){3,6}(?![\p{L}\p{N}])/gu,
+    check: (m) => { const x = fold(m.replace(/\./g, "")); return !LEGAL_FORM_WORDS.has(x) && !EXTRA_SET.has(x) && !isKnownWord(x); } },
   { type: "societe", rx: new RegExp(
       "(?<![\\p{L}\\p{N}])(?:[\\p{Lu}][\\p{L}\\p{N}'’.\\-]*(?:[ \\u00A0]+(?:&|et|and)[ \\u00A0]+|[ \\u00A0]+)){0,5}" +
       "[\\p{Lu}][\\p{L}\\p{N}'’.\\-]*[ \\u00A0,]+(?:" + LEGAL_FORMS_SRC + ")(?![\\p{L}\\p{N}])", "gu") },
@@ -728,7 +802,7 @@ export function codeSrc() {
 export const CODE_SRC = codeSrc();
 
 /* Applique fn aux morceaux de texte situés HORS des codes déjà posés. */
-function outsideCodes(text, fn) {
+export function outsideCodes(text, fn) {
   const rx = new RegExp(codeSrc(), "gu");
   let out = "";
   let last = 0;
@@ -789,6 +863,28 @@ function staleEnglishWord(v, code) {
   // seulement un mot courant (SCOWL ≤ 35), pas « Atlas ».
   return s === s.toLowerCase() ? isKnownWord(s, true) : commonEnglish(x);
 }
+/* v2.30 (T08) — distance d'édition ≤ 1 (substitution, insertion, suppression,
+   transposition) : « Ouazani » pour « Ouazzani ». */
+function within1(a, b) {
+  if (a === b) return true;
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > 1) return false;
+  let i = 0;
+  while (i < la && i < lb && a[i] === b[i]) i++;
+  if (la === lb) {
+    if (a.slice(i + 1) === b.slice(i + 1)) return true;                                   // substitution
+    return i + 1 < la && a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2); // transposition
+  }
+  return la > lb ? a.slice(i + 1) === b.slice(i) : b.slice(i + 1) === a.slice(i);        // insertion / suppression
+}
+const NAME_CODE_RX = /^(?:NOM|PRENOM|PERSONNE)-/;
+/* La clé d'abréviation d'une valeur de plusieurs mots : tout sauf le dernier
+   mot, puis les trois premières lettres du dernier (« atlas conserves ind »). */
+function abbrKey(k) {
+  const parts = k.split(" ");
+  if (parts.length < 2 || parts[parts.length - 1].length < 3) return null;
+  return parts.slice(0, -1).join(" ") + " " + parts[parts.length - 1].slice(0, 3);
+}
 function indexValue(ix, v, code) {
   const k = foldKey(v);
   if (k.startsWith("#")) { if (k.length >= 7 && !ix.digitMap.has(k)) ix.digitMap.set(k, code); return; }
@@ -801,6 +897,32 @@ function indexValue(ix, v, code) {
   }
   if (!ix.multi.has(k)) ix.multi.set(k, code);
   ix.maxWords = Math.max(ix.maxWords, Math.min(n, 12));
+  // v2.30 (T08) — un patronyme ou un prénom (≥ 6 lettres) se retrouve avec une
+  // faute de frappe ; une dénomination de plusieurs mots, abrégée en fin
+  // (« VIR RECU ATLAS CONSERVES IND » dans un libellé bancaire).
+  if (n === 1 && NAME_CODE_RX.test(code) && k.length >= 6 && /^\p{L}+$/u.test(k)) {
+    const bucket = ix.fuzzy.get(k[0]) || [];
+    bucket.push([k, code]);
+    ix.fuzzy.set(k[0], bucket);
+  }
+  if (n >= 2 && /^SOCIETE-/.test(code) && /^[\p{L} ]+$/u.test(k)) {
+    const ak = abbrKey(k);
+    if (ak && !ix.abbr.has(ak)) ix.abbr.set(ak, { code, last: k.split(" ").pop() });
+  }
+}
+
+/* v2.30 (T08) — tient l'index à jour au fil de l'eau : les entrées nouvelles
+   (valeur brute ET forme normalisée — « smda » pour « SMDA SA ») et les alias
+   nouveaux de byKey (posés par le moteur ou par societeCode). */
+function indexNewKeys(ix, book) {
+  const entries = book.entries || [];
+  for (let i = ix.seen; i < entries.length; i++) indexValue(ix, entries[i].value, entries[i].code);
+  ix.seen = entries.length;
+  for (const mk of Object.keys(book.byKey || {})) {
+    if (ix.keys.has(mk)) continue;
+    ix.keys.add(mk);
+    indexValue(ix, mk.slice(mk.indexOf("||") + 2), book.byKey[mk]);
+  }
 }
 
 /* Déclare un alias (valeur supplémentaire pour un code existant). */
@@ -811,6 +933,31 @@ function addAlias(book, typePrefix, value, code) {
   for (const ix of Object.values(MATCHERS.get(book) || {})) indexValue(ix, value, code);
 }
 
+/* v2.30 (T08) — le code d'une SOCIÉTÉ, sous toutes ses formes : la raison
+   sociale (casse et forme juridique indifférentes, cf. normFor), son sigle
+   (« SMDA » pour « Société Marocaine de Distribution Alimentaire »), le sigle
+   à points. Si l'une des formes est déjà dans la clé, les autres la
+   rejoignent ; sinon un code est créé pour la valeur, et les sigles en
+   deviennent des alias. Les initiales d'une dénomination d'au moins trois
+   mots sont un alias d'office (« ACI » pour « Atlas Conserves Industries »),
+   sauf si elles font un mot ou une abréviation connue. */
+export function initialsOf(value) {
+  const parts = String(value).replace(/[()]/g, " ").split(/[\s'’]+/).filter((w) => /\p{L}/u.test(w));
+  const content = parts.filter((w) => !CONNECTORS.has(fold(w)) && !LEGAL_FORM_WORDS.has(fold(w)));
+  if (content.length < 3) return null;
+  const ini = content.map((w) => w.replace(/^[^\p{L}]+/u, "")[0]).join("").toUpperCase();
+  if (ini.length < 3 || ini.length > 6) return null;
+  const x = fold(ini);
+  if (isKnownWord(ini) || EXTRA_SET.has(x) || LEGAL_FORM_WORDS.has(x)) return null;
+  return ini;
+}
+export function societeCode(book, value, acronyms = []) {
+  const r = codeForSociete(book, value, [...(acronyms || []), initialsOf(value)].filter(Boolean));
+  // Les alias posés dans byKey entrent dans les index des correspondances connues.
+  for (const ix of Object.values(MATCHERS.get(book) || {})) indexNewKeys(ix, book);
+  return r;
+}
+
 export function knownValueMatcher(book, { en = false } = {}) {
   if (!book || !book.byKey) return null;
   en = !!en && namesEn() !== null;
@@ -819,13 +966,11 @@ export function knownValueMatcher(book, { en = false } = {}) {
   const lang = en ? "en" : "fr";
   let ix = byLang[lang];
   if (!ix) {
-    ix = { en, multi: new Map(), capOnly: new Map(), digitMap: new Map(), maxWords: 1, seen: 0 };
-    for (const mk of Object.keys(book.byKey)) indexValue(ix, mk.slice(mk.indexOf("||") + 2), book.byKey[mk]);
-    ix.seen = (book.entries || []).length;
+    ix = { en, multi: new Map(), capOnly: new Map(), digitMap: new Map(), fuzzy: new Map(), abbr: new Map(), maxWords: 1, seen: 0, keys: new Set() };
+    indexNewKeys(ix, book);
     byLang[lang] = ix;
-  } else if ((book.entries || []).length > ix.seen) {
-    for (const e of book.entries.slice(ix.seen)) indexValue(ix, e.value, e.code);
-    ix.seen = book.entries.length;
+  } else {
+    indexNewKeys(ix, book);
   }
   const N = en ? namesEn() : names();
   if (!ix.multi.size && !ix.capOnly.size && !ix.digitMap.size) return null;
@@ -845,7 +990,14 @@ export function knownValueMatcher(book, { en = false } = {}) {
     const toks = [];
     MATCH_TOKEN_RX.lastIndex = 0;
     let m;
-    while ((m = MATCH_TOKEN_RX.exec(s))) toks.push({ a: m.index, b: m.index + m[0].length });
+    while ((m = MATCH_TOKEN_RX.exec(s))) {
+      // v2.30 (T08) — « d'Aïn Sebaâ » : l'élision n'est pas un morceau du nom.
+      const el = /^([\p{L}]{1,6})(['’])(.+)$/u.exec(m[0]);
+      if (el && ELISIONS.has(fold(el[1]))) {
+        toks.push({ a: m.index, b: m.index + el[1].length });
+        toks.push({ a: m.index + el[1].length + 1, b: m.index + m[0].length });
+      } else toks.push({ a: m.index, b: m.index + m[0].length });
+    }
     let out = "";
     let last = 0;
     for (let i = 0; i < toks.length; i++) {
@@ -861,6 +1013,19 @@ export function knownValueMatcher(book, { en = false } = {}) {
         if (codeOnly.test(cand)) continue;
         const k = foldKey(cand);
         let code = ix.multi.get(k);
+        // v2.30 (T08) — « S.M.D.A. » pour « SMDA » (le sigle à points).
+        if (!code && n === 1 && /^(?:\p{Lu}\.){2,}\p{Lu}?$/u.test(cand)) code = ix.multi.get(foldKey(cand.replace(/\./g, "")));
+        // v2.30 (T08) — la dénomination abrégée en fin : « ATLAS CONSERVES IND ».
+        if (!code && n >= 2 && ix.abbr.size && /^[\p{L} ]+$/u.test(k)) {
+          const last = k.split(" ").pop();
+          const hit2 = last.length >= 3 ? ix.abbr.get(abbrKey(k)) : null;
+          if (hit2 && hit2.last.startsWith(last) && hit2.last !== last) code = hit2.code;
+        }
+        // v2.30 (T08) — la faute de frappe sur un nom (« Ouazani ») : à une
+        // lettre près d'un nom de la clé, hors mots du dictionnaire.
+        if (!code && n === 1 && ix.fuzzy.size && k.length >= 6 && /^\p{Lu}/u.test(cand) && /^\p{L}+$/u.test(k) && !isKnownWord(cand, en)) {
+          for (const [kk, c] of ix.fuzzy.get(k[0]) || []) if (within1(k, kk)) { code = c; break; }
+        }
         if (!code && n === 1) {
           const besideCode =
             (i > 0 && NEXT_TO.test(s.slice(toks[i - 1].b, toks[i].a)) && codeOnly.test(s.slice(toks[i - 1].a, toks[i - 1].b))) ||
@@ -1062,16 +1227,44 @@ export function strictCode(input, opts = {}) {
   //     adresses, sociétés à forme juridique. AVANT les valeurs connues : un
   //     email doit être codé en entier, pas découpé autour d'un nom connu.
   for (const p of PATTERNS) {
-    text = outsideCodes(text, (seg) => seg.replace(p.rx, (m) => {
-      if (p.check && !p.check(m)) return m;
+    text = outsideCodes(text, (seg) => seg.replace(p.rx, (m, ...rest) => {
+      const at = rest.find((a) => typeof a === "number");
+      if (p.check && !p.check(m, seg.slice(Math.max(0, at - 40), at))) return m;
+      if (p.clair) {
+        if (mask || !book) return m;
+        shelter.push(m);
+        return `${shelter.length - 1}`;
+      }
       // « … Négoce SARL. » : le point final est celui de la phrase.
-      const value = p.type === "societe" && m.endsWith(".") ? m.slice(0, -1) : m;
-      const code = emit(p.type, value);
+      const value = p.type === "societe" && m.endsWith(".") && !/\.\p{Lu}\.$/u.test(m) ? m.slice(0, -1) : m;
+      // v2.30 (T08) — « Atlas Conserves Industries SA et SMDA SA » : deux sociétés, deux codes.
+      if (p.type === "societe" && LEGAL_THEN_CONNECTOR_RX.test(value)) {
+        LEGAL_THEN_CONNECTOR_RX.lastIndex = 0;
+        const parts = value.split(LEGAL_THEN_CONNECTOR_RX);
+        if (parts.length >= 3) {
+          const out = [];
+          for (let i = 0; i < parts.length; i += 2) {
+            const part = parts[i].trim();
+            out.push(emit("societe", part));
+            if (parts[i + 1] !== undefined) out.push(" " + parts[i + 1].trim() + " ");
+          }
+          return out.join("") + (value === m ? "" : ".");
+        }
+      }
+      LEGAL_THEN_CONNECTOR_RX.lastIndex = 0;
+      let code;
       if (p.type === "societe" && book && !mask) {
-        // Alias sans la forme juridique : « Transports Moreau & Fils » plus
-        // loin dans le texte recevra le MÊME code.
+        // Un seul code pour la raison sociale, son nom nu (« Transports Moreau
+        // & Fils » plus loin dans le texte) et son sigle (societeCode).
+        stats.replaced++;
+        stats.byType[labelOf("societe")] = (stats.byType[labelOf("societe")] || 0) + 1;
+        const r = societeCode(book, value, []);
+        if (r.isNew) stats.newCodes++;
+        code = r.code;
         const core = value.replace(new RegExp("[\\s,]+(?:" + LEGAL_FORMS_SRC + ")$"), "").trim();
         if (core.length >= 3 && core !== value && !isKnownWord(core)) addAlias(book, "SOCIETE", core, code);
+      } else {
+        code = emit(p.type, value);
       }
       return value === m ? code : code + ".";
     }));
@@ -1109,7 +1302,10 @@ export function strictCode(input, opts = {}) {
   // Les listes de la langue de chaque mot (v2.26) : le français, ou le
   // français + l'anglais dans un paragraphe en anglais.
   const PW = W.map((i) => profile(enAt(toks[i].at)));
-  const capSafeOf = (P, x) => P.N.capSafe.has(x) || EXTRA_SET.has(x) || (P.en && EN_EXTRA_SET.has(x));
+  // v2.30 (T08) — une région à trait d'union (« Casablanca-Settat »,
+  // « Rabat-Salé-Kénitra ») est sûre si chacune de ses parties l'est.
+  const capSafeOf = (P, x) => P.N.capSafe.has(x) || EXTRA_SET.has(x) || (P.en && EN_EXTRA_SET.has(x)) ||
+    (x.includes("-") && x.split("-").every((p) => p && P.N.capSafe.has(p)));
   // Un mot anglais courant, en minuscules dans un paragraphe anglais, n'est
   // jamais un morceau de nom (« John Carter said », « we will call »).
   const lowerWord = (wi) => PW[wi].en && commonEnglish(f[wi]);
@@ -1179,14 +1375,39 @@ export function strictCode(input, opts = {}) {
       !PW[j].honorWords.has(f[j]);
   };
 
+  // v2.30 (T08) — les TERMES DÉFINIS d'un contrat : un mot du dictionnaire
+  // écrit avec une majuscule derrière un déterminant (« le Distributeur »,
+  // « les Produits », « la Société ») est un terme défini, pas un nom — et il
+  // le reste partout dans le texte (« le stock de Produits du Distributeur »
+  // donnait deux patronymes). Jamais un patronyme ou un prénom de l'INSEE.
+  const definedTerms = new Set();
+  for (let wi = 1; wi < W.length; wi++) {
+    const t = tok(wi);
+    if (t.k !== "word" || !isCap(t.s) || isAllCaps(t.s) || !isWord(wi - 1)) continue;
+    const P = PW[wi];
+    const sep = sepBefore(wi);
+    if (!(P.det.has(f[wi - 1]) && (SPACE.test(sep) || /^['’]$/.test(sep)))) continue;
+    const x = f[wi];
+    if (isKnownWord(t.s, P.en) && !P.N.nomColl.has(x) && !P.N.prenoms.has(x) && !P.company.has(x)) definedTerms.add(x);
+  }
+  // v2.30 (T08) — OCR : « C ommissaire », « C asablanca » — une lettre
+  // détachée de son mot. Recollés, ils font un mot connu : lisibles tous deux.
+  const repaired = new Set();
+
   for (let wi = 0; wi < W.length; wi++) {
     const t = tok(wi);
     if (t.k === "code" || t.k === "num") { lawChain = false; continue; }
     if (t.k === "mixed") { if (!UNIT_RX.test(t.s) && !EXTRA_SET.has(f[wi])) verdict[wi] = "reference"; continue; }
+    if (repaired.has(wi)) continue;
     const w = t.s;
     const x = f[wi];
     const P = PW[wi];
     const N = P.N;
+    if (w.length === 1 && isCap(w) && isWord(wi + 1) && /^[  ]$/.test(sepBefore(wi + 1))) {
+      const nx = tok(wi + 1).s;
+      if (/^\p{Ll}/u.test(nx) && nx.length >= 3 && !isKnownWord(nx, P.en) &&
+          (isKnownWord(w + nx, P.en) || capSafeOf(P, fold(w + nx)))) { repaired.add(wi + 1); continue; }
+    }
     const { det: DETERMINERS, func: FUNCTION_WORDS, months: MONTHS, roles: ROLE_TITLES, labels: PERSON_LABELS,
       company: COMPANY_TRIGGERS, honorWords: HONORIFIC_WORDS } = P;
     const capSafe = (y) => capSafeOf(P, y);
@@ -1237,19 +1458,32 @@ export function strictCode(input, opts = {}) {
     if (lawChain && isCap(w) && known && !N.nomColl.has(x) && !firstName) continue;
 
     // Particule capitalisée devant un nom (« El Amrani », « Ben Ali ») : en clair.
-    if (PARTICLES.has(x) && isWord(wi + 1) && isCap(tok(wi + 1).s) && SPACE.test(sepBefore(wi + 1)) && !initial[wi + 1]) continue;
+    if (PARTICLES.has(x) && wi + 1 < W.length && (tok(wi + 1).k === "code" || (isWord(wi + 1) && isCap(tok(wi + 1).s))) && SPACE.test(sepBefore(wi + 1)) && !initial[wi + 1]) continue;
 
     // Titre de civilité juste avant : « M. Petit », « Mme Rousseau »,
     // « Monsieur Paris ». « Mes demandes » n'en est pas un (pas de point, minuscule).
     const abbr = prevWord && HONORIFIC_ABBR.has(px) && isCap(prevTok);
-    if (abbr && !DETERMINERS.has(x) && !PARTICLES.has(x) &&
+    // v2.30 (T08) — « M. A. Ouazzani » : l'initiale n'est pas le nom, elle
+    // rejoint le code du nom qui suit (cf. l'initiale, étape 5).
+    const initiale = /^[A-Z]$/.test(w) && wi + 1 < W.length && (tok(wi + 1).k === "code" || (isWord(wi + 1) && isCap(tok(wi + 1).s))) && /^\.[  ]$/.test(sepBefore(wi + 1));
+    if (abbr && !DETERMINERS.has(x) && !PARTICLES.has(x) && !initiale &&
         ((/^\.[  ]+$/.test(sep)) || (SPACE.test(sep) && isCap(w)))) { verdict[wi] = nameLike("prenom"); continue; }
-    if (prevWord && HONORIFIC_WORDS.has(px) && SPACE.test(sep) && isCap(w) && !HONORIFIC_WORDS.has(x)) { verdict[wi] = nameLike("prenom"); continue; }
+    //   v2.30 (T08) — « Mme El Ouafi » : la particule reste une particule (le nom
+    //   suit), elle ne devient pas un prénom.
+    if (prevWord && HONORIFIC_WORDS.has(px) && SPACE.test(sep) && isCap(w) && !HONORIFIC_WORDS.has(x) &&
+        !(PARTICLES.has(x) && wi + 1 < W.length && (tok(wi + 1).k === "code" || (isWord(wi + 1) && isCap(tok(wi + 1).s))) && SPACE.test(sepBefore(wi + 1)))) { verdict[wi] = nameLike("prenom"); continue; }
     // Rôle juste avant : « le Président Robin », « l'expert GERMAIN ».
     if (prevWord && ROLE_TITLES.has(px) && SPACE.test(sep) && isCap(w) && !capSafe(x) && !ROLE_TITLES.has(x) &&
         !DETERMINERS.has(x) && !HEADING_WORDS.has(x)) { verdict[wi] = nameLike("prenom"); continue; }
     // « Société Atlas », « SCI Les Oliviers », « cabinet Benjelloun » → entreprise.
-    if (prevWord && COMPANY_TRIGGERS.has(px) && SPACE.test(sep) && isCap(w) && !capSafe(x)) { verdict[wi] = "societe"; continue; }
+    //   v2.30 (T08) — derrière une tête de dénomination (« Société », « Compagnie »,
+    //   « Groupe »), un mot sûr est le début du nom : « Société Marocaine de … »,
+    //   « Société Générale ». Derrière « agence » ou « banque », il reste sûr.
+    if (prevWord && COMPANY_TRIGGERS.has(px) && SPACE.test(sep) && isCap(w) &&
+        (!capSafe(x) || (DENOMINATION_HEADS.has(px) && !FUNCTION_WORDS.has(x) && !DETERMINERS.has(x) && !LEGAL_FORM_WORDS.has(x) &&
+          !COMPANY_TRIGGERS.has(x) && !HEADING_WORDS.has(x) && !MONTHS.has(x) && !HONORIFIC_WORDS.has(x) && !HONORIFIC_ABBR.has(x)))) {
+      verdict[wi] = "societe"; continue;
+    }
     // « Client : Rousseau », « CONTRE : … » → nom après un libellé de personne.
     //   (même une ville ou un mois : « Client : Paris », « Expert : Avril »).
     if (prevWord && PERSON_LABELS.has(px) && /^[  ]*:[  ]*$/.test(sep) && isCap(w) &&
@@ -1261,6 +1495,25 @@ export function strictCode(input, opts = {}) {
     if (isCap(w)) {
       // Suite d'un nom d'entreprise : « Société Maghreb Distribution ».
       if (prevWord && verdict[wi - 1] === "societe" && SPACE.test(sep) && !capSafe(x)) { verdict[wi] = "societe"; continue; }
+      // v2.30 (T08) — la raison sociale continue derrière un ou deux
+      // connecteurs : « Société Marocaine de Distribution Alimentaire »,
+      // « Compagnie des Travaux du Nord », « Cabinet Belkadi et Associés »
+      // (« et » seulement devant « Associés », « Fils », « Frères »…). Jamais
+      // un prénom, un titre, un rôle : « Société Atlas de Karim Benali ».
+      if (!initial[wi] && (SPACE.test(sep) || /^['’]$/.test(sep)) && !capSafe(x) && !firstName && !FUNCTION_WORDS.has(x) &&
+          !DETERMINERS.has(x) && !HEADING_WORDS.has(x) && !HONORIFIC_WORDS.has(x) && !HONORIFIC_ABBR.has(x) &&
+          !ROLE_TITLES.has(x) && !COMPANY_TRIGGERS.has(x) && !LEGAL_FORM_WORDS.has(x) && !MONTHS.has(x)) {
+        let j = wi - 1;
+        let n = 0;
+        let et = false;
+        while (n < 2 && isWord(j) && CONNECTORS.has(f[j]) && (n === 0 || /^(?:[  ]{1,2}|['’])$/.test(sepBefore(j + 1)))) {
+          if (f[j] === "et" || f[j] === "and") et = true;
+          j--; n++;
+        }
+        if (n && isWord(j) && verdict[j] === "societe" && SPACE.test(sepBefore(j + 1)) && (!et || COMPANY_SUFFIX.has(x))) {
+          verdict[wi] = "societe"; continue;
+        }
+      }
       if (w.length === 1 || ROMAN_RX.test(w)) continue;               // initiale isolée ; « II. »
       if (isAllCaps(w)) {
         if (capSafe(x) || FUNCTION_WORDS.has(x) || HEADING_WORDS.has(x) || LEGAL_FORM_WORDS.has(x)) continue;
@@ -1284,6 +1537,10 @@ export function strictCode(input, opts = {}) {
       if (det && !detName) { if (!known) verdict[wi] = nameLike("prenom"); continue; }
       if (firstName) { verdict[wi] = "prenom"; continue; }
       if (!known) { verdict[wi] = "nom"; continue; }
+      // v2.30 (T08) — un terme défini du texte (« le Distributeur » plus haut),
+      // un rôle (« Directeur Général »), une fin de raison sociale (« et
+      // Associés ») : des mots, pas des noms.
+      if (definedTerms.has(x) || COMPANY_SUFFIX.has(x) || (ROLE_TITLES.has(x) && !N.nomColl.has(x))) continue;
       // Mot d'en-tête de tableau ou d'intitulé (« Pièce Émetteur Date »,
       // « Montant Échéance ») : un libellé, pas un nom — v2.15.1, la ligne
       // d'en-tête d'un tableau extrait d'un PDF codait « Émetteur » et « Date ».
@@ -1302,7 +1559,11 @@ export function strictCode(input, opts = {}) {
     }
     // Minuscules : un mot inconnu du dictionnaire est codé (une lettre isolée
     // ne dit rien de personne : « b.md », « annexe b »).
-    if (!known && w.length > 1) { verdict[wi] = "autre"; continue; }
+    if (!known && w.length > 1) {
+      // v2.30 (T08) — « (ii) », « (iv) » : un chiffre romain en minuscules.
+      if (w.length <= 4 && ROMAN_RX.test(w.toUpperCase())) continue;
+      verdict[wi] = "autre"; continue;
+    }
     if (!known) continue;
     // Notes tapées en minuscules : « rdv avec me moulin », « appeler mme petit ».
     if (prevWord && HONORIFIC_ABBR.has(px) && /^\.?[  ]+$/.test(sep) && (N.nomColl.has(x) || N.prenoms.has(x)) &&
@@ -1342,7 +1603,7 @@ export function strictCode(input, opts = {}) {
         !HONORIFIC_WORDS.has(x) && !ROMAN_RX.test(w)) return true;
     if (HONORIFIC_ABBR.has(x) || HONORIFIC_WORDS.has(x) || ROLE_TITLES.has(x) || PERSON_LABELS.has(x) ||
         COMPANY_TRIGGERS.has(x) || DETERMINERS.has(x) || PARTICLES.has(x) || FUNCTION_WORDS.has(x) ||
-        HEADING_WORDS.has(x) || ROMAN_RX.test(w)) return false;
+        HEADING_WORDS.has(x) || ROMAN_RX.test(w) || definedTerms.has(x) || COMPANY_SUFFIX.has(x)) return false;
     // Une ville ou un mois capitalisé juste APRÈS un prénom est un patronyme
     // (« Karim Avril », « Leila Paris ») ; ailleurs, il reste lisible.
     if (capSafe(x)) return fromFirstName;
@@ -1366,13 +1627,23 @@ export function strictCode(input, opts = {}) {
         }
         const tj = isWord(j) ? tok(j).s : "";
         // Initiale collée à un nom : « K. Benali ».
-        if (tj.length === 1 && isCap(tj) && verdict[j] === null && !HONORIFIC_ABBR.has(f[j])) {
-          verdict[j] = "prenom"; changed = true; continue;
+        // v2.30 (T08) — l'initiale (une lettre, un point, un espace, puis le
+        // nom) disparaît dans le code du nom : « A. Ouazzani » et « Ouazzani »
+        // sont une seule personne, un seul code. Avant, « A » devenait un
+        // prénom à part (PRENOM-003 = « A ») ; et « À RELIRE » ou « C
+        // ommissaire » (OCR) faisaient d'une lettre un prénom.
+        if (tj.length === 1 && /^[A-Z]$/.test(tj) && verdict[j] === null && !HONORIFIC_ABBR.has(f[j]) && dir === -1 &&
+            /^\.[  ]$/.test(sepBefore(wi)) && (verdict[wi] === "nom" || verdict[wi] === "prenom")) {
+          verdict[j] = "initiale"; changed = true; continue;
         }
+        if (tj.length === 1) continue;
+        const Pj = PW[j];
+        // v2.30 (T08) — une abréviation en capitales (« VIR RECU », « ACPT »)
+        // à gauche d'un nom n'en fait pas partie.
+        if (dir === -1 && isAllCaps(tj) && (EXTRA_SET.has(f[j]) || Pj.starters.has(f[j]))) continue;
         // À gauche, un mot du dictionnaire en tête de phrase n'est pas aspiré
         // (« Selon Pierre ») — sauf si c'est lui-même un prénom ou un patronyme.
         // (« Horizon Immobilier », lui, est aspiré en entier : « Horizon » n'est pas un mot d'amorce.)
-        const Pj = PW[j];
         // v2.28.x — et, devant un PRÉNOM, tout mot du dictionnaire en tête de
         // phrase : « Relance Pierre Durand », « Appelle Karim », « Envoie Salma
         // le contrat » — un prénom ouvre le nom d'une personne, le mot qui le
@@ -1390,19 +1661,74 @@ export function strictCode(input, opts = {}) {
     }
   }
 
+  // 5a) v2.30 (T08) — une INITIALE devant un nom déjà codé (« A. NOM-010 »,
+  //     la clé connaissait le nom) disparaît elle aussi dans le code.
+  for (let wi = 0; wi + 1 < W.length; wi++) {
+    if (tok(wi).k !== "word" || verdict[wi] !== null || !/^[A-Z]$/.test(tok(wi).s) || HONORIFIC_ABBR.has(f[wi])) continue;
+    if (tok(wi + 1).k === "code" && /^(?:NOM|PRENOM|PERSONNE)-/.test(tok(wi + 1).s) && /^\.[  ]$/.test(sepBefore(wi + 1))) verdict[wi] = "initiale";
+  }
+
   // 5b) Une société est UN nom (v2.15) : « Garage Lefèvre » reçoit un seul
   //     code, et le même là où il revient (« au Garage Lefèvre », sans la
   //     forme juridique), au lieu d'un code par mot — l'IA y voyait sinon deux
   //     parties. « Fontaine & Associés » aussi.
+  //     v2.30 (T08) — la raison sociale enjambe ses connecteurs (« Société
+  //     Marocaine de Distribution Alimentaire »), prend sa tête capitalisée
+  //     (« Société », « Cabinet ») quand elle est une dénomination, et avale le
+  //     SIGLE entre parenthèses qui la suit (« (SMDA) SA », « (ACI) ») : le
+  //     sigle devient un alias du même code, et ses autres mentions aussi.
   const SPAN_SEP = /^(?:[  ]{1,2}|[  ]?-[  ]?)$/;
+  const CONN_SEP = /^(?:[  ]{1,2}|['’])$/;
   const AMP_SEP = /^[  ]?&[  ]?$|^[  ]et[  ]$/;
   const WRAP_SEP = /^[  ]{0,2}\r?\n[  ]{0,2}$/;
   const spanOf = new Array(W.length).fill(-1);
-  const spans = [];                                // { a, b, value }
+  const spans = [];                                // { a, b, value, acronyms }
+  const isConn = (q) => isWord(q) && CONNECTORS.has(f[q]) && verdict[q] === null;
+
+  // Sigles entre parenthèses : « Atlas Conserves Industries (ACI) ».
+  const sigles = new Map();                        // index du sigle → { a, legal }
+  for (let wi = 1; wi < W.length; wi++) {
+    const t = tok(wi);
+    if (t.k !== "word" || !/^\p{Lu}{2,6}$/u.test(t.s) || !/^[  ]?\($/.test(sepBefore(wi))) continue;
+    let legal = -1;
+    let closes = false;
+    const sepAfter = (q) => (q + 1 < W.length ? sepBefore(q + 1) : (toks[W[q] + 1] ? toks[W[q] + 1].s : ""));
+    if (/^\)/.test(sepAfter(wi))) closes = true;
+    else if (isWord(wi + 1) && LEGAL_FORM_WORDS.has(f[wi + 1]) && /^[  ]$/.test(sepAfter(wi)) && /^\)/.test(sepAfter(wi + 1))) { closes = true; legal = wi + 1; }
+    if (!closes) continue;
+    // La dénomination qui précède : des mots capitalisés (ou des connecteurs).
+    const run = [];
+    let j = wi - 1;
+    while (isWord(j) && run.length < 8) {
+      if (run.length && !CONN_SEP.test(sepBefore(j + 1))) break;
+      const wj = tok(j).s;
+      if (CONNECTORS.has(f[j]) && !isCap(wj)) { run.unshift({ j, conn: true }); j--; continue; }
+      if (!isCap(wj) || wj.length === 1 || verdict[j] === "reference") break;
+      run.unshift({ j, conn: false });
+      if (initial[j]) break;
+      j--;
+    }
+    const content = run.filter((r) => !r.conn);
+    const letters = fold(t.s);
+    let a = -1;
+    for (let k = content.length - 1; k >= 0; k--) {
+      if (content.slice(k).map((r) => fold(tok(r.j).s)[0]).join("") === letters) { a = content[k].j; break; }
+    }
+    if (a < 0) continue;
+    for (let q = a; q < wi; q++) if (isWord(q) && !CONNECTORS.has(f[q])) verdict[q] = "societe";
+    sigles.set(wi, { a, legal });
+  }
+
   for (let wi = 0; wi < W.length; wi++) {
     if (verdict[wi] !== "societe") continue;
     const cur = spans.length ? spans[spans.length - 1] : null;
     if (cur && cur.b === wi - 1 && SPAN_SEP.test(sepBefore(wi))) { cur.b = wi; spanOf[wi] = spans.length - 1; continue; }
+    // Pont sur un ou deux connecteurs en clair : « de », « d' », « et ».
+    if (cur && wi - cur.b <= 3 && wi - cur.b >= 2 && CONN_SEP.test(sepBefore(wi))) {
+      let ok = true;
+      for (let q = cur.b + 1; q < wi; q++) if (!isConn(q) || !CONN_SEP.test(sepBefore(q))) { ok = false; break; }
+      if (ok) { for (let q = cur.b + 1; q <= wi; q++) spanOf[q] = spans.length - 1; cur.b = wi; continue; }
+    }
     spans.push({ a: wi, b: wi });
     spanOf[wi] = spans.length - 1;
   }
@@ -1411,12 +1737,38 @@ export function strictCode(input, opts = {}) {
     if (isWord(j) && spanOf[j] < 0 && isCap(tok(j).s) && AMP_SEP.test(sepBefore(j)) &&
         (COMPANY_SUFFIX.has(f[j]) || (verdict[j] && verdict[j] !== "reference"))) { sp.b = j; spanOf[j] = k; verdict[j] = "societe"; }
   }
+  // La tête de dénomination (« Société », « Cabinet ») entre dans le nom quand
+  // la raison sociale a un connecteur ou un sigle : « Société Marocaine de
+  // Distribution Alimentaire », « Cabinet Belkadi et Associés ».
+  const hasConn = (sp) => { for (let q = sp.a; q <= sp.b; q++) if (isConn(q)) return true; return false; };
+  const sigleOf = (sp) => { for (const [wi, s] of sigles) if (s.a === sp.a) return wi; return -1; };
+  for (const [k, sp] of spans.entries()) {
+    const j = sp.a - 1;
+    if (isWord(j) && spanOf[j] < 0 && verdict[j] === null && isCap(tok(j).s) && COMPANY_TRIGGERS.has(f[j]) &&
+        SPACE.test(sepBefore(sp.a)) && (hasConn(sp) || sigleOf(sp) >= 0)) {
+      sp.a = j; spanOf[j] = k; verdict[j] = "societe";
+      for (const s of sigles.values()) if (s.a === j + 1) s.a = j;
+    }
+  }
   const textOf = (a, b) => toks.slice(W[a], W[b] + 1).map((t) => t.s).join("");
   const keyOf = (a, b) => f.slice(a, b + 1).join(" ");
   const canon = new Map();                          // clé repliée → valeur de la 1re occurrence
   for (const sp of spans) {
     sp.value = textOf(sp.a, sp.b).trim();
+    sp.acronyms = [];
     if (sp.b > sp.a && !canon.has(keyOf(sp.a, sp.b))) canon.set(keyOf(sp.a, sp.b), sp.value);
+  }
+  // Le sigle est avalé par le code de la dénomination, et devient son alias.
+  const sigleText = new Map();                      // sigle (tel quel) → valeur de la dénomination
+  for (const [wi, s] of sigles) {
+    const k = spanOf[s.a];
+    if (k < 0) continue;
+    const sp = spans[k];
+    if (sp.b !== wi - 1) continue;
+    sp.acronyms.push(tok(wi).s);
+    sigleText.set(tok(wi).s, sp.value);
+    sp.swallow = s.legal >= 0 ? s.legal : wi;      // jusqu'où effacer
+    for (let q = wi; q <= sp.swallow; q++) spanOf[q] = k;
   }
   if (canon.size) {
     for (const [key, value] of canon) {
@@ -1426,15 +1778,35 @@ export function strictCode(input, opts = {}) {
         // Une coupure de ligne (PDF, colonne étroite) ne sépare pas un nom.
         let ok = true;
         for (let q = wi; q < wi + n; q++) {
-          if (!isWord(q) || spanOf[q] >= 0 || (q > wi && !SPAN_SEP.test(sepBefore(q)) && !WRAP_SEP.test(sepBefore(q)))) { ok = false; break; }
+          if (!isWord(q) || spanOf[q] >= 0 || (q > wi && !SPAN_SEP.test(sepBefore(q)) && !CONN_SEP.test(sepBefore(q)) && !WRAP_SEP.test(sepBefore(q)))) { ok = false; break; }
         }
         if (!ok) continue;
-        spans.push({ a: wi, b: wi + n - 1, value });
+        spans.push({ a: wi, b: wi + n - 1, value, acronyms: [] });
         for (let q = wi; q < wi + n; q++) { spanOf[q] = spans.length - 1; verdict[q] = "societe"; }
       }
     }
     for (const sp of spans) if (sp.b > sp.a && canon.has(keyOf(sp.a, sp.b))) sp.value = canon.get(keyOf(sp.a, sp.b));
   }
+  // Les autres mentions du sigle dans ce texte (« les conserves ACI ») : le
+  // même code que la dénomination.
+  if (sigleText.size) {
+    for (let wi = 0; wi < W.length; wi++) {
+      if (spanOf[wi] >= 0 || tok(wi).k !== "word" || !sigleText.has(tok(wi).s)) continue;
+      if (verdict[wi] !== null && verdict[wi] !== "nom" && verdict[wi] !== "prenom" && verdict[wi] !== "autre" && verdict[wi] !== "societe") continue;
+      spans.push({ a: wi, b: wi, value: sigleText.get(tok(wi).s), acronyms: [tok(wi).s] });
+      spanOf[wi] = spans.length - 1;
+      verdict[wi] = "societe";
+    }
+  }
+  const emitSociete = (sp) => {
+    stats.replaced++;
+    const label = labelOf("societe");
+    stats.byType[label] = (stats.byType[label] || 0) + 1;
+    if (mask || !book) return "•••";
+    const r = societeCode(book, sp.value, sp.acronyms);
+    if (r.isNew) stats.newCodes++;
+    return r.code;
+  };
 
   // 6) Réécriture.
   for (let wi = 0; wi < W.length; wi++) {
@@ -1446,8 +1818,17 @@ export function strictCode(input, opts = {}) {
     if (spanOf[wi] >= 0) {
       const sp = spans[spanOf[wi]];
       if (wi !== sp.a) continue;
-      t.s = emit("societe", sp.value);
-      for (let j = W[sp.a] + 1; j <= W[sp.b]; j++) toks[j].s = "";
+      t.s = emitSociete(sp);
+      const last = sp.swallow !== undefined ? sp.swallow : sp.b;
+      for (let j = W[sp.a] + 1; j <= W[last]; j++) toks[j].s = "";
+      // La parenthèse fermante du sigle avalé.
+      if (sp.swallow !== undefined && toks[W[last] + 1] && toks[W[last] + 1].k === "sep") toks[W[last] + 1].s = toks[W[last] + 1].s.replace(/^\)/, "");
+      continue;
+    }
+    if (v === "initiale") {
+      // « A. Ouazzani » → le code du nom seul : la lettre et son point partent.
+      t.s = "";
+      if (toks[W[wi] + 1] && toks[W[wi] + 1].k === "sep") toks[W[wi] + 1].s = "";
       continue;
     }
     t.s = emit(v, t.s);

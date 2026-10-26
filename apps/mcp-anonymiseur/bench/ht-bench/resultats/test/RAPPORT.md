@@ -1,6 +1,6 @@
 # HT-Bench 0.2.0 (jeu test) — rapport de détection
 
-Moteur Hidden Tokens **v2.28.0** · jeu `4881c8d2bc9febe5…` (synthétique, graine fixe) · 366 documents · 3420 valeurs à coder · 3029 leurres.
+Moteur Hidden Tokens **v2.30.0** · jeu `4881c8d2bc9febe5…` (synthétique, graine fixe) · 366 documents · 3420 valeurs à coder · 3029 leurres.
 
 Chemin mesuré : anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte. Une valeur compte comme détectée si toutes ses lettres et chiffres sont sous un code (les particules d'un nom — Ben, El, Aït, de… — peuvent rester en clair). Une valeur codée en partie est une fuite : elle compte comme manquée. Définitions complètes : `bench/ht-bench/README.md`.
 
@@ -12,13 +12,13 @@ Verrou de sortie : sur 0 identifiant(s) direct(s) manqué(s) ou partiel(s) par l
 
 | Pack | Docs | Rappel direct | Cible | Rappel (tout) | Précision | F1 | Leurres codés | « ••• » en sortie |
 |---|---:|---:|:-:|---:|---:|---:|---:|---:|
-| core | 42 | 100.0 % (322/322) | ✅ | 98.4 % | 93.5 % | 95.9 % | 3/141 (2.1 %) | 0 |
-| telecom-ma | 36 | 100.0 % (242/242) | ✅ | 100.0 % | 82.7 % | 90.5 % | 17/158 (10.8 %) | 0 |
-| juridique-fr | 36 | 100.0 % (276/276) | ✅ | 98.6 % | 88.9 % | 93.5 % | 29/300 (9.7 %) | 0 |
-| banque-assurance | 96 | 100.0 % (652/652) | ✅ | 100.0 % | 83.0 % | 90.7 % | 25/676 (3.7 %) | 0 |
-| sante | 36 | 100.0 % (204/204) | ✅ | 96.3 % | 84.8 % | 90.2 % | 27/240 (11.3 %) | 0 |
+| core | 42 | 100.0 % (322/322) | ✅ | 98.4 % | 96.0 % | 97.2 % | 3/141 (2.1 %) | 0 |
+| telecom-ma | 36 | 100.0 % (242/242) | ✅ | 100.0 % | 85.3 % | 92.1 % | 5/158 (3.2 %) | 0 |
+| juridique-fr | 36 | 100.0 % (276/276) | ✅ | 98.6 % | 90.4 % | 94.3 % | 29/300 (9.7 %) | 0 |
+| banque-assurance | 96 | 100.0 % (652/652) | ✅ | 100.0 % | 85.2 % | 92.0 % | 15/676 (2.2 %) | 0 |
+| sante | 36 | 100.0 % (204/204) | ✅ | 96.3 % | 82.7 % | 89.0 % | 27/240 (11.3 %) | 0 |
 | expertise-comptable | 84 | 100.0 % (599/599) | ✅ | 98.5 % | 96.5 % | 97.5 % | 1/1142 (0.1 %) | 0 |
-| rh-paie | 36 | 100.0 % (228/228) | ✅ | 100.0 % | 89.3 % | 94.3 % | 74/372 (19.9 %) | 24 |
+| rh-paie | 36 | 100.0 % (228/228) | ✅ | 100.0 % | 94.8 % | 97.3 % | 14/372 (3.8 %) | 24 |
 
 Précision du pack = passages codés qui recouvrent une valeur étiquetée / tous les passages codés : le verrou code tout mot inconnu du lexique, un mot courant codé à tort la fait baisser (cf. « Codé hors étiquette »). « ••• » en sortie : passages masqués par le verrou de sortie dans la réponse de coder_texte (souvent un code déjà posé que le motif d'un pack reconnaît à nouveau : l'IA ne peut plus le citer).
 
@@ -33,7 +33,7 @@ Précision du pack = passages codés qui recouvrent une valeur étiquetée / tou
 
 | Type | Direct | Valeurs | Rappel | Partielles | Précision | F1 | Bon préfixe |
 |---|:-:|---:|---:|---:|---:|---:|---:|
-| PERSONNE — Nom de personne | oui | 965 | 100.0 % | 0 | 80.1 % (1874/2340) | 88.9 % | 960/965 |
+| PERSONNE — Nom de personne | oui | 965 | 100.0 % | 0 | 84.3 % (1870/2219) | 91.5 % | 960/965 |
 | CIN — CIN marocaine | oui | 192 | 100.0 % | 0 | 73.6 % (159/216) | 84.8 % | 159/192 |
 | NIR — NIR (sécurité sociale, France) | oui | 40 | 100.0 % | 0 | — (0/0) | — | 40/40 |
 | CNSS — N° CNSS | oui | 72 | 100.0 % | 0 | 100.0 % (72/72) | 100.0 % | 72/72 |
@@ -42,7 +42,7 @@ Précision du pack = passages codés qui recouvrent une valeur étiquetée / tou
 | RC — Registre de commerce (RC) | oui | 53 | 100.0 % | 0 | 100.0 % (53/53) | 100.0 % | 53/53 |
 | SIREN — SIREN | oui | 24 | 100.0 % | 0 | 14.2 % (24/169) | 24.9 % | 24/24 |
 | SIRET — SIRET | oui | 31 | 100.0 % | 0 | — (0/0) | — | 12/31 |
-| TEL — Téléphone | oui | 462 | 100.0 % | 0 | 100.0 % (430/430) | 100.0 % | 430/462 |
+| TEL — Téléphone | oui | 462 | 100.0 % | 0 | 100.0 % (431/431) | 100.0 % | 431/462 |
 | EMAIL — E-mail | oui | 200 | 100.0 % | 0 | 100.0 % (200/200) | 100.0 % | 200/200 |
 | IBAN — IBAN | oui | 55 | 100.0 % | 0 | 33.5 % (55/164) | 50.2 % | 55/55 |
 | RIB — RIB | oui | 109 | 100.0 % | 0 | — (0/0) | — | 109/109 |
@@ -54,7 +54,7 @@ Précision du pack = passages codés qui recouvrent une valeur étiquetée / tou
 | BIC — BIC / SWIFT |  | 24 | 100.0 % | 0 | — (0/0) | — | 0/24 |
 | ICCID — ICCID (carte SIM) |  | 12 | 100.0 % | 0 | 100.0 % (12/12) | 100.0 % | 12/12 |
 | ADRESSE — Adresse postale |  | 184 | 96.2 % | 0 | 100.0 % (180/180) | 98.1 % | 161/177 |
-| SOCIETE — Société |  | 279 | 100.0 % | 0 | 66.7 % (279/418) | 80.1 % | 279/279 |
+| SOCIETE — Société |  | 279 | 100.0 % | 0 | 63.0 % (279/443) | 77.3 % | 279/279 |
 | NAISSANCE — Date de naissance |  | 86 | 79.1 % | 0 | 100.0 % (68/68) | 88.3 % | 68/68 |
 | PATENTE — N° de patente |  | 5 | 100.0 % | 0 | 100.0 % (5/5) | 100.0 % | 5/5 |
 | TVA — N° de TVA intracommunautaire |  | 7 | 100.0 % | 0 | 100.0 % (7/7) | 100.0 % | 7/7 |
@@ -239,10 +239,10 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 
 | Leurre | Nombre | Codés à tort | Taux |
 |---|---:|---:|---:|
-| MONTANT — Montant | 1002 | 36 | 3.6 % |
-| DATE — Date (hors naissance) | 785 | 10 | 1.3 % |
+| MONTANT — Montant | 1002 | 0 | 0.0 % |
+| DATE — Date (hors naissance) | 785 | 0 | 0.0 % |
 | ARTICLE — Article ou texte de loi | 84 | 26 | 31.0 % |
-| SIGLE — Sigle ou terme du lexique | 456 | 60 | 13.2 % |
+| SIGLE — Sigle ou terme du lexique | 456 | 24 | 5.3 % |
 | MOT — Mot courant qui ressemble à un nom | 130 | 16 | 12.3 % |
 | VILLE — Ville | 201 | 0 | 0.0 % |
 | PRODUIT — Offre, opérateur, médicament | 103 | 28 | 27.2 % |
@@ -258,7 +258,7 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | juridique-fr/conclusions/003 | ADRESSE (indirect) | fr-rue | `105 quai de la Fosse` | manque | Fosse | oui |  |
 | juridique-fr/conclusions/007 | ADRESSE (indirect) | fr-bis | `22 bis quai de la Fosse` | manque | Fosse | oui |  |
 | juridique-fr/conclusions/009 | ADRESSE (indirect) | fr-rue | `99 quai de la Fosse` | manque | Fosse | oui |  |
-| juridique-fr/conclusions/010 | ADRESSE (indirect) | fr-batiment | `Bâtiment C, 28 quai de la Fosse` | manque | Fosse | oui | NOM, PRENOM |
+| juridique-fr/conclusions/010 | ADRESSE (indirect) | fr-batiment | `Bâtiment C, 28 quai de la Fosse` | manque | Fosse | oui | NOM |
 | juridique-fr/conclusions/012 | ADRESSE (indirect) | fr-rue | `52 quai de la Fosse` | manque | Fosse | oui |  |
 | expertise-comptable/rapprochement/002 | EFFET (indirect) | cheque-7 | `9741521` | manque | 9741521 | oui |  |
 | expertise-comptable/rapprochement/002 | EFFET (indirect) | cheque-7 | `2372484` | manque | 2372484 | oui |  |
@@ -291,7 +291,7 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | sante/compteRendu/011 | NAISSANCE (indirect) | lettres | `28 septembre 1989` | manque | 28 septembre 1989 | oui |  |
 | sante/compteRendu/012 | NAISSANCE (indirect) | jj-mm-aaaa | `19/04/1973` | manque | 19 04 1973 | oui |  |
 
-## Leurres codés à tort (176)
+## Leurres codés à tort (94)
 
 | Document | Leurre | Valeur | Préfixes |
 |---|---|---|---|
@@ -303,18 +303,6 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | telecom-ma/transcription/011 | PRODUIT | `Fibre 100 Méga` | NOM |
 | telecom-ma/ticket/003 | PRODUIT | `forfait 4G+ 20 Go` | NOM |
 | telecom-ma/ticket/012 | PRODUIT | `forfait 4G+ 20 Go` | NOM |
-| telecom-ma/portabilite/001 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/002 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/003 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/004 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/005 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/006 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/007 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/008 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/009 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/010 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/011 | SIGLE | `ANRT` | NOM |
-| telecom-ma/portabilite/012 | SIGLE | `ANRT` | NOM |
 | juridique-fr/conclusions/001 | ARTICLE · jurisprudence | `Soc., 27 septembre 2023, n° 21-24.782` | POURVOI |
 | juridique-fr/conclusions/001 | ARTICLE · jurisprudence | `Soc., 27 septembre 2023, n° 21-24.782` | POURVOI |
 | juridique-fr/conclusions/001 | MOT | `Noël` | PRENOM |
@@ -357,16 +345,6 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | banque-assurance/kyc/010 | SIGLE | `KYC` | SOCIETE |
 | banque-assurance/kyc/011 | SIGLE | `KYC` | SOCIETE |
 | banque-assurance/kyc/012 | SIGLE | `KYC` | SOCIETE |
-| banque-assurance/carte/001 | DATE · points | `04.07.2024` | SOCIETE |
-| banque-assurance/carte/002 | DATE · jj-mm-aaaa | `25/04/2019` | SOCIETE |
-| banque-assurance/carte/004 | DATE · points | `08.03.2023` | SOCIETE |
-| banque-assurance/carte/005 | DATE · jj-mm-aaaa | `13/07/2021` | SOCIETE |
-| banque-assurance/carte/007 | DATE · points | `04.08.2020` | SOCIETE |
-| banque-assurance/carte/008 | DATE · jj-mm-aaaa | `16/12/2024` | SOCIETE |
-| banque-assurance/carte/009 | DATE · iso | `2022-09-10` | SOCIETE |
-| banque-assurance/carte/010 | DATE · points | `10.10.2023` | SOCIETE |
-| banque-assurance/carte/011 | DATE · jj-mm-aaaa | `08/09/2023` | SOCIETE |
-| banque-assurance/carte/012 | DATE · jj-mm-aaaa | `12/06/2025` | SOCIETE |
 | banque-assurance/effets/007 | MOT | `Noël` | PRENOM |
 | banque-assurance/effets/010 | MOT | `Noël` | PRENOM |
 | sante/compteRendu/001 | PRODUIT | `NFS` | NOM |
@@ -397,82 +375,22 @@ Précision(type) = passages codés sous un préfixe de ce type qui recouvrent bi
 | sante/ordonnance/008 | PRODUIT | `insuline glargine` | CODE |
 | sante/ordonnance/011 | PRODUIT | `Doliprane 1000 mg` | NOM |
 | expertise-comptable/lettreMission/007 | MOT | `Noël` | PRENOM |
-| rh-paie/bulletinMa/001 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/001 | MONTANT · milliers | `71 080,83 MAD` | SOCIETE |
-| rh-paie/bulletinMa/001 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/001 | MONTANT · grand | `1 170 078,89 MAD` | SOCIETE |
-| rh-paie/bulletinMa/002 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/002 | MONTANT · centaines | `125,37 MAD` | SOCIETE |
-| rh-paie/bulletinMa/002 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/002 | MONTANT · grand | `7 414 824 MAD` | SOCIETE |
-| rh-paie/bulletinMa/003 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/003 | MONTANT · centaines | `953 MAD` | SOCIETE |
-| rh-paie/bulletinMa/003 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/003 | MONTANT · grand | `1 359 875 MAD` | SOCIETE |
-| rh-paie/bulletinMa/004 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/004 | MONTANT · grand | `6 881 868 MAD` | SOCIETE |
-| rh-paie/bulletinMa/004 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/004 | MONTANT · milliers | `15.234,93 MAD` | SOCIETE |
-| rh-paie/bulletinMa/005 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/005 | MONTANT · milliers | `15 645,04 MAD` | SOCIETE |
-| rh-paie/bulletinMa/005 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/005 | MONTANT · centaines | `760,67 MAD` | SOCIETE |
-| rh-paie/bulletinMa/006 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/006 | MONTANT · grand | `7.539.545 MAD` | SOCIETE |
-| rh-paie/bulletinMa/006 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/006 | MONTANT · grand | `5.197.452,87 MAD` | SOCIETE |
-| rh-paie/bulletinMa/007 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/007 | MONTANT · grand | `8 299 685,28 MAD` | SOCIETE |
-| rh-paie/bulletinMa/007 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/007 | MONTANT · grand | `6.879.574,52 MAD` | SOCIETE |
-| rh-paie/bulletinMa/008 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/008 | MONTANT · centaines | `718,43 MAD` | SOCIETE |
-| rh-paie/bulletinMa/008 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/008 | MONTANT · milliers | `90 688,20 MAD` | SOCIETE |
-| rh-paie/bulletinMa/009 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/009 | MONTANT · milliers | `49 891 MAD` | SOCIETE |
-| rh-paie/bulletinMa/009 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/009 | MONTANT · milliers | `41.882,49 MAD` | SOCIETE |
-| rh-paie/bulletinMa/010 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/010 | MONTANT · centaines | `350 MAD` | SOCIETE |
-| rh-paie/bulletinMa/010 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/010 | MONTANT · milliers | `77 844,45 MAD` | SOCIETE |
-| rh-paie/bulletinMa/011 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/011 | MONTANT · centaines | `236,81 MAD` | SOCIETE |
-| rh-paie/bulletinMa/011 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/011 | MONTANT · centaines | `781 MAD` | SOCIETE |
-| rh-paie/bulletinMa/012 | SIGLE | `AMO` | SOCIETE |
-| rh-paie/bulletinMa/012 | MONTANT · grand | `965 000,63 MAD` | SOCIETE |
-| rh-paie/bulletinMa/012 | SIGLE | `IR` | SOCIETE |
-| rh-paie/bulletinMa/012 | MONTANT · milliers | `16 366,06 MAD` | SOCIETE |
-| rh-paie/bulletinFr/001 | SIGLE | `CSG` | SOCIETE |
-| rh-paie/bulletinFr/001 | MONTANT · milliers | `23 121,36 €` | SOCIETE |
-| rh-paie/bulletinFr/002 | SIGLE | `CSG` | SOCIETE |
-| rh-paie/bulletinFr/002 | MONTANT · milliers | `41.219 €` | SOCIETE |
-| rh-paie/bulletinFr/003 | SIGLE | `CRDS` | SOCIETE |
-| rh-paie/bulletinFr/003 | MONTANT · milliers | `22 675,29 €` | SOCIETE |
-| rh-paie/bulletinFr/004 | SIGLE | `CRDS` | SOCIETE |
-| rh-paie/bulletinFr/004 | MONTANT · grand | `8 253 682 €` | SOCIETE |
-| rh-paie/bulletinFr/005 | SIGLE | `CSG` | SOCIETE |
-| rh-paie/bulletinFr/005 | MONTANT · milliers | `92 557 €` | SOCIETE |
-| rh-paie/bulletinFr/006 | SIGLE | `CSG` | SOCIETE |
-| rh-paie/bulletinFr/006 | MONTANT · grand | `494 918 €` | SOCIETE |
-| rh-paie/bulletinFr/007 | SIGLE | `CRDS` | SOCIETE |
-| rh-paie/bulletinFr/007 | MONTANT · centaines | `584,48 €` | SOCIETE |
-| rh-paie/bulletinFr/008 | SIGLE | `CSG` | SOCIETE |
-| rh-paie/bulletinFr/008 | MONTANT · milliers | `77 687,35 €` | SOCIETE |
-| rh-paie/bulletinFr/009 | SIGLE | `CSG` | SOCIETE |
-| rh-paie/bulletinFr/009 | MONTANT · centaines | `504 €` | SOCIETE |
-| rh-paie/bulletinFr/010 | SIGLE | `CSG` | SOCIETE |
-| rh-paie/bulletinFr/010 | MONTANT · centaines | `327,49 €` | SOCIETE |
-| rh-paie/bulletinFr/011 | SIGLE | `CSG` | SOCIETE |
-| rh-paie/bulletinFr/011 | MONTANT · milliers | `51 444 €` | SOCIETE |
-| rh-paie/bulletinFr/012 | SIGLE | `CRDS` | SOCIETE |
-| rh-paie/bulletinFr/012 | MONTANT · milliers | `69 156 €` | SOCIETE |
+| rh-paie/bulletinFr/001 | SIGLE | `CSG` | NOM |
+| rh-paie/bulletinFr/002 | SIGLE | `CSG` | NOM |
+| rh-paie/bulletinFr/003 | SIGLE | `CRDS` | NOM |
+| rh-paie/bulletinFr/004 | SIGLE | `CRDS` | NOM |
+| rh-paie/bulletinFr/005 | SIGLE | `CSG` | NOM |
+| rh-paie/bulletinFr/006 | SIGLE | `CSG` | NOM |
+| rh-paie/bulletinFr/007 | SIGLE | `CRDS` | NOM |
+| rh-paie/bulletinFr/008 | SIGLE | `CSG` | NOM |
+| rh-paie/bulletinFr/009 | SIGLE | `CSG` | NOM |
+| rh-paie/bulletinFr/010 | SIGLE | `CSG` | NOM |
+| rh-paie/bulletinFr/011 | SIGLE | `CSG` | NOM |
+| rh-paie/bulletinFr/012 | SIGLE | `CRDS` | NOM |
 | rh-paie/attestation/002 | MOT | `Noël` | PRENOM |
 | rh-paie/attestation/007 | MOT | `Noël` | PRENOM |
 
-## Codé hors étiquette (433 passages, 47 distincts — 40 plus fréquents)
+## Codé hors étiquette (393 passages, 41 distincts — 40 plus fréquents)
 
 Ni une valeur étiquetée, ni un leurre : surtout des mots du gabarit que le verrou ne connaît pas. Sur-coder est sûr, mais rend le texte moins utile à l'IA.
 
@@ -480,37 +398,34 @@ Ni une valeur étiquetée, ni un leurre : surtout des mots du gabarit que le ver
 |---|---:|
 | NOM « EMIS » | 18 |
 | NOM « RECU » | 18 |
-| NOM « VIR » | 18 |
 | NOM « VIREMENT » | 18 |
-| NOM « TR » | 14 |
 | SOCIETE « FICHE CONTACT » | 14 |
 | CODE « confraternellement » | 12 |
-| CODE « requérante » | 12 |
 | CODE « télédéclarations » | 12 |
-| NOM « AMIABLE » | 12 |
 | NOM « Bien » | 12 |
 | NOM « Co-emprunteur » | 12 |
 | NOM « CRÉDIT » | 12 |
 | NOM « DEVANT » | 12 |
 | NOM « DOSSIER » | 12 |
-| NOM « EXTRAIT » | 12 |
-| NOM « INTERNE » | 12 |
 | NOM « LIAISON » | 12 |
 | NOM « RAS » | 12 |
 | NOM « Reprise » | 12 |
 | NOM « SAV » | 12 |
 | NOM « Télédéclaration » | 12 |
 | NOM « TICKET » | 12 |
+| SOCIETE « COMPTE RENDU DE CONSULTATION » | 12 |
+| SOCIETE « CONSTAT AMIABLE » | 12 |
 | SOCIETE « DÉCLARATION DE SINISTRE » | 12 |
 | SOCIETE « DEMANDE DE PORTABILITÉ DU NUMÉRO » | 12 |
-| NOM « CHQ » | 10 |
-| NOM « PRLV » | 10 |
+| SOCIETE « EXTRAIT DU GRAND LIVRE » | 12 |
+| SOCIETE « NOTE INTERNE » | 12 |
+| SOCIETE « OPPOSITION SUR CARTE BANCAIRE » | 12 |
+| SOCIETE « OUVERTURE DE COMPTE » | 12 |
 | NOM « REMIS » | 10 |
 | NOM « CONSOMMATION » | 6 |
 | NOM « IMMOBILIER » | 6 |
 | NOM « REMISE » | 6 |
 | NOM « Syntec » | 6 |
-| PRENOM « À » | 6 |
 | SOCIETE « PLAISE AU CONSEIL » | 6 |
 | NOM « Hamdoullah » | 5 |
 | NOM « Salam » | 5 |
@@ -518,3 +433,6 @@ Ni une valeur étiquetée, ni un leurre : surtout des mots du gabarit que le ver
 | SOCIETE « ORDRE DE VIREMENT PERMANENT » | 4 |
 | NOM « GSM » | 3 |
 | NOM « Inchallah » | 3 |
+| SOCIETE « ORDRE DE VIREMENT OCCASIONNEL » | 3 |
+| CODE « glycémique » | 2 |
+| NOM « Mb » | 2 |

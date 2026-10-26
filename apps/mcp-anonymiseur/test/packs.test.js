@@ -27,7 +27,7 @@ const codesDe = (t, prefixe) => [...t.matchAll(new RegExp(`(?<![A-Z])${prefixe}-
 
 test("chaque pack livré est valide : format, règles acceptées, exemples reconnus et contrôlés", () => {
   const fichiers = fs.readdirSync(PACKS).filter((n) => n.endsWith(".json"));
-  assert.deepEqual(fichiers.sort(), ["banque-assurance.json", "expertise-comptable.json", "juridique-fr.json", "notariat-ma.json", "rh-paie.json", "sante.json", "telecom-ma.json"]);
+  assert.deepEqual(fichiers.sort(), ["banque-assurance.json", "expertise-comptable.json", "juridique-fr.json", "juridique-ma.json", "notariat-ma.json", "rh-paie.json", "sante.json", "telecom-ma.json"]);
   for (const n of fichiers) {
     const pack = JSON.parse(fs.readFileSync(path.join(PACKS, n), "utf8"));
     assert.equal(pack.format, FORMAT_PACK);
@@ -44,7 +44,7 @@ test("chaque pack livré est valide : format, règles acceptées, exemples recon
     for (const e of pack.entetes || []) assert.ok(new RegExp(e.motif, "iu").test(e.exemple), `${n} en-tête ${e.prefixe} : l'exemple est reconnu`);
   }
   const l = listerPacks();
-  assert.equal(l.length, 7);
+  assert.equal(l.length, 8);   // v2.30 : + juridique-ma
   assert.ok(l.every((p) => p.nom && p.version && p.description && p.motifs >= 3));
   assert.equal(lirePack("inconnu"), null);
 });

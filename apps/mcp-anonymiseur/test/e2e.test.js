@@ -315,7 +315,9 @@ test("anonymiser_dossier : plan en comptes seuls, exécution → fichiers + rapp
   // Le PLAN d'abord : liste des fichiers, comptes par type, zéro valeur réelle.
   const plan = await client.callTool({ name: "anonymiser_dossier", arguments: {} });
   const planOut = resultText(plan);
-  assert.match(planOut, /PLAN DE LOT — 4 fichier/);
+  // v2.30 (T08) — le lot liste aussi l'image, le PDF scanné et le scan relu de la boîte de sortie.
+  assert.match(planOut, /PLAN DE LOT — 6 fichier/);
+  assert.match(planOut, /image \(scan\) → à lire par lire_scan/);
   assert.match(planOut, /clients\.xlsx/);
   assert.match(planOut, /facture\.xlsx/);
   assert.match(planOut, /confirmer: true/);
@@ -328,7 +330,9 @@ test("anonymiser_dossier : plan en comptes seuls, exécution → fichiers + rapp
   // Exécution : tous les fichiers, toutes les feuilles, une seule clé.
   const res = await client.callTool({ name: "anonymiser_dossier", arguments: { confirmer: true } });
   const out = resultText(res);
-  assert.match(out, /LOT TERMINÉ — 3\/4/);
+  assert.match(out, /LOT TERMINÉ — 4\/6/);
+  assert.match(out, /2 scan\(s\) à lire/);
+  assert.ok(!/illisibles ou scannés/.test(out), "un scan n'est pas « illisible »");
   assert.ok(!out.includes("El Amrani") && !out.includes("Sophatel"), "une valeur réelle a fui dans le compte rendu de lot");
   // Pas d'aperçu de contenu dans un compte rendu de lot : ni tableau TSV,
   // ni section « TABLEAU CODÉ » (les codes cités par le bloc de règles sont

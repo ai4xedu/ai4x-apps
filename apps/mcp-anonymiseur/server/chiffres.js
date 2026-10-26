@@ -79,12 +79,19 @@ const fold = (s) => String(s || "").normalize("NFD").replace(/\p{M}/gu, "").toLo
 
 /* Finance d'une personne ou d'une organisation : ce qu'un cabinet ne veut pas
    montrer à une IA, même sans le nom à côté. */
-const SENSIBLE_RX = /\bsalaire|\bpaie\b|\bpaye\b|remun|\bprime|\bbonus|\bca\b|chiffre.?d.?affaire|honoraire|encours|\bsolde|patrimoine|revenu|resultat|\bmarge\b|benefice|dividende|\bcapital|tresorerie|pension|retraite|cotisation|\bimpot|imposable|avoir fiscal|epargne|placement|portefeuille|\bactif|\bpassif/;
+/* v2.30 (T08) — « Solde », « CA », « Chiffre d'affaires », « Total » sont des
+   MONTANTS, pas des colonnes sensibles : dans le relevé de compte d'un
+   contentieux, le solde dû et le chiffre d'affaires des trois exercices sont
+   ce que l'IA doit calculer (l'indemnité de rupture de T08 en dépendait ; en
+   gabarit, les deux essais codés l'ont calculée sur un seul exercice). Reste
+   sensible : la finance d'une personne (paie, revenus, patrimoine) et les
+   agrégats d'une organisation (résultat, marge, capital, trésorerie). */
+const SENSIBLE_RX = /\bsalaire|\bpaie\b|\bpaye\b|remun|\bprime|\bbonus|honoraire|encours|patrimoine|revenu|resultat|\bmarge\b|benefice|dividende|\bcapital|tresorerie|pension|retraite|cotisation|\bimpot|imposable|avoir fiscal|epargne|placement|portefeuille|\bactif|\bpassif/;
 const SENSIBLE_EXACT = new Set(["brut", "net", "total brut", "total net", "net a payer", "montant brut", "montant net"]);
 const TAUX_RX = /taux|%|pourcent|pct|ratio|coefficient|coef|indice|\btva\b(?!.*montant)|marge\s*%/;
 const QUANTITE_RX = /quantit|\bqte\b|\bqt\b|\bnb\b|nombre|effectif|heure|\bjour|unite|volume|surface|\bm2\b|\bm²|\bkm\b|poids|duree|delai|\bage\b|kilom|litre|pieces/;
 const NUMERO_RX = /\bn[°o]\b|numero|\bnum\b|\bcode\b|\bref|\bid\b|matricule|annee|exercice|\bmois\b|\bcp\b|postal|siren|siret|\bnir\b|rang|ordre|ligne|page|version/;
-const MONTANT_RX = /montant|total|prix|cout|tarif|somme|valeur|\beur|€|\bmad\b|\bdhs?\b|usd|\$|\bht\b|ttc|facture|acompte|remise|frais|budget|depense|recette|paiement|versement|reglement|creance|dette|impay|\bdu\b|restant|penalit|indemnit|dommage|loyer|caution|provision|credit|debit/;
+const MONTANT_RX = /montant|total|prix|cout|tarif|somme|valeur|\beur|€|\bmad\b|\bdhs?\b|usd|\$|\bht\b|ttc|facture|acompte|remise|frais|budget|depense|recette|paiement|versement|reglement|creance|dette|impay|\bdu\b|restant|penalit|indemnit|dommage|loyer|caution|provision|credit|debit|\bsolde|\bca\b|chiffre.?d.?affaire|objectif/;
 
 /* Renvoie { classe, libelle, sensible }. classe : sensible | montant | taux |
    quantite | numero | autre. */
@@ -104,7 +111,7 @@ export function classifyNumericHeader(header) {
 
 /* Mise en page document (facture, courrier, bulletin) : pas d'en-têtes de
    colonnes. En auto, on regarde de quoi parle le texte. */
-const DOCUMENT_SENSIBLE_RX = /salaire|paie|paye|bulletin|net a payer|remuneration|cotisation|chiffre d.affaire|bilan|compte de resultat|patrimoine|releve de compte|avis d.impo|declaration de revenu|liasse|grand livre|balance/;
+const DOCUMENT_SENSIBLE_RX = /salaire|paie|paye|bulletin|net a payer|remuneration|cotisation|bilan|compte de resultat|patrimoine|avis d.impo|declaration de revenu|liasse|grand livre|balance/;
 
 export function documentLooksFinancial(ws, XLSX) {
   if (!ws || !ws["!ref"]) return false;

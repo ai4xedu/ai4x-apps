@@ -114,7 +114,8 @@ test("sceau_dossier : après un travail réel, un sceau vérifiable, sans aucune
   assert.match(res, /✅ Sceau délivré au nom de Cabinet Benali/);
   assert.match(res, /0 retrouvée en clair/);
   assert.match(res, /lettre de mission/);
-  for (const v of ["Hicham", "Bennani", "hicham.bennani@gmail.com", "FAC-2026-0142"]) assert.ok(!res.includes(v), `${v} a fui`);
+  // (le n° de facture, lui, reste lisible depuis la v2.30 : ce n'est pas une valeur de la clé)
+  for (const v of ["Hicham", "Bennani", "hicham.bennani@gmail.com"]) assert.ok(!res.includes(v), `${v} a fui`);
   // Le lien survit au verrou de sortie et se vérifie.
   const seal = res.match(/verifier-sceau#(NANOS1\.[\w-]+\.[\w-]+)/)[1];
   const v = verifySeal(seal, TRUSTED);

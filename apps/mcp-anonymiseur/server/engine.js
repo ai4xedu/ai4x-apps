@@ -269,6 +269,11 @@ export function classifyLoose(s) {
 
 const DIGIT_PREFIXES = new Set(["TEL", "RIB", "ICE", "IF", "RC", "CNSS", "PATENTE", "CARTE", "PERMIS"]);
 
+/* v2.30 (T08) — une SOCIÉTÉ sous toutes ses graphies est une seule valeur :
+   « Atlas Conserves Industries SA » et « ATLAS CONSERVES INDUSTRIES SA »
+   (casse et accents indifférents), « S.M.D.A. » vaut « SMDA ». T08 donnait
+   huit codes au même fournisseur. */
+const foldNorm = (s) => String(s).normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/œ/g, "oe").replace(/æ/g, "ae");
 export function normFor(prefix, text) {
   if (prefix === "EMAIL") return String(text).toLowerCase();
   // Identifiants numériques : « 06 61 23 45 67 » et « 0661234567 » sont la
@@ -276,6 +281,14 @@ export function normFor(prefix, text) {
   if (DIGIT_PREFIXES.has(prefix)) return String(text).replace(/[\s.\-]/g, "");
   // « AB-123-CD », « AB 123 CD », « ab123cd » : la même plaque.
   if (prefix === "IMMAT") return String(text).toUpperCase().replace(/[\s\-]/g, "");
+  if (prefix === "SOCIETE" || prefix === "SOC") {
+    // La forme juridique reste dans la clé (« X SARL » et « X SNC » sont deux
+    // sociétés) ; c'est societeCode (verrou.js) qui relie « X » à « X SARL ».
+    let v = foldNorm(text).replace(/\s+/g, " ").trim();
+    if (/^(?:\p{L}\.){2,}\p{L}?\.?$/u.test(v)) v = v.replace(/\./g, "");
+    v = v.replace(/^((?:\p{L}\.){2,}\p{L}?)\.?(?=\s)/u, (m, a) => a.replace(/\./g, ""));
+    return v;
+  }
   return String(text).replace(/\s+/g, " ");
 }
 
@@ -303,11 +316,48 @@ export function codeFor(book, typeId, text) {
   return { code, isNew };
 }
 
+/* v2.30 (T08) — le code d'une SOCIÉTÉ, sous toutes ses formes : la raison
+   sociale avec ou sans forme juridique (« Atlas Conserves Industries » et
+   « … SA » sont une société ; « X SARL » et « X SNC », deux), quelle que soit
+   la casse (normFor), son sigle et son sigle à points (« SMDA », « S.M.D.A. »),
+   passés dans `forms`. Si l'une des formes est déjà dans la clé, les autres
+   la rejoignent (alias dans byKey, aucune entrée nouvelle) ; sinon un code est
+   créé pour la valeur et les formes en deviennent des alias. */
+const LEGAL_TAIL_KEY_RX = /[\s,]+(?:s\.?a\.?r\.?l\.?(?:\s*a\.?u\.?)?|sarlau|s\.?a\.?s\.?u?|s\.?n\.?c\.?|gie|sci|scp|selarl|selas|eurl|s\.?a\.?|inc\.?|ltd\.?|llc|gmbh|spa|bv|nv|ag|plc)\.?$/u;
+export function codeForSociete(book, value, forms = []) {
+  const t = typeById("societe");
+  const key = (v) => t.prefix + "||" + normFor(t.prefix, v);
+  // Le code déjà connu d'une forme : telle quelle, sans sa forme juridique, ou
+  // avec une forme juridique en plus (« SMDA » retrouve « SMDA SA »).
+  const trouver = (v) => {
+    const norm = normFor(t.prefix, v);
+    const exact = book.byKey[t.prefix + "||" + norm];
+    if (exact) return exact;
+    const core = norm.replace(LEGAL_TAIL_KEY_RX, "").trim();
+    if (core !== norm) return core.length >= 3 ? book.byKey[t.prefix + "||" + core] : undefined;
+    if (norm.length < 3) return undefined;
+    for (const k of Object.keys(book.byKey)) {
+      if (!k.startsWith(t.prefix + "||" + norm + " ")) continue;
+      if (LEGAL_TAIL_KEY_RX.test(k.slice((t.prefix + "||" + norm).length))) return book.byKey[k];
+    }
+    return undefined;
+  };
+  const alias = [...new Set((forms || []).filter((a) => a && String(a).trim().length >= 2))];
+  let code = trouver(value);
+  let isNew = false;
+  if (!code) for (const a of alias) { code = trouver(a); if (code) break; }
+  if (!code) ({ code, isNew } = codeFor(book, "societe", value));
+  else if (!book.byKey[key(value)]) book.byKey[key(value)] = code;
+  for (const a of alias) if (!book.byKey[key(a)]) book.byKey[key(a)] = code;
+  return { code, isNew };
+}
+
 /* Le code d'un ALIAS (le nom nu d'une société) : celui de la valeur complète,
    créé au besoin ; l'alias est inscrit dans byKey, si bien qu'un prochain
    texte qui ne cite que le nom nu retrouve le même code (verrou.js indexe
    byKey). Aucune entrée nouvelle : la clé garde une ligne par société. */
 function aliasFor(book, e) {
+  if ((e.type || "societe") === "societe") return codeForSociete(book, String(e.aliasOf).trim(), [String(e.value).trim()]);
   const t = typeById(e.type || "societe");
   const full = codeFor(book, e.type || "societe", String(e.aliasOf).trim());
   const ak = t.prefix + "||" + normFor(t.prefix, String(e.value).trim());
@@ -468,7 +518,13 @@ const DOC_PATTERNS = [
   // Casablanca sous le n° 389412 » (banc d'essai du 20/10/2026 — le numéro
   // sortait en clair). Ville optionnelle, 1 à 3 mots capitalisés ou déjà
   // codés (NOM-012), puis au plus « sous le n° » avant le numéro.
-  { type: "rc",      rx: /\b(?:RC|R\.C\.?)(?:[^0-9A-Za-z\n]{1,6}(?:d[eu]\s+)?(?:\p{Lu}[\p{L}'’]+|[A-Z]+-\d{3})(?:[\s-]{1,3}(?:\p{Lu}[\p{L}'’]+|[A-Z]+-\d{3})){0,2}(?:\s+sous\s+le)?)?[^0-9A-Za-z\n]{0,6}(?:n[°º.]\s*)?(\d{3,7})\b/gu },
+  // v2.30 (T08) — le numéro peut suivre sur la ligne d'après (« RC Agadir\n52907 »
+  // dans un pied de facture) : un retour à la ligne admis juste avant lui.
+  { type: "rc",      rx: /\b(?:RC|R\.C\.?)(?:[^0-9A-Za-z\n]{1,6}(?:d[eu]\s+)?(?:\p{Lu}[\p{L}'’]+|[A-Z]+-\d{3})(?:[\s-]{1,3}(?:\p{Lu}[\p{L}'’]+|[A-Z]+-\d{3})){0,2}(?:\s+sous\s+le)?)?[^0-9A-Za-z\n]{0,6}\n?[ \t]*(?:n[°º.]\s*)?(\d{3,7})\b/gu },
+  // v2.30 (T08) — le RC en prose : « immatriculée au registre du commerce de
+  // Casablanca sous le n° 586985 », avec la ville (coupée ou non par une fin de
+  // ligne) ou sans. Les deux fuites « rc » de T08.
+  { type: "rc",      rx: /\bregistre\s+d[eu]\s+commerce(?:\s+(?:d[eu]|d['’])\s*(?:\p{Lu}[\p{L}'’-]+|[A-Z]+-\d{3})(?:\s+(?:\p{Lu}[\p{L}'’-]+|[A-Z]+-\d{3})){0,2})?\s+sous\s+le\s+(?:n(?:um[ée]ro)?[°º.]?\s*)?(\d{3,7})\b/giu },
   // v2.28 — le numéro d'affiliation de l'employeur (7 chiffres) se cite avec
   // son rôle : « CNSS employeur 7456193 », « CNSS d'affiliation n° … » ; le
   // mot du milieu le laissait en clair.
@@ -547,7 +603,15 @@ defense defenses intervention volontaire forcee lettre recommandee accuse recept
 attestation employeur honneur certificat proces verbal constat rapport courrier courriel plaidoirie
 plaidoiries notification signification commandement payer injonction opposition saisie avis assignation
 convocation compte rendu releve bulletin salaire fiche salarie personnel declaration
+exercice objectif objectifs remarque remarques libelle libelles debit credit solde lettrage prenom prenoms nom noms
+royaume maroc tribunal tribunaux commerce instance cour appel carte nationale identite ministere justice
+relire avant usage valable soussigne soussignes soussignee soussignees exclusive exclusif produit produits
 `.split(/\s+/).filter(Boolean));
+/* v2.30 (T08) — les trois dernières lignes : en-têtes de tableau (« Exercice
+   Objectif »), champs d'une pièce d'identité (« Nom », « Prénom »), en-têtes
+   d'actes marocains (« ROYAUME DU MAROC », « TRIBUNAL DE COMMERCE DE
+   CASABLANCA », « CARTE NATIONALE D'IDENTITÉ ») et le bandeau d'un scan relu
+   (« À RELIRE AVANT USAGE ») : jamais des noms. */
 
 function normToken(t) {
   return String(t).normalize("NFD").replace(/\p{M}/gu, "").toUpperCase();
@@ -571,6 +635,25 @@ const LEGAL_SUFFIX_RX =
      seule valeur. */
 const CIVILITY_START_RX = /^(?:M\.|MM\.|Mme|Mmes|Mlle|Me|Mr|Mrs|Ms|Dr|Pr|Monsieur|Madame|Mademoiselle|Ma[iî]tre)(?=[\s.]|$)/u;
 const LEGAL_CONNECTOR_RX = /\s+(?:&|et|and)\s+/gu;
+/* v2.30 (T08) — « Pour SMDA SA », « Entre Atlas Conserves Industries SA »,
+   « Contre X SARL » : le mot d'amorce capitalisé n'est pas la société (T08
+   donnait un code par amorce). */
+const CAPTURE_STARTERS_RX = /^(?:Pour|Entre|Et|Avec|Contre|Voir|Par|Chez|Selon|Vu|Attendu|Concernant|Objet|Dossier|Affaire|Client|Fournisseur|Partie)\s+(?=\S)/u;
+/* v2.30 (T08) — « Entre Atlas Conserves Industries SA et SMDA SA » : la capture
+   gloutonne enjambait « et » et faisait UNE société des deux parties. Coupée
+   derrière une forme juridique suivie d'un connecteur : deux sociétés. */
+const LEGAL_THEN_CONNECTOR_RX = /((?:S\.?A\.?R\.?L\.?(?:\s*A\.?U\.?)?|SARLAU|S\.?A\.?S\b\.?|S\.?N\.?C\b\.?|GIE|SCI|S\.?A\b\.?))\s+(?:&|et|and)\s+(?=\p{Lu})/gu;
+export function splitLegalCapture(raw) {
+  const parts = [];
+  let last = 0;
+  const v = String(raw);
+  for (const m of v.matchAll(LEGAL_THEN_CONNECTOR_RX)) {
+    parts.push(v.slice(last, m.index + m[1].length));
+    last = m.index + m[0].length;
+  }
+  parts.push(v.slice(last));
+  return parts.map(cleanLegalCapture).filter(Boolean);
+}
 export function cleanLegalCapture(raw) {
   let v = String(raw).trim();
   if (CIVILITY_START_RX.test(v)) {
@@ -579,6 +662,7 @@ export function cleanLegalCapture(raw) {
     const last = cuts[cuts.length - 1];
     v = v.slice(last.index + last[0].length).trim();
   }
+  while (CAPTURE_STARTERS_RX.test(v) && v.split(/\s+/).length > 2) v = v.replace(CAPTURE_STARTERS_RX, "");
   // « SARL. », « S.A. » : le dernier point part (« S.A » reste une forme reconnue).
   if (v.endsWith(".")) v = v.slice(0, -1);
   return v.length >= 2 ? v : null;
@@ -615,7 +699,7 @@ function withLegalAliases(cands) {
 }
 
 const ADDRESS_RX =
-  /\b(rue|avenue|av\.|bd\b|boulevard|r[eé]sidence|r[eé]s\.|lotissement|lot\.|quartier|angle|[eé]tage|imm\.|immeuble|appt|apt\b|km\s?\d)/i;
+  /\b(rue|avenue|av\.|bd\b|boulevard|r[eé]sidence|r[eé]s\.|lotissement|lot\.|quartier|angle|[eé]tage|imm\.|immeuble|appt|apt\b|km\s?\d|parc\s+industriel|zone\s+industrielle|zone\s+d['’]activit)/i;
 
 const ZONE_LABELS = new Set([
   "EMETTEUR", "CLIENT", "DESTINATAIRE", "FOURNISSEUR", "ACHETEUR", "VENDEUR", "EXPEDITEUR",
@@ -639,20 +723,31 @@ function isDocTitle(tokens, knownWord) {
     NAME_STOPLIST.has(normToken(t)) || knownWord(t.toLowerCase()));
 }
 
-/* Une cellule entièrement en MAJUSCULES hors lexique = nom probable. */
+/* Une cellule entièrement en MAJUSCULES hors lexique = nom probable.
+   v2.30 (T08) — pas une ligne qui porte une référence ou un numéro (« SMDA SA
+   — FACTURE N° FA-2025-1129 » avalait le n° de facture dans un nom de
+   société), ni un fragment d'intitulé fait de mots du dictionnaire qui
+   commence par un mot-outil ou contient un nombre (« ENTRE LES SOUSSIGNÉES »,
+   « EXCLUSIVE DU 15 MARS 2019 ») ; « HORIZON IMMOBILIER », lui, reste un nom. */
+const CAPS_FUNCTION_START = new Set("entre pour par de du des les le la au aux sur sous avec sans contre et ou a".split(" "));
 function allCapsName(text, knownWord = null) {
   // ⚠️ le flag u est vital : sans lui \p{L} n'est pas une classe Unicode.
-  if (REFERENCE_ONLY_RX.test(String(text).trim())) return false;
-  const tokens = String(text).split(/[^\p{L}\d]+/u).filter((t) => /\p{L}/u.test(t));
+  const s = String(text).trim();
+  if (REFERENCE_ONLY_RX.test(s)) return false;
+  if (/\bN[°º]|[\p{Lu}]{1,6}[-_/]\d{2,}/u.test(s)) return false;
+  const tokens = s.split(/[^\p{L}\d]+/u).filter((t) => /\p{L}/u.test(t));
   if (!tokens.length) return false;
   if (isDocTitle(tokens, knownWord)) return false;
   let signal = false;
+  let allKnown = !!knownWord;
   for (const t of tokens) {
     // Tester la casse sur le token BRUT (normToken met tout en majuscules).
     if (t !== t.toUpperCase()) return false;               // un token en minuscules disqualifie
-    if (t.replace(/[^\p{L}]/gu, "").length >= 3 && !NAME_STOPLIST.has(normToken(t)) &&
-        !HEADING_WORDS.has(normToken(t).toLowerCase())) signal = true;
+    const heading = NAME_STOPLIST.has(normToken(t)) || HEADING_WORDS.has(normToken(t).toLowerCase());
+    if (t.replace(/[^\p{L}]/gu, "").length >= 3 && !heading) signal = true;
+    if (allKnown && !heading && !knownWord(t.toLowerCase())) allKnown = false;
   }
+  if (signal && allKnown && (tokens.length === 1 || /\d/.test(s) || CAPS_FUNCTION_START.has(normToken(tokens[0]).toLowerCase()))) return false;
   return signal;
 }
 
@@ -697,7 +792,7 @@ export function nameCandidates(ws) {
       if (!text) continue;
       LEGAL_SUFFIX_RX.lastIndex = 0;
       let m;
-      while ((m = LEGAL_SUFFIX_RX.exec(text))) { const v = cleanLegalCapture(m[0]); if (v) add(v, "societe"); }
+      while ((m = LEGAL_SUFFIX_RX.exec(text))) for (const v of splitLegalCapture(m[0])) add(v, "societe");
       if (ADDRESS_RX.test(text) && !matchesDocPattern(text)) add(text, "adresse");
       if (allCapsName(text) && !matchesDocPattern(text)) add(text, "societe");
     }
@@ -729,7 +824,7 @@ export function nameCandidates(ws) {
    Chaque ligne joue le rôle d'une cellule : mêmes règles fortes (forme
    juridique, adresse, MAJUSCULES hors lexique), et le filet « zone » devient
    « les 1-2 lignes non vides qui suivent un libellé ÉMETTEUR / CLIENT / … ». */
-export function nameCandidatesFromText(fullText, { knownWord = null } = {}) {
+export function nameCandidatesFromText(fullText, { knownWord = null, known = null } = {}) {
   const lines = String(fullText || "").split(/\r?\n/).map((l) => l.trim());
   const seen = new Map();
   const add = (value, type) => {
@@ -743,13 +838,25 @@ export function nameCandidatesFromText(fullText, { knownWord = null } = {}) {
     if (!line) continue;
     LEGAL_SUFFIX_RX.lastIndex = 0;
     let m;
-    while ((m = LEGAL_SUFFIX_RX.exec(line))) { const v = cleanLegalCapture(m[0]); if (v) add(v, "societe"); }
+    while ((m = LEGAL_SUFFIX_RX.exec(line))) for (const v of splitLegalCapture(m[0])) add(v, "societe");
     // Ligne d'adresse d'une facture : codée en entier. Une PHRASE qui contient
     // une adresse (« Le témoin habite 12 rue des Lilas. ») ne l'est pas : le
     // verrou y code l'adresse seule, le reste de la phrase reste lisible.
     const prose = line.length > 80 || /[.!?]\s+\p{L}/u.test(line);
     if (!prose && ADDRESS_RX.test(line) && !matchesDocPattern(line)) add(line, "adresse");
-    if (allCapsName(line, knownWord) && !matchesDocPattern(line)) add(line, "societe");
+    // v2.30 (T08) — une ligne en capitales se lit segment par segment (« SMDA
+    // SA — FACTURE N° FA-2025-1129 » : la société, puis le n° de facture), et
+    // un segment où la clé reconnaît déjà une valeur (« FO OUAZZANI » sur un
+    // scan) est laissé au verrou, qui en garde le code.
+    const segs = line.replace(/^(?:>\s*)+/, "").split(/\s+[—–|]\s+/);
+    for (const seg of segs) {
+      // Un segment (pas la ligne entière) doit faire au moins deux mots, sans
+      // numéro : « IPP 311964011 » n'est pas une société.
+      if (segs.length > 1 && (seg.split(/[^\p{L}\d]+/u).filter((t) => /\p{L}/u.test(t)).length < 2 || /\d{5,}/.test(seg))) continue;
+      if (!allCapsName(seg, knownWord) || matchesDocPattern(seg)) continue;
+      if (known && known(seg).replaced > 0) continue;
+      add(seg, "societe");
+    }
   }
   // Passe 2 — zone : les lignes qui suivent un libellé ÉMETTEUR / CLIENT / …
   for (let i = 0; i < lines.length; i++) {
@@ -772,7 +879,7 @@ export function nameCandidatesFromText(fullText, { knownWord = null } = {}) {
 export function anonymizeText(fullText, book, extra, opts) {
   book = book || newCodebook();
   const excludes = new Set(((opts && opts.excludes) || []).map((v) => String(v).trim().toLowerCase()));
-  const auto = nameCandidatesFromText(fullText, { knownWord: opts && opts.knownWord }).filter((c) => !excludes.has(c.value.toLowerCase()));
+  const auto = nameCandidatesFromText(fullText, { knownWord: opts && opts.knownWord, known: opts && opts.known }).filter((c) => !excludes.has(c.value.toLowerCase()));
   const allExtra = [...(extra || []), ...withLegalAliases(auto).filter((c) => !excludes.has(c.value.toLowerCase()))];
   const res = codeDocumentText(fullText, book, allExtra);
   return {
@@ -834,13 +941,20 @@ export function codeDocumentText(input, book, extra) {
     const esc = String(e.value).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const rx = new RegExp(`(?<![\\p{L}\\p{N}])${esc}(?![\\p{L}\\p{N}])`, "giu");
     text = text.replace(rx, () => {
-      const { code, isNew } = e.aliasOf ? aliasFor(book, e) : codeFor(book, e.type || "autre", String(e.value).trim());
+      const { code, isNew } = e.aliasOf ? aliasFor(book, e)
+        : e.type === "societe" ? codeForSociete(book, String(e.value).trim())
+        : codeFor(book, e.type || "autre", String(e.value).trim());
       bump(e.type || "autre", isNew);
       placed.push(code);
       return MARK + String.fromCodePoint(MARK_BASE + placed.length - 1);
     });
   }
   if (placed.length) text = text.replace(MARK_RX, (_, ch) => placed[ch.codePointAt(0) - MARK_BASE]);
+  // v2.30 (T08) — le nom nu d'une société (« Atlas Négoce » pour « Atlas Négoce
+  // SARL ») devient un alias de la clé même quand ce texte ne le cite pas : la
+  // pièce suivante, qui ne dit que le nom nu, retrouve le même code. Avant,
+  // l'alias n'était posé qu'à sa première rencontre dans le même texte.
+  for (const e of extras) if (e.aliasOf && placed.length) aliasFor(book, e);
 
   // 2) Le dictionnaire de motifs.
   for (const p of DOC_PATTERNS) {

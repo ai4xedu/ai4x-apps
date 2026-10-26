@@ -1,0 +1,28 @@
+{
+  "format": "hidden-tokens.pack/1",
+  "id": "juridique-ma",
+  "nom": "Juridique — cabinet d'avocats, Maroc",
+  "version": "1.0.0",
+  "description": "La couche marocaine d'un dossier de contentieux (validation T08, 26/10/2026) : numéros de dossier des tribunaux (NNNN/8202/AAAA) et de procès-verbal codés sous leur nom, colonnes RC / ICE / IF / patente / CNSS codées en entier ; juridictions, auxiliaires de justice (commissaire judiciaire), sources de droit (DOC, Code de commerce) et institutions (Barid Al-Maghrib, OMPIC) laissés en clair. Les formats RC / ICE / IF / patente / CNSS en texte libre sont ceux du moteur.",
+  "regles": [
+    { "id": "P-001", "type": "motif", "libelle": "Numéro de dossier du tribunal (format marocain)", "prefixe": "AFFAIRE",
+      "motif": "(?<![\\d/])\\d{1,5}/\\d{4}/\\d{4}(?![\\d/])", "exemple": "7944/8202/2026" },
+    { "id": "P-002", "type": "motif", "libelle": "Numéro de procès-verbal (commissaire judiciaire)", "prefixe": "PV",
+      "motif": "(?<=\\b(?:P\\.?V\\.?|proc[èe]s-verbal)(?:[ \\t]+de[ \\t]+constat)?[ \\t]*n[°o]\\.?[ \\t]*)\\d{1,6}/\\d{4}(?!\\d)", "exemple": "PV n° 500/2026" },
+    { "id": "P-003", "type": "motif", "libelle": "Numéro de jugement ou d'ordonnance annoncé", "prefixe": "JUGEMENT",
+      "motif": "(?<=\\b(?:jugement|ordonnance|arr[êe]t)[ \\t]+n[°o]\\.?[ \\t]*)\\d{1,6}(?:/\\d{4})?(?!\\d)", "exemple": "jugement n° 4521/2026" },
+    { "id": "P-010", "type": "laisser_en_clair", "libelle": "Juridictions et auxiliaires de justice",
+      "termes": ["tribunal de commerce", "tribunal de première instance", "cour d'appel de commerce", "cour d'appel", "Cour de cassation", "tribunal administratif", "Cour constitutionnelle", "commissaire judiciaire", "huissier de justice", "adoul", "greffe", "bâtonnier", "Ordre des avocats", "Royaume du Maroc", "Ministère de la Justice", "procès-verbal de constat"] },
+    { "id": "P-011", "type": "laisser_en_clair", "libelle": "Sources de droit",
+      "termes": ["Dahir des obligations et contrats", "Code des obligations et contrats", "Code de commerce", "Code de procédure civile", "Code du travail", "Code de la famille", "Moudawana", "Bulletin officiel", "Dahir"] },
+    { "id": "P-012", "type": "laisser_en_clair", "libelle": "Institutions et registres",
+      "termes": ["Barid Al-Maghrib", "Poste Maroc", "Bank Al-Maghrib", "OMPIC", "CNSS", "DGI", "ANCFCC", "registre du commerce"] }
+  ],
+  "entetes": [
+    { "motif": "^\\s*r\\.?c\\.?\\s*$|registre\\s+d[eu]\\s+commerce", "prefixe": "RC", "libelle": "Colonne RC", "exemple": "RC" },
+    { "motif": "^\\s*i\\.?c\\.?e\\.?\\s*$|identifiant\\s+commun", "prefixe": "ICE", "libelle": "Colonne ICE", "exemple": "ICE" },
+    { "motif": "^\\s*i\\.?f\\.?\\s*$|identifiant\\s+fiscal", "prefixe": "IF", "libelle": "Colonne IF", "exemple": "IF" },
+    { "motif": "patente", "prefixe": "PATENTE", "libelle": "Colonne patente", "exemple": "N° patente" },
+    { "motif": "cnss", "prefixe": "CNSS", "libelle": "Colonne CNSS", "exemple": "N° CNSS" }
+  ]
+}

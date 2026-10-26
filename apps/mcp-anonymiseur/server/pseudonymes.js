@@ -218,8 +218,15 @@ export function contextFor(book, text = "") {
   // personne de ce nom est entrée dans la clé) ou avec un mot du texte est
   // renouvelé : décoder la réponse de l'IA serait sinon ambigu.
   for (const e of book.entries || []) {
+    // v2.30 (T08) — un pseudonyme renouvelé n'est pas oublié : il reste dans
+    // la clé (anciensPseudos), pour que les textes rendus avec lui se décodent
+    // encore (deanonymiser, decoder_word), et il n'est jamais réattribué.
+    for (const a of e.anciensPseudos || []) { registerPseudo(a.pseudo, ctx); for (const k of Object.keys(a.alias || {})) registerPseudo(k, ctx); }
     if (!e.pseudo) continue;
-    if (!acceptable(e.pseudo, ctx, { tokensUnique: false })) { delete e.pseudo; delete e.pseudoAlias; ctx.renouveles++; continue; }
+    if (!acceptable(e.pseudo, ctx, { tokensUnique: false })) {
+      (e.anciensPseudos = e.anciensPseudos || []).push({ pseudo: e.pseudo, ...(e.pseudoAlias ? { alias: e.pseudoAlias } : {}) });
+      delete e.pseudo; delete e.pseudoAlias; ctx.renouveles++; continue;
+    }
     registerPseudo(e.pseudo, ctx);
     for (const a of Object.keys(e.pseudoAlias || {})) registerPseudo(a, ctx);
   }
@@ -723,15 +730,24 @@ export function ecrituresDate(s) {
   ])];
 }
 
+/* Les pseudonymes d'une entrée : le courant, puis les anciens (renouvelés). */
+function tousPseudos(e) {
+  const out = [];
+  if (e.pseudo) out.push({ pseudo: e.pseudo, alias: e.pseudoAlias });
+  for (const a of e.anciensPseudos || []) if (a && a.pseudo) out.push(a);
+  return out;
+}
+
 export function pseudoMap(book) {
   const map = {};
   for (const e of book.entries || []) {
-    if (!e.pseudo) continue;
-    map[e.pseudo.toUpperCase()] = e.value;
-    if (/^NAISS-/.test(e.code)) for (const v of ecrituresDate(e.pseudo)) if (!(v.toUpperCase() in map)) map[v.toUpperCase()] = e.value;
-    const m = e.pseudo.match(LEGAL_TAIL_RX);
-    if (m) { const core = e.pseudo.slice(0, m.index).trim(); if (core.length >= 3) map[core.toUpperCase()] = e.value; }
-    for (const [a, v] of Object.entries(e.pseudoAlias || {})) map[a.toUpperCase()] = v;
+    for (const { pseudo, alias } of tousPseudos(e)) {
+      if (!(pseudo.toUpperCase() in map)) map[pseudo.toUpperCase()] = e.value;
+      if (/^NAISS-/.test(e.code)) for (const v of ecrituresDate(pseudo)) if (!(v.toUpperCase() in map)) map[v.toUpperCase()] = e.value;
+      const m = pseudo.match(LEGAL_TAIL_RX);
+      if (m) { const core = pseudo.slice(0, m.index).trim(); if (core.length >= 3 && !(core.toUpperCase() in map)) map[core.toUpperCase()] = e.value; }
+      for (const [a, v] of Object.entries(alias || {})) if (!(a.toUpperCase() in map)) map[a.toUpperCase()] = v;
+    }
   }
   return map;
 }
@@ -743,11 +759,12 @@ export function pseudoMap(book) {
 export function codesDepuisPseudos(book) {
   const pairs = [];
   for (const e of book.entries || []) {
-    if (!e.pseudo) continue;
-    pairs.push([e.pseudo, e.code]);
-    const m = e.pseudo.match(LEGAL_TAIL_RX);
-    if (m) { const core = e.pseudo.slice(0, m.index).trim(); if (core.length >= 3) pairs.push([core, e.code]); }
-    for (const a of Object.keys(e.pseudoAlias || {})) pairs.push([a, e.code]);
+    for (const { pseudo, alias } of tousPseudos(e)) {
+      pairs.push([pseudo, e.code]);
+      const m = pseudo.match(LEGAL_TAIL_RX);
+      if (m) { const core = pseudo.slice(0, m.index).trim(); if (core.length >= 3) pairs.push([core, e.code]); }
+      for (const a of Object.keys(alias || {})) pairs.push([a, e.code]);
+    }
   }
   if (!pairs.length) return (t) => String(t);
   pairs.sort((a, b) => b[0].length - a[0].length);

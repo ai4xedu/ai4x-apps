@@ -16,7 +16,7 @@
 // Il est branché dans index.js par le seul point d'enregistrement des
 // outils : un outil ajouté demain en hérite sans qu'on y pense.
 // ============================================================================
-import { knownValueMatcher } from "./verrou.js";
+import { knownValueMatcher, isAmountGroups, S10_TRACKING_RX } from "./verrou.js";
 
 export const MASK = "[MASQUÉ]";
 
@@ -61,7 +61,9 @@ const OUT_PATTERNS = [
   // Chiffres groupés (≥ 4 groupes) : « 01 423 456 78 ». Pas précédés d'une
   // lettre ou d'un tiret : les horodatages de NOS fichiers (rapport-lot-2026-09-18-21-30)
   // ne sont pas des numéros.
-  new RegExp(`(?<![\\p{Nd}\\p{L}_\\-])${D}{1,4}(?:${SEP}${D}{1,4}){3,}(?!${D})`, "gu"),
+  // v2.30 (T08) — sauf un montant à séparateurs de milliers (« 12 800 000 »,
+  // « 2024 12 800 000 ») : l'audit du sceau le comptait comme un numéro masqué.
+  { rx: new RegExp(`(?<![\\p{Nd}\\p{L}_\\-])${D}{1,4}(?:${SEP}${D}{1,4}){3,}(?!${D})`, "gu"), check: (m) => !isAmountGroups(m) },
   new RegExp(`(?<!${D})${D}{10,}(?!${D})`, "gu"),                                                 // identifiant long
   new RegExp(`(?<![\\p{L}\\p{N}-])(?!CA\\b|HT\\b)[A-Z]{1,2}[ \\u00A0]?${D}{5,8}(?![\\p{L}\\p{N}])`, "gu"), // CIN, passeport
   // v2.1 — permis de conduire « 15/284731 ». Une carte bancaire, elle, tombe
@@ -95,9 +97,13 @@ export function guardText(input, ctx = {}) {
     recoded += r.replaced;
   }
 
+  // v2.30 (T08) — un n° de suivi postal (UPU S10, « RR674701456MA ») n'est
+  // pas un RIB : mis à l'abri comme nos propres tournures.
+  s = s.replace(S10_TRACKING_RX, (m) => { shelter.push(m); return `\ue010${shelter.length - 1}\ue011`; });
   let masked = 0;
-  for (const rx of OUT_PATTERNS) {
-    s = s.replace(rx, () => { masked++; return MASK; });
+  for (const p of OUT_PATTERNS) {
+    const rx = p.rx || p;
+    s = s.replace(rx, (m) => { if (p.check && !p.check(m)) return m; masked++; return MASK; });
   }
   s = s.replace(/(\d+)/g, (_, i) => shelter[Number(i)]);
   return { text: s, masked, recoded };

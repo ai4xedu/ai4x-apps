@@ -54,9 +54,12 @@ test("identifiants : email entier, téléphones MA/FR, IBAN, ICE non pris pour u
   const b = newCodebook();
   const out = code("Joindre karim.benali@gmail.com ou 06 12 34 56 78, IBAN FR76 3000 6000 0112 3456 7890 189, " +
     "ICE 001234567000089, dossier RG 2024/01234, facture FAC-2026-0142, SIRET 123 456 789 00012.", b);
-  for (const v of ["karim", "benali", "06 12", "FR76", "001234567000089", "2024/01234", "FAC-2026", "123 456 789"]) {
+  for (const v of ["karim", "benali", "06 12", "FR76", "001234567000089", "2024/01234", "123 456 789"]) {
     assert.ok(!out.includes(v), `${v} en clair : ${out}`);
   }
+  // v2.30 (T08) — un n° de facture annoncé comme tel reste lisible (une pièce
+  // comptable, pas un identifiant) ; un n° de dossier reste codé (validation-t08).
+  assert.ok(out.includes("facture FAC-2026-0142"), out);
   assert.match(out, /EMAIL-\d{3}/);
   assert.match(out, /ICE-\d{3}/);
   assert.ok(!b.entries.some((e) => e.code.startsWith("TEL") && e.value.includes("001234567000089")), "ICE pris pour un téléphone");

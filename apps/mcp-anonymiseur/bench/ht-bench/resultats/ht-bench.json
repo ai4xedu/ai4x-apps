@@ -3,7 +3,7 @@
  "version_jeu": "0.2.0",
  "split": "dev",
  "jeu_sha256": "50932d2282937e5f9a95160997e6aa2a17ac93a4563839743661de96231bca0b",
- "version_moteur": "2.28.0",
+ "version_moteur": "2.30.0",
  "chemin": "anonymiser_fichier sur un .md (MCP stdio, fichier *-anonymise.md écrit sur le poste) — moteur + verrou, pack du document activé par reglages.json ; verrou de sortie mesuré à part sur la réponse de coder_texte",
  "documents": 383,
  "global": {
@@ -21,12 +21,12 @@
    "manques": 33,
    "rappel": 0.9905254091300603
   },
-  "precision": 0.8870872058532727,
-  "passages": 5057,
+  "precision": 0.902789005658852,
+  "passages": 4948,
   "leurres": {
    "n": 3082,
-   "codes": 185,
-   "taux_faux_positifs": 0.060025957170668394
+   "codes": 100,
+   "taux_faux_positifs": 0.03244646333549643
   }
  },
  "par_type": {
@@ -38,10 +38,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 2353,
-   "passages_justes": 1916,
-   "precision": 0.8142796430089247,
-   "f1": 0.8976341063480908,
+   "passages": 2231,
+   "passages_justes": 1911,
+   "precision": 0.8565665620797849,
+   "f1": 0.9227426364075326,
    "bien_etiquetes": 976
   },
   "CIN": {
@@ -136,10 +136,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 190,
+   "passages": 191,
    "passages_justes": 24,
-   "precision": 0.12631578947368421,
-   "f1": 0.22429906542056077,
+   "precision": 0.1256544502617801,
+   "f1": 0.22325581395348837,
    "bien_etiquetes": 24
   },
   "SIRET": {
@@ -164,11 +164,11 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 439,
-   "passages_justes": 439,
+   "passages": 440,
+   "passages_justes": 440,
    "precision": 1,
    "f1": 1,
-   "bien_etiquetes": 439
+   "bien_etiquetes": 440
   },
   "EMAIL": {
    "libelle": "E-mail",
@@ -332,10 +332,10 @@
    "partiels": 0,
    "manques": 0,
    "rappel": 1,
-   "passages": 421,
+   "passages": 444,
    "passages_justes": 279,
-   "precision": 0.66270783847981,
-   "f1": 0.7971428571428572,
+   "precision": 0.6283783783783784,
+   "f1": 0.7717842323651452,
    "bien_etiquetes": 279
   },
   "NAISSANCE": {
@@ -538,11 +538,11 @@
     "manques": 6,
     "rappel": 0.9849624060150376
    },
-   "precision": 0.9354243542435424,
-   "f1": 0.9595544414987756,
-   "passages": 542,
+   "precision": 0.9600760456273765,
+   "f1": 0.972360017931815,
+   "passages": 526,
    "passages_leurres": 2,
-   "passages_hors_etiquette": 33,
+   "passages_hors_etiquette": 19,
    "leurres": {
     "n": 152,
     "codes": 2,
@@ -609,15 +609,15 @@
     "manques": 0,
     "rappel": 1
    },
-   "precision": 0.8188405797101449,
-   "f1": 0.900398406374502,
-   "passages": 414,
-   "passages_leurres": 18,
+   "precision": 0.8432835820895522,
+   "f1": 0.9149797570850203,
+   "passages": 402,
+   "passages_leurres": 6,
    "passages_hors_etiquette": 57,
    "leurres": {
     "n": 158,
-    "codes": 18,
-    "taux_faux_positifs": 0.11392405063291139
+    "codes": 6,
+    "taux_faux_positifs": 0.0379746835443038
    },
    "direct_par_type": {
     "CIN": {
@@ -687,11 +687,11 @@
     "manques": 1,
     "rappel": 0.9976359338061466
    },
-   "precision": 0.8841463414634146,
-   "f1": 0.937468879985905,
-   "passages": 656,
+   "precision": 0.8985736925515055,
+   "f1": 0.9455171964127296,
+   "passages": 631,
    "passages_leurres": 36,
-   "passages_hors_etiquette": 40,
+   "passages_hors_etiquette": 28,
    "leurres": {
     "n": 309,
     "codes": 36,
@@ -765,15 +765,15 @@
     "manques": 0,
     "rappel": 1
    },
-   "precision": 0.842586085734364,
-   "f1": 0.9145690312738368,
-   "passages": 1423,
-   "passages_leurres": 25,
-   "passages_hors_etiquette": 199,
+   "precision": 0.8663294797687862,
+   "f1": 0.9283778552071236,
+   "passages": 1384,
+   "passages_leurres": 15,
+   "passages_hors_etiquette": 170,
    "leurres": {
     "n": 675,
-    "codes": 25,
-    "taux_faux_positifs": 0.037037037037037035
+    "codes": 15,
+    "taux_faux_positifs": 0.022222222222222223
    },
    "direct_par_type": {
     "CARTE": {
@@ -871,11 +871,11 @@
     "manques": 13,
     "rappel": 0.9607250755287009
    },
-   "precision": 0.8421052631578947,
-   "f1": 0.8975127888516492,
-   "passages": 513,
+   "precision": 0.8218390804597702,
+   "f1": 0.8858715238883748,
+   "passages": 522,
    "passages_leurres": 27,
-   "passages_hors_etiquette": 54,
+   "passages_hors_etiquette": 66,
    "leurres": {
     "n": 248,
     "codes": 27,
@@ -942,9 +942,9 @@
     "manques": 11,
     "rappel": 0.9872093023255814
    },
-   "precision": 0.9663941871026339,
-   "f1": 0.9766908550110309,
-   "passages": 1101,
+   "precision": 0.9663636363636363,
+   "f1": 0.9766752521535863,
+   "passages": 1100,
    "passages_leurres": 1,
    "passages_hors_etiquette": 36,
    "leurres": {
@@ -1048,15 +1048,15 @@
     "manques": 2,
     "rappel": 0.9936305732484076
    },
-   "precision": 0.8946078431372549,
-   "f1": 0.9415227402379436,
-   "passages": 408,
-   "passages_leurres": 38,
+   "precision": 0.9530026109660574,
+   "f1": 0.97289262129121,
+   "passages": 383,
+   "passages_leurres": 13,
    "passages_hors_etiquette": 5,
    "leurres": {
     "n": 386,
-    "codes": 76,
-    "taux_faux_positifs": 0.19689119170984457
+    "codes": 13,
+    "taux_faux_positifs": 0.03367875647668394
    },
    "direct_par_type": {
     "CIN": {
@@ -2330,14 +2330,14 @@
   "MONTANT": {
    "libelle": "Montant",
    "n": 1017,
-   "codes": 38,
-   "taux": 0.03736479842674533
+   "codes": 0,
+   "taux": 0
   },
   "DATE": {
    "libelle": "Date (hors naissance)",
    "n": 787,
-   "codes": 10,
-   "taux": 0.012706480304955527
+   "codes": 0,
+   "taux": 0
   },
   "ARTICLE": {
    "libelle": "Article ou texte de loi",
@@ -2348,8 +2348,8 @@
   "SIGLE": {
    "libelle": "Sigle ou terme du lexique",
    "n": 463,
-   "codes": 61,
-   "taux": 0.13174946004319654
+   "codes": 24,
+   "taux": 0.05183585313174946
   },
   "MOT": {
    "libelle": "Mot courant qui ressemble à un nom",
@@ -2495,8 +2495,7 @@
    "valeur": "Bâtiment C, 27 quai de la Fosse",
    "statut": "manque",
    "prefixes": [
-    "NOM",
-    "PRENOM"
+    "NOM"
    ],
    "en_clair": [
     "Fosse"
@@ -2985,51 +2984,11 @@
   {
    "doc": "telecom-ma/portabilite/001",
    "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/001",
-   "pack": "telecom-ma",
    "type": "MOT",
    "variante": "",
    "valeur": "Noël",
    "prefixes": [
     "PRENOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/002",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/003",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/004",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
    ]
   },
   {
@@ -3040,86 +2999,6 @@
    "valeur": "Noël",
    "prefixes": [
     "PRENOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/005",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/006",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/007",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/008",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/009",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/010",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/011",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
-   ]
-  },
-  {
-   "doc": "telecom-ma/portabilite/012",
-   "pack": "telecom-ma",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "ANRT",
-   "prefixes": [
-    "NOM"
    ]
   },
   {
@@ -3603,106 +3482,6 @@
    ]
   },
   {
-   "doc": "banque-assurance/carte/001",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "jj-mm-aaaa",
-   "valeur": "22/03/2023",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/carte/002",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "iso",
-   "valeur": "2025-04-07",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/carte/003",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "iso",
-   "valeur": "2021-11-16",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/carte/004",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "iso",
-   "valeur": "2023-07-02",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/carte/005",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "iso",
-   "valeur": "2026-03-07",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/carte/006",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "jj-mm-aaaa",
-   "valeur": "15/06/2024",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/carte/007",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "points",
-   "valeur": "28.04.2025",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/carte/008",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "jj-mm-aaaa",
-   "valeur": "05/07/2019",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/carte/011",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "iso",
-   "valeur": "2026-06-17",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "banque-assurance/carte/012",
-   "pack": "banque-assurance",
-   "type": "DATE",
-   "variante": "points",
-   "valeur": "15.01.2020",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
    "doc": "banque-assurance/effets/002",
    "pack": "banque-assurance",
    "type": "MOT",
@@ -3983,503 +3762,13 @@
    ]
   },
   {
-   "doc": "rh-paie/bulletinMa/001",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/001",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "47 076 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/001",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/001",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "56 405,37 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/002",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/002",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "30 267,48 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/002",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/002",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "20 050,55 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/003",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/003",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "centaines",
-   "valeur": "255 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/003",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/003",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "4.170.902,64 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/004",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/004",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "39 103,66 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/004",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/004",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "7.606.725 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/005",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/005",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "centaines",
-   "valeur": "861,50 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/005",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/005",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "centaines",
-   "valeur": "911 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/006",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/006",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "47 762,09 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/006",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/006",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "4 290 256,83 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/007",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/007",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "3 081 328,67 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/007",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/007",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "7 505 814 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/008",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/008",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "6 137 548,14 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/008",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/008",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "5 249 273 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/009",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/009",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "9 662 583 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/009",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/009",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "41 393,44 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/010",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/010",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "9.564.495,35 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/010",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/010",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "91 861 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/011",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/011",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "9 668 158,96 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/011",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/011",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "84.966,59 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/012",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/012",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "91 413,62 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/012",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "IR",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinMa/012",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "53.320,30 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
    "doc": "rh-paie/bulletinFr/001",
    "pack": "rh-paie",
    "type": "SIGLE",
    "variante": "",
    "valeur": "CSG",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/001",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "900 068,22 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4489,17 +3778,7 @@
    "variante": "",
    "valeur": "CSG",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/002",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "32 290,31 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4509,17 +3788,7 @@
    "variante": "",
    "valeur": "CSG",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/003",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "44.825,08 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4529,17 +3798,7 @@
    "variante": "",
    "valeur": "CRDS",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/004",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "14 098 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4549,17 +3808,7 @@
    "variante": "",
    "valeur": "CSG",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/005",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "grand",
-   "valeur": "1 843 924 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4569,17 +3818,7 @@
    "variante": "",
    "valeur": "CSG",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/006",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "17.464,33 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4589,17 +3828,7 @@
    "variante": "",
    "valeur": "CRDS",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/007",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "centaines",
-   "valeur": "475 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4609,17 +3838,7 @@
    "variante": "",
    "valeur": "CSG",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/008",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "4 692,59 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4629,17 +3848,7 @@
    "variante": "",
    "valeur": "CSG",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/009",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "96 518 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4649,17 +3858,7 @@
    "variante": "",
    "valeur": "CRDS",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/010",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "65 423,40 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4669,17 +3868,7 @@
    "variante": "",
    "valeur": "CSG",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/011",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "milliers",
-   "valeur": "20.786 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4689,17 +3878,7 @@
    "variante": "",
    "valeur": "CSG",
    "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/bulletinFr/012",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "centaines",
-   "valeur": "873 €",
-   "prefixes": [
-    "SOCIETE"
+    "NOM"
    ]
   },
   {
@@ -4733,36 +3912,6 @@
    ]
   },
   {
-   "doc": "rh-paie/manuel/leurres-paie",
-   "pack": "rh-paie",
-   "type": "SIGLE",
-   "variante": "",
-   "valeur": "AMO",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/manuel/leurres-paie",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "",
-   "valeur": "8 450,00 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
-   "doc": "rh-paie/manuel/leurres-paie",
-   "pack": "rh-paie",
-   "type": "MONTANT",
-   "variante": "",
-   "valeur": "190,97 MAD",
-   "prefixes": [
-    "SOCIETE"
-   ]
-  },
-  {
    "doc": "sante/manuel/transmission-orale",
    "pack": "sante",
    "type": "PRODUIT",
@@ -4785,14 +3934,6 @@
  ],
  "hors_etiquette": [
   {
-   "passage": "NOM « PRLV »",
-   "n": 18
-  },
-  {
-   "passage": "NOM « TR »",
-   "n": 14
-  },
-  {
    "passage": "SOCIETE « FICHE CONTACT »",
    "n": 14
   },
@@ -4801,23 +3942,11 @@
    "n": 13
   },
   {
-   "passage": "NOM « VIR »",
-   "n": 13
-  },
-  {
    "passage": "CODE « confraternellement »",
    "n": 12
   },
   {
-   "passage": "CODE « requérante »",
-   "n": 12
-  },
-  {
    "passage": "CODE « télédéclarations »",
-   "n": 12
-  },
-  {
-   "passage": "NOM « AMIABLE »",
    "n": 12
   },
   {
@@ -4842,14 +3971,6 @@
   },
   {
    "passage": "NOM « EMIS »",
-   "n": 12
-  },
-  {
-   "passage": "NOM « EXTRAIT »",
-   "n": 12
-  },
-  {
-   "passage": "NOM « INTERNE »",
    "n": 12
   },
   {
@@ -4881,6 +4002,14 @@
    "n": 12
   },
   {
+   "passage": "SOCIETE « COMPTE RENDU DE CONSULTATION »",
+   "n": 12
+  },
+  {
+   "passage": "SOCIETE « CONSTAT AMIABLE »",
+   "n": 12
+  },
+  {
    "passage": "SOCIETE « DÉCLARATION DE SINISTRE »",
    "n": 12
   },
@@ -4889,8 +4018,20 @@
    "n": 12
   },
   {
-   "passage": "NOM « CHQ »",
-   "n": 11
+   "passage": "SOCIETE « EXTRAIT DU GRAND LIVRE »",
+   "n": 12
+  },
+  {
+   "passage": "SOCIETE « NOTE INTERNE »",
+   "n": 12
+  },
+  {
+   "passage": "SOCIETE « OPPOSITION SUR CARTE BANCAIRE »",
+   "n": 12
+  },
+  {
+   "passage": "SOCIETE « OUVERTURE DE COMPTE »",
+   "n": 12
   },
   {
    "passage": "NOM « REMIS »",
@@ -4925,10 +4066,6 @@
    "n": 5
   },
   {
-   "passage": "PRENOM « À »",
-   "n": 5
-  },
-  {
    "passage": "CODE « glycémique »",
    "n": 4
   },
@@ -4947,18 +4084,6 @@
   {
    "passage": "NOM « Mb »",
    "n": 3
-  },
-  {
-   "passage": "NOM « BANCAIRE »",
-   "n": 2
-  },
-  {
-   "passage": "NOM « Carte »",
-   "n": 2
-  },
-  {
-   "passage": "NOM « CARTE »",
-   "n": 2
   },
   {
    "passage": "NOM « Enfant »",
