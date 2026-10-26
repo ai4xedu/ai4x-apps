@@ -737,23 +737,30 @@ export function ecrituresDate(s) {
 /* Les pseudonymes d'une entrée : le courant, puis les anciens (renouvelés). */
 function tousPseudos(e) {
   const out = [];
-  if (e.pseudo) out.push({ pseudo: e.pseudo, alias: e.pseudoAlias });
-  for (const a of e.anciensPseudos || []) if (a && a.pseudo) out.push(a);
+  if (e.pseudo) out.push({ pseudo: e.pseudo, alias: e.pseudoAlias, courant: true });
+  for (const a of e.anciensPseudos || []) if (a && a.pseudo) out.push({ ...a, courant: false });
   return out;
 }
 
 export function pseudoMap(book) {
-  const map = {};
+  // Trois rangs, du plus faible au plus fort : les formes DÉRIVÉES (autres
+  // écritures d'une date, raison sociale sans forme juridique, alias d'un nom
+  // complet), puis les pseudonymes ANCIENS (renouvelés, v2.31), puis le
+  // pseudonyme COURANT de chaque entrée, qui l'emporte toujours. Vu à la recette
+  // (bloc M) : « 3 juillet 1975 » et « 03/07/1975 » sont deux entrées de la
+  // clé avec le même pseudonyme décalé, écrit différemment ; l'écriture dérivée
+  // de l'une ne doit pas recouvrir le pseudonyme propre de l'autre.
+  const derive = {}, anciens = {}, courants = {};
   for (const e of book.entries || []) {
-    for (const { pseudo, alias } of tousPseudos(e)) {
-      if (!(pseudo.toUpperCase() in map)) map[pseudo.toUpperCase()] = e.value;
-      if (/^NAISS-/.test(e.code)) for (const v of ecrituresDate(pseudo)) if (!(v.toUpperCase() in map)) map[v.toUpperCase()] = e.value;
+    for (const { pseudo, alias, courant } of tousPseudos(e)) {
+      (courant ? courants : anciens)[pseudo.toUpperCase()] = e.value;
+      if (/^NAISS-/.test(e.code)) for (const v of ecrituresDate(pseudo)) if (!(v.toUpperCase() in derive)) derive[v.toUpperCase()] = e.value;
       const m = pseudo.match(LEGAL_TAIL_RX);
-      if (m) { const core = pseudo.slice(0, m.index).trim(); if (core.length >= 3 && !(core.toUpperCase() in map)) map[core.toUpperCase()] = e.value; }
-      for (const [a, v] of Object.entries(alias || {})) if (!(a.toUpperCase() in map)) map[a.toUpperCase()] = v;
+      if (m) { const core = pseudo.slice(0, m.index).trim(); if (core.length >= 3 && !(core.toUpperCase() in derive)) derive[core.toUpperCase()] = e.value; }
+      for (const [a, v] of Object.entries(alias || {})) if (!(a.toUpperCase() in derive)) derive[a.toUpperCase()] = v;
     }
   }
-  return map;
+  return { ...derive, ...anciens, ...courants };
 }
 
 /* Remet les CODES à la place des pseudonymes d'un texte rendu — pour le

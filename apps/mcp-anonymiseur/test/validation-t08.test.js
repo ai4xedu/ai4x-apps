@@ -228,6 +228,17 @@ test("T08-10 : un pseudonyme renouvelé reste dans la clé et se décode encore"
   assert.equal(pseudoMap(book)["SBAÏ"], "Ouazzani");
   assert.equal(decodeText("Conclusions pour M. Sbaï.", pseudoMap(book)).text, "Conclusions pour M. Ouazzani.");
   assert.equal(codesDepuisPseudos(book)("M. Sbaï"), "M. NOM-001");
+  // Une date de naissance en deux écritures (« 03/07/1975 » dans un tableur,
+  // « 3 juillet 1975 » dans une note) : deux entrées, le même décalage, et
+  // chacune revient à SA valeur — le pseudonyme propre l'emporte sur l'écriture
+  // dérivée de l'autre (recette bloc M, M5a / M11b).
+  const b2 = newCodebook();
+  b2.entries.push({ code: "NAISS-001", value: "03/07/1975", type: "Date de naissance", pseudo: "27/09/1974" });
+  b2.entries.push({ code: "NAISS-002", value: "3 juillet 1975", type: "Date de naissance", pseudo: "27 septembre 1974" });
+  const m2 = pseudoMap(b2);
+  assert.equal(m2["27 SEPTEMBRE 1974"], "3 juillet 1975");
+  assert.equal(m2["27/09/1974"], "03/07/1975");
+  assert.equal(decodeText("née le 27 septembre 1974, soit le 27/09/1974", m2).text, "née le 3 juillet 1975, soit le 03/07/1975");
 });
 
 /* ------------------------------------------------------- de bout en bout */
