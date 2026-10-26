@@ -53,7 +53,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { fold, foldKey, isKnownWord, names, CODE_SRC, LEGAL_FORMS_SRC } from "./verrou.js";
+import { fold, foldKey, isKnownWord, names, typoLike, CODE_SRC, LEGAL_FORMS_SRC } from "./verrou.js";
 import { FICHIER_REGLAGES } from "./chiffres.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -256,6 +256,10 @@ function acceptable(cand, ctx, { tokensUnique = true } = {}) {
   const toks = k.split(" ");
   for (let i = 0; i < toks.length; i++) {
     if (ctx.reels.has(toks[i])) return false;
+    // v2.31 (T08) — ni à une faute de frappe près d'un vrai nom de la clé
+    // (lettre doublée, lettres inversées) : le verrou rattache une telle
+    // graphie au vrai nom, et le pseudonyme se confondrait avec lui.
+    if (toks[i].length >= 6) for (const r of ctx.reels) if (r.length >= 6 && !r.includes(" ") && typoLike(toks[i], r)) return false;
     // Aucun mot de la valeur réelle que ce pseudonyme remplace : « Atlas
     // Services » pour « Atlas Négoce » livrerait la moitié du vrai nom.
     if (ctx.exclure && ctx.exclure.has(toks[i])) return false;

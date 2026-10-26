@@ -116,7 +116,7 @@ compte rendu, chacun gardé par `test/validation-t08.test.js` :
   et coupé par une fin de ligne (« RC Agadir ⏎ 52907 »).
 - **Date de naissance à points** (`JJ.MM.AAAA`) derrière « Né le », même avec du
   bruit d'OCR entre les deux.
-- **Variantes d'un patronyme** : une faute de frappe (distance 1) et l'initiale
+- **Variantes d'un patronyme** : une faute de frappe (lettre doublée ou lettres inversées) et l'initiale
   « A. Ouazzani » rejoignent le code du nom ; « ATLAS CONSERVES IND » rejoint
   la dénomination.
 - **Les mots courants ne sont plus des noms** : termes définis d'un contrat

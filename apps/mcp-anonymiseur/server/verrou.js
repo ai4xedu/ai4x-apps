@@ -863,19 +863,21 @@ function staleEnglishWord(v, code) {
   // seulement un mot courant (SCOWL ≤ 35), pas « Atlas ».
   return s === s.toLowerCase() ? isKnownWord(s, true) : commonEnglish(x);
 }
-/* v2.30 (T08) — distance d'édition ≤ 1 (substitution, insertion, suppression,
-   transposition) : « Ouazani » pour « Ouazzani ». */
-function within1(a, b) {
+/* v2.30 (T08) — la FAUTE DE FRAPPE sur un nom : « Ouazani » pour « Ouazzani »
+   (lettre doublée oubliée ou ajoutée), « Ouazzain » pour « Ouazzani » (deux
+   lettres inversées). Pas une substitution ni une lettre quelconque en plus :
+   « Benani » et « Benali » sont deux familles — la CI l'a rappelé (le pseudonyme
+   d'un nom tombait à une lettre d'un vrai nom, et les deux se confondaient). */
+export function typoLike(a, b) {
   if (a === b) return true;
   const la = a.length, lb = b.length;
   if (Math.abs(la - lb) > 1) return false;
   let i = 0;
   while (i < la && i < lb && a[i] === b[i]) i++;
-  if (la === lb) {
-    if (a.slice(i + 1) === b.slice(i + 1)) return true;                                   // substitution
-    return i + 1 < la && a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2); // transposition
-  }
-  return la > lb ? a.slice(i + 1) === b.slice(i) : b.slice(i + 1) === a.slice(i);        // insertion / suppression
+  if (la === lb) return i + 1 < la && a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2); // transposition
+  const [long, short] = la > lb ? [a, b] : [b, a];
+  if (long.slice(i + 1) !== short.slice(i)) return false;                                   // une lettre en plus…
+  return long[i] === long[i + 1] || (i > 0 && long[i] === long[i - 1]);                     // … qui double sa voisine
 }
 const NAME_CODE_RX = /^(?:NOM|PRENOM|PERSONNE)-/;
 /* La clé d'abréviation d'une valeur de plusieurs mots : tout sauf le dernier
@@ -1024,7 +1026,7 @@ export function knownValueMatcher(book, { en = false } = {}) {
         // v2.30 (T08) — la faute de frappe sur un nom (« Ouazani ») : à une
         // lettre près d'un nom de la clé, hors mots du dictionnaire.
         if (!code && n === 1 && ix.fuzzy.size && k.length >= 6 && /^\p{Lu}/u.test(cand) && /^\p{L}+$/u.test(k) && !isKnownWord(cand, en)) {
-          for (const [kk, c] of ix.fuzzy.get(k[0]) || []) if (within1(k, kk)) { code = c; break; }
+          for (const [kk, c] of ix.fuzzy.get(k[0]) || []) if (typoLike(k, kk)) { code = c; break; }
         }
         if (!code && n === 1) {
           const besideCode =

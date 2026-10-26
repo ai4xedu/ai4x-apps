@@ -43,6 +43,7 @@ export const PACKS = {
   "sante": { nom: "Santé — soins, laboratoires, assurance maladie", depuis: "2.22.0", description: "N° de dossier patient, d'assuré (AMO, CNOPS, sécurité sociale), de praticien (INPE, RPPS, ADELI), de lot ; spécialités, examens, médicaments courants et organismes en clair." },
   "expertise-comptable": { nom: "Expertise comptable — Maroc et France", depuis: "2.22.0", description: "N° de facture, de pièce, TVA intracommunautaire, déclarations DGI ; plan comptable, impôts, administrations et logiciels en clair ; montants selon le réglage Nombres." },
   "rh-paie": { nom: "RH et paie", depuis: "2.22.0", description: "Matricule, badge, contrat de travail ; postes, droit du travail, éléments de paie et organismes en clair ; salaires selon le réglage Nombres." },
+  "juridique-ma": { nom: "Juridique — cabinet d'avocats, Maroc", depuis: "2.30.0", description: "N° de dossier des tribunaux (NNNN/8202/AAAA), de procès-verbal et de jugement annoncés ; colonnes RC, ICE, IF, patente, CNSS ; juridictions, auxiliaires de justice, sources de droit et institutions marocaines en clair." },
   "notariat-ma": { nom: "Notariat — étude de notaire, Maroc", depuis: "2.24.0", description: "N° de titre foncier (indice de conservation compris), de réquisition d'immatriculation, de minute, de répertoire, d'acte adoulaire annoncés, nom de la propriété ; conservation foncière, droits réels, succession et fiscalité de l'acte en clair." },
 };
 

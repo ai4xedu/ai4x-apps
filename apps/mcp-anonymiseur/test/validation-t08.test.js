@@ -97,7 +97,7 @@ test("T08-3 : « Né le » puis une date JJ.MM.AAAA, même séparée par du brui
 });
 
 /* 4 — les variantes d'un patronyme. */
-test("T08-4 : une faute de frappe (distance 1) et l'initiale « A. <Nom> » partagent le code du nom ; aucun code « A »", () => {
+test("T08-4 : une faute de frappe (lettre doublée, lettres inversées) et l'initiale « A. <Nom> » partagent le code du nom ; aucun code « A »", () => {
   const book = newCodebook();
   const a = full("Représentée par M. Abdelkader Ouazzani, Président Directeur Général.", book);
   const nom = codes(a, "NOM");
@@ -114,6 +114,8 @@ test("T08-4 : une faute de frappe (distance 1) et l'initiale « A. <Nom> » part
   const c = full("M. OUAZZANI Abdelkader, représentant légal. Prénom : ABDELKADER.", book);
   assert.ok(c.includes(nom[0]) && !/OUAZZANI|ABDELKADER|Abdelkader/.test(c), c);
   assert.equal(entries(book, "PRENOM").length, 1, JSON.stringify(entries(book, "PRENOM")));
+  assert.ok(full("Convocation de Mme Nadia Ouazzini.", book).includes("NOM-"), "un autre nom à une lettre près (substitution) reste un autre nom");
+  assert.ok(book.entries.some((e) => e.value === "Ouazzini"), "il reçoit son propre code");
   // « ATLAS CONSERVES IND » dans un libellé bancaire : l'abréviation rejoint la dénomination.
   const b3 = newCodebook();
   const d = full("Nous distribuons Atlas Conserves Industries (ACI).", b3);
