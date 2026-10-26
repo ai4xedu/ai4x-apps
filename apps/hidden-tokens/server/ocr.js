@@ -88,7 +88,7 @@ export async function ocrImages(images, opts = {}) {
     gzip: false,
     // Jamais dans le dossier de l'extension : une extension installée n'est
     // pas forcément inscriptible. Le cache est jetable, le temporaire suffit.
-    cachePath: opts.cachePath || path.join(os.tmpdir(), "anonymiseur-ai4x-ocr"),
+    cachePath: opts.cachePath || path.join(os.tmpdir(), "hidden-tokens-ocr"),
     logger: () => {},
   });
   const pages = [];
@@ -119,7 +119,7 @@ export async function ocrWords(images, opts = {}) {
   const worker = await createWorker("fra", 1, {
     langPath: TESSDATA_DIR,
     gzip: false,
-    cachePath: opts.cachePath || path.join(os.tmpdir(), "anonymiseur-ai4x-ocr"),
+    cachePath: opts.cachePath || path.join(os.tmpdir(), "hidden-tokens-ocr"),
     logger: () => {},
   });
   const pages = [];

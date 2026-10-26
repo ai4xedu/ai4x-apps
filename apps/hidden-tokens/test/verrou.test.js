@@ -173,6 +173,9 @@ test("confinement : une extension Filesystem qui voit le dossier est un RISQUE n
     JSON.stringify({ display_name: "Filesystem" }));
   fs.writeFileSync(path.join(claude, "Claude Extensions Settings", "ant.dir.ant.anthropic.filesystem.json"),
     JSON.stringify({ isEnabled: true, userConfig: { allowed_directories: [path.join(home, "Documents")] } }));
+  fs.writeFileSync(path.join(claude, "Claude Extensions Settings", "local.mcpb.hidden-tokens.hidden-tokens.json"),
+    JSON.stringify({ isEnabled: true, userConfig: { dossier_travail: workdir } }));
+  // L'extension d'avant la v2.30, encore installée : signalée, jamais comptée comme une fuite.
   fs.writeFileSync(path.join(claude, "Claude Extensions Settings", "local.mcpb.ai4x.anonymiseur-ai4x.json"),
     JSON.stringify({ isEnabled: true, userConfig: { dossier_travail: workdir } }));
   fs.writeFileSync(path.join(claude, "claude_desktop_config.json"), JSON.stringify({
@@ -185,8 +188,10 @@ test("confinement : une extension Filesystem qui voit le dossier est un RISQUE n
   assert.match(txt, /Filesystem/);
   assert.match(txt, /fs2/);
   assert.match(txt, /Cowork/);
-  // L'anonymiseur lui-même n'est jamais compté comme une fuite.
-  assert.doesNotMatch(txt, /anonymiseur/i);
+  // Hidden Tokens lui-même n'est jamais compté comme une fuite ; l'ancienne
+  // extension est signalée (info), sans compter.
+  assert.doesNotMatch(txt, /risque:[^\n]*anonymiseur/i);
+  assert.match(txt, /info:[^\n]*anonymiseur-ai4x[^\n]*Retirez-la/);
 
   // Extension désactivée ou dossier disjoint : plus de risque.
   fs.writeFileSync(path.join(claude, "Claude Extensions Settings", "ant.dir.ant.anthropic.filesystem.json"),

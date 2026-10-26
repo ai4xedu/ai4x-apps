@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ============================================================================
-// Hidden Tokens (moteur Hidden Tokens) — Anonymiseur de données Ai4x — serveur MCP
-// local (stdio). v2.0 ; nom Hidden Tokens depuis la v2.14.
+// Hidden Tokens — serveur MCP local (stdio). v2.0 ; nom Hidden Tokens depuis
+// la v2.14, identifiant d'extension « hidden-tokens » depuis la v2.30.
 //
 // Ce que fait ce connecteur : il permet à Claude (Desktop) d'anonymiser des
 // fichiers SUR LE POSTE de l'utilisateur, de travailler sur les codes
@@ -77,7 +77,7 @@ import { creerClientSentinelle, sonderSentinelle, OUTILS_PRISE, PriseDelai } fro
 import { attestHtml, posteIdentity } from "./attestation.js";
 import { resoudreSortie, decrireSortie, ANCIEN_OUTDIR_NAME } from "./dossier-sortie.js";
 
-export const VERSION = "2.29.0";
+export const VERSION = "2.30.0";
 
 /* Un gabarit `${user_config.*}` non substitué vaut « non renseigné » — sinon on
    résoudrait un dossier de travail nommé littéralement « ${user_config...} »,
@@ -962,7 +962,7 @@ const INSTRUCTIONS = [
     : `moteur local (sentinelle Hidden Tokens ${MODE.raison}) — la clé est tenue par ce connecteur.`) + " etat_cle dit le mode courant.",
 ].join("\n");
 
-const server = new McpServer({ name: "anonymiseur-ai4x", version: VERSION }, { instructions: INSTRUCTIONS });
+const server = new McpServer({ name: "hidden-tokens", version: VERSION }, { instructions: INSTRUCTIONS });
 
 /* LE point d'enregistrement : tout outil passe par le verrou de sortie, y
    compris ses erreurs imprévues (dont le message pourrait citer un chemin). */

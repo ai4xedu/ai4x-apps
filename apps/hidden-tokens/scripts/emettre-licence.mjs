@@ -103,12 +103,12 @@ console.log(`Référence : ${payload.id}${note ? "  · " + note : ""}`);
 console.log("\nClé à transmettre au client :\n");
 console.log(key);
 console.log("\nInstallation côté client : Claude Desktop → réglages de l'extension");
-console.log("« Nanomizer » → champ « Clé de licence » → coller → REDÉMARRER Claude Desktop.");
+console.log("« Hidden Tokens » → champ « Clé de licence » → coller → REDÉMARRER Claude Desktop.");
 console.log("(Ou déposer la clé dans un fichier licence.txt à la racine du dossier de travail.)\n");
 console.log("──── Message WhatsApp prêt à envoyer (avec le fichier .mcpb en pièce jointe) ────\n");
 console.log(`Merci ${payload.org} ! Votre paiement est bien reçu. Voici votre connecteur et votre clé ${lifetime ? "à vie" : `(abonnement valable jusqu'au ${payload.exp})`}.
 
-1. Ouvrez le fichier joint anonymiseur-ai4x.mcpb : Claude Desktop propose « Installer ».
+1. Ouvrez le fichier joint hidden-tokens.mcpb : Claude Desktop propose « Installer ».
 2. Choisissez votre dossier de travail (hors iCloud / Google Drive / Dropbox).
 3. Dans le champ « Clé de licence », collez la clé ci-dessous, puis REDÉMARREZ Claude Desktop.
 4. Demandez à Claude : « vérifie le confinement » — il vous dira si une autre extension voit votre dossier.

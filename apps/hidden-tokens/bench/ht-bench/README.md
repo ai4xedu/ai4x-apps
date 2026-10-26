@@ -16,7 +16,7 @@ npm run bench:ht:generer    # régénère dataset/ (dev et test) depuis les grai
 node bench/ht-bench/evaluer.mjs --enregistrer-reference   # réécrit reference.json (jeu dev)
 ```
 
-Le banc complet prend une dizaine de secondes. En CI, le job `ht-bench` (`.github/workflows/mcp-anonymiseur.yml`) fait deux choses : il vérifie que `dataset/` (dev et test) est bien celui que produisent les graines, et il échoue si le rappel des identifiants directs baisse, que ce soit au global, pour un pack ou pour un type, ou si un seul document ne passe pas l'aller-retour (voir « Sortie corrompue » plus bas). Le rapport est joint à l'exécution. `test/ht-bench.test.js` couvre les pièces du banc qui n'ont pas besoin du moteur (balisage, réalignement, règle de score).
+Le banc complet prend une dizaine de secondes. En CI, le job `ht-bench` (`.github/workflows/hidden-tokens.yml`) fait deux choses : il vérifie que `dataset/` (dev et test) est bien celui que produisent les graines, et il échoue si le rappel des identifiants directs baisse, que ce soit au global, pour un pack ou pour un type, ou si un seul document ne passe pas l'aller-retour (voir « Sortie corrompue » plus bas). Le rapport est joint à l'exécution. `test/ht-bench.test.js` couvre les pièces du banc qui n'ont pas besoin du moteur (balisage, réalignement, règle de score).
 
 `npm run bench` (le banc des fuites, `bench/run.mjs`) reste à part. Il pose une autre question : sur un petit corpus réaliste et tout le parcours MCP, une valeur se retrouve-t-elle quelque part dans ce que lit l'IA ?
 

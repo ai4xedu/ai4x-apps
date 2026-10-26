@@ -57,7 +57,7 @@ Trois règles de plus dans `politique-source.json` (spec :
 
 ## Pas encore fait (stories suivantes)
 
-- ~~**US-4**~~ : livré côté connecteur (v2.9.0, `mcp-anonymiseur/server/politique.js`) —
+- ~~**US-4**~~ : livré côté connecteur (v2.9.0, `hidden-tokens/server/politique.js`) —
   épinglage de la clé, anti-retour, expiration (72 h de grâce), rechargement,
   copie locale vérifiée, règles « interdit » par détecteur. Surface : Claude
   Desktop (fichiers) ; une politique doit lister `claude_desktop` dans

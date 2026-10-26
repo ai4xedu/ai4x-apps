@@ -1,13 +1,13 @@
 // ============================================================================
 // RÈGLES DE L'ORGANISATION — la part de validation que la console partage avec
-// le poste (mcp-anonymiseur/server/regles.js) : forme d'un préfixe maison,
+// le poste (hidden-tokens/server/regles.js) : forme d'un préfixe maison,
 // garde-fous d'un motif, limites des listes de termes. Spec :
 // nanomizer/SPEC-REGLES-ORGANISATION.md.
 //
 // ⚠️ CONTRAT avec le poste : verifierMotif et PREFIXE_RX doivent rendre le
 // même verdict des deux côtés — une politique signée avec un motif que le
 // poste refuserait serait déclarée ALTEREE sur tous les postes.
-// mcp-anonymiseur/test/politique.test.js compare les deux.
+// hidden-tokens/test/politique.test.js compare les deux.
 //
 // Les termes « laisser_en_clair » : le poste refuse tout terme qui a la forme
 // d'un identifiant d'après SES détecteurs (email, téléphone, compte, carte,

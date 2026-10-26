@@ -8,7 +8,7 @@
 // la phrase de passe), et reçoit, comme un poste, une enveloppe dans le
 // registre. Rien n'est jamais en clair sur le partage.
 //
-// Le poste, lui, ne fait que lire (apps/mcp-anonymiseur/server/registre.js) ;
+// Le poste, lui, ne fait que lire (apps/hidden-tokens/server/registre.js) ;
 // les formats sont partagés, pas le code — test/registre.test.js des deux
 // côtés vérifie que ce que l'une écrit, l'autre le lit.
 // ============================================================================

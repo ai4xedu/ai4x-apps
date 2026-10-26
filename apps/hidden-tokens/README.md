@@ -1,11 +1,15 @@
-# Hidden Tokens — Anonymiseur de données Ai4x (connecteur MCP local)
+# Hidden Tokens (connecteur MCP local)
 
-> **Hidden Tokens** est le nom du produit depuis la v2.14 (22/10/2026) ; **Nanomizer**
-> reste le nom du moteur. L'identifiant de l'extension (`anonymiseur-ai4x`) ne change
-> pas : la mise à jour remplace l'ancienne, réglages et licence compris. Le dossier
-> de sortie `Anonymiseur-Ai4x/` est renommé `Hidden-Tokens/` au premier démarrage
-> (cf. `server/dossier-sortie.js`) ; les formats signés internes (`.nanomizer-*`,
-> `nanomizer.politique/1`, préfixes des jetons) ne changent pas.
+> **Hidden Tokens** est le nom du produit depuis la v2.14 (22/10/2026). Depuis la
+> **v2.30** (26/10/2026), c'est aussi l'identifiant de l'extension : `hidden-tokens`,
+> éditeur « Hidden Tokens » (dossier `local.mcpb.hidden-tokens.hidden-tokens` dans
+> Claude Desktop). Claude Desktop installe cette extension À CÔTÉ de l'ancienne
+> `anonymiseur-ai4x` : l'utilisateur retire l'ancienne (Réglages → Extensions) et
+> rechoisit son dossier de travail — même clé, même dossier `Hidden-Tokens/`.
+> `verifier_confinement` et l'appli de bureau le lui rappellent tant qu'elle est là.
+> Le dossier de sortie `Anonymiseur-Ai4x/` est renommé `Hidden-Tokens/` au premier
+> démarrage (cf. `server/dossier-sortie.js`) ; les formats signés internes
+> (`.nanomizer-*`, `nanomizer.politique/1`, préfixes des jetons) ne changent pas.
 
 Extension Claude Desktop (`.mcpb`) : Claude anonymise les fichiers Excel/CSV,
 les PDF, les notes et les scans **sur le poste de l'utilisateur**, travaille sur
@@ -97,6 +101,12 @@ minuscules…, tous les outils appelés, zéro occurrence), `test/verrou.test.js
 | `sceau_dossier` | Sceau pour le CLIENT de l'avocat : journal audité, puis preuve signée (certificat du cabinet signé par Ai4x + signature du cabinet), page imprimable avec QR et clause de lettre de mission, vérifiable hors ligne sur ai4x.academy/verifier-sceau. Refusé s'il y a une fuite, en essai, ou avec une clé d'avant la v2.6 |
 | `coder_texte` | **Le verrou universel (v2.17)** : un texte libre entre en clair, ressort codé avec la clé du dossier (même moteur, même verrou, même politique qu'un fichier) ; seule la clé est écrite. Appelé par la sentinelle pour chaque message envoyé à ChatGPT, Claude.ai, Gemini ou Copilot depuis le navigateur ; depuis Claude, pour un texte collé en clair. Le texte reçu n'est jamais journalisé (sa taille l'est). `rendu: "lisible"` (v2.23) : le texte ressort avec des pseudonymes à la place des codes de personnes |
 | `reinitialiser_cle` | Archive la clé (datée) et repart de zéro — confirmation exigée |
+
+v2.30.0 (une seule identité : Hidden Tokens, 26/10/2026). L'extension s'appelle
+`hidden-tokens` (éditeur « Hidden Tokens », hiddentokens.com) et le serveur MCP
+aussi ; le dépôt la range dans `apps/hidden-tokens`. L'ancienne `anonymiseur-ai4x`,
+si elle reste installée, est signalée par `verifier_confinement` (sans compter
+comme une fuite) et par l'appli de bureau.
 
 v2.29.0 (validation T01, le contrat en suivi de modifications, 25/10/2026).
 Le premier des dix vrais tests (Nanomizer, `docs/validation/T01-contrat`) : un

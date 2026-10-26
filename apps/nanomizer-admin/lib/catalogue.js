@@ -2,7 +2,7 @@
 // CATALOGUE — les noms partagés entre la console et le poste.
 //
 // Les détecteurs reprennent les préfixes du moteur du connecteur
-// (../mcp-anonymiseur/server/engine.js, TYPES) : une politique ne peut citer
+// (../hidden-tokens/server/engine.js, TYPES) : une politique ne peut citer
 // qu'un détecteur que le moteur sait faire tourner. test/catalogue.test.js
 // échoue si les deux listes divergent.
 // ============================================================================
@@ -32,7 +32,7 @@ export const DETECTEURS = {
   CODE: "Autre donnée sensible",
 };
 
-/* Packs métier livrés avec le connecteur (apps/mcp-anonymiseur/packs/*.json,
+/* Packs métier livrés avec le connecteur (apps/hidden-tokens/packs/*.json,
    SPEC-PACKS-METIER). La console n'en connaît que l'identité : le poste
    développe depuis ses propres fichiers. test/catalogue.test.js échoue si la
    liste diverge des fichiers livrés. */

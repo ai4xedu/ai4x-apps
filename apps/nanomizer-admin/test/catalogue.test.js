@@ -9,7 +9,7 @@ import { DETECTEURS, PLANCHER, CATEGORIES, PACKS } from "../lib/catalogue.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ENGINE = new URL("../../mcp-anonymiseur/server/engine.js", import.meta.url);
+const ENGINE = new URL("../../hidden-tokens/server/engine.js", import.meta.url);
 
 function prefixesDuMoteur() {
   const src = fs.readFileSync(ENGINE, "utf8");
@@ -35,7 +35,7 @@ test("chaque catégorie de règle a son préfixe de code dans le moteur (US-5)",
 });
 
 test("le catalogue des packs reprend exactement les packs livrés avec le connecteur (id, nom)", () => {
-  const dossier = fileURLToPath(new URL("../../mcp-anonymiseur/packs/", import.meta.url));
+  const dossier = fileURLToPath(new URL("../../hidden-tokens/packs/", import.meta.url));
   const livres = fs.readdirSync(dossier).filter((n) => n.endsWith(".json")).map((n) => JSON.parse(fs.readFileSync(path.join(dossier, n), "utf8")));
   assert.deepEqual(Object.keys(PACKS).sort(), livres.map((p) => p.id).sort());
   for (const p of livres) assert.equal(PACKS[p.id].nom, p.nom, p.id);

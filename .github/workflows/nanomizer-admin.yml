@@ -5,9 +5,9 @@ name: nanomizer-admin
 # chemin surveillé.
 on:
   push:
-    paths: ["apps/nanomizer-admin/**", "apps/mcp-anonymiseur/server/engine.js", ".github/workflows/nanomizer-admin.yml"]
+    paths: ["apps/nanomizer-admin/**", "apps/hidden-tokens/server/engine.js", ".github/workflows/nanomizer-admin.yml"]
   pull_request:
-    paths: ["apps/nanomizer-admin/**", "apps/mcp-anonymiseur/server/engine.js", ".github/workflows/nanomizer-admin.yml"]
+    paths: ["apps/nanomizer-admin/**", "apps/hidden-tokens/server/engine.js", ".github/workflows/nanomizer-admin.yml"]
 
 jobs:
   test:

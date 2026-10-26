@@ -15,8 +15,8 @@ import { creerSequestre, ouvrirSequestre, SequestreInvalide } from "../lib/seque
 import { groupes, lireGroupes, pageFeuille, FeuilleInvalide } from "../lib/feuille.js";
 import { genererPaireReception, empreinte } from "../lib/enveloppe.js";
 // Le poste : son module à lui, pour le contrat.
-import { descellerPourPoste, ouvrirRegistre, ajouterEntrees, lireEntrees as lireEntreesPoste, verifierSignatureRegistre } from "../../mcp-anonymiseur/server/registre.js";
-import { desceller as descellerPoste, sceller as scellerPoste, infoEnveloppe } from "../../mcp-anonymiseur/server/enveloppe.js";
+import { descellerPourPoste, ouvrirRegistre, ajouterEntrees, lireEntrees as lireEntreesPoste, verifierSignatureRegistre } from "../../hidden-tokens/server/registre.js";
+import { desceller as descellerPoste, sceller as scellerPoste, infoEnveloppe } from "../../hidden-tokens/server/enveloppe.js";
 
 /* Ce que fait l'appli quand le poste importe son enrôlement : une paire, une fiche. */
 function deposerFiche(partage, posteId, utilisateur, org) {
@@ -218,5 +218,5 @@ test("contrat enveloppe : ce que la console scelle, le connecteur l'ouvre, et r�
   const env = scellerPoste(paire.publique, infoEnveloppe("org", "x"), { a: 1 });
   assert.deepEqual(descellerPoste(paire.privee, infoEnveloppe("org", "x"), env), { a: 1 });
   const src = (f) => fs.readFileSync(f, "utf8");
-  assert.equal(src(new URL("../lib/enveloppe.js", import.meta.url)), src(new URL("../../mcp-anonymiseur/server/enveloppe.js", import.meta.url)), "les deux copies d'enveloppe.js doivent rester identiques");
+  assert.equal(src(new URL("../lib/enveloppe.js", import.meta.url)), src(new URL("../../hidden-tokens/server/enveloppe.js", import.meta.url)), "les deux copies d'enveloppe.js doivent rester identiques");
 });

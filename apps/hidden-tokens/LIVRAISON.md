@@ -93,7 +93,7 @@ Réponse type :
 ## 2. À réception du virement : émettre la clé
 
 ```bash
-cd ai4x-apps/apps/mcp-anonymiseur
+cd ai4x-apps/apps/hidden-tokens
 NANOMIZER_PRIVATE_KEY_FILE="…/nanomizer-cle-privee-NE-JAMAIS-PARTAGER.txt" \
   node scripts/emettre-licence.mjs --org "Maître Nom Prénom" --note "FAC-2026-…"
 # cabinet :

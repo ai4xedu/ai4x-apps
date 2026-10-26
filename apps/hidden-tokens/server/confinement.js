@@ -98,7 +98,11 @@ export function cloudSync(workdir, { home = os.homedir(), platform = process.pla
 export function auditConfinement(ctx) {
   const home = ctx.home || os.homedir();
   const shown = ctx.shown || ((p) => p);
-  const selfRx = ctx.selfRx || /anonymiseur-ai4x/i;
+  const selfRx = ctx.selfRx || /\.hidden-tokens$/i;
+  // L'extension d'avant la v2.30 (identifiant « anonymiseur-ai4x ») : même
+  // produit, mais Claude Desktop l'installe à côté de la nouvelle. Elle n'est
+  // pas une fuite ; elle est signalée pour être retirée, jamais comptée.
+  const ancienRx = ctx.ancienRx || /anonymiseur-ai4x/i;
   const dir = claudeConfigDir(ctx.platform, ctx.env, home);
   const findings = [];
   const risk = (text) => findings.push({ level: "risque", text });
@@ -115,6 +119,11 @@ export function auditConfinement(ctx) {
     if (selfRx.test(id)) continue;
     const settings = readJson(path.join(settingsDir, f)) || {};
     if (settings.isEnabled === false) continue;
+    if (ancienRx.test(id)) {
+      info(`L'ancienne extension Hidden Tokens (« anonymiseur-ai4x », d'avant la v2.30) est encore installée : Claude verrait ` +
+        `deux fois les mêmes outils. → Retirez-la (Réglages → Extensions), la nouvelle « Hidden Tokens » la remplace, même clé, même dossier.`);
+      continue;
+    }
     const manifest = readJson(path.join(dir, "Claude Extensions", id, "manifest.json")) || {};
     const name = manifest.display_name || manifest.name || id.split(".").pop();
     const paths = collectPaths(settings.userConfig || {}, home);

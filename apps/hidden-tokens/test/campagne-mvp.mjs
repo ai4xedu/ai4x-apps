@@ -3,7 +3,7 @@
 // CAMPAGNE DE VALIDATION MVP — à rejouer à CHAQUE version avant publication.
 //
 // Différence avec `npm test` : ici on ne teste pas les sources, on teste
-// L'ARTEFACT RÉELLEMENT DISTRIBUÉ (dist/anonymiseur-ai4x.mcpb, dépaqueté),
+// L'ARTEFACT RÉELLEMENT DISTRIBUÉ (dist/hidden-tokens.mcpb, dépaqueté),
 // parlé via le vrai protocole MCP, sur des données au format marocain réel,
 // dans un dossier de travail isolé (jamais la clé de production).
 //
@@ -28,7 +28,7 @@ XLSX.set_fs(_fs);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
-const bundle = path.join(root, "dist", "anonymiseur-ai4x.mcpb");
+const bundle = path.join(root, "dist", "hidden-tokens.mcpb");
 
 /* ------------------------------------------------------------- licence */
 // Depuis la v1.6, les outils qui PRODUISENT de l'anonymisation exigent une
@@ -170,7 +170,7 @@ function makeFiles(dir) {
 console.log("\n════ CAMPAGNE DE VALIDATION MVP — artefact distribué ════\n");
 
 if (!fs.existsSync(bundle)) {
-  console.error(`Bundle introuvable : ${bundle}\nLancez d'abord : npx @anthropic-ai/mcpb pack . dist/anonymiseur-ai4x.mcpb`);
+  console.error(`Bundle introuvable : ${bundle}\nLancez d'abord : npx @anthropic-ai/mcpb pack . dist/hidden-tokens.mcpb`);
   process.exit(1);
 }
 

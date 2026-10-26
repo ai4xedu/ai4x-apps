@@ -75,7 +75,7 @@ const res = await build({
 
 const code = res.outputFiles[0].text;
 const sha = crypto.createHash("sha256").update(code).digest("hex");
-const banner = `/*! Nanomizer — verrou v${manifest.version} pour l'appli web (paquet généré par ai4x-apps/apps/mcp-anonymiseur/scripts/build-web-verrou.mjs ; ne pas modifier à la main). sha256:${sha} — dictionnaire : an-array-of-french-words (MIT), SCOWL (Kevin Atkinson, cf. LICENCE-scowl.txt) ; noms : INSEE (Licence Ouverte), U.S. Census (domaine public). */\n`;
+const banner = `/*! Nanomizer — verrou v${manifest.version} pour l'appli web (paquet généré par ai4x-apps/apps/hidden-tokens/scripts/build-web-verrou.mjs ; ne pas modifier à la main). sha256:${sha} — dictionnaire : an-array-of-french-words (MIT), SCOWL (Kevin Atkinson, cf. LICENCE-scowl.txt) ; noms : INSEE (Licence Ouverte), U.S. Census (domaine public). */\n`;
 fs.mkdirSync(path.join(root, "dist"), { recursive: true });
 const out = path.join(root, "dist", "nanomizer-verrou-web.js");
 fs.writeFileSync(out, banner + code);
